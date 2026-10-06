@@ -2,7 +2,7 @@
   "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
   "revision": 0,
   "last_node_id": 778,
-  "last_link_id": 1492,
+  "last_link_id": 1499,
   "nodes": [
     {
       "id": 463,
@@ -292,8 +292,8 @@
       "id": 468,
       "type": "SetNode",
       "pos": [
-        -4764.882856776925,
-        6414.005289993268
+        -5132.152140148808,
+        6991.253425250765
       ],
       "size": [
         210,
@@ -340,8 +340,8 @@
       "id": 600,
       "type": "SetNode",
       "pos": [
-        -4866.268137482759,
-        6410.433539349272
+        -5103.366029279801,
+        6941.191891901468
       ],
       "size": [
         210,
@@ -388,8 +388,8 @@
       "id": 595,
       "type": "SetNode",
       "pos": [
-        -5098.25738494441,
-        6782.23483681791
+        -4851.44015499798,
+        6395.04697017132
       ],
       "size": [
         210,
@@ -438,8 +438,8 @@
       "id": 473,
       "type": "SetNode",
       "pos": [
-        -5104.483907430495,
-        6819.474546023265
+        -4802.365366257956,
+        6403.991977946326
       ],
       "size": [
         210,
@@ -488,8 +488,8 @@
       "id": 593,
       "type": "SetNode",
       "pos": [
-        -5084.366096555677,
-        6822.117507481582
+        -4843.717062018747,
+        6410.373395910146
       ],
       "size": [
         210,
@@ -538,8 +538,8 @@
       "id": 475,
       "type": "SetNode",
       "pos": [
-        -5077.327539897053,
-        6794.032943136948
+        -4859.37016287477,
+        6408.835482298796
       ],
       "size": [
         210,
@@ -586,8 +586,8 @@
       "id": 601,
       "type": "SetNode",
       "pos": [
-        -4790.285552093796,
-        6427.380039844075
+        -5050.871011909205,
+        6978.903208807536
       ],
       "size": [
         210,
@@ -634,8 +634,8 @@
       "id": 471,
       "type": "GetNode",
       "pos": [
-        -5112.186703449807,
-        6767.500360561121
+        -4843.88006245744,
+        6423.071885549242
       ],
       "size": [
         210,
@@ -679,8 +679,8 @@
       "id": 462,
       "type": "GetNode",
       "pos": [
-        -5080.083147516276,
-        6759.743516136504
+        -4891.515006990327,
+        6416.874308436555
       ],
       "size": [
         210,
@@ -724,8 +724,8 @@
       "id": 467,
       "type": "GetNode",
       "pos": [
-        -5092.5038533728875,
-        6787.660010221364
+        -4876.62219067786,
+        6420.293476422682
       ],
       "size": [
         210,
@@ -769,8 +769,8 @@
       "id": 599,
       "type": "GetNode",
       "pos": [
-        -5081.206459016644,
-        6791.834639905583
+        -4879.140010082208,
+        6468.197635447057
       ],
       "size": [
         210,
@@ -1377,8 +1377,8 @@
       "id": 598,
       "type": "GetNode",
       "pos": [
-        -5119.84137761255,
-        6748.460020305441
+        -4903.065793879078,
+        6408.007428993493
       ],
       "size": [
         210,
@@ -1593,8 +1593,8 @@
       "id": 469,
       "type": "GetNode",
       "pos": [
-        -4744.946001240969,
-        6760.69891683272
+        -4468.145525081718,
+        6913.846721265093
       ],
       "size": [
         210,
@@ -1636,8 +1636,8 @@
       "id": 681,
       "type": "SetNode",
       "pos": [
-        -5111.3834683573605,
-        6782.684482094589
+        -4855.1556410005305,
+        6408.341436351742
       ],
       "size": [
         210,
@@ -1846,8 +1846,8 @@
       "id": 698,
       "type": "PreviewAny",
       "pos": [
-        -4798.774397600117,
-        6671.458861804896
+        -4763.879386753156,
+        6672.536568576819
       ],
       "size": [
         537.4829429587471,
@@ -1888,8 +1888,8 @@
       "id": 702,
       "type": "FixedCameraH3Presets",
       "pos": [
-        -4917.722672976275,
-        6215.092408621695
+        -5189.818538091697,
+        6679.733069693382
       ],
       "size": [
         415.9504464964152,
@@ -2721,8 +2721,8 @@
       "id": 755,
       "type": "GetNode",
       "pos": [
-        -4794.619941877445,
-        6417.053414069315
+        -5099.670631844311,
+        6955.205346697018
       ],
       "size": [
         210,
@@ -2766,8 +2766,8 @@
       "id": 757,
       "type": "SetNode",
       "pos": [
-        -5112.356849930336,
-        6789.536024370706
+        -4871.84497807347,
+        6409.519806424607
       ],
       "size": [
         210,
@@ -2911,8 +2911,8 @@
       "id": 760,
       "type": "GetNode",
       "pos": [
-        -5108.52286722949,
-        6807.015375597922
+        -4873.808968390266,
+        6358.184020735044
       ],
       "size": [
         210,
@@ -3001,8 +3001,8 @@
       "id": 762,
       "type": "GetNode",
       "pos": [
-        -5100.2463365027725,
-        6782.668424912485
+        -4865.467351967759,
+        6420.977518752419
       ],
       "size": [
         210,
@@ -3046,8 +3046,8 @@
       "id": 763,
       "type": "GetNode",
       "pos": [
-        -5105.595786446934,
-        6797.157830172025
+        -4893.149718693838,
+        6373.001702309689
       ],
       "size": [
         210,
@@ -3091,8 +3091,8 @@
       "id": 764,
       "type": "GetNode",
       "pos": [
-        -5104.276593751265,
-        6780.734415018953
+        -4910.142851405788,
+        6417.910707820301
       ],
       "size": [
         210,
@@ -3273,12 +3273,12 @@
       "id": 769,
       "type": "765d3c7f-d11c-4388-bca1-f53c4ffc4b20",
       "pos": [
-        -5182.610337724997,
-        6681.569537405289
+        -4925.113704012659,
+        6235.024572525915
       ],
       "size": [
-        362.40452181627916,
-        371.16723277968504
+        426.34501928972804,
+        384.57411128218246
       ],
       "flags": {},
       "order": 47,
@@ -3315,14 +3315,18 @@
         },
         {
           "name": "width",
-          "shape": 7,
           "type": "INT",
+          "widget": {
+            "name": "width"
+          },
           "link": 1478
         },
         {
           "name": "height",
-          "shape": 7,
           "type": "INT",
+          "widget": {
+            "name": "height"
+          },
           "link": 1479
         },
         {
@@ -3426,12 +3430,16 @@
         "previewExposures": []
       },
       "widgets_values": [
+        1344,
+        768,
         5,
         20,
         8,
         true
       ],
       "widgets_values_named": {
+        "width": 1344,
+        "height": 768,
         "value": 5,
         "value_1": 20,
         "value_2": 8,
@@ -3655,7 +3663,13 @@
       "inputs": [],
       "outputs": [],
       "title": "ДЛИТЕЛЬНОСТЬ / DURATION",
-      "properties": {},
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        }
+      },
       "widgets_values": [
         "📌 ДЛИТЕЛЬНОСТЬ / DURATION\n\n— РУССКИЙ —\n\nПри написании промпта укажи длину видео в секундах.\nПример: «15 секунд видео.»\n\n\n— ENGLISH —\n\nWhen writing the prompt, specify the video length\nin seconds.\nExample: \"15 seconds of video.\""
       ],
@@ -3682,7 +3696,13 @@
       "inputs": [],
       "outputs": [],
       "title": "📥 ОТКУДА СКАЧАТЬ НОДЫ / WHERE TO GET NODES",
-      "properties": {},
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        }
+      },
       "widgets_values": [
         "📥 ОТКУДА СКАЧАТЬ НОДЫ / WHERE TO GET NODES\n\n— РУССКИЙ —\n\nНОДЫ АВТОРА (Нерон):\nhttps://github.com/neron5480-cell/neron-video-minimax-h3-i2v/tree/main\n├── Neron Dialog Autoprompter\n├── Neron Multi-Image LLM\n├── Interactive Image Processor\n├── Manual Color & Upscale Panel\n├── H3 LoRA Selector (5 slots)\n├── Fixed Camera H3 Presets\n└── Smart Load & Resize Image\n\nУстанавливаются через ComfyUI-Manager —\nнайди по имени и нажми Install.\n\nКРИТИЧНО ВАЖНО — LLM-text-processor\nОтсюда берётся llama-server.exe, без которого\nдиректор не сможет работать.\n\nСсылка:\nhttps://github.com/KingManiya/ComfyUI-LLM-text-processor\n\nУстанавливается так же — через ComfyUI-Manager.\n\nОСТАЛЬНЫЕ НОДЫ (все через ComfyUI-Manager):\n\n• ComfyUI-Manager — установщик всего остального\n  (если его ещё нет — сначала поставь его)\n\n• ComfyUI-KJNodes — Set/Get ноды, Preview Override\n\n• comfyui-easy-use — easy cleanGpuUsed\n\n• ComfyUI-VideoHelperSuite — Video Combine\n\n• ComfyUI-Frame-Interpolation — RIFE\n\n• ComfyRoll Studio — CR Prompt Text, CR Seed\n\n• Eclipse — Show Text [Eclipse]\n\n• ComfyUI-Impact-Pack — вспомогательные ноды\n\nВсе ставятся из ComfyUI-Manager по имени.\nПосле установки — перезапусти ComfyUI.\n\n\n— ENGLISH —\n\nAUTHOR'S NODES (Neron):\nhttps://github.com/neron5480-cell/neron-video-minimax-h3-i2v/tree/main\n├── Neron Dialog Autoprompter\n├── Neron Multi-Image LLM\n├── Interactive Image Processor\n├── Manual Color & Upscale Panel\n├── H3 LoRA Selector (5 slots)\n├── Fixed Camera H3 Presets\n└── Smart Load & Resize Image\n\nInstall via ComfyUI-Manager — search by name\nand press Install.\n\nCRITICAL — LLM-text-processor\nThis is where llama-server.exe comes from.\nWithout it, the director cannot work.\n\nLink:\nhttps://github.com/KingManiya/ComfyUI-LLM-text-processor\n\nInstall the same way — via ComfyUI-Manager.\n\nOTHER NODES (all via ComfyUI-Manager):\n\n• ComfyUI-Manager — installs everything else\n  (if you don't have it yet — install it first)\n\n• ComfyUI-KJNodes — Set/Get nodes, Preview Override\n\n• comfyui-easy-use — easy cleanGpuUsed\n\n• ComfyUI-VideoHelperSuite — Video Combine\n\n• ComfyUI-Frame-Interpolation — RIFE\n\n• ComfyRoll Studio — CR Prompt Text, CR Seed\n\n• Eclipse — Show Text [Eclipse]\n\n• ComfyUI-Impact-Pack — helper nodes\n\nAll are installed from ComfyUI-Manager by name.\nAfter installation — restart ComfyUI."
       ],
@@ -3709,7 +3729,13 @@
       "inputs": [],
       "outputs": [],
       "title": "⚙️ ОДНА МОДЕЛЬ НА ОБЕ НОДЫ / SAME MODEL FOR BOTH NODES",
-      "properties": {},
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        }
+      },
       "widgets_values": [
         "⚙️ ОДНА МОДЕЛЬ НА ОБЕ НОДЫ / SAME MODEL FOR BOTH NODES\n\n— РУССКИЙ —\n\nДиректор и Сценарист используют языковую модель\nчерез llama-server.\n\nЕСЛИ МОДЕЛЬ ОДНА И ТА ЖЕ в обеих нодах:\n\n• Сервер загружается один раз.\n• Оперативка и видеопамять не задваиваются.\n• Переключение между нодами — мгновенное.\n\nЭто рекомендованный режим.\nУ большинства пользователей так и должно быть.\n\nЕСЛИ МОДЕЛИ РАЗНЫЕ:\n\n• При переходе от Директора к Сценаристу сервер\n  перезапускается с другой моделью.\n• Нужно вдвое больше оперативки и видеопамяти.\n• Работает медленнее, но работает.\n\nЕсли у тебя мощный компьютер с запасом RAM —\nможешь использовать разные модели.\n\nЕсли оперативки впритык — оставь одну и ту же\nмодель в обеих нодах. Иначе OOM и падение.\n\nПо умолчанию обе ноды уже настроены на одну модель.\nНе трогай, если не уверен.\n\n\n— ENGLISH —\n\nThe Director and the Screenwriter both use a language\nmodel via llama-server.\n\nIF THE SAME MODEL IS SELECTED in both nodes:\n\n• The server loads once.\n• RAM and VRAM are not doubled.\n• Switching between nodes is instant.\n\nThis is the recommended mode.\nFor most users this should be the default.\n\nIF DIFFERENT MODELS ARE SELECTED:\n\n• When switching from Director to Screenwriter, the\n  server restarts with the other model.\n• You need twice the RAM and VRAM.\n• Slower, but works.\n\nIf you have a powerful computer with plenty of RAM —\nyou can use different models.\n\nIf your RAM is tight — keep the same model in both\nnodes. Otherwise OOM and crash.\n\nBy default both nodes are already set to the same model.\nDon't change it unless you know what you're doing."
       ],
@@ -4002,14 +4028,6 @@
       "STRING"
     ],
     [
-      1472,
-      755,
-      0,
-      702,
-      1,
-      "INT"
-    ],
-    [
       1473,
       598,
       0,
@@ -4128,6 +4146,14 @@
       593,
       0,
       "VAE"
+    ],
+    [
+      1472,
+      755,
+      0,
+      702,
+      1,
+      "INT"
     ]
   ],
   "groups": [],
@@ -4139,7 +4165,7 @@
         "state": {
           "lastGroupId": 13,
           "lastNodeId": 778,
-          "lastLinkId": 1492,
+          "lastLinkId": 1499,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -4431,7 +4457,7 @@
         "state": {
           "lastGroupId": 13,
           "lastNodeId": 778,
-          "lastLinkId": 1492,
+          "lastLinkId": 1499,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -4742,7 +4768,7 @@
         "state": {
           "lastGroupId": 13,
           "lastNodeId": 778,
-          "lastLinkId": 1492,
+          "lastLinkId": 1499,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -4751,8 +4777,8 @@
         "inputNode": {
           "id": -10,
           "bounding": [
-            -28.72435854943862,
-            6387.476009640432,
+            -81.49557141481779,
+            6411.878882641763,
             128,
             308
           ]
@@ -4779,8 +4805,8 @@
             "localized_name": "если_ложь",
             "shape": 7,
             "pos": [
-              75.27564145056138,
-              6411.476009640432
+              22.50442858518221,
+              6435.878882641763
             ]
           },
           {
@@ -4793,8 +4819,8 @@
             "localized_name": "если_истина",
             "shape": 7,
             "pos": [
-              75.27564145056138,
-              6431.476009640432
+              22.50442858518221,
+              6455.878882641763
             ]
           },
           {
@@ -4807,8 +4833,8 @@
             "localized_name": "ref_image_0",
             "shape": 7,
             "pos": [
-              75.27564145056138,
-              6451.476009640432
+              22.50442858518221,
+              6475.878882641763
             ]
           },
           {
@@ -4816,13 +4842,13 @@
             "name": "ref_images.ref_image_1",
             "type": "IMAGE",
             "linkIds": [
-              1455
+              1493
             ],
             "localized_name": "ref_image_1",
             "shape": 7,
             "pos": [
-              75.27564145056138,
-              6471.476009640432
+              22.50442858518221,
+              6495.878882641763
             ]
           },
           {
@@ -4830,13 +4856,13 @@
             "name": "ref_images.ref_image_2",
             "type": "IMAGE",
             "linkIds": [
-              1456
+              1494
             ],
             "localized_name": "ref_image_2",
             "shape": 7,
             "pos": [
-              75.27564145056138,
-              6491.476009640432
+              22.50442858518221,
+              6515.878882641763
             ]
           },
           {
@@ -4844,12 +4870,12 @@
             "name": "width",
             "type": "INT",
             "linkIds": [
-              1402
+              1496
             ],
             "localized_name": "ширина",
             "pos": [
-              75.27564145056138,
-              6511.476009640432
+              22.50442858518221,
+              6535.878882641763
             ]
           },
           {
@@ -4857,12 +4883,12 @@
             "name": "height",
             "type": "INT",
             "linkIds": [
-              1403
+              1497
             ],
             "localized_name": "высота",
             "pos": [
-              75.27564145056138,
-              6531.476009640432
+              22.50442858518221,
+              6555.878882641763
             ]
           },
           {
@@ -4870,13 +4896,13 @@
             "name": "ref_images.ref_image_3",
             "type": "IMAGE",
             "linkIds": [
-              1457
+              1495
             ],
             "localized_name": "ref_image_3",
             "shape": 7,
             "pos": [
-              75.27564145056138,
-              6551.476009640432
+              22.50442858518221,
+              6575.878882641763
             ]
           },
           {
@@ -4888,8 +4914,8 @@
             ],
             "localized_name": "anything",
             "pos": [
-              75.27564145056138,
-              6571.476009640432
+              22.50442858518221,
+              6595.878882641763
             ]
           },
           {
@@ -4901,8 +4927,8 @@
             ],
             "label": "секунды",
             "pos": [
-              75.27564145056138,
-              6591.476009640432
+              22.50442858518221,
+              6615.878882641763
             ]
           },
           {
@@ -4914,8 +4940,8 @@
             ],
             "label": "шаги стандарт",
             "pos": [
-              75.27564145056138,
-              6611.476009640432
+              22.50442858518221,
+              6635.878882641763
             ]
           },
           {
@@ -4927,8 +4953,8 @@
             ],
             "label": "шаги турбо",
             "pos": [
-              75.27564145056138,
-              6631.476009640432
+              22.50442858518221,
+              6655.878882641763
             ]
           },
           {
@@ -4940,8 +4966,8 @@
             ],
             "label": "режим турбо",
             "pos": [
-              75.27564145056138,
-              6651.476009640432
+              22.50442858518221,
+              6675.878882641763
             ]
           }
         ],
@@ -5921,8 +5947,8 @@
             "id": 731,
             "type": "ComfyMathExpression",
             "pos": [
-              377.99579285013783,
-              6684.7903088503235
+              369.3549177867004,
+              6676.0408162812555
             ],
             "size": [
               400,
@@ -5962,8 +5988,8 @@
                 "type": "INT",
                 "links": [
                   1391,
-                  1404,
-                  1471
+                  1471,
+                  1499
                 ]
               },
               {
@@ -6175,12 +6201,12 @@
             "id": 742,
             "type": "MiniMaxH3ReferenceToVideo",
             "pos": [
-              325.6269943408319,
-              6621.588576473413
+              347.01282693693014,
+              6622.745867975392
             ],
             "size": [
               400,
-              334
+              384
             ],
             "flags": {
               "collapsed": true
@@ -6220,56 +6246,28 @@
                 "name": "ref_images.ref_image_1",
                 "shape": 7,
                 "type": "IMAGE",
-                "link": 1402
+                "link": 1493
               },
               {
                 "localized_name": "ref_image_2",
                 "name": "ref_images.ref_image_2",
                 "shape": 7,
                 "type": "IMAGE",
-                "link": 1403
-              },
-              {
-                "localized_name": "ref_image_3",
-                "name": "ref_images.ref_image_3",
-                "shape": 7,
-                "type": "IMAGE",
-                "link": 1457
-              },
-              {
-                "localized_name": "ref_image_4",
-                "name": "ref_images.ref_image_4",
-                "shape": 7,
-                "type": "IMAGE",
-                "link": null
-              },
-              {
-                "localized_name": "ref_image_5",
-                "name": "ref_images.ref_image_5",
-                "shape": 7,
-                "type": "IMAGE",
-                "link": null
-              },
-              {
-                "localized_name": "ref_image_6",
-                "name": "ref_images.ref_image_6",
-                "shape": 7,
-                "type": "IMAGE",
-                "link": null
+                "link": 1494
               },
               {
                 "localized_name": "ref_video_0",
                 "name": "ref_videos.ref_video_0",
                 "shape": 7,
                 "type": "IMAGE",
-                "link": 1455
+                "link": null
               },
               {
                 "localized_name": "ref_video_audio_0",
                 "name": "ref_video_audios.ref_video_audio_0",
                 "shape": 7,
                 "type": "AUDIO",
-                "link": 1456
+                "link": null
               },
               {
                 "localized_name": "ref_audio_0",
@@ -6279,26 +6277,67 @@
                 "link": null
               },
               {
-                "localized_name": "размер_реф_изображения",
-                "name": "ref_image_size",
-                "type": "COMBO",
-                "widget": {
-                  "name": "ref_image_size"
-                },
-                "link": 1470
-              },
-              {
                 "localized_name": "ref_audio_1",
                 "name": "ref_audios.ref_audio_1",
                 "shape": 7,
                 "type": "AUDIO",
-                "link": 1404
+                "link": null
               },
               {
                 "localized_name": "ref_audio_2",
                 "name": "ref_audios.ref_audio_2",
                 "shape": 7,
                 "type": "AUDIO",
+                "link": null
+              },
+              {
+                "localized_name": "prompt",
+                "name": "prompt",
+                "type": "STRING",
+                "widget": {
+                  "name": "prompt"
+                },
+                "link": 1498
+              },
+              {
+                "localized_name": "ширина",
+                "name": "width",
+                "type": "INT",
+                "widget": {
+                  "name": "width"
+                },
+                "link": 1496
+              },
+              {
+                "localized_name": "высота",
+                "name": "height",
+                "type": "INT",
+                "widget": {
+                  "name": "height"
+                },
+                "link": 1497
+              },
+              {
+                "localized_name": "длина",
+                "name": "length",
+                "type": "INT",
+                "widget": {
+                  "name": "length"
+                },
+                "link": 1499
+              },
+              {
+                "localized_name": "ref_image_3",
+                "name": "ref_images.ref_image_3",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 1495
+              },
+              {
+                "localized_name": "ref_image_4",
+                "name": "ref_images.ref_image_4",
+                "shape": 7,
+                "type": "IMAGE",
                 "link": null
               }
             ],
@@ -6509,8 +6548,8 @@
             "id": 722,
             "type": "easy cleanGpuUsed",
             "pos": [
-              132.54903277666173,
-              6623.672391322422
+              143.00413867816923,
+              6631.473684785028
             ],
             "size": [
               161.3404296875,
@@ -6535,7 +6574,7 @@
                 "name": "output",
                 "type": "*",
                 "links": [
-                  1470
+                  1498
                 ]
               }
             ],
@@ -6614,8 +6653,8 @@
             "id": 737,
             "type": "PrimitiveFloat",
             "pos": [
-              153.96859759365174,
-              6704.470976834272
+              171.42533106468406,
+              6682.608191928454
             ],
             "size": [
               270,
@@ -6669,8 +6708,8 @@
             "id": 736,
             "type": "PrimitiveInt",
             "pos": [
-              180.53698492764332,
-              6658.5788296925575
+              182.48921476774953,
+              6521.945618578538
             ],
             "size": [
               270,
@@ -6917,14 +6956,6 @@
             "type": "MODEL"
           },
           {
-            "id": 1358,
-            "origin_id": 719,
-            "origin_slot": 0,
-            "target_id": 715,
-            "target_slot": 1,
-            "type": "INT"
-          },
-          {
             "id": 1367,
             "origin_id": 735,
             "origin_slot": 0,
@@ -7117,6 +7148,14 @@
             "type": "BOOLEAN"
           },
           {
+            "id": 1358,
+            "origin_id": 719,
+            "origin_slot": 0,
+            "target_id": 715,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
             "id": 1393,
             "origin_id": 725,
             "origin_slot": 0,
@@ -7157,60 +7196,60 @@
             "type": "IMAGE"
           },
           {
-            "id": 1402,
-            "origin_id": -10,
-            "origin_slot": 5,
-            "target_id": 742,
-            "target_slot": 4,
-            "type": "INT"
-          },
-          {
-            "id": 1403,
-            "origin_id": -10,
-            "origin_slot": 6,
-            "target_id": 742,
-            "target_slot": 5,
-            "type": "INT"
-          },
-          {
-            "id": 1457,
-            "origin_id": -10,
-            "origin_slot": 7,
-            "target_id": 742,
-            "target_slot": 6,
-            "type": "IMAGE"
-          },
-          {
-            "id": 1455,
+            "id": 1493,
             "origin_id": -10,
             "origin_slot": 3,
             "target_id": 742,
-            "target_slot": 10,
+            "target_slot": 4,
             "type": "IMAGE"
           },
           {
-            "id": 1456,
+            "id": 1494,
             "origin_id": -10,
             "origin_slot": 4,
             "target_id": 742,
-            "target_slot": 11,
+            "target_slot": 5,
             "type": "IMAGE"
           },
           {
-            "id": 1470,
+            "id": 1498,
             "origin_id": 722,
             "origin_slot": 0,
             "target_id": 742,
-            "target_slot": 13,
+            "target_slot": 11,
             "type": "STRING"
           },
           {
-            "id": 1404,
+            "id": 1496,
+            "origin_id": -10,
+            "origin_slot": 5,
+            "target_id": 742,
+            "target_slot": 12,
+            "type": "INT"
+          },
+          {
+            "id": 1497,
+            "origin_id": -10,
+            "origin_slot": 6,
+            "target_id": 742,
+            "target_slot": 13,
+            "type": "INT"
+          },
+          {
+            "id": 1499,
             "origin_id": 731,
             "origin_slot": 1,
             "target_id": 742,
             "target_slot": 14,
             "type": "INT"
+          },
+          {
+            "id": 1495,
+            "origin_id": -10,
+            "origin_slot": 7,
+            "target_id": 742,
+            "target_slot": 15,
+            "type": "IMAGE"
           }
         ],
         "extra": {
@@ -7232,8 +7271,8 @@
     "ds": {
       "scale": 0.6622850291432135,
       "offset": [
-        7297.1506856643955,
-        -5544.956947967547
+        7108.383599125529,
+        -5558.652893298601
       ]
     }
   },
