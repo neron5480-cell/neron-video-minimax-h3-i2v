@@ -810,8 +810,8 @@ class NeronDialogAutoprompter:
             },
         }
 
-    RETURN_TYPES = ("STRING", "IMAGE", "IMAGE", "IMAGE", "IMAGE")
-    RETURN_NAMES = ("prompt", "ref_image_0", "ref_image_1", "ref_image_2", "last_frame")
+    RETURN_TYPES = ("STRING", "IMAGE", "IMAGE", "IMAGE", "IMAGE", "INT", "INT")
+    RETURN_NAMES = ("prompt", "ref_image_0", "ref_image_1", "ref_image_2", "last_frame", "width", "height")
     FUNCTION = "process"
     CATEGORY = "Neron/Dialog"
 
@@ -842,7 +842,7 @@ class NeronDialogAutoprompter:
             )
             source = f"preset: {resolution_preset}"
 
-        # ── Кратность (по умолчанию 32, требование MiniMax H3) ──
+        # ── Кратность ──
         W = _round_to_divisible(W, divisible_by)
         H = _round_to_divisible(H, divisible_by)
 
@@ -856,7 +856,7 @@ class NeronDialogAutoprompter:
         if model == "No_GGUF_Models_Found":
             return (
                 "Ошибка: нет моделей в models/LLM/",
-                ref_image_0, ref_image_1, ref_image_2, last_frame,
+                ref_image_0, ref_image_1, ref_image_2, last_frame, W, H,
             )
 
         try:
@@ -905,9 +905,9 @@ class NeronDialogAutoprompter:
         ready_prompt = _FINAL_PROMPTS.pop(session_key, "")
         if ready_prompt:
             print(f"[Neron Dialog] Отдаю готовый промпт ({len(ready_prompt)} символов)")
-            return (ready_prompt, ref_image_0, ref_image_1, ref_image_2, last_frame)
+            return (ready_prompt, ref_image_0, ref_image_1, ref_image_2, last_frame, W, H)
 
-        return ("", ref_image_0, ref_image_1, ref_image_2, last_frame)
+        return ("", ref_image_0, ref_image_1, ref_image_2, last_frame, W, H)
 
 
 # ============================================================
