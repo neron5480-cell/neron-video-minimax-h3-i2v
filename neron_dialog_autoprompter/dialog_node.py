@@ -8,8 +8,13 @@ import io
 import ctypes
 import platform
 import subprocess
+import threading
+import zipfile
+import shutil
+import tempfile
 import urllib.request
 import urllib.error
+from collections import deque
 from pathlib import Path
 
 import numpy as np
@@ -281,6 +286,21 @@ _SERVER_MODEL_PATH = ""
 _SERVER_MMPROJ_PATH = ""
 _SERVER_PORT = 8765
 
+# Лог сервера (последние 300 строк), чтобы при крахе видеть причину
+_SERVER_LOG = deque(maxlen=300)
+_SERVER_LOG_THREAD = None
+
+# Кулдаун после краха — чтобы JS-панель не долбила сервер каждые 1.5 сек
+_SERVER_LAST_CRASH = 0.0
+_SERVER_CRASH_COOLDOWN = 30.0
+
+# Модель и язык — для человеческой диагностики на нужном языке
+_LAST_MODEL_NAME_FOR_DIAG = ""
+_DIAG_LANG = "ru"
+
+# Защита от повторных попыток скачать llama-server
+_DOWNLOAD_ATTEMPTED = False
+
 _SESSIONS = {}
 _DIALOG_LOGS = {}
 _LAST_IMAGES = {}
@@ -299,15 +319,279 @@ def _reset_session(session_key: str):
 
 
 # ============================================================
+#  СТРИМИНГ ЛОГА СЕРВЕРА
+# ============================================================
+def _reader_thread(proc):
+    """Читает stdout/stderr llama-server и печатает в консоль ComfyUI."""
+    try:
+        for raw in iter(proc.stdout.readline, b""):
+            try:
+                line = raw.decode("utf-8", errors="replace").rstrip()
+            except Exception:
+                line = repr(raw)
+            _SERVER_LOG.append(line)
+            print(f"[llama-server] {line}")
+    except Exception as e:
+        print(f"[Neron Dialog] Ошибка чтения лога сервера: {e}")
+
+
+# ============================================================
+#  ДИАГНОСТИКА КРАХА — ПОНЯТНЫЙ ТЕКСТ RU/EN
+# ============================================================
+def _diagnose_server_crash(model_name: str = "", lang: str = "ru") -> str:
+    """Превращает лог llama-server в понятное сообщение для чата (RU/EN)."""
+    log_lines = [ln for ln in _SERVER_LOG if ln.strip()]
+    log_text = "\n".join(log_lines)
+    low = log_text.lower()
+    en = (lang == "en")
+
+    # 1. mmproj не подходит к модели
+    m = re.search(
+        r"text model \(n_embd = (\d+)\).*?mmproj \(n_embd = (\d+)\)",
+        log_text, re.IGNORECASE | re.DOTALL,
+    )
+    if m:
+        short = model_name[:25] if model_name else ("MODEL" if en else "МОДЕЛЬ")
+        if en:
+            return (
+                f"❌ mmproj doesn't match the model.\n\n"
+                f"Model dimension: {m.group(1)}, mmproj: {m.group(2)}.\n"
+                f"These are files from different models.\n\n"
+                f"What to do:\n"
+                f"1. Open the page where you downloaded the model"
+                + (f' "{model_name}"' if model_name else "") + "\n"
+                f"2. Download mmproj FROM THE SAME REPO "
+                f"(usually mmproj-F16.gguf or mmproj-BF16.gguf)\n"
+                f"3. RENAME it when saving, e.g.: mmproj-{short}-F16.gguf\n"
+                f"   (otherwise models with the same filename overwrite each other)\n"
+                f"4. Put it in models/LLM/ and select it in the node (expert_mode = true)"
+            )
+        return (
+            f"❌ mmproj не подходит к модели.\n\n"
+            f"У модели размерность {m.group(1)}, у mmproj — {m.group(2)}.\n"
+            f"Это файлы от разных моделей.\n\n"
+            f"Что делать:\n"
+            f"1. Открой страницу, откуда качал модель"
+            + (f" «{model_name}»" if model_name else "") + "\n"
+            f"2. Скачай mmproj ИЗ ТОЙ ЖЕ РЕПЫ "
+            f"(обычно mmproj-F16.gguf или mmproj-BF16.gguf)\n"
+            f"3. При сохранении ПЕРЕИМЕНУЙ его, например: mmproj-{short}-F16.gguf\n"
+            f"   (иначе разные модели с одинаковым именем затирают друг друга)\n"
+            f"4. Положи в models/LLM/ и выбери его в ноде (expert_mode = true)"
+        )
+
+    # 2. Мало видеопамяти
+    if "out of memory" in low or "cuda_error_out_of_memory" in low:
+        if en:
+            return (
+                "❌ Not enough VRAM for this model.\n\n"
+                "Options:\n"
+                "• Use a lighter quantization (Q4_K_M instead of Q6/Q8)\n"
+                "• Or reduce n_ctx (context) — currently 8192, try 4096"
+            )
+        return (
+            "❌ Не хватило видеопамяти под эту модель.\n\n"
+            "Варианты:\n"
+            "• Возьми более лёгкую квантизацию (Q4_K_M вместо Q6/Q8)\n"
+            "• Или уменьши n_ctx (контекст) — сейчас стоит 8192, попробуй 4096"
+        )
+
+    # 3. Старый llama-server не знает модель
+    if "unknown model architecture" in low or "unsupported architecture" in low:
+        if en:
+            return (
+                "❌ llama-server is too old for this model.\n\n"
+                "Update it:\n"
+                "1. Download the latest release: "
+                "https://github.com/ggerganov/llama.cpp/releases\n"
+                "2. Unpack into this node's vendor/ folder"
+            )
+        return (
+            "❌ llama-server слишком старый для этой модели.\n\n"
+            "Обнови:\n"
+            "1. Скачай свежий релиз: https://github.com/ggerganov/llama.cpp/releases\n"
+            "2. Распакуй в папку vendor/ этой ноды"
+        )
+
+    # 4. Нет DLL
+    if ("dll" in low) and ("not found" in low or "load failed" in low or "cannot load" in low):
+        if en:
+            return (
+                "❌ Missing system libraries.\n\n"
+                "Install Visual C++ Redistributable:\n"
+                "https://aka.ms/vs/17/release/vc_redist.x64.exe\n"
+                "Then restart ComfyUI."
+            )
+        return (
+            "❌ Не хватает системных библиотек.\n\n"
+            "Установи Visual C++ Redistributable:\n"
+            "https://aka.ms/vs/17/release/vc_redist.x64.exe\n"
+            "Перезапусти ComfyUI."
+        )
+
+    # 5. Модель/файл не найден
+    if "no such file" in low or "file not found" in low or "can't open" in low:
+        if en:
+            return (
+                "❌ Model or mmproj file not found.\n\n"
+                "Check that both files are in models/LLM/ "
+                "and their names match the ones selected in the node."
+            )
+        return (
+            "❌ Файл модели или mmproj не найден.\n\n"
+            "Проверь, что оба файла лежат в models/LLM/ "
+            "и имена совпадают с выбранными в ноде."
+        )
+
+    # 6. Что-то другое — показываем последние 5 строк лога
+    tail = log_lines[-5:] if log_lines else []
+    if tail:
+        if en:
+            return (
+                "❌ llama-server crashed on startup.\n\n"
+                "Last log lines:\n"
+                + "\n".join(tail) + "\n\n"
+                "If unclear — send these lines to the node author."
+            )
+        return (
+            "❌ llama-server упал при загрузке.\n\n"
+            "Последние строки лога:\n"
+            + "\n".join(tail) + "\n\n"
+            "Если не понятно — скинь эти строки автору ноды."
+        )
+
+    return "❌ llama-server crashed. Log is empty." if en else "❌ llama-server упал. Лог пуст."
+
+
+# ============================================================
+#  АВТО-СКАЧИВАНИЕ LLAMA-SERVER
+# ============================================================
+_LLAMA_RELEASE_URL = "https://api.github.com/repos/ggerganov/llama.cpp/releases/latest"
+
+
+def _detect_llama_asset_patterns():
+    """Возвращает список подстрок для поиска подходящего zip-ассета в релизе."""
+    system = platform.system()
+    machine = platform.machine().lower()
+
+    has_nvidia = shutil.which("nvidia-smi") is not None
+
+    if system == "Windows":
+        if machine not in ("amd64", "x86_64"):
+            return None
+        if has_nvidia:
+            return [
+                "win-cuda-12.4-x64",
+                "win-cuda-12.1-x64",
+                "win-cuda-x64",
+                "win-avx2-x64",
+            ]
+        return ["win-avx2-x64", "win-avx-x64"]
+    if system == "Linux":
+        return ["ubuntu-x64", "linux-x64"]
+    return None
+
+
+def _download_llama_server(vendor_dir: Path):
+    """Скачивает свежий релиз llama.cpp и распаковывает в vendor_dir."""
+    global _DOWNLOAD_ATTEMPTED
+    if _DOWNLOAD_ATTEMPTED:
+        return None
+    _DOWNLOAD_ATTEMPTED = True
+
+    vendor_dir.mkdir(parents=True, exist_ok=True)
+    print("[Neron Dialog] llama-server не найден — пробую скачать свежий релиз...")
+
+    try:
+        req = urllib.request.Request(
+            _LLAMA_RELEASE_URL,
+            headers={"User-Agent": "neron-dialog-autoprompter"},
+        )
+        with urllib.request.urlopen(req, timeout=30) as r:
+            release = json.loads(r.read())
+    except Exception as e:
+        print(f"[Neron Dialog] Не удалось получить список релизов: {e}")
+        return None
+
+    assets = release.get("assets", [])
+    patterns = _detect_llama_asset_patterns()
+    if not patterns:
+        print("[Neron Dialog] Не могу определить подходящую сборку для этой системы")
+        return None
+
+    chosen = None
+    for pat in patterns:
+        for a in assets:
+            if pat in a["name"] and a["name"].endswith(".zip"):
+                chosen = a
+                break
+        if chosen:
+            break
+
+    if not chosen:
+        print(f"[Neron Dialog] В релизе нет подходящего ассета. Искал: {patterns}")
+        return None
+
+    print(f"[Neron Dialog] Скачиваю {chosen['name']} "
+          f"({chosen.get('size', 0) / 1024 / 1024:.0f} МБ)...")
+
+    tmp_path = None
+    try:
+        fd, tmp_name = tempfile.mkstemp(suffix=".zip")
+        os.close(fd)
+        tmp_path = Path(tmp_name)
+        urllib.request.urlretrieve(chosen["browser_download_url"], tmp_path)
+
+        print(f"[Neron Dialog] Распаковываю в {vendor_dir}...")
+        with zipfile.ZipFile(tmp_path) as zf:
+            names = [n for n in zf.namelist() if not n.endswith("/")]
+            top_dirs = set(n.split("/")[0] for n in names if "/" in n)
+            if len(top_dirs) == 1 and all("/" in n for n in names):
+                prefix = list(top_dirs)[0] + "/"
+                for member in names:
+                    if not member.startswith(prefix):
+                        continue
+                    target = vendor_dir / member[len(prefix):]
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    with zf.open(member) as src, open(target, "wb") as dst:
+                        shutil.copyfileobj(src, dst)
+            else:
+                zf.extractall(vendor_dir)
+
+        exe_name = "llama-server.exe" if platform.system() == "Windows" else "llama-server"
+        exe = vendor_dir / exe_name
+        if not exe.exists():
+            hits = list(vendor_dir.rglob(exe_name))
+            if hits:
+                exe = hits[0]
+        if exe.exists():
+            print(f"[Neron Dialog] ✅ llama-server установлен: {exe}")
+            return exe
+        print("[Neron Dialog] В архиве не нашёл llama-server")
+        return None
+    except Exception as e:
+        print(f"[Neron Dialog] Ошибка скачивания: {e}")
+        return None
+    finally:
+        if tmp_path is not None:
+            try:
+                tmp_path.unlink(missing_ok=True)
+            except Exception:
+                pass
+
+
+# ============================================================
 #  ПОИСК БИНАРНИКА
 # ============================================================
 def _find_llama_server():
+    # 1. Своя папка vendor
     if _VENDOR_DIR.exists():
         hits = list(_VENDOR_DIR.rglob("llama-server.exe"))
         if hits:
             print(f"[Neron Dialog] llama-server найден в ноде: {hits[0]}")
             return hits[0]
 
+    # 2. Соседняя нода ComfyUI-LLM-text-processor*
     custom_nodes = _NODE_DIR.parent
     for ext_folder in custom_nodes.glob("ComfyUI-LLM-text-processor*"):
         vendor = ext_folder / "vendor"
@@ -317,7 +601,9 @@ def _find_llama_server():
         if hits:
             print(f"[Neron Dialog] llama-server найден во внешней ноде: {hits[0]}")
             return hits[0]
-    return None
+
+    # 3. Авто-скачивание в свою vendor
+    return _download_llama_server(_VENDOR_DIR)
 
 
 # ============================================================
@@ -328,7 +614,12 @@ def _wait_for_server(port, timeout=180):
     start = time.time()
     while time.time() - start < timeout:
         if _SERVER_PROCESS is not None and _SERVER_PROCESS.poll() is not None:
-            raise RuntimeError("llama-server упал при загрузке. Смотри консоль выше.")
+            print("[Neron Dialog] ❌ llama-server упал при загрузке. Последние строки вывода:")
+            for ln in list(_SERVER_LOG)[-40:]:
+                print(f"[llama-server] {ln}")
+            raise RuntimeError(
+                _diagnose_server_crash(_LAST_MODEL_NAME_FOR_DIAG, _DIAG_LANG)
+            )
         try:
             with urllib.request.urlopen(url, timeout=2) as r:
                 if r.status == 200:
@@ -337,11 +628,14 @@ def _wait_for_server(port, timeout=180):
         except Exception:
             pass
         time.sleep(0.5)
+    if _DIAG_LANG == "en":
+        raise RuntimeError(f"llama-server didn't start within {timeout} sec.")
     raise RuntimeError(f"llama-server не поднялся за {timeout} сек")
 
 
 def _start_server(server_exe, model_path, mmproj_path, n_gpu_layers, n_ctx, port=8765):
-    global _SERVER_PROCESS, _SERVER_MODEL_PATH, _SERVER_MMPROJ_PATH
+    global _SERVER_PROCESS, _SERVER_MODEL_PATH, _SERVER_MMPROJ_PATH, _SERVER_LOG_THREAD
+    global _SERVER_LAST_CRASH, _LAST_MODEL_NAME_FOR_DIAG
 
     cmd = [
         str(server_exe),
@@ -355,10 +649,13 @@ def _start_server(server_exe, model_path, mmproj_path, n_gpu_layers, n_ctx, port
         cmd.extend(["--mmproj", str(mmproj_path)])
 
     print(f"[Neron Dialog] Запуск: {' '.join(cmd)}")
+    _LAST_MODEL_NAME_FOR_DIAG = Path(model_path).stem
 
     creationflags = 0
     if os.name == "nt":
         creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
+
+    _SERVER_LOG.clear()
 
     _SERVER_PROCESS = subprocess.Popen(
         cmd,
@@ -369,7 +666,17 @@ def _start_server(server_exe, model_path, mmproj_path, n_gpu_layers, n_ctx, port
     )
     _SERVER_MODEL_PATH = str(model_path)
     _SERVER_MMPROJ_PATH = str(mmproj_path) if mmproj_path else ""
-    _wait_for_server(port)
+
+    _SERVER_LOG_THREAD = threading.Thread(
+        target=_reader_thread, args=(_SERVER_PROCESS,), daemon=True,
+    )
+    _SERVER_LOG_THREAD.start()
+
+    try:
+        _wait_for_server(port)
+    except Exception:
+        _SERVER_LAST_CRASH = time.time()
+        raise
 
 
 def _stop_server():
@@ -398,7 +705,20 @@ atexit.register(_stop_server)
 
 
 def _ensure_server_running(server_exe, model_path, mmproj_path, n_gpu_layers, n_ctx):
-    global _SERVER_PROCESS
+    global _SERVER_PROCESS, _SERVER_LAST_CRASH
+
+    if _SERVER_LAST_CRASH and (time.time() - _SERVER_LAST_CRASH) < _SERVER_CRASH_COOLDOWN:
+        remaining = int(_SERVER_CRASH_COOLDOWN - (time.time() - _SERVER_LAST_CRASH))
+        if _DIAG_LANG == "en":
+            raise RuntimeError(
+                f"llama-server crashed recently. Retry in {remaining} sec. "
+                f"See console above for details."
+            )
+        raise RuntimeError(
+            f"llama-server недавно падал. Повторная попытка через {remaining} сек. "
+            f"Причина — в консоли выше."
+        )
+
     same_model = (
         _SERVER_PROCESS is not None
         and _SERVER_PROCESS.poll() is None
@@ -444,7 +764,11 @@ def _chat_completion(messages, max_tokens, temperature, port=8765):
             pass
         print(f"[Neron Dialog] HTTP {e.code} от llama-server. Тело ответа:")
         print(error_body[:2000])
-        raise RuntimeError(f"llama-server вернул {e.code}. Смотри консоль выше.") from e
+        raise RuntimeError(
+            f"llama-server returned {e.code}. See console above."
+            if _DIAG_LANG == "en"
+            else f"llama-server вернул {e.code}. Смотри консоль выше."
+        ) from e
 
 
 # ============================================================
@@ -470,19 +794,22 @@ def _comfy_image_to_data_uri(image_tensor, max_size: int = 768, quality: int = 8
 
 def _load_system_prompt(prompt_file: str) -> str:
     if not prompt_file or prompt_file == "No_prompt_Found":
-        return "Ты — полезный ассистент. Отвечай кратко."
+        return "You are a helpful assistant." if _DIAG_LANG == "en" else "Ты — полезный ассистент."
     path = _PROMPTS_DIR / prompt_file
     if not path.exists():
         print(f"[Neron Dialog] Системник не найден: {path}")
-        return "Ты — полезный ассистент."
+        return "You are a helpful assistant." if _DIAG_LANG == "en" else "Ты — полезный ассистент."
     try:
         with open(path, "r", encoding="utf-8") as f:
             text = f.read().strip()
         print(f"[Neron Dialog] Системник загружен: {prompt_file} ({len(text)} символов)")
-        return text if text else "Ты — полезный ассистент."
+        return text if text else (
+            "You are a helpful assistant." if _DIAG_LANG == "en"
+            else "Ты — полезный ассистент."
+        )
     except Exception as e:
         print(f"[Neron Dialog] Ошибка чтения системника: {e}")
-        return "Ты — полезный ассистент."
+        return "You are a helpful assistant." if _DIAG_LANG == "en" else "Ты — полезный ассистент."
 
 
 def _log_message(session_key: str, role: str, content: str):
@@ -603,14 +930,8 @@ def _build_first_user_messages(user_text: str, images: dict, lang: str = "ru") -
         last_prefix = "Last frame (финальный кадр):"
         last_ack = "Вижу последний кадр."
 
-    messages.append({
-        "role": "user",
-        "content": " ".join(header_lines),
-    })
-    messages.append({
-        "role": "assistant",
-        "content": ack_text,
-    })
+    messages.append({"role": "user", "content": " ".join(header_lines)})
+    messages.append({"role": "assistant", "content": ack_text})
 
     pic_idx = 1
     for slot in present:
@@ -638,10 +959,7 @@ def _build_first_user_messages(user_text: str, images: dict, lang: str = "ru") -
                 {"type": "image_url", "image_url": {"url": data_uri}},
             ],
         })
-        messages.append({
-            "role": "assistant",
-            "content": ack,
-        })
+        messages.append({"role": "assistant", "content": ack})
 
     messages.append({"role": "user", "content": user_text})
 
@@ -653,6 +971,8 @@ def _build_first_user_messages(user_text: str, images: dict, lang: str = "ru") -
 # ============================================================
 def _process_message(session_key: str, user_text: str, params: dict,
                      images: dict = None, hidden=False):
+    global _DIAG_LANG
+
     model_path = params["model_path"]
     mmproj_path = params["mmproj_path"]
     n_gpu_layers = params["n_gpu_layers"]
@@ -662,11 +982,18 @@ def _process_message(session_key: str, user_text: str, params: dict,
     director_prompt = params["director_prompt"]
 
     if not model_path or not Path(model_path).exists():
+        if _DIAG_LANG == "en":
+            raise RuntimeError(f"Model not found: {model_path}")
         raise RuntimeError(f"Модель не найдена: {model_path}")
+
+    # Определяем язык ДО старта сервера — чтобы диагностика была на нужном языке
+    _DIAG_LANG = _detect_language_from_prompt(director_prompt)
 
     server_exe = _find_llama_server()
     if server_exe is None:
-        raise RuntimeError("llama-server.exe не найден.")
+        if _DIAG_LANG == "en":
+            raise RuntimeError("llama-server.exe not found and could not be downloaded.")
+        raise RuntimeError("llama-server.exe не найден и не удалось скачать.")
 
     _ensure_server_running(server_exe, model_path, mmproj_path, n_gpu_layers, n_ctx)
 
@@ -680,8 +1007,7 @@ def _process_message(session_key: str, user_text: str, params: dict,
         history.append({"role": "system", "content": system_text})
 
     is_first_user = not any(m["role"] == "user" for m in history)
-
-    lang = _detect_language_from_prompt(director_prompt)
+    lang = _DIAG_LANG
 
     if is_first_user and images and mmproj_path:
         try:
@@ -705,7 +1031,7 @@ def _process_message(session_key: str, user_text: str, params: dict,
         gen_time = time.time() - t0
 
         if not answer or not answer.strip():
-            answer = "⚠ МОДЕЛЬ ОТВЕТИЛА ПУСТО" if lang == "ru" else "⚠ MODEL RETURNED EMPTY"
+            answer = "⚠ MODEL RETURNED EMPTY" if lang == "en" else "⚠ МОДЕЛЬ ОТВЕТИЛА ПУСТО"
 
         history.append({"role": "assistant", "content": answer})
         _log_message(session_key, "assistant", answer)
@@ -718,7 +1044,7 @@ def _process_message(session_key: str, user_text: str, params: dict,
         return answer
 
     except Exception as e:
-        answer = f"Ошибка запроса: {e}"
+        answer = f"Request error: {e}" if lang == "en" else f"Ошибка запроса: {e}"
         print(f"[Neron Dialog] {answer}")
         if is_first_user and images:
             history.clear()
@@ -770,7 +1096,6 @@ class NeronDialogAutoprompter:
 
         return {
             "required": {
-                # ── ЭКСПЕРТНЫЕ ──
                 "model": (models, {"default": default_model}),
                 "mmproj": (mmprojs, {"default": default_mmproj}),
                 "director_prompt": (prompts, {"default": default_prompt}),
@@ -783,7 +1108,6 @@ class NeronDialogAutoprompter:
                 "session_id": ("STRING", {"default": "default"}),
                 "save_session": ("BOOLEAN", {"default": False}),
 
-                # ── РАЗРЕШЕНИЕ ──
                 "resolution_mode": ([_RESOLUTION_MODE_PRESETS, _RESOLUTION_MODE_MANUAL],
                                     {"default": _RESOLUTION_MODE_PRESETS}),
                 "resolution_preset": (list(_RESOLUTION_PRESETS.keys()),
@@ -792,7 +1116,6 @@ class NeronDialogAutoprompter:
                 "manual_height": ("INT", {"default": 768, "min": 64, "max": 4096, "step": 32}),
                 "divisible_by": ([8, 16, 32, 64, 128], {"default": 32}),
 
-                # ── ВИДНЫЕ ВСЕГДА ──
                 "user_message": ("STRING", {
                     "multiline": True,
                     "default": "Привет! Что на картинке?",
@@ -825,9 +1148,11 @@ class NeronDialogAutoprompter:
         ref_image_0=None, ref_image_1=None, ref_image_2=None,
         last_frame=None, width=None, height=None,
     ):
-        _save_last_selection(model, mmproj, director_prompt)
+        global _DIAG_LANG
 
-        # ── Определяем итоговые размеры ──
+        _save_last_selection(model, mmproj, director_prompt)
+        _DIAG_LANG = _detect_language_from_prompt(director_prompt)
+
         source = "default"
 
         if width is not None and height is not None:
@@ -842,20 +1167,18 @@ class NeronDialogAutoprompter:
             )
             source = f"preset: {resolution_preset}"
 
-        # ── Кратность ──
         W = _round_to_divisible(W, divisible_by)
         H = _round_to_divisible(H, divisible_by)
 
         print(f"[Neron Dialog] Размер: {W}x{H} ({source}, кратно {divisible_by})")
 
-        # ── Чёрный кадр если картинки нет ──
         if ref_image_0 is None:
             ref_image_0 = torch.zeros((1, H, W, 3), dtype=torch.float32)
             print(f"[Neron Dialog] Нет ref_image_0 → чёрный кадр {W}x{H}")
 
         if model == "No_GGUF_Models_Found":
             return (
-                "Ошибка: нет моделей в models/LLM/",
+                "No models in models/LLM/" if _DIAG_LANG == "en" else "Ошибка: нет моделей в models/LLM/",
                 ref_image_0, ref_image_1, ref_image_2, last_frame, W, H,
             )
 
@@ -1079,7 +1402,9 @@ try:
             return web.json_response({"error": "empty message"}, status=400)
         if session_key not in _LAST_PARAMS or not _LAST_PARAMS[session_key].get("model_path"):
             return web.json_response(
-                {"error": "Модель ещё не выбрана. Подожди пару секунд."},
+                {"error": "Model not selected yet. Wait a couple of seconds."
+                 if _DIAG_LANG == "en"
+                 else "Модель ещё не выбрана. Подожди пару секунд."},
                 status=400,
             )
 
@@ -1122,7 +1447,10 @@ try:
 
         for msg in log:
             if msg.get("role") == "assistant" and not msg.get("content", "").strip():
-                msg["content"] = "(промпт отправлен в генерацию)"
+                msg["content"] = (
+                    "(prompt sent to generation)" if _DIAG_LANG == "en"
+                    else "(промпт отправлен в генерацию)"
+                )
 
         print(f"[Neron Dialog] Готовый промпт сохранён ({len(prompt)} символов)")
         print(f"[Neron Dialog] Блок [ARTISTIC_PROMPT] вырезан из {cleared} сообщений лога")
