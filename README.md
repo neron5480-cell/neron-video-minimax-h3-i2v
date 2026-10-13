@@ -1,4 +1,4 @@
-# nerON — ComfyUI custom nodes & workflows
+# neron — ComfyUI custom nodes & workflows
 
 > 🇷🇺 Русская версия — ниже. 🇬🇧 English version — at the bottom.
 
