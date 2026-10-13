@@ -12,6 +12,9 @@
 
 ## ✨ Что умеет
 
+### 🚀 Полная автономность
+- **Абсолютно независимые ноды** — каждый блок полностью автономен. Вы можете вытащить `Restore Studio` или `Live Preview` и вставить их в **любой другой процесс** (воркфлоу) — они продолжат работать без каких-либо внешних зависимостей.
+
 ### 🔬 Реставрация
 - **auto_wb** — автоматический баланс белого. Эффективно убирает желтизну архивных снимков или паразитный синий оттенок.
 - **auto_levels** — автоуровни. Умная растяжка контраста по перцентилям для возвращения глубины теням и свету.
@@ -29,7 +32,7 @@
 
 ### 🎛 Цвет и тон
 - **brightness / contrast / saturation / sharpness** — классический ползунковый фоторедактор.
-- **rgb_r / rgb_g / rgb_b** — точечное смещение по каналам для настройки цветового оттенка (теплее/холоднее).
+- **rgb_r / rgb_g / rgb_b** — точечное смещение по каналам для настройки遮 цветового оттенка (теплее/холоднее).
 
 ### 📐 Апскейл
 - Модель подключается **снаружи** через стандартный блок `UpscaleModelLoader`.
@@ -67,6 +70,9 @@ It combines tools that usually require ten separate nodes into a single block: c
 ---
 
 ## ✨ Features
+
+### 🚀 Complete Autonomy
+- **Fully independent nodes** — Each block is entirely self-contained. You can pull `Restore Studio` or `Live Preview` out and drop them into **any other workflow** — they will continue to work perfectly without any external dependencies.
 
 ### 🔬 Restoration
 - **auto_wb** — Automatic white balance. Efficiently removes age-related yellowing or unwanted blue tints.
