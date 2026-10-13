@@ -76,7 +76,7 @@ MIT — см. [LICENSE](./LICENSE).
 
 ---
 
-# nerON — ComfyUI custom nodes & workflows (EN)
+# neron — ComfyUI custom nodes & workflows (EN)
 
 > 🇬🇧 English version. 🇷🇺 Русская версия — выше.
 
