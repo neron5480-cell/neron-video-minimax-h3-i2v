@@ -1,119 +1,247 @@
-# 🎨 Restore Studio
+# restore_studio
 
-[English version below](#-english-version)  
-*(Нажмите на ссылку выше, чтобы сразу перейти к английскому тексту)*
+> 🇷🇺 Русская версия — ниже. 🇬🇧 English version — at the bottom.
+
+Кастомные узлы для ComfyUI: реставрация, раскраска и апскейл старых фотографий.
+
+## Что внутри
+
+| Узел | Назначение |
+|---|---|
+| `Restore Studio` | Основная обработка: апскейл, шумодав, автокоррекция, раскраска, восстановление лиц |
+| `Live Preview` | Предпросмотр результата в реальном времени, без нажатия Queue |
+
+Оба узла автономны. Их можно вытащить и вставить в любой другой воркфлоу — внешних зависимостей нет.
+
+## Возможности Restore Studio
+
+- Апскейл (модель подключается снаружи через `UpscaleModelLoader`)
+- Авто-баланс белого и авто-уровни
+- Шумодав и удаление точек/царапин
+- Восстановление лиц через CodeFormer
+- Раскраска чёрно-белых фото через DDColor
+- Яркость, контраст, насыщенность, резкость
+- Баланс RGB-каналов
+- Пресеты: Old B&W Photo, Portrait, Landscape, Film Look, Vintage, Manual
+
+## Возможности Live Preview
+
+- Показывает результат в большом окне
+- Реагирует на движение ползунков в реальном времени
+- Не требует нажатия Queue
+- Работает через собственный HTTP-эндпоинт
+
+## Установка
+
+1. Скачай репозиторий: кнопка **Code → Download ZIP**
+2. Распакуй архив
+3. Скопируй папку `restore_studio` в:
+
+```
+ComfyUI/custom_nodes/
+```
+
+Должно получиться:
+
+```
+ComfyUI/custom_nodes/restore_studio/
+```
+
+4. Перезапусти ComfyUI
+
+## Модели CodeFormer
+
+Все файлы из релиза [v0.1.0](https://github.com/sczhou/CodeFormer/releases/tag/v0.1.0) кладутся в:
+
+```
+ComfyUI/custom_nodes/restore_studio/models/
+```
+
+| Файл | Ссылка |
+|---|---|
+| `codeformer.pth` | [скачать](https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/codeformer.pth) |
+| `detection_Resnet50_Final.pth` | [скачать](https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/detection_Resnet50_Final.pth) |
+| `parsing_parsenet.pth` | [скачать](https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/parsing_parsenet.pth) |
+| `yolov5l-face.pth` | [скачать](https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/yolov5l-face.pth) |
+
+Папку `models` создай вручную, если её нет.
+
+Итоговая структура:
+
+```
+ComfyUI/custom_nodes/restore_studio/
+  models/
+    codeformer.pth
+    detection_Resnet50_Final.pth
+    parsing_parsenet.pth
+    yolov5l-face.pth
+```
+
+## Параметры Restore Studio
+
+| Параметр | Описание |
+|---|---|
+| `preset` | Готовый пресет или Manual для ручного управления |
+| `FACE RESTORE / ЛИЦА` | Вкл/выкл восстановление лиц |
+| `FACE STRENGTH` | Сила восстановления лиц |
+| `FACE SHARPEN` | Резкость лиц |
+| `AUTO WB` | Авто-баланс белого |
+| `AUTO LEVELS` | Авто-уровни |
+| `DENOISE` | Шумоподавление |
+| `DESPECKLE` | Удаление точек и царапин |
+| `COLORIZE` | Раскраска чёрно-белых фото |
+| `COLORIZE STRENGTH` | Насыщенность раскраски |
+| `BRIGHTNESS` | Яркость |
+| `CONTRAST` | Контраст |
+| `SATURATION` | Насыщенность |
+| `SHARPNESS` | Резкость |
+| `RGB RED / GREEN / BLUE` | Баланс каналов |
+| `UPSCALE SCALE` | Коэффициент увеличения (2 = x2) |
+| `UPSCALE SHARPEN` | Резкость после апскейла |
+
+## Использование
+
+1. Добавь узел `Restore Studio` на холст
+2. Подключи `image` (обязательно) и `upscale_model` (опционально)
+3. Настрой параметры
+4. Подключи выход `IMAGE` к следующему узлу или к `SaveImage`
+5. Для предпросмотра добавь `Live Preview` и соедини с выходом `Restore Studio`
+
+## Примечания
+
+- Если `FACE RESTORE` выключен — модели CodeFormer не задействуются, их можно не скачивать
+- `Live Preview` может замедлять работу на слабой видеокарте. Отключается через правый клик → **Mute** или **Bypass**
+- Для других узлов (например, Facerestore CF или ReActor) те же модели иногда кладут в `ComfyUI/models/facerestore_models/`. Для этого узла путь другой — внутри его собственной папки в `custom_nodes`
+
+## Лицензия
+
+MIT — см. [LICENSE](../LICENSE).
+
+## Благодарности
+
+- [sczhou/CodeFormer](https://github.com/sczhou/CodeFormer) — модели восстановления лиц
 
 ---
 
-Комбайн для реставрации и обработки фотографий в ComfyUI. 
-Собирает в одной ноде то, что обычно требует десятка сторонних блоков: чистку, цветокоррекцию, восстановление лиц, раскраску ч/б и качественный апскейл.
+# restore_studio (EN)
 
----
+> 🇬🇧 English version. 🇷🇺 Русская версия — выше.
 
-## ✨ Что умеет
+Custom nodes for ComfyUI: restoration, colorization and upscaling of old photos.
 
-### 🚀 Полная автономность
-- **Абсолютно независимые ноды** — каждый блок полностью автономен. Вы можете вытащить `Restore Studio` или `Live Preview` и вставить их в **любой другой процесс** (воркфлоу) — они продолжат работать без каких-либо внешних зависимостей.
+## Contents
 
-### 🔬 Реставрация
-- **auto_wb** — автоматический баланс белого. Эффективно убирает желтизну архивных снимков или паразитный синий оттенок.
-- **auto_levels** — автоуровни. Умная растяжка контраста по перцентилям для возвращения глубины теням и свету.
-- **denoise** — шумоподавление. Убирает пленочное зерно, цифровой шум и артефакты.
-- **despeckle** — удаление мелких точек, пыли и царапин со сканов.
+| Node | Purpose |
+|---|---|
+| `Restore Studio` | Main processing: upscaling, denoising, auto-correction, colorization, face restoration |
+| `Live Preview` | Real-time preview without pressing Queue |
 
-### 👤 Восстановление лиц
-- **face_restore** — встроенное восстановление лиц через ReActor (поддерживает CodeFormer / GFPGAN).
-- **face_restore_strength** — плавная регулировка силы восстановления.
-- **face_restore_sharpen** — авторезкость ПОСЛЕ восстановления. Компенсирует «пластиковость» GFPGAN, возвращая текстуру кожи.
+Both nodes are self-contained. You can pull them out and drop them into any other workflow — no external dependencies.
 
-### 🎨 Раскраска
-- **colorize** — автоматическая раскраска ч/б снимков через DDColor.
-- **colorize_strength** — управление интенсивностью цвета (0.5 — приглушённо, 1.0 — полностью).
+## Restore Studio features
 
-### 🎛 Цвет и тон
-- **brightness / contrast / saturation / sharpness** — классический ползунковый фоторедактор.
-- **rgb_r / rgb_g / rgb_b** — точечное смещение по каналам для настройки遮 цветового оттенка (теплее/холоднее).
+- Upscaling (model is connected from outside via `UpscaleModelLoader`)
+- Auto white balance and auto levels
+- Denoise and despeckle
+- Face restoration via CodeFormer
+- Colorization of black-and-white photos via DDColor
+- Brightness, contrast, saturation, sharpness
+- RGB channel balance
+- Presets: Old B&W Photo, Portrait, Landscape, Film Look, Vintage, Manual
 
-### 📐 Апскейл
-- Модель подключается **снаружи** через стандартный блок `UpscaleModelLoader`.
-- **upscale_scale** — во сколько раз увеличить изображение (от 1.0 до 4.0).
-- **upscale_sharpen** — финальная резкость после масштабирования (обычно оставляется на 0).
+## Live Preview features
 
-### 🎁 Пресеты (Пакетные настройки в один клик)
-- **📷 Old B&W Photo** — база для архивных снимков с автоматическим включением раскраски.
-- **👤 Portrait** — фокус на идеальное восстановление и резкость лица.
-- **A 🏞 Landscape** — пейзажи с усиленным контрастом и сочностью.
-- **🎬 Film Look** — тёплое, глубокое кинематографичное тонирование.
-- **📼 Vintage** — благородный выцветший винтажный эффект.
-- **✋ Manual** — ручной режим, все ползунки разблокированы.
+- Shows the result in a large window
+- Reacts to slider movement in real time
+- No need to press Queue
+- Works via its own HTTP endpoint
 
-### 🖥 Live Preview (Интерактивный движок)
-Отдельная нода, идущая в комплекте. Показывает результат в **большом окне** и реагирует на любые сдвиги ползунков **в реальном времени** — *без нажатия кнопки Queue*. Работает автономно через собственный HTTP-эндпоинт.
+## Installation
 
----
+1. Download the repository: **Code → Download ZIP**
+2. Unpack the archive
+3. Copy the `restore_studio` folder into:
 
-## 📦 Установка
+```
+ComfyUI/custom_nodes/
+```
 
-1. Скопируйте папку `restore_studio` с вашего компьютера.
-2. Вставьте её прямо в папку с кастомными нодами вашего ComfyUI:
-   `ComfyUI/custom_nodes/`
-3. Перезапустите ComfyUI. Папка интерфейса подтянется автоматически.
+The result should be:
 
----
----
+```
+ComfyUI/custom_nodes/restore_studio/
+```
 
-# 🎨 Restore Studio (English Version)
+4. Restart ComfyUI
 
-An all-in-one suite for photo restoration and processing inside ComfyUI. 
-It combines tools that usually require ten separate nodes into a single block: cleaning, color correction, face restoration, b&w colorization, and high-quality upscaling.
+## CodeFormer models
 
----
+All files from release [v0.1.0](https://github.com/sczhou/CodeFormer/releases/tag/v0.1.0) go into:
 
-## ✨ Features
+```
+ComfyUI/custom_nodes/restore_studio/models/
+```
 
-### 🚀 Complete Autonomy
-- **Fully independent nodes** — Each block is entirely self-contained. You can pull `Restore Studio` or `Live Preview` out and drop them into **any other workflow** — they will continue to work perfectly without any external dependencies.
+| File | Link |
+|---|---|
+| `codeformer.pth` | [download](https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/codeformer.pth) |
+| `detection_Resnet50_Final.pth` | [download](https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/detection_Resnet50_Final.pth) |
+| `parsing_parsenet.pth` | [download](https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/parsing_parsenet.pth) |
+| `yolov5l-face.pth` | [download](https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/yolov5l-face.pth) |
 
-### 🔬 Restoration
-- **auto_wb** — Automatic white balance. Efficiently removes age-related yellowing or unwanted blue tints.
-- **auto_levels** — Auto levels. Smart contrast stretching by percentiles to bring back depth to highlights and shadows.
-- **denoise** — Noise reduction. Cleans up film grain, digital noise, and artifacts.
-- **despeckle** — Removes tiny dots, dust, and micro-scratches from scans.
+Create the `models` folder manually if it does not exist.
 
-### 👤 Face Restoration
-- **face_restore** — Built-in face restoration powered by ReActor (supports CodeFormer / GFPGAN).
-- **face_restore_strength** — Smooth control over the face restoration intensity.
-- **face_restore_sharpen** — Auto-sharpness applied AFTER face restoration. Compensates for the artificial "plastic" look of GFPGAN, restoring natural skin texture.
+Full structure:
 
-### 🎨 Colorization
-- **colorize** — Automatic black-and-white image colorization via DDColor.
-- **colorize_strength** — Controls color saturation (0.5 for muted retro tones, 1.0 for full color).
+```
+ComfyUI/custom_nodes/restore_studio/
+  models/
+    codeformer.pth
+    detection_Resnet50_Final.pth
+    parsing_parsenet.pth
+    yolov5l-face.pth
+```
 
-### 🎛 Color & Tone
-- **brightness / contrast / saturation / sharpness** — Classic slider-based photo editor.
-- **rgb_r / rgb_g / rgb_b** — Per-channel shifts to adjust the color temperature (warmer/cooler).
+## Restore Studio parameters
 
-### 📐 Upscaling
-- The upscale model connects **externally** via a standard `UpscaleModelLoader` node.
-- **upscale_scale** — Determines how many times to enlarge the image (from 1.0 to 4.0).
-- **upscale_sharpen** — Final sharpness filter applied after upscaling (usually kept at 0).
+| Parameter | Description |
+|---|---|
+| `preset` | Ready-made preset or Manual for full control |
+| `FACE RESTORE` | Enable/disable face restoration |
+| `FACE STRENGTH` | Face restoration strength |
+| `FACE SHARPEN` | Face sharpening |
+| `AUTO WB` | Auto white balance |
+| `AUTO LEVELS` | Auto levels |
+| `DENOISE` | Denoising |
+| `DESPECKLE` | Remove specks and scratches |
+| `COLORIZE` | Colorize black-and-white photos |
+| `COLORIZE STRENGTH` | Colorization saturation |
+| `BRIGHTNESS` | Brightness |
+| `CONTRAST` | Contrast |
+| `SATURATION` | Saturation |
+| `SHARPNESS` | Sharpness |
+| `RGB RED / GREEN / BLUE` | Channel balance |
+| `UPSCALE SCALE` | Upscale factor (2 = x2) |
+| `UPSCALE SHARPEN` | Sharpening after upscale |
 
-### 🎁 Presets (One-Click Batch Settings)
-- **📷 Old B&W Photo** — Optimized baseline for archival photos with colorization enabled.
-- **👤 Portrait** — Focused on perfect face restoration and crisp facial details.
-- **A 🏞 Landscape** — Enhanced contrast and vibrant saturation for nature shots.
-- **🎬 Film Look** — Warm, deep, and cinematic color grading.
-- **📼 Vintage** — A beautiful faded retro effect with a warm tint.
-- **✋ Manual** — Manual control mode, unlocking all sliders.
+## Usage
 
-### 🖥 Live Preview (Interactive Engine)
-A separate node included in the package. It displays the results in a **large window** and responds to any slider adjustments **instantly in real time** — *without having to click Queue*. Operates autonomously via a dedicated HTTP endpoint.
+1. Add the `Restore Studio` node to the canvas
+2. Connect `image` (required) and `upscale_model` (optional)
+3. Adjust the parameters
+4. Connect the `IMAGE` output to the next node or to `SaveImage`
+5. For preview, add `Live Preview` and connect it to the `Restore Studio` output
 
----
+## Notes
 
-## 📦 Installation
+- If `FACE RESTORE` is off, CodeFormer models are not used and do not need to be downloaded
+- `Live Preview` may slow down weak GPUs. Disable via right-click → **Mute** or **Bypass**
+- For other nodes (such as Facerestore CF or ReActor), the same models are sometimes placed in `ComfyUI/models/facerestore_models/`. For this node the path is different — inside its own folder in `custom_nodes`
 
-1. Copy the `restore_studio` folder from your computer.
-2. Paste it directly into your ComfyUI custom nodes directory:
-   `ComfyUI/custom_nodes/`
-3. Restart ComfyUI. The web interface folder will load automatically.
+## License
+
+MIT — see [LICENSE](../LICENSE).
+
+## Credits
+
+- [sczhou/CodeFormer](https://github.com/sczhou/CodeFormer) — face restoration models
