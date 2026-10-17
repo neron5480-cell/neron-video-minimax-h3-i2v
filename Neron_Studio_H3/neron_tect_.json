@@ -1,0 +1,737 @@
+{
+  "id": "a477deb9-9dd1-4404-961d-bec6a6671b5e",
+  "revision": 0,
+  "last_node_id": 46,
+  "last_link_id": 51,
+  "nodes": [
+    {
+      "id": 13,
+      "type": "NeronVideoClarity",
+      "pos": [
+        -3004.437996106885,
+        6962.508144956873
+      ],
+      "size": [
+        375.658203125,
+        782
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 36
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 37
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            38
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            39
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronVideoClarity"
+      },
+      "widgets_values": [
+        "Simple",
+        "✋ Manual / Вручную",
+        true,
+        true,
+        true,
+        1,
+        1,
+        0.3,
+        0.2,
+        0.3,
+        false,
+        "rife",
+        2,
+        false,
+        0,
+        0,
+        0,
+        0,
+        0,
+        "16",
+        "gpu",
+        true,
+        64,
+        0.5,
+        5,
+        0.35,
+        0.08,
+        0.5,
+        "rife49.pth",
+        true,
+        null,
+        null
+      ],
+      "widgets_values_named": {
+        "MODE / РЕЖИМ": "Simple",
+        "PRESET / ПРЕСЕТ": "✋ Manual / Вручную",
+        "STABILIZE / СТАБИЛИЗАЦИЯ": true,
+        "MOTION COMP / КОМПЕНСАЦИЯ": true,
+        "DEFLICKER / ДЕФЛИКЕР": true,
+        "BRIGHTNESS / ЯРКОСТЬ": 1,
+        "SATURATION / НАСЫЩЕННОСТЬ": 1,
+        "SHARPEN / РЕЗКОСТЬ": 0.3,
+        "CONTRAST / ОБЪЁМ": 0.2,
+        "DETAILS / ДЕТАЛИЗАЦИЯ": 0.3,
+        "INTERPOLATE / ИНТЕРПОЛЯЦИЯ": false,
+        "ENGINE / ДВИЖОК": "rife",
+        "MULTIPLIER / МНОЖИТЕЛЬ": 2,
+        "AUDIO / ЗВУК": false,
+        "VOLUME / ГРОМКОСТЬ": 0,
+        "BASS / БАСЫ": 0,
+        "MID / СЕРЕДИНА": 0,
+        "TREBLE / ВЕРХА": 0,
+        "BALANCE / БАЛАНС": 0,
+        "VRAM PRESET / ПАМЯТЬ": "16",
+        "DEVICE / УСТРОЙСТВО": "gpu",
+        "AUTO CHUNK / АВТО-ЧАНК": true,
+        "CHUNK SIZE / РАЗМЕР": 64,
+        "FLOW SCALE / ТОЧНОСТЬ": 0.5,
+        "STAB WINDOW / ОКНО": 5,
+        "STAB STRENGTH / СИЛА": 0.35,
+        "MOTION THR / ПОРОГ": 0.08,
+        "DEFLICK STR / СИЛА ДЕФЛИКЕРА": 0.5,
+        "RIFE MODEL / МОДЕЛЬ": "rife49.pth",
+        "FREE AFTER RUN / ОЧИСТКА ПОСЛЕ": true,
+        "🔄 Reset to Defaults / Сброс": null,
+        "📖 Help / Справка": null
+      },
+      "color": "#4a2f1e",
+      "bgcolor": "#2e1c10"
+    },
+    {
+      "id": 36,
+      "type": "NeronMiniMaxH3Generator",
+      "pos": [
+        -3392.105161644016,
+        6961.105711124725
+      ],
+      "size": [
+        375.658203125,
+        610
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prompt",
+          "shape": 7,
+          "type": "STRING",
+          "link": 47
+        },
+        {
+          "name": "ref_image_0",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 51
+        },
+        {
+          "name": "ref_image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "ref_image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "ref_image_3",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "ref_video",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "ref_video_audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "ref_audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "width",
+          "shape": 7,
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "height",
+          "shape": 7,
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "length_in",
+          "shape": 7,
+          "type": "INT",
+          "link": 48
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "IMAGE",
+          "links": [
+            36
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            37
+          ]
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "frames_count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronMiniMaxH3Generator"
+      },
+      "widgets_values": [
+        false,
+        "Turbo / Турбо",
+        15,
+        "Пресеты / Presets",
+        "Кино 16:9 (1344x768)",
+        1344,
+        768,
+        32,
+        false,
+        "None / Не выбрано",
+        1,
+        false,
+        "None / Не выбрано",
+        1,
+        false,
+        "None / Не выбрано",
+        1,
+        true,
+        0,
+        "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+        "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "minimax_h3_video_vae_fp16.safetensors",
+        "minimax_h3_audio_vae_fp32.safetensors",
+        "minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors",
+        20,
+        8,
+        1,
+        "randomize",
+        null,
+        null
+      ],
+      "widgets_values_named": {
+        "expert_mode": false,
+        "MODE / РЕЖИМ": "Turbo / Турбо",
+        "SECONDS / СЕКУНДЫ": 15,
+        "resolution_mode": "Пресеты / Presets",
+        "resolution_preset": "Кино 16:9 (1344x768)",
+        "manual_width": 1344,
+        "manual_height": 768,
+        "divisible_by": 32,
+        "slot_1_enabled": false,
+        "slot_1_lora": "None / Не выбрано",
+        "slot_1_strength": 1,
+        "slot_2_enabled": false,
+        "slot_2_lora": "None / Не выбрано",
+        "slot_2_strength": 1,
+        "slot_3_enabled": false,
+        "slot_3_lora": "None / Не выбрано",
+        "slot_3_strength": 1,
+        "FREE AFTER RUN / ОЧИСТКА ПОСЛЕ": true,
+        "decode_tile_size": 0,
+        "unet_model": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+        "clip_model": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "vae_video_model": "minimax_h3_video_vae_fp16.safetensors",
+        "vae_audio_model": "minimax_h3_audio_vae_fp32.safetensors",
+        "turbo_lora_model": "minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors",
+        "normal_steps": 20,
+        "turbo_steps": 8,
+        "seed": 1,
+        "control_after_generate": "randomize",
+        "🔄 Reset to Defaults / Сброс": null,
+        "📖 Help / Справка": null
+      },
+      "color": "#4a2f1e",
+      "bgcolor": "#2e1c10"
+    },
+    {
+      "id": 37,
+      "type": "VHS_VideoCombine",
+      "pos": [
+        -2610.833309611547,
+        6965.3162075738865
+      ],
+      "size": [
+        220.7333984375,
+        334
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 38
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 39
+        },
+        {
+          "name": "meta_batch",
+          "shape": 7,
+          "type": "VHS_BatchManager",
+          "link": null
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Filenames",
+          "type": "VHS_FILENAMES",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VHS_VideoCombine"
+      },
+      "widgets_values": {
+        "frame_rate": 24,
+        "loop_count": 0,
+        "filename_prefix": "AnimateDiff",
+        "format": "video/h264-mp4",
+        "pix_fmt": "yuv420p",
+        "crf": 19,
+        "save_metadata": true,
+        "trim_to_audio": false,
+        "pingpong": false,
+        "save_output": true,
+        "videopreview": {
+          "hidden": false,
+          "paused": false,
+          "params": {}
+        }
+      },
+      "widgets_values_named": {
+        "frame_rate": 24,
+        "loop_count": 0,
+        "filename_prefix": "AnimateDiff",
+        "format": "video/h264-mp4",
+        "pix_fmt": "yuv420p",
+        "crf": 19,
+        "save_metadata": true,
+        "trim_to_audio": false,
+        "pingpong": false,
+        "save_output": true,
+        "videopreview": {
+          "hidden": false,
+          "paused": false,
+          "params": {}
+        }
+      },
+      "color": "#332922",
+      "bgcolor": "#593930"
+    },
+    {
+      "id": 41,
+      "type": "CR Prompt Text",
+      "pos": [
+        -4140.457090309054,
+        6984.302317445906
+      ],
+      "size": [
+        306,
+        434
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            46
+          ]
+        },
+        {
+          "name": "show_help",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CR Prompt Text"
+      },
+      "widgets_values": [
+        "prompt"
+      ],
+      "widgets_values_named": {
+        "prompt": "prompt"
+      },
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 42,
+      "type": "NeronAutoPrompter",
+      "pos": [
+        -3822.536563876965,
+        6977.67619634759
+      ],
+      "size": [
+        412.572265625,
+        490
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prompt_in",
+          "shape": 7,
+          "type": "STRING",
+          "link": 46
+        },
+        {
+          "name": "image_0",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 50
+        },
+        {
+          "name": "image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "last_frame",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "minimax_prompt",
+          "type": "STRING",
+          "links": [
+            47
+          ]
+        },
+        {
+          "name": "frames_count",
+          "type": "INT",
+          "links": [
+            48
+          ]
+        },
+        {
+          "name": "storyboard_json",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronAutoPrompter"
+      },
+      "widgets_values": [
+        false,
+        "[LLM] Autoprompter (Naxdy Brief) / Автопромтер",
+        "AUTO (Listen to autoprompter) / АВТО",
+        "medium shot",
+        1,
+        15,
+        24,
+        "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q4_K_M.gguf",
+        "No_mmproj_Found",
+        "director_H3_ru.txt",
+        4096,
+        0.7,
+        8192,
+        -1,
+        true,
+        "",
+        "",
+        null,
+        null
+      ],
+      "widgets_values_named": {
+        "expert_mode": false,
+        "workflow_mode": "[LLM] Autoprompter (Naxdy Brief) / Автопромтер",
+        "camera_mode": "AUTO (Listen to autoprompter) / АВТО",
+        "framing_type": "medium shot",
+        "fixed_distance": 1,
+        "seconds": 15,
+        "fps": 24,
+        "model": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q4_K_M.gguf",
+        "mmproj": "No_mmproj_Found",
+        "system_prompt": "director_H3_ru.txt",
+        "max_tokens": 4096,
+        "temperature": 0.7,
+        "n_ctx": 8192,
+        "n_gpu_layers": -1,
+        "UNLOAD AFTER RUN / ВЫГРУЖАТЬ ПОСЛЕ": true,
+        "manual_prompt": "",
+        "subject_details": "",
+        "🔄 Reset to Defaults / Сброс": null,
+        "📖 Help / Справка": null
+      },
+      "color": "#4a2f1e",
+      "bgcolor": "#2e1c10"
+    },
+    {
+      "id": 46,
+      "type": "InteractiveImageProcessor",
+      "pos": [
+        -4575.411739701839,
+        6987.658390120084
+      ],
+      "size": [
+        420,
+        1012
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "upscale_model",
+          "shape": 7,
+          "type": "UPSCALE_MODEL",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            50,
+            51
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": []
+        }
+      ],
+      "title": "Start Frame / Стартовый кадр",
+      "properties": {
+        "Node name for S&R": "InteractiveImageProcessor",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "eadf8a80917b1a19dd1607aec1378ae4.jpg",
+        "Disabled / Отключено",
+        "1024x1024 (1:1 Square)",
+        "1:1",
+        1024,
+        1024,
+        1024,
+        "1.0 MP (1024x1024)",
+        32,
+        0,
+        1.14,
+        0.94,
+        0,
+        "Disabled / Откл",
+        2,
+        "image",
+        "",
+        null,
+        null
+      ],
+      "widgets_values_named": {
+        "image": "eadf8a80917b1a19dd1607aec1378ae4.jpg",
+        "resize_mode": "Disabled / Отключено",
+        "ai_preset": "1024x1024 (1:1 Square)",
+        "aspect_ratio": "1:1",
+        "max_dimension": 1024,
+        "manual_width": 1024,
+        "manual_height": 1024,
+        "megapixels": "1.0 MP (1024x1024)",
+        "divisible_by": 32,
+        "BRIGHTNESS / ЯРКОСТЬ": 0,
+        "CONTRAST / КОНТРАСТ": 1.14,
+        "SATURATION / НАСЫЩЕННОСТЬ": 0.94,
+        "SHARPNESS / РЕЗКОСТЬ": 0,
+        "upscale": "Disabled / Откл",
+        "upscale_scale": 2,
+        "upload": "image",
+        "interactive_preview": "",
+        "🔄 Reset to Defaults / Сброс": null,
+        "📖 Help / Справка": null
+      },
+      "color": "#332922",
+      "bgcolor": "#593930"
+    }
+  ],
+  "links": [
+    [
+      36,
+      36,
+      0,
+      13,
+      0,
+      "IMAGE"
+    ],
+    [
+      37,
+      36,
+      1,
+      13,
+      1,
+      "AUDIO"
+    ],
+    [
+      38,
+      13,
+      0,
+      37,
+      0,
+      "IMAGE"
+    ],
+    [
+      39,
+      13,
+      1,
+      37,
+      1,
+      "AUDIO"
+    ],
+    [
+      46,
+      41,
+      0,
+      42,
+      0,
+      "STRING"
+    ],
+    [
+      47,
+      42,
+      0,
+      36,
+      0,
+      "STRING"
+    ],
+    [
+      48,
+      42,
+      1,
+      36,
+      10,
+      "INT"
+    ],
+    [
+      50,
+      46,
+      0,
+      42,
+      1,
+      "IMAGE"
+    ],
+    [
+      51,
+      46,
+      0,
+      36,
+      1,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1,
+      "offset": [
+        4760.733527831053,
+        -6714.728262396589
+      ]
+    },
+    "frontendVersion": "1.55.17",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
