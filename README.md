@@ -1,153 +1,72 @@
 # neron — ComfyUI custom nodes & workflows
 
-> 🇷🇺 Русская версия — ниже. 🇬🇧 English version — at the bottom.
+> ru Русская версия — ниже. en English version — at the bottom.
 
-Сборник кастомных узлов и воркфлоу для ComfyUI.
-
-## Что внутри
-
-| Пакет | Описание |
-|---|---|
-| [ComfyUI-H3-Lora-Selector](./ComfyUI-H3-Lora-Selector) | Селектор LoRA для H3 |
-| [ComfyUI-H3-Static-Camera](./ComfyUI-H3-Static-Camera) | Статичная камера для H3 |
-| [ComfyUI-Interactive-Processor](./ComfyUI-Interactive-Processor) | Интерактивный процессор |
-| [neron_dialog_autoprompter](./neron_dialog_autoprompter) | Автопромптер для диалогов |
-| [restore_studio](./restore_studio) | Реставрация, раскраска и апскейл старых фото |
-| [workflow](./workflow) | Готовые воркфлоу |
-
-## Установка
-
-Каждый пакет ставится отдельно. Скопируй нужную папку в:
-
-```
-ComfyUI/custom_nodes/
-```
-
-Затем перезапусти ComfyUI.
-
-## Требования
-
-Зависимости у каждого пакета свои — смотри README внутри его папки. Общие требования:
-
-- ComfyUI актуальной версии
-- ComfyUI-Manager (рекомендуется)
-- Python 3.10+
-
-## Пакеты
-
-### ComfyUI-H3-Lora-Selector
-
-Селектор LoRA для моделей H3.
-
-### ComfyUI-H3-Static-Camera
-
-Узел статичной камеры для H3.
-
-### ComfyUI-Interactive-Processor
-
-Интерактивный процессор изображений.
-
-### neron_dialog_autoprompter
-
-Автопромптер для диалоговых сцен.
-
-### restore_studio
-
-Реставрация старых фотографий: апскейл, шумодав, удаление царапин, раскраска ч/б, восстановление лиц через CodeFormer, генеративная доработка через Flux Fill.
-
-Включает узлы:
-- `Restore Studio` — основная обработка
-- `Live Preview` — предпросмотр в реальном времени без нажатия Queue
-
-Полная инструкция по моделям и путям — в [README внутри папки](./restore_studio).
-
-### workflow
-
-Готовые воркфлоу для импорта в ComfyUI. Файлы `.json` перетаскиваются прямо в окно ComfyUI.
-
-## Лицензия
-
-MIT — см. [LICENSE](./LICENSE).
-
-## Благодарности
-
-- [sczhou/CodeFormer](https://github.com/sczhou/CodeFormer) — модели восстановления лиц
-- [Comfy-Org](https://github.com/comfyanonymous/ComfyUI) — ComfyUI
+Сборник кастомных узлов и воркфлоу для ComfyUI. 
+Здесь собраны как новые монолитные комбайны (Neron Studio), так и старые вспомогательные ноды.
 
 ---
 
-# neron — ComfyUI custom nodes & workflows (EN)
+## 🚀 NERON STUDIO PIPELINE (V1.0)
 
-> 🇬🇧 English version. 🇷🇺 Русская версия — выше.
+Наш главный пайплайн для генерации видео и звука (MiniMax H3). 
+Полный цикл: от подготовки кадра до финальной склейки. Без «лапши» из проводов.
 
-A collection of custom nodes and workflows for ComfyUI.
+**Состав пайплайна (5 нод):**
+1. **Start Frame (Interactive Image Processor)** — подготовка стартового кадра. Живое превью, ресайз, цветокор.
+2. **Neron AutoPrompter** — LLM-режиссер и камера-оператор. Генерирует идеальный промпт.
+3. **Neron MiniMax H3 Generator** — сердце системы. Вся генерация видео/звука в одной ноде.
+4. **Neron Video Clarity** — пост-обработка (стабилизация, дефликер, RIFE). Работает без апскейла.
+5. **Video Combine** — финальная склейка (стандартная нода VideoHelperSuite).
 
-## Contents
+---
 
-| Package | Description |
-|---|---|
-| [ComfyUI-H3-Lora-Selector](./ComfyUI-H3-Lora-Selector) | LoRA selector for H3 |
-| [ComfyUI-H3-Static-Camera](./ComfyUI-H3-Static-Camera) | Static camera for H3 |
-| [ComfyUI-Interactive-Processor](./ComfyUI-Interactive-Processor) | Interactive processor |
-| [neron_dialog_autoprompter](./neron_dialog_autoprompter) | Auto-prompter for dialogues |
-| [restore_studio](./restore_studio) | Restoration, colorization and upscaling of old photos |
-| [workflow](./workflow) | Ready-to-use workflows |
+## 📦 Что внутри (Все пакеты)
 
-## Installation
+| Пакет (Папка) | Описание | Статус |
+| :--- | :--- | :--- |
+| **[neron_minimax_h3_generator](./neron_minimax_h3_generator)** | 🎥 Генератор H3 (Все в одном: UNET, CLIP, VAE, LoRA) | **Новое** |
+| **[NeronVideoClarity](./NeronVideoClarity)** | 🎬 Пост-обработка видео (Стабилизация, RIFE) | **Новое** |
+| **[ComfyUI-Interactive-Processor](./ComfyUI-Interactive-Processor)** | 🖼 Умная загрузка и ресайз кадра (Start Frame) | **Новое** |
+| **[neron_dialog_autoprompter](./neron_dialog_autoprompter)** | 🤖 Автопромптер (LLM + Управление камерой) | Активно |
+| **[ComfyUI-H3-Lora-Selector](./ComfyUI-H3-Lora-Selector)** | Селектор LoRA для H3 | Старое |
+| **[ComfyUI-H3-Static-Camera](./ComfyUI-H3-Static-Camera)** | Статичная камера для H3 | Старое |
+| **[restore_studio](./restore_studio)** | Реставрация, раскраска и апскейл старых фото | Старое |
+| **[workflow](./workflow)** | Готовые воркфлоу (JSON) для ComfyUI | Обновляется |
 
-Each package is installed separately. Copy the desired folder into:
+---
 
-```
-ComfyUI/custom_nodes/
-```
+## 💻 Установка
+1. Склонируй репозиторий или скачай ZIP.
+2. Закинь нужные папки в `ComfyUI/custom_nodes/`.
+3. Перезапусти ComfyUI.
 
-Then restart ComfyUI.
+---
 
-## Requirements
+## 👨‍💻 Автор
+* **Neron** (GitHub: [neron5480-cell](https://github.com/neron5480-cell), Civitai: [neron5480922](https://civitai.com/user/neron5480922))
+* Свободно для использования. Ссылка на автора приветствуется.
 
-Dependencies differ per package — see the README inside each folder. General requirements:
+---
+---
 
-- Up-to-date ComfyUI
-- ComfyUI-Manager (recommended)
-- Python 3.10+
+# English version
 
-## Packages
+## 🚀 NERON STUDIO PIPELINE (V1.0)
+Our main pipeline for video and audio generation (MiniMax H3). 
+Full cycle: from start frame preparation to final combining. No spaghetti wiring.
 
-### ComfyUI-H3-Lora-Selector
+**Pipeline Nodes (5):**
+1. **Start Frame (Interactive Image Processor)** — start frame prep. Live preview, resize, color.
+2. **Neron AutoPrompter** — LLM director & camera operator. Generates the perfect prompt.
+3. **Neron MiniMax H3 Generator** — the core. All video/audio generation in one node.
+4. **Neron Video Clarity** — post-processing (stabilization, deflicker, RIFE). No upscale.
+5. **Video Combine** — final combine (standard VideoHelperSuite node).
 
-LoRA selector for H3 models.
+## 📦 What's inside
+*(See table above / Смотри таблицу выше)*
 
-### ComfyUI-H3-Static-Camera
-
-Static camera node for H3.
-
-### ComfyUI-Interactive-Processor
-
-Interactive image processor.
-
-### neron_dialog_autoprompter
-
-Auto-prompter for dialogue scenes.
-
-### restore_studio
-
-Restoration of old photos: upscaling, denoising, scratch removal, B&W colorization, face restoration via CodeFormer, generative refinement via Flux Fill.
-
-Includes the nodes:
-- `Restore Studio` — main processing
-- `Live Preview` — real-time preview without pressing Queue
-
-Full instructions on models and paths — in the [README inside the folder](./restore_studio).
-
-### workflow
-
-Ready-to-use workflows for import into ComfyUI. `.json` files can be dragged directly into the ComfyUI window.
-
-## License
-
-MIT — see [LICENSE](./LICENSE).
-
-## Credits
-
-- [sczhou/CodeFormer](https://github.com/sczhou/CodeFormer) — face restoration models
-- [Comfy-Org](https://github.com/comfyanonymous/ComfyUI) — ComfyUI
+## 💻 Installation
+1. Clone this repo or download ZIP.
+2. Move the desired folders into `ComfyUI/custom_nodes/`.
+3. Restart ComfyUI.
