@@ -1,4 +1,4 @@
-# 🎬 NERON STUDIO — MiniMax H3 Pipeline
+ 🎬 NERON STUDIO — MiniMax H3 Pipeline
 
 ---
 
@@ -13,7 +13,6 @@
 *   **Автономность.** Все ноды (кроме Генератора) работают независимо. `AutoPrompter` можно подключать к LTX, Wan, Flux. `Clarity` — к любому видео. `Start Frame` — к любому пайплайну.
 *   **Минимум нод.** 4 штуки вместо 30+.
 *   **Очистка памяти (Гострабайтер).** Загрузили модель, отработали, выгрузили. Память не копится от прогона к прогону.
-*   **Заточка под MiniMax H3.** Генератор работает только с этой моделью.
 *   **Удобный интерфейс.** Цветовые группы для настроек, встроенная справка на двух языках.
 *   **Соблюдение кратности.** Видео всегда кратно 17 кадрам, картинка — 32 пикселям.
 
@@ -24,7 +23,7 @@
 ### 📦 ЧТО ВНУТРИ
 1. **🖼 Interactive Image Processor (Start Frame)** — Подготовка кадра: ресайз, цветокоррекция, живое превью.
 2. **🎬 Neron Dialog AutoPrompter** — LLM-режиссер. Генерирует технический промпт по картинке и тексту. Понимает первый и последний кадр. Имеет сквозные выходы для картинок.
-3. **🎥 Neron MiniMax H3 Generator** — Сам генератор. Внутри — UNET, CLIP, VAE, LoRA. Режимы Turbo (8 шагов) и Normal (20). Умный VAE-декод.
+3. **🎥 Neron MiniMax H3 Generator** — Сам генератор (единственная нода, заточенная под MiniMax H3). Внутри — UNET, CLIP, VAE, LoRA. Режимы Turbo (8 шагов) и Normal (20). Умный VAE-декод.
 4. **🎬 Neron Video Clarity** — Пост-обработка. Стабилизация, дефликер, цвет, резкость. RIFE строго ПОСЛЕ стабилизации. Вытягивает качество на низких разрешениях (320х320, 384х512). Выдает очищенный `last_frame` для склейки видео.
 
 ### 🚀 ВОРКФЛОУ
@@ -50,7 +49,6 @@ A build of 4 custom nodes that replace 30+ standard nodes. No messy wires, no me
 *   **Autonomy.** All nodes (except the Generator) work independently. `AutoPrompter` can be connected to LTX, Wan, Flux. `Clarity` — to any video. `Start Frame` — to any pipeline.
 *   **Fewer nodes.** 4 instead of 30+.
 *   **Memory Management (Go-on-Worker).** Load model, process, unload. Memory doesn't accumulate between runs.
-*   **H3 Specific.** The Generator works only with this model.
 *   **Clean UI.** Colored setting groups, built-in bilingual help.
 *   **Correct Multiples.** Video is always a multiple of 17 frames, image — 32 pixels.
 
@@ -61,7 +59,7 @@ A build of 4 custom nodes that replace 30+ standard nodes. No messy wires, no me
 ### 📦 WHAT'S INSIDE
 1. **🖼 Interactive Image Processor (Start Frame)** — Frame prep: resize, color correction, live preview.
 2. **🎬 Neron Dialog AutoPrompter** — LLM director. Generates technical prompts based on image and text. Understands first/last frames. Has passthrough image outputs.
-3. **🎥 Neron MiniMax H3 Generator** — The generator itself. Inside — UNET, CLIP, VAE, LoRA. Turbo (8 steps) and Normal (20) modes. Smart VAE decode.
+3. **🎥 Neron MiniMax H3 Generator** — The generator itself (the only node tailored specifically for MiniMax H3). Inside — UNET, CLIP, VAE, LoRA. Turbo (8 steps) and Normal (20) modes. Smart VAE decode.
 4. **🎬 Neron Video Clarity** — Post-processing. Stabilization, deflicker, color, sharpness. RIFE strictly AFTER stabilization. Pulls quality at low resolutions (320x320, 384x512). Outputs a cleaned `last_frame` for video stitching.
 
 ### 🚀 WORKFLOWS
