@@ -1,18 +1,20 @@
-# neron — ComfyUI custom nodes & workflows
+# Neron's ComfyUI Projects
 
 [ru Русская версия — ниже. en English version — at the bottom.](#english-version)
 
-Сборник кастомных узлов и воркфлоу для ComfyUI. Изначально это был пайплайн для генерации видео (Neron Studio H3), но теперь репозиторий разросся, и у нас появилась полноценная музыкальная студия! Репозиторий разделен на три части: пайплайн **Neron Studio H3**, новая аудио-студия **NeronAudioStudio** и старые вспомогательные ноды (в корне).
+Привет, друзья! 
+
+В этом репозитории живут мои кастомные ноды для ComfyUI. Здесь собраны **два абсолютно независимых проекта**: один для видео, другой для музыки. Вы можете использовать их по отдельности или вместе, как вам удобно.
 
 ---
 
-## 🚀 NERON STUDIO H3 PIPELINE (V1.0) — ВИДЕО
+## 🎬 Проект 1: NERON STUDIO H3 (Видео-генерация)
 
-👋 Все новые комбайны, воркфлоу и инструкции теперь лежат в папке **[`Neron_Studio_H3`](Neron_Studio_H3/)**.
+👋 Все комбайны, воркфлоу и инструкции лежат в папке **[`Neron_Studio_H3`](Neron_Studio_H3/)**.
 
-Наш главный пайплайн для генерации видео и звука (MiniMax H3). Полный цикл: от подготовки кадра до финальной склейки. Без «лапши» из проводов.
+Это мой основной пайплайн для генерации видео и звука (MiniMax H3). Полный цикл: от подготовки стартового кадра до финальной склейки. Без «лапши» из проводов.
 
-**Состав нового пайплайна (5 нод):**
+**Состав пайплайна (5 нод):**
 1. **Start Frame (Interactive Image Processor)** — подготовка стартового кадра.
 2. **Neron AutoPrompter** — LLM-режиссер и камера-оператор.
 3. **Neron MiniMax H3 Generator** — сердце системы (вся генерация в одной ноде).
@@ -23,44 +25,47 @@
 
 ---
 
-## 🎹 NERONAUDIOSTUDIO (BETA) — МУЗЫКА
+## 🎹 Проект 2: NERONAUDIOSTUDIO (Музыкальная студия)
 
-👋 Все новые аудио-ноды теперь лежат в папке **[`NeronAudioStudio`](NeronAudioStudio/)**.
+👋 Все аудио-ноды лежат в папке **[`NeronAudioStudio`](NeronAudioStudio/)**.
 
-Мы превратили ComfyUI в маленькую музыкальную студию (DAW). Главная фишка: **звук играет сразу на ноде, кнопка Queue для прослушивания не нужна!** Всё работает в браузере и не нагружает видеокарту.
+Это отдельный проект, который превращает ComfyUI в маленькую музыкальную студию (DAW). 
 
 **Что внутри:**
-*   **Drum Machine:** Пошаговый секвенсор ударных с поддержкой ваших сэмплов.
-*   **Piano Roll:** Рисуем мелодии мышкой, внутри 9 синтезаторов.
-*   **Audio Loader:** Загрузка и обрезка любого звука.
-*   **Mixer:** До 8 каналов, громкость, баланс, Mute/Solo, синхронизация BPM и работа с видео.
-*   **Video Combine:** Умная склейка видео (или пачки кадров) со звуком.
+*   **Drum Machine:** Пошаговый секвенсор ударных (как в FL Studio) с поддержкой ваших сэмплов.
+*   **Piano Roll:** Рисуем мелодии мышкой, внутри 9 встроенных синтезаторов.
+*   **Audio Loader:** Загрузка, прослушивание и обрезка любого звукового файла.
+*   **Mixer:** До 8 каналов. Громкость, баланс, Mute/Solo, синхронизация BPM и работа с видео (полная замена/вырезание звука, наложение своих дорожек, синхронизация по длине).
+*   **Video Combine:** Умная склейка видео (или пачки кадров) со сведенным звуком.
 
-⚠️ **Важно:** Проект в стадии **Beta**. Интерфейс пока только на русском (английский будет позже), но всё интуитивно понятно. Возможны баги и сбои. Подробная инструкция по всем кнопкам и папкам лежит в **[README внутри NeronAudioStudio](NeronAudioStudio/README.md)**.
+Главная фишка: **звук играет сразу на ноде, кнопка Queue для прослушивания не нужна!** Всё работает в браузере и не нагружает видеокарту.
+
+⚠️ **Важно:** Проект в стадии **Beta**. Интерфейс пока только на русском (английский будет позже), но всё интуитивно понятно. Возможны баги. Подробная инструкция по всем кнопкам и папкам лежит в **[README внутри NeronAudioStudio](NeronAudioStudio/README.md)**.
 
 ---
 
 ## 📦 Старые ноды (Legacy) — В КОРНЕ
 
-Эти ноды остаются в корне репозитория для обратной совместимости. Если у вас уже настроены старые воркфлоу — они продолжат работать.
+Эти ноды (например, Lora-Selector, Static-Camera) остаются в корне репозитория для обратной совместимости. Если у вас уже настроены старые воркфлоу — они продолжат работать.
 
 ---
-
 <br><br>
 
 # English version
 
-A collection of custom nodes and workflows for ComfyUI. What started as a video generation pipeline (Neron Studio H3) now includes a full-fledged music studio! The repository is divided into three parts: the **Neron Studio H3** pipeline, the new **NeronAudioStudio**, and legacy nodes (in the root).
+Hi friends!
+
+This repository contains my custom nodes for ComfyUI. It holds **two completely independent projects**: one for video, one for music. You can use them separately or together, however you like.
 
 ---
 
-## 🚀 NERON STUDIO H3 PIPELINE (V1.0) — VIDEO
+## 🎬 Project 1: NERON STUDIO H3 (Video Generation)
 
-👋 All new workflows and instructions now live in the **[`Neron_Studio_H3`](Neron_Studio_H3/)** folder.
+👋 All workflows and instructions live in the **[`Neron_Studio_H3`](Neron_Studio_H3/)** folder.
 
-Our main pipeline for video and audio generation (MiniMax H3). Full cycle: from frame preparation to final muxing. No "spaghetti" wires.
+This is my main pipeline for video and audio generation (MiniMax H3). Full cycle: from initial frame preparation to final muxing. No "spaghetti" wires.
 
-**New pipeline contents (5 nodes):**
+**Pipeline contents (5 nodes):**
 1. **Start Frame (Interactive Image Processor)** — initial frame preparation.
 2. **Neron AutoPrompter** — LLM director and camera operator.
 3. **Neron MiniMax H3 Generator** — the core system (all generation in one node).
@@ -71,23 +76,25 @@ Our main pipeline for video and audio generation (MiniMax H3). Full cycle: from 
 
 ---
 
-## 🎹 NERONAUDIOSTUDIO (BETA) — MUSIC
+## 🎹 Project 2: NERONAUDIOSTUDIO (Music Studio)
 
-👋 All new audio nodes now live in the **[`NeronAudioStudio`](NeronAudioStudio/)** folder.
+👋 All audio nodes live in the **[`NeronAudioStudio`](NeronAudioStudio/)** folder.
 
-We've turned ComfyUI into a small digital audio workstation (DAW). Main feature: **audio plays directly on the node, no need to hit Queue just to listen!** Everything runs in the browser and doesn't load your GPU.
+This is a separate project that turns ComfyUI into a small digital audio workstation (DAW).
 
 **What's inside:**
-*   **Drum Machine:** Step sequencer for drums with custom sample support.
+*   **Drum Machine:** Step sequencer for drums (like FL Studio) with custom sample support.
 *   **Piano Roll:** Draw melodies with your mouse, 9 built-in synths.
-*   **Audio Loader:** Load and trim any audio file.
-*   **Mixer:** Up to 8 channels, volume, pan, Mute/Solo, BPM sync, and video support.
-*   **Video Combine:** Smart muxing of video (or image batches) with audio.
+*   **Audio Loader:** Load, listen, and trim any audio file.
+*   **Mixer:** Up to 8 channels. Volume, pan, Mute/Solo, BPM sync, and video support (fully replace/mute video audio, overlay multiple tracks, sync by length).
+*   **Video Combine:** Smart muxing of video (or image batches) with the mixed audio.
 
-⚠️ **Important:** The project is in **Beta**. The interface is currently in Russian only (English will be added later), but it's highly intuitive. Bugs and glitches are possible. Detailed instructions for all buttons and folders are in the **[README inside NeronAudioStudio](NeronAudioStudio/README.md)**.
+Main feature: **audio plays directly on the node, no need to hit Queue just to listen!** Everything runs in the browser and doesn't load your GPU.
+
+⚠️ **Important:** The project is in **Beta**. The interface is currently in Russian only (English will be added later), but it's highly intuitive. Bugs are possible. Detailed instructions for all buttons and folders are in the **[README inside NeronAudioStudio](NeronAudioStudio/README.md)**.
 
 ---
 
 ## 📦 Legacy Nodes — IN ROOT
 
-These nodes remain in the repository root for backward compatibility. If you already have old workflows set up, they will continue to work.
+These nodes (e.g., Lora-Selector, Static-Camera) remain in the repository root for backward compatibility. If you already have old workflows set up, they will continue to work.
