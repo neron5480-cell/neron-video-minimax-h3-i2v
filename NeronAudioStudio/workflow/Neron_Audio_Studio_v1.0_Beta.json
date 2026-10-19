@@ -1,0 +1,485 @@
+{
+  "id": "46022200-0865-4f82-bdbf-c7ea7b86e682",
+  "revision": 0,
+  "last_node_id": 59,
+  "last_link_id": 48,
+  "nodes": [
+    {
+      "id": 41,
+      "type": "NeronDrumMachine",
+      "pos": [
+        -3195.370137646656,
+        -2462.740389660017
+      ],
+      "size": [
+        900,
+        502
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            43
+          ]
+        },
+        {
+          "name": "saved_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "bpm",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronDrumMachine"
+      },
+      "widgets_values": [
+        "default",
+        90,
+        "{\"version\":4,\"bars\":1,\"auto\":false,\"seeded\":true,\"tracks\":[{\"name\":\"HIHATS\",\"color\":\"#ffd166\",\"folder\":\"H I H A T S\",\"sample\":\"H I H A T (1).wav\",\"steps\":[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],\"vol\":0.8,\"pan\":0},{\"name\":\"KICKS\",\"color\":\"#ff5a5f\",\"folder\":\"K I C K S\",\"sample\":\"K I C K (1).wav\",\"steps\":[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],\"vol\":0.8,\"pan\":0},{\"name\":\"OPEN HIHATS\",\"color\":\"#f4a261\",\"folder\":\"O P E N  H I H A T S\",\"sample\":\"O P E N  H A T (1).wav\",\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"vol\":0.8,\"pan\":0},{\"name\":\"PERCS\",\"color\":\"#06d6a0\",\"folder\":\"P E R C S\",\"sample\":\"P E R C (1).WAV\",\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"vol\":0.8,\"pan\":0},{\"name\":\"SHAKERS\",\"color\":\"#4cc9f0\",\"folder\":\"S H A K E R S\",\"sample\":\"S H A K E R (1).wav\",\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"vol\":0.8,\"pan\":0},{\"name\":\"TAMBOURINES\",\"color\":\"#b388ff\",\"folder\":\"T A M B O U R I N E S\",\"sample\":\"T A M B O U R I N E (1).wav\",\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"vol\":0.8,\"pan\":0},{\"name\":\"TOMS\",\"color\":\"#ff8fab\",\"folder\":\"T O M S\",\"sample\":\"T O M (1).WAV\",\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"vol\":0.8,\"pan\":0}]}",
+        "neron_beat_01",
+        ""
+      ],
+      "widgets_values_named": {
+        "kit_name": "default",
+        "bpm": 90,
+        "pattern_json": "{\"version\":4,\"bars\":1,\"auto\":false,\"seeded\":true,\"tracks\":[{\"name\":\"HIHATS\",\"color\":\"#ffd166\",\"folder\":\"H I H A T S\",\"sample\":\"H I H A T (1).wav\",\"steps\":[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],\"vol\":0.8,\"pan\":0},{\"name\":\"KICKS\",\"color\":\"#ff5a5f\",\"folder\":\"K I C K S\",\"sample\":\"K I C K (1).wav\",\"steps\":[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],\"vol\":0.8,\"pan\":0},{\"name\":\"OPEN HIHATS\",\"color\":\"#f4a261\",\"folder\":\"O P E N  H I H A T S\",\"sample\":\"O P E N  H A T (1).wav\",\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"vol\":0.8,\"pan\":0},{\"name\":\"PERCS\",\"color\":\"#06d6a0\",\"folder\":\"P E R C S\",\"sample\":\"P E R C (1).WAV\",\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"vol\":0.8,\"pan\":0},{\"name\":\"SHAKERS\",\"color\":\"#4cc9f0\",\"folder\":\"S H A K E R S\",\"sample\":\"S H A K E R (1).wav\",\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"vol\":0.8,\"pan\":0},{\"name\":\"TAMBOURINES\",\"color\":\"#b388ff\",\"folder\":\"T A M B O U R I N E S\",\"sample\":\"T A M B O U R I N E (1).wav\",\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"vol\":0.8,\"pan\":0},{\"name\":\"TOMS\",\"color\":\"#ff8fab\",\"folder\":\"T O M S\",\"sample\":\"T O M (1).WAV\",\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"vol\":0.8,\"pan\":0}]}",
+        "save_name": "neron_beat_01",
+        "neron_sequencer": ""
+      }
+    },
+    {
+      "id": 42,
+      "type": "NeronPianoRoll",
+      "pos": [
+        -2277.383821647885,
+        -2471.4904873567884
+      ],
+      "size": [
+        1080,
+        826
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            42
+          ]
+        },
+        {
+          "name": "saved_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "bpm",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronPianoRoll"
+      },
+      "widgets_values": [
+        "default",
+        90,
+        "{\"version\":1,\"bars\":2,\"master\":0.9,\"snap\":1,\"zoom\":28,\"selected\":0,\"auto\":false,\"tracks\":[{\"name\":\"Track 1\",\"inst\":\"synth:piano\",\"sample\":\"\",\"root\":60,\"gate\":false,\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"color\":\"#ff9f43\",\"notes\":[{\"m\":80,\"s\":9,\"l\":1},{\"m\":72,\"s\":6,\"l\":1},{\"m\":70,\"s\":2,\"l\":1},{\"m\":67,\"s\":14,\"l\":1}]}]}",
+        "neron_piano",
+        ""
+      ],
+      "widgets_values_named": {
+        "kit_name": "default",
+        "bpm": 90,
+        "project_json": "{\"version\":1,\"bars\":2,\"master\":0.9,\"snap\":1,\"zoom\":28,\"selected\":0,\"auto\":false,\"tracks\":[{\"name\":\"Track 1\",\"inst\":\"synth:piano\",\"sample\":\"\",\"root\":60,\"gate\":false,\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"color\":\"#ff9f43\",\"notes\":[{\"m\":80,\"s\":9,\"l\":1},{\"m\":72,\"s\":6,\"l\":1},{\"m\":70,\"s\":2,\"l\":1},{\"m\":67,\"s\":14,\"l\":1}]}]}",
+        "save_name": "neron_piano",
+        "neron_piano": ""
+      }
+    },
+    {
+      "id": 44,
+      "type": "LoadVideo",
+      "pos": [
+        -1941.220500848559,
+        -3008.2574118747493
+      ],
+      "size": [
+        729.9392613937837,
+        484.59083453400336
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            45
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo"
+      },
+      "widgets_values": [
+        "zeromax-go-on_317063.mp4",
+        "image"
+      ],
+      "widgets_values_named": {
+        "file": "zeromax-go-on_317063.mp4",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 53,
+      "type": "NeronVideoCombine",
+      "pos": [
+        -273.3146651571118,
+        -2475.983295883497
+      ],
+      "size": [
+        420,
+        520
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "shape": 7,
+          "type": "*",
+          "link": 47
+        },
+        {
+          "name": "images",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 46
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": 48
+        }
+      ],
+      "outputs": [
+        {
+          "name": "saved_path",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronVideoCombine"
+      },
+      "widgets_values": [
+        "Neron_Video",
+        "mp4 (как есть, без перекодирования)",
+        18,
+        24,
+        ""
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "Neron_Video",
+        "format": "mp4 (как есть, без перекодирования)",
+        "quality_crf": 18,
+        "fps": 24,
+        "neron_video_player": ""
+      }
+    },
+    {
+      "id": 55,
+      "type": "NeronAudioLoader",
+      "pos": [
+        -1726.981918677334,
+        -1602.1912892600728
+      ],
+      "size": [
+        520,
+        400
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            44
+          ]
+        },
+        {
+          "name": "seconds",
+          "type": "FLOAT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronAudioLoader"
+      },
+      "widgets_values": [
+        "Neron_Audio/Ленинград и Зоя - Жигули _hitmo.net__1.mp3",
+        0,
+        0,
+        ""
+      ],
+      "widgets_values_named": {
+        "audio_file": "Neron_Audio/Ленинград и Зоя - Жигули _hitmo.net__1.mp3",
+        "start_sec": 0,
+        "end_sec": 0,
+        "neron_audio_loader": ""
+      }
+    },
+    {
+      "id": 56,
+      "type": "NeronMixer",
+      "pos": [
+        -1185.482214484603,
+        -2473.2301418626453
+      ],
+      "size": [
+        900,
+        848
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "shape": 7,
+          "type": "*",
+          "link": 45
+        },
+        {
+          "name": "bpm",
+          "shape": 7,
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "audio_1",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 42
+        },
+        {
+          "name": "audio_2",
+          "type": "AUDIO",
+          "link": 43
+        },
+        {
+          "name": "audio_3",
+          "type": "AUDIO",
+          "link": 44
+        },
+        {
+          "name": "audio_4",
+          "type": "AUDIO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            46
+          ]
+        },
+        {
+          "name": "saved_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "bpm",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": [
+            47
+          ]
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "links": [
+            48
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronMixer"
+      },
+      "widgets_values": [
+        "{\"version\":3,\"repeats\":1,\"master\":0.9,\"bpm\":90,\"bpm_set\":true,\"sync_bpm\":true,\"fit\":false,\"fit_sec\":0,\"video\":{\"name\":\"zeromax-go-on_317063.mp4\",\"subfolder\":\"\",\"type\":\"input\"},\"video_manual\":null,\"tracks\":[{\"slot\":\"audio_1\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"slot\":\"audio_2\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"slot\":\"audio_3\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"slot\":\"video_audio\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false}]}",
+        "neron_mix",
+        ""
+      ],
+      "widgets_values_named": {
+        "mixer_json": "{\"version\":3,\"repeats\":1,\"master\":0.9,\"bpm\":90,\"bpm_set\":true,\"sync_bpm\":true,\"fit\":false,\"fit_sec\":0,\"video\":{\"name\":\"zeromax-go-on_317063.mp4\",\"subfolder\":\"\",\"type\":\"input\"},\"video_manual\":null,\"tracks\":[{\"slot\":\"audio_1\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"slot\":\"audio_2\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"slot\":\"audio_3\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"slot\":\"video_audio\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false}]}",
+        "save_name": "neron_mix",
+        "neron_mixer": ""
+      }
+    },
+    {
+      "id": 58,
+      "type": "Note",
+      "pos": [
+        -3133.900867423842,
+        -2683.143460715174
+      ],
+      "size": [
+        353.6416832502737,
+        117.52077309451806
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "РУССКИЙ",
+      "properties": {},
+      "widgets_values": [
+        "=== NERONAUDIOSTUDIO ===\n\nНабор нод для ComfyUI, который превращает его в маленькую музыкальную студию: пишете бит и мелодию прямо на нодах, слушаете сразу (без Queue), сводите всё в микшере, накладываете музыку на видео и сохраняете готовый клип со звуком.\n\n--------------------------------------------------\n\nЧТО ВНУТРИ\n\nNeron Drum Machine: Пошаговый секвенсор ударных (как в FL Studio): дорожки, такты, свои сэмплы.\nNeron Piano Roll: Пианоролл: ноты мышкой, 9 встроенных синтов и ваши сэмплы.\nNeron Audio Loader: Загрузка любого звукового файла с волной, прослушиванием и обрезкой.\nNeron Mixer: Сведение всего вместе: громкость, баланс, M/S, BPM-синхронизация, плеер видео, перемотка.\nNeron Video Combine: Сборка и сохранение видео (из готового ролика или из кадров) со звуком.\n\nВсе ноды лежат в меню NeronAudio.\nГлавная идея: слушать можно сразу на ноде, кнопка Queue нужна только когда результат надо передать дальше по схеме или сохранить.\n\n--------------------------------------------------\n\nУСТАНОВКА\n\n1. Скопируйте папку NeronAudioStudio в ComfyUI/custom_nodes/.\n2. Полностью перезапустите ComfyUI.\n3. Обновите страницу с очисткой кэша: Ctrl+F5.\n4. Двойной клик по пустому месту схемы - поиск - введите Neron.\n\nСкачать ноды: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n\nТребования:\n- ComfyUI (современный, с новым интерфейсом) и Python-пакеты, которые в нём уже есть: numpy, torch, soundfile, aiohttp.\n- ffmpeg - нужен только для видео (склейка звука с роликом). Он уже есть, если установлена VideoHelperSuite или imageio-ffmpeg.\n- av (PyAV) - ставится вместе с ComfyUI, нужен для вытаскивания звука из видео.\n- Браузер: Chrome / Edge / Electron (ComfyUI Desktop).\n\n--------------------------------------------------\n\nГДЕ ЧТО ЛЕЖИТ\n\nВаши сэмплы для драм-машины и пианино: input/Neron_Drums/<название набора>/<папки со звуками>\nПроекты (СОХРАНИТЬ/ОТКРЫТЬ): output/Neron_Projects/drum, piano, mixer (файлы .json)\nWAV из драм-машины и пианоролла: output/Neron_Loops\nСведённый звук микшера (SAVE WAV): output/Neron_Mixes\nСклеенное видео (SAVE VIDEO и Video Combine): output/Neron_Videos\nФайлы, загруженные кнопкой ЗАГРУЗИТЬ в Audio Loader: input/Neron_Audio\n\nБиблиотека сэмплов:\nНабор по умолчанию называется default (поле kit_name на ноде).\nКаждая подпапка набора - это группа звуков. Вложенные папки поддерживаются (до 4 уровней).\nКладите туда свои и скачанные сэмплы (wav, mp3, flac, ogg и др.), перезапуск не нужен: нажмите кнопку обновления ⟳.\nКнопка ПАПКА ЗВУКОВ открывает библиотеку в проводнике.\n\n--------------------------------------------------\n\nОПИСАНИЕ НОД\n\nNeron Drum Machine:\nСеквенсор ударных: сетка по 16 шагов на такт, до 8 тактов.\nДля каждой дорожки задаются: Название, цвет, ПАПКА (откуда брать звук), ЗВУК (конкретный файл), VOL (громкость) и PAN (баланс).\nКнопки PLAY / STOP - слушать по кругу. SAVE WAV - записать в output/Neron_Loops. АВТО WAV - сохранять автоматически при каждом изменении.\nПроекты (верхняя строка): имя + СОХРАНИТЬ, список + ОТКРЫТЬ, НОВЫЙ.\n\nNeron Piano Roll:\nПианоролл в духе FL Studio: ноты по клеткам, до 16 тактов.\nКлик по сетке - поставить ноту, потянуть - задать длину. Двойной клик или правая кнопка по ноте - удалить.\nСЕТКА (1/32 ... такт) - шаг привязки; ЗУМ или Ctrl + колесо - масштаб.\nCtrl+Z - отмена, Пробел - играть/стоп.\nИнструменты дорожки: Piano, E-Piano, Bell, Organ, Pluck, Bass, Lead, Pad, Sine. Или ваши сэмплы из любой папки библиотеки (галочка «обрезать по длине ноты»).\n\nNeron Audio Loader:\nЗагрузчик любого звукового файла (wav, mp3, flac и др.), слышно сразу и без Queue.\nКнопка ЗАГРУЗИТЬ - выбрать файл на компьютере.\nКлик по волне - перемотать. Жёлтые края на волне - начало и конец отрезка (можно тянуть мышкой).\nСБРОС ОБРЕЗКИ - вернуть файл целиком.\n\nNeron Mixer:\nСердце набора. Всё подключается проводами (до 8 каналов).\nVOL и PAN - громкость и баланс. M (Mute) - выключить, S (Solo) - слушать только этот канал.\nPLAY / STOP - играть всё вместе по кругу. STOP - это пауза.\nSAVE WAV - свести в файл output/Neron_Mixes/<save_name>.wav.\nSAVE VIDEO - склеить подключённое видео со сведённым звуком.\nBPM, СИНХР. - автоматическая синхронизация темпа между нодами.\nПОВТОРОВ - сколько раз повторится самый длинный луп в сохранённом файле.\nMASTER - общая громкость (с мягким лимитером).\nВидео: подключите к входу video любой загрузчик. В микшере появится плеер. Дорожка ЗВУК ВИДЕО (родной звук ролика) - можно нажать M и отключить его.\nГалочка ПО ДЛИНЕ ВИДЕО - музыка зацикливается ровно под длину ролика.\n\nNeron Video Combine:\nСобирает и сохраняет видео, показывает результат прямо на ноде.\nfilename_prefix - имя файла.\nformat - mp4 (как есть), mp4 (h264), webm (vp9), mov (h264).\nquality_crf - качество (18 - отлично, 30 - легкий файл).\nfps - частота кадров (можно подключить с выхода fps микшера).\n\n--------------------------------------------------\n\nЧАСТЫЕ ПРОБЛЕМЫ\n\nНет новых выходов/входов на ноде: удалите ноду и добавьте заново. Проверьте Ctrl+F5.\nМикшер молчит: нажмите PLAY, проверьте кнопки M, S, MASTER.\nВидео не показывается: подключите загрузчик к входу video и выберите файл.\nSAVE VIDEO пишет \"не удалось склеить видео\": нужен ffmpeg.\n\n--------------------------------------------------\n\nИЗВЕСТНЫЕ ОГРАНИЧЕНИЯ\n\nДо 8 тактов в драм-машине, до 16 в пианоролле, до 8 каналов в микшере.\nМикшер заранее \"слышит\" только Neron Drum Machine, Neron Piano Roll, Neron Audio Loader и стандартный Load Audio."
+      ],
+      "widgets_values_named": {
+        "text": "=== NERONAUDIOSTUDIO ===\n\nНабор нод для ComfyUI, который превращает его в маленькую музыкальную студию: пишете бит и мелодию прямо на нодах, слушаете сразу (без Queue), сводите всё в микшере, накладываете музыку на видео и сохраняете готовый клип со звуком.\n\n--------------------------------------------------\n\nЧТО ВНУТРИ\n\nNeron Drum Machine: Пошаговый секвенсор ударных (как в FL Studio): дорожки, такты, свои сэмплы.\nNeron Piano Roll: Пианоролл: ноты мышкой, 9 встроенных синтов и ваши сэмплы.\nNeron Audio Loader: Загрузка любого звукового файла с волной, прослушиванием и обрезкой.\nNeron Mixer: Сведение всего вместе: громкость, баланс, M/S, BPM-синхронизация, плеер видео, перемотка.\nNeron Video Combine: Сборка и сохранение видео (из готового ролика или из кадров) со звуком.\n\nВсе ноды лежат в меню NeronAudio.\nГлавная идея: слушать можно сразу на ноде, кнопка Queue нужна только когда результат надо передать дальше по схеме или сохранить.\n\n--------------------------------------------------\n\nУСТАНОВКА\n\n1. Скопируйте папку NeronAudioStudio в ComfyUI/custom_nodes/.\n2. Полностью перезапустите ComfyUI.\n3. Обновите страницу с очисткой кэша: Ctrl+F5.\n4. Двойной клик по пустому месту схемы - поиск - введите Neron.\n\nСкачать ноды: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n\nТребования:\n- ComfyUI (современный, с новым интерфейсом) и Python-пакеты, которые в нём уже есть: numpy, torch, soundfile, aiohttp.\n- ffmpeg - нужен только для видео (склейка звука с роликом). Он уже есть, если установлена VideoHelperSuite или imageio-ffmpeg.\n- av (PyAV) - ставится вместе с ComfyUI, нужен для вытаскивания звука из видео.\n- Браузер: Chrome / Edge / Electron (ComfyUI Desktop).\n\n--------------------------------------------------\n\nГДЕ ЧТО ЛЕЖИТ\n\nВаши сэмплы для драм-машины и пианино: input/Neron_Drums/<название набора>/<папки со звуками>\nПроекты (СОХРАНИТЬ/ОТКРЫТЬ): output/Neron_Projects/drum, piano, mixer (файлы .json)\nWAV из драм-машины и пианоролла: output/Neron_Loops\nСведённый звук микшера (SAVE WAV): output/Neron_Mixes\nСклеенное видео (SAVE VIDEO и Video Combine): output/Neron_Videos\nФайлы, загруженные кнопкой ЗАГРУЗИТЬ в Audio Loader: input/Neron_Audio\n\nБиблиотека сэмплов:\nНабор по умолчанию называется default (поле kit_name на ноде).\nКаждая подпапка набора - это группа звуков. Вложенные папки поддерживаются (до 4 уровней).\nКладите туда свои и скачанные сэмплы (wav, mp3, flac, ogg и др.), перезапуск не нужен: нажмите кнопку обновления ⟳.\nКнопка ПАПКА ЗВУКОВ открывает библиотеку в проводнике.\n\n--------------------------------------------------\n\nОПИСАНИЕ НОД\n\nNeron Drum Machine:\nСеквенсор ударных: сетка по 16 шагов на такт, до 8 тактов.\nДля каждой дорожки задаются: Название, цвет, ПАПКА (откуда брать звук), ЗВУК (конкретный файл), VOL (громкость) и PAN (баланс).\nКнопки PLAY / STOP - слушать по кругу. SAVE WAV - записать в output/Neron_Loops. АВТО WAV - сохранять автоматически при каждом изменении.\nПроекты (верхняя строка): имя + СОХРАНИТЬ, список + ОТКРЫТЬ, НОВЫЙ.\n\nNeron Piano Roll:\nПианоролл в духе FL Studio: ноты по клеткам, до 16 тактов.\nКлик по сетке - поставить ноту, потянуть - задать длину. Двойной клик или правая кнопка по ноте - удалить.\nСЕТКА (1/32 ... такт) - шаг привязки; ЗУМ или Ctrl + колесо - масштаб.\nCtrl+Z - отмена, Пробел - играть/стоп.\nИнструменты дорожки: Piano, E-Piano, Bell, Organ, Pluck, Bass, Lead, Pad, Sine. Или ваши сэмплы из любой папки библиотеки (галочка «обрезать по длине ноты»).\n\nNeron Audio Loader:\nЗагрузчик любого звукового файла (wav, mp3, flac и др.), слышно сразу и без Queue.\nКнопка ЗАГРУЗИТЬ - выбрать файл на компьютере.\nКлик по волне - перемотать. Жёлтые края на волне - начало и конец отрезка (можно тянуть мышкой).\nСБРОС ОБРЕЗКИ - вернуть файл целиком.\n\nNeron Mixer:\nСердце набора. Всё подключается проводами (до 8 каналов).\nVOL и PAN - громкость и баланс. M (Mute) - выключить, S (Solo) - слушать только этот канал.\nPLAY / STOP - играть всё вместе по кругу. STOP - это пауза.\nSAVE WAV - свести в файл output/Neron_Mixes/<save_name>.wav.\nSAVE VIDEO - склеить подключённое видео со сведённым звуком.\nBPM, СИНХР. - автоматическая синхронизация темпа между нодами.\nПОВТОРОВ - сколько раз повторится самый длинный луп в сохранённом файле.\nMASTER - общая громкость (с мягким лимитером).\nВидео: подключите к входу video любой загрузчик. В микшере появится плеер. Дорожка ЗВУК ВИДЕО (родной звук ролика) - можно нажать M и отключить его.\nГалочка ПО ДЛИНЕ ВИДЕО - музыка зацикливается ровно под длину ролика.\n\nNeron Video Combine:\nСобирает и сохраняет видео, показывает результат прямо на ноде.\nfilename_prefix - имя файла.\nformat - mp4 (как есть), mp4 (h264), webm (vp9), mov (h264).\nquality_crf - качество (18 - отлично, 30 - легкий файл).\nfps - частота кадров (можно подключить с выхода fps микшера).\n\n--------------------------------------------------\n\nЧАСТЫЕ ПРОБЛЕМЫ\n\nНет новых выходов/входов на ноде: удалите ноду и добавьте заново. Проверьте Ctrl+F5.\nМикшер молчит: нажмите PLAY, проверьте кнопки M, S, MASTER.\nВидео не показывается: подключите загрузчик к входу video и выберите файл.\nSAVE VIDEO пишет \"не удалось склеить видео\": нужен ffmpeg.\n\n--------------------------------------------------\n\nИЗВЕСТНЫЕ ОГРАНИЧЕНИЯ\n\nДо 8 тактов в драм-машине, до 16 в пианоролле, до 8 каналов в микшере.\nМикшер заранее \"слышит\" только Neron Drum Machine, Neron Piano Roll, Neron Audio Loader и стандартный Load Audio."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 59,
+      "type": "Note",
+      "pos": [
+        -2758.597480181161,
+        -2673.9342188727906
+      ],
+      "size": [
+        337.42090557308165,
+        102.13769636038796
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "English",
+      "properties": {},
+      "widgets_values": [
+        "=== NERONAUDIOSTUDIO ===\n\nA set of nodes for ComfyUI that turns it into a small music studio: write beats and melodies directly on the nodes, listen instantly (no Queue), mix everything in the mixer, overlay music onto video and save a finished clip with sound.\n\n--------------------------------------------------\n\nWHAT'S INSIDE\n\nNeron Drum Machine: Step sequencer for drums (like FL Studio): tracks, bars, custom samples.\nNeron Piano Roll: Piano roll: notes with mouse, 9 built-in synths and your samples.\nNeron Audio Loader: Load any audio file with waveform, listening, and trimming.\nNeron Mixer: Mix everything together: volume, pan, M/S, BPM sync, video player, seeking.\nNeron Video Combine: Assemble and save video (from a ready clip or frames) with audio.\n\nAll nodes are in the NeronAudio menu.\nMain idea: you can listen instantly on the node, the Queue button is only needed when you want to pass the result further down the graph or save it.\n\n--------------------------------------------------\n\nINSTALLATION\n\n1. Copy the NeronAudioStudio folder to ComfyUI/custom_nodes/.\n2. Completely restart ComfyUI.\n3. Refresh the page with cache clear: Ctrl+F5.\n4. Double click on empty canvas - search - type Neron.\n\nDownload nodes: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n\nRequirements:\n- ComfyUI (modern, with new interface) and Python packages already included: numpy, torch, soundfile, aiohttp.\n- ffmpeg - needed only for video (muxing audio with video). Already there if VideoHelperSuite or imageio-ffmpeg is installed.\n- av (PyAV) - installed with ComfyUI, needed to extract audio from video.\n- Browser: Chrome / Edge / Electron (ComfyUI Desktop).\n\n--------------------------------------------------\n\nWHERE THINGS ARE\n\nSamples for drum machine and piano: input/Neron_Drums/<kit_name>/<sound_folders>\nProjects (SAVE/OPEN): output/Neron_Projects/drum, piano, mixer (.json files)\nWAV from drum machine and piano roll: output/Neron_Loops\nMixed audio (SAVE WAV): output/Neron_Mixes\nMuxed video (SAVE VIDEO and Video Combine): output/Neron_Videos\nFiles uploaded via UPLOAD button in Audio Loader: input/Neron_Audio\n\nSample library:\nDefault kit is called default (field kit_name on the node).\nEach subfolder is a group of sounds. Nested folders supported (up to 4 levels).\nPut your and downloaded samples (wav, mp3, flac, ogg, etc.) there, no restart needed: press the refresh button ⟳.\nThe SOUND FOLDER button opens the library in explorer.\n\n--------------------------------------------------\n\nNODE OVERVIEW\n\nNeron Drum Machine:\nDrum sequencer: 16 steps per bar grid, up to 8 bars.\nFor each track you set: Name, color, FOLDER (where to get sounds), SOUND (specific file), VOL (volume) and PAN.\nButtons PLAY / STOP - loop listening. SAVE WAV - record to output/Neron_Loops. AUTO WAV - auto-save on every change.\nProjects (top row): name + SAVE, list + OPEN, NEW.\n\nNeron Piano Roll:\nPiano roll in the spirit of FL Studio: notes on a grid, up to 16 bars.\nClick grid - place a note, drag - set length. Double click or right click on a note - delete.\nGRID (1/32 ... bar) - snap step; ZOOM or Ctrl + wheel - scale.\nCtrl+Z - undo, Space - play/stop.\nTrack instruments: Piano, E-Piano, Bell, Organ, Pluck, Bass, Lead, Pad, Sine. Or your samples from any library folder (checkbox \"trim to note length\").\n\nNeron Audio Loader:\nLoader for any audio file (wav, mp3, flac, etc.), audible instantly without Queue.\nUPLOAD button - select a file from your computer.\nClick on waveform - seek. Yellow edges on waveform - start and end of segment (can be dragged).\nRESET TRIM - restore full file.\n\nNeron Mixer:\nThe heart of the suite. Everything is connected with wires (up to 8 channels).\nVOL and PAN - volume and pan. M (Mute) - turn off, S (Solo) - listen only to this channel.\nPLAY / STOP - play everything together in a loop. STOP is pause.\nSAVE WAV - mix to file output/Neron_Mixes/<save_name>.wav.\nSAVE VIDEO - mux connected video with mixed audio.\nBPM, SYNC - automatic tempo sync between nodes.\nREPEATS - how many times the longest loop repeats in the saved file.\nMASTER - overall volume (with soft limiter).\nVideo: connect any video loader to the video input. A player appears in the mixer. VIDEO AUDIO track (original video audio) - you can press M to mute it.\nFIT TO VIDEO LENGTH checkbox - music loops exactly to the video length.\n\nNeron Video Combine:\nAssembles and saves video, shows result directly on the node.\nfilename_prefix - file name.\nformat - mp4 (as is), mp4 (h264), webm (vp9), mov (h264).\nquality_crf - quality (18 - great, 30 - light file).\nfps - frame rate (can connect from mixer fps output).\n\n--------------------------------------------------\n\nTROUBLESHOOTING\n\nNo new outputs/inputs: delete node and add again. Check Ctrl+F5.\nMixer is silent: press PLAY, check M, S, MASTER buttons.\nVideo not showing: connect loader to video input and select a file.\nSAVE VIDEO says \"failed to mux\": ffmpeg is required.\n\n--------------------------------------------------\n\nLIMITATIONS\n\nUp to 8 bars in drum machine, up to 16 in piano roll, up to 8 channels in mixer.\nMixer \"hears\" in advance only Neron Drum Machine, Neron Piano Roll, Neron Audio Loader, and standard Load Audio."
+      ],
+      "widgets_values_named": {
+        "text": "=== NERONAUDIOSTUDIO ===\n\nA set of nodes for ComfyUI that turns it into a small music studio: write beats and melodies directly on the nodes, listen instantly (no Queue), mix everything in the mixer, overlay music onto video and save a finished clip with sound.\n\n--------------------------------------------------\n\nWHAT'S INSIDE\n\nNeron Drum Machine: Step sequencer for drums (like FL Studio): tracks, bars, custom samples.\nNeron Piano Roll: Piano roll: notes with mouse, 9 built-in synths and your samples.\nNeron Audio Loader: Load any audio file with waveform, listening, and trimming.\nNeron Mixer: Mix everything together: volume, pan, M/S, BPM sync, video player, seeking.\nNeron Video Combine: Assemble and save video (from a ready clip or frames) with audio.\n\nAll nodes are in the NeronAudio menu.\nMain idea: you can listen instantly on the node, the Queue button is only needed when you want to pass the result further down the graph or save it.\n\n--------------------------------------------------\n\nINSTALLATION\n\n1. Copy the NeronAudioStudio folder to ComfyUI/custom_nodes/.\n2. Completely restart ComfyUI.\n3. Refresh the page with cache clear: Ctrl+F5.\n4. Double click on empty canvas - search - type Neron.\n\nDownload nodes: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n\nRequirements:\n- ComfyUI (modern, with new interface) and Python packages already included: numpy, torch, soundfile, aiohttp.\n- ffmpeg - needed only for video (muxing audio with video). Already there if VideoHelperSuite or imageio-ffmpeg is installed.\n- av (PyAV) - installed with ComfyUI, needed to extract audio from video.\n- Browser: Chrome / Edge / Electron (ComfyUI Desktop).\n\n--------------------------------------------------\n\nWHERE THINGS ARE\n\nSamples for drum machine and piano: input/Neron_Drums/<kit_name>/<sound_folders>\nProjects (SAVE/OPEN): output/Neron_Projects/drum, piano, mixer (.json files)\nWAV from drum machine and piano roll: output/Neron_Loops\nMixed audio (SAVE WAV): output/Neron_Mixes\nMuxed video (SAVE VIDEO and Video Combine): output/Neron_Videos\nFiles uploaded via UPLOAD button in Audio Loader: input/Neron_Audio\n\nSample library:\nDefault kit is called default (field kit_name on the node).\nEach subfolder is a group of sounds. Nested folders supported (up to 4 levels).\nPut your and downloaded samples (wav, mp3, flac, ogg, etc.) there, no restart needed: press the refresh button ⟳.\nThe SOUND FOLDER button opens the library in explorer.\n\n--------------------------------------------------\n\nNODE OVERVIEW\n\nNeron Drum Machine:\nDrum sequencer: 16 steps per bar grid, up to 8 bars.\nFor each track you set: Name, color, FOLDER (where to get sounds), SOUND (specific file), VOL (volume) and PAN.\nButtons PLAY / STOP - loop listening. SAVE WAV - record to output/Neron_Loops. AUTO WAV - auto-save on every change.\nProjects (top row): name + SAVE, list + OPEN, NEW.\n\nNeron Piano Roll:\nPiano roll in the spirit of FL Studio: notes on a grid, up to 16 bars.\nClick grid - place a note, drag - set length. Double click or right click on a note - delete.\nGRID (1/32 ... bar) - snap step; ZOOM or Ctrl + wheel - scale.\nCtrl+Z - undo, Space - play/stop.\nTrack instruments: Piano, E-Piano, Bell, Organ, Pluck, Bass, Lead, Pad, Sine. Or your samples from any library folder (checkbox \"trim to note length\").\n\nNeron Audio Loader:\nLoader for any audio file (wav, mp3, flac, etc.), audible instantly without Queue.\nUPLOAD button - select a file from your computer.\nClick on waveform - seek. Yellow edges on waveform - start and end of segment (can be dragged).\nRESET TRIM - restore full file.\n\nNeron Mixer:\nThe heart of the suite. Everything is connected with wires (up to 8 channels).\nVOL and PAN - volume and pan. M (Mute) - turn off, S (Solo) - listen only to this channel.\nPLAY / STOP - play everything together in a loop. STOP is pause.\nSAVE WAV - mix to file output/Neron_Mixes/<save_name>.wav.\nSAVE VIDEO - mux connected video with mixed audio.\nBPM, SYNC - automatic tempo sync between nodes.\nREPEATS - how many times the longest loop repeats in the saved file.\nMASTER - overall volume (with soft limiter).\nVideo: connect any video loader to the video input. A player appears in the mixer. VIDEO AUDIO track (original video audio) - you can press M to mute it.\nFIT TO VIDEO LENGTH checkbox - music loops exactly to the video length.\n\nNeron Video Combine:\nAssembles and saves video, shows result directly on the node.\nfilename_prefix - file name.\nformat - mp4 (as is), mp4 (h264), webm (vp9), mov (h264).\nquality_crf - quality (18 - great, 30 - light file).\nfps - frame rate (can connect from mixer fps output).\n\n--------------------------------------------------\n\nTROUBLESHOOTING\n\nNo new outputs/inputs: delete node and add again. Check Ctrl+F5.\nMixer is silent: press PLAY, check M, S, MASTER buttons.\nVideo not showing: connect loader to video input and select a file.\nSAVE VIDEO says \"failed to mux\": ffmpeg is required.\n\n--------------------------------------------------\n\nLIMITATIONS\n\nUp to 8 bars in drum machine, up to 16 in piano roll, up to 8 channels in mixer.\nMixer \"hears\" in advance only Neron Drum Machine, Neron Piano Roll, Neron Audio Loader, and standard Load Audio."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      42,
+      42,
+      0,
+      56,
+      2,
+      "AUDIO"
+    ],
+    [
+      43,
+      41,
+      0,
+      56,
+      3,
+      "AUDIO"
+    ],
+    [
+      44,
+      55,
+      0,
+      56,
+      4,
+      "AUDIO"
+    ],
+    [
+      45,
+      44,
+      0,
+      56,
+      0,
+      "VIDEO"
+    ],
+    [
+      46,
+      56,
+      0,
+      53,
+      2,
+      "AUDIO"
+    ],
+    [
+      47,
+      56,
+      3,
+      53,
+      0,
+      "VIDEO"
+    ],
+    [
+      48,
+      56,
+      4,
+      53,
+      3,
+      "FLOAT"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.7285135320575334,
+      "offset": [
+        4064.0970750767933,
+        3314.966794179613
+      ]
+    },
+    "frontendVersion": "1.55.18",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
