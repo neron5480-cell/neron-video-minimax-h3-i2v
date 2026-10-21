@@ -1,10 +1,10 @@
-# Neron's ComfyUI Projects
+ Neron's ComfyUI Projects
 
 [ru Русская версия — ниже. en English version — at the bottom.](#english-version)
 
 Привет, друзья! 
 
-В этом репозитории живут мои кастомные ноды для ComfyUI. Здесь собраны **два абсолютно независимых проекта**: один для видео, другой для музыки. Вы можете использовать их по отдельности или вместе, как вам удобно.
+В этом репозитории живут мои кастомные ноды для ComfyUI. Здесь собраны **три абсолютно независимых проекта**: генерация видео, пост-обработка видео и музыка. Вы можете использовать их по отдельности или вместе, как вам удобно.
 
 ---
 
@@ -25,7 +25,34 @@
 
 ---
 
-## 🎹 Проект 2: NERONAUDIOSTUDIO (Музыкальная студия)
+## 🎛 Проект 2: PERCEPTION RELAY — Эстафета восприятия (Пост-обработка видео)
+
+👋 Все ноды, воркфлоу и инструкции лежат в папке **[`ComfyUI-PerceptionRelay`](ComfyUI-PerceptionRelay/)**.
+
+ИИ-видео выглядит «неживым» не из-за разрешения. Причина в том, что мозгу зрителя мешают: детали «кипят» и ползут, глаза и контур лица дрожат, тени плоские, цвет растекается за границы. **Эстафета не дорисовывает ни одной детали.** Она убирает то, что мешает, а дальше мозг сам видит картинку чёткой и живой. Работает с любым видео, в том числе с роликами из H3.
+
+**Главная фишка — 🎛 Пульт с живым предпросмотром.** Крутишь любой ползунок, и через долю секунды видишь кадр до 2K. Есть шторка «до / после», лупа в полном разрешении и кнопка **▶ проиграть 1 с**: она показывает секунду ролика по кругу, чтобы видеть дрожь, а не стоп-кадр.
+
+**Карточки этапов** (каждая втыкается в Пульт одним проводом, в любом порядке):
+*   **👁 Разведка** — находит лица и глаза, следит за ними.
+*   **🌊 Поток** — движение между кадрами (RAFT или DIS без скачивания).
+*   **⚖ Судья** — отличает физику от дрейфа и гасит «кипение» деталей. Честное движение не трогает.
+*   **💎 Огранка** — резкость только по краям и только там, где край стоит во времени.
+*   **🌑 Тональный скелет** — тени и чёрное как каркас картинки: глубина и объём без потери деталей.
+*   **🎨 Цветовой шов** — чистые границы цвета без кайм и «бритвы».
+*   **✨ Полировка** — дефликер, свет, плавность (×2 полукадр или смаз по движению).
+*   **🎚 Основное** — простые яркость, контраст, резкость, насыщенность.
+*   **🎯 Точки внимания** — глаза и контур лица до «фокуса объектива».
+
+**На выходе:** кадры, звук и fps для Create Video, видео-сравнение «до / после» и **отчёт** с настройками и работой каждого этапа. В отчёте нет путей, имён файлов и самого видео, поэтому его можно смело присылать мне. Из ваших отчётов соберём пресеты.
+
+**Железо:** 12–16 ГБ видеопамяти, 32–48 ГБ ОЗУ. Модели крошечные: детектор лиц 230 КБ и RAFT ~20 МБ, качаются сами. Ноды на русском и английском.
+
+⚠️ **Важно:** проект в стадии **Alpha**. Возможны баги, ваши отчёты очень помогут. Установка, описание всех ползунков и «что делать, если…» — в **[README внутри ComfyUI-PerceptionRelay](ComfyUI-PerceptionRelay/README.md)** и в **[HELP.md](ComfyUI-PerceptionRelay/HELP.md)**.
+
+---
+
+## 🎹 Проект 3: NERONAUDIOSTUDIO (Музыкальная студия)
 
 👋 Все аудио-ноды лежат в папке **[`NeronAudioStudio`](NeronAudioStudio/)**.
 
@@ -55,7 +82,7 @@
 
 Hi friends!
 
-This repository contains my custom nodes for ComfyUI. It holds **two completely independent projects**: one for video, one for music. You can use them separately or together, however you like.
+This repository contains my custom nodes for ComfyUI. It holds **three completely independent projects**: video generation, video post-processing and music. You can use them separately or together, however you like.
 
 ---
 
@@ -76,7 +103,34 @@ This is my main pipeline for video and audio generation (MiniMax H3). Full cycle
 
 ---
 
-## 🎹 Project 2: NERONAUDIOSTUDIO (Music Studio)
+## 🎛 Project 2: PERCEPTION RELAY (Video Post-processing)
+
+👋 All nodes, workflows and instructions live in the **[`ComfyUI-PerceptionRelay`](ComfyUI-PerceptionRelay/)** folder.
+
+AI video looks "fake" not because of resolution. It looks fake because the viewer's brain keeps getting disturbed: details boil and crawl, eyes and the face edge jitter, shadows are flat, colour leaks across borders. **Perception Relay does not invent a single detail.** It removes what disturbs the eye, and the brain sees the picture as sharp and alive on its own. It works with any video, including clips from H3.
+
+**Main feature — 🎛 the Pult with a live preview.** Move any slider and see the frame (up to 2K) within a fraction of a second. You get a before/after split, a full-resolution magnifier and a **▶ play 1 s** button that loops one second of the clip, so you see shimmer, not just a still.
+
+**Stage cards** (each plugs into the Pult with one wire, in any order):
+*   **👁 Scout** — finds and tracks faces and eyes.
+*   **🌊 Flow** — motion between frames (RAFT, or DIS with no download).
+*   **⚖ Judge** — tells physics from drift and calms boiling detail. Honest motion is left alone.
+*   **💎 Edge cut** — sharpens edges only, and only where the edge holds steady in time.
+*   **🌑 Tone skeleton** — shadows and blacks as the frame of the picture: depth and volume, no detail loss.
+*   **🎨 Colour seam** — clean colour borders, no halos, no "razor" look.
+*   **✨ Polish** — deflicker, light, smoothness (×2 half-frame or motion blur).
+*   **🎚 Basic** — simple brightness, contrast, sharpness, saturation.
+*   **🎯 Attention points** — eyes and face edge pulled to "lens focus".
+
+**Outputs:** frames, audio and fps for Create Video, a before/after comparison video, and a **run report** with all settings and how each stage worked. The report contains no paths, file names or video, so it is safe to send to me. Your reports will become presets.
+
+**Hardware:** 12–16 GB VRAM, 32–48 GB RAM. Models are tiny (face detector 230 KB, RAFT ~20 MB) and download automatically. Nodes are in English and Russian.
+
+⚠️ **Important:** the project is in **Alpha**. Bugs are possible, and your reports help a lot. Installation, every slider and troubleshooting are in the **[README inside ComfyUI-PerceptionRelay](ComfyUI-PerceptionRelay/README.md)** and in **[HELP.md](ComfyUI-PerceptionRelay/HELP.md)**.
+
+---
+
+## 🎹 Project 3: NERONAUDIOSTUDIO (Music Studio)
 
 👋 All audio nodes live in the **[`NeronAudioStudio`](NeronAudioStudio/)** folder.
 
