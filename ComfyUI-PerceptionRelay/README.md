@@ -42,6 +42,9 @@ Stage cards plug into the Pult with **one wire each, in any order**:
   clips** keep their work folders; older ones are deleted automatically after a run, and stage files no longer
   in the chain are removed. Final videos (`…_pult_001.mp4`) and the report folder are never deleted.
   Change the number in `output/perception_relay/settings.json` → `"keep_jobs"` (0 = never delete).
+  **Long clips and RAM:** the `frames_out` output loads the whole finished clip into RAM (1 min at 48 fps ≈ 36 GB).
+  If there is not enough memory, the Pult skips that output (the video is still saved to a file) and says so in
+  the report. For long clips turn `frames_out` off in expert mode.
   **Don't need a clip any more? Delete its work folder by hand** — `output/perception_relay/<clip>/`. It is safe:
   final videos sit next to it in `perception_relay`, not inside. If you tweak that clip again, the Pult simply
   recomputes the stages.
@@ -222,6 +225,9 @@ over time. Optional upscale: ×2, to 1080p, to 1440p. Now built into the Pult as
   не удаляются никогда.
 - Сколько роликов хранить — в файле `output/perception_relay/settings.json`, параметр `"keep_jobs"`
   (0 — не удалять ничего).
+- **Длинные ролики и оперативка.** Выход «кадры» (`frames_out`) загружает весь готовый ролик в ОЗУ: минута
+  при 48 к/с — около 36 ГБ. Если памяти не хватает, Пульт сам пропустит этот выход (ролик всё равно сохранится
+  в файл) и напишет об этом в отчёте. Для длинных роликов лучше выключить `frames_out` в режиме эксперта.
 - **Ролик больше не нужен? Удалите его рабочую папку вручную** — `output/perception_relay/<имя ролика>/`.
   Это безопасно: готовые видео лежат рядом, в самой `perception_relay`, а не внутри папки. Если потом
   понадобится снова подстроить этот ролик, Пульт просто посчитает этапы заново.

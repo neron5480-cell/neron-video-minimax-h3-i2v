@@ -457,6 +457,25 @@ class RelayHub:
         last = None
         frames = None
         if frames_out:
+            # защита от вылета: весь ролик в ОЗУ (float32) может не влезть — минута при 48 к/с ≈ 36 ГБ
+            # crash guard: the whole clip as float32 in RAM may not fit (1 min at 48 fps ≈ 36 GB)
+            n_out = relay["current"].get("frames", v["frames"])
+            need = float(n_out) * w * h * 3 * 4
+            try:
+                import psutil
+                avail = float(psutil.virtual_memory().available)
+            except Exception:
+                avail = None
+            if avail is not None and need > 0.5 * avail:
+                frames_out = False
+                text += ("\n\n⚠ Кадры наружу не выданы: нужно ~{:.1f} ГБ ОЗУ, свободно ~{:.1f} ГБ. Готовый ролик сохранён "
+                         "в файл (см. «Итог»). Для длинных роликов выключите frames_out.\n"
+                         "⚠ Frames output skipped: needs ~{:.1f} GB RAM, ~{:.1f} GB free. The final video is saved to a file "
+                         "(see «Итог»). Turn frames_out off for long clips.").format(
+                             need / 1024 ** 3, avail / 1024 ** 3, need / 1024 ** 3, avail / 1024 ** 3)
+                print(f"[PerceptionRelay] frames_out пропущен / skipped: нужно / need {need / 1024 ** 3:.1f} GB, "
+                      f"свободно / free {avail / 1024 ** 3:.1f} GB")
+        if frames_out:
             arr = [torch.from_numpy(f) for f in core_io.FrameReader(final, w, h, "yuv", "bt709", "tv")]
             frames = torch.stack(arr).float() if arr else torch.zeros(1, h, w, 3)
             last = frames[-1:].clone()

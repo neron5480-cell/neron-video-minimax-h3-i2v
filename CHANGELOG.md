@@ -1,5 +1,11 @@
 # Changelog / История изменений
 
+## 2026-10-23 — Perception Relay: защита от нехватки памяти / out-of-memory guard
+
+**RU:** Если выход «кадры» (`frames_out`) не влезает в оперативку (нужно больше половины свободной), Пульт его пропускает вместо вылета; готовый ролик сохраняется в файл, в отчёте — пояснение.
+
+**EN:** If the `frames_out` output would not fit in RAM (more than half of the free memory), the Pult skips it instead of crashing; the final video is still saved to a file and the report explains why.
+
 ## 2026-10-23 — Perception Relay: место на диске / disk space
 
 **RU:** Рабочие папки задач (~5 ГБ на 10 с видео) больше не копятся бесконечно. Хранятся только 2 последних ролика, старые удаляются сами после прогона; файлы этапов, которых нет в цепочке, тоже удаляются. Готовые видео и отчёты не трогаются. Настройка: `output/perception_relay/settings.json` → `keep_jobs`.
