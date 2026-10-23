@@ -1,5 +1,11 @@
 # Changelog / История изменений
 
+## 2026-10-23 — Perception Relay: место на диске / disk space
+
+**RU:** Рабочие папки задач (~5 ГБ на 10 с видео) больше не копятся бесконечно. Хранятся только 2 последних ролика, старые удаляются сами после прогона; файлы этапов, которых нет в цепочке, тоже удаляются. Готовые видео и отчёты не трогаются. Настройка: `output/perception_relay/settings.json` → `keep_jobs`.
+
+**EN:** Work folders (~5 GB per 10 s of video) no longer pile up. Only the 2 most recent clips keep them, older ones are deleted after a run, and stage files no longer in the chain are removed. Final videos and reports are untouched. Setting: `output/perception_relay/settings.json` → `keep_jobs`.
+
 ## 2026-10-23 — Perception Relay: растягивание Пульта / Pult resizing
 
 **RU:** Пульт больше не «борется» с мышью. Раньше при растягивании нода сама возвращала свою высоту, и раскладка разваливалась (окно уезжало, внизу оставалось пустое поле). Теперь размер задаёте вы: окно заполняет всё свободное место, кадр вписывается с сохранением пропорций. Размер запоминается в схеме и не меняется при включении режима эксперта. Новая нода, пока её не трогали руками, по-прежнему подстраивается под кадр сама.

@@ -37,6 +37,11 @@ Stage cards plug into the Pult with **one wire each, in any order**:
   (readable .txt + .json: settings, source passport, every stage's report, timings, warnings). Paths,
   file names and the clip name are stripped — safe to share. Send it to help build presets.
 - **Memory:** only the stages you change are recomputed.
+- **Disk space:** every clip gets a work folder in `output/perception_relay/<clip>/` with each stage saved
+  losslessly (about 5 GB per 10 s of video) — that is what makes slider tweaks fast. Only the **2 most recent
+  clips** keep their work folders; older ones are deleted automatically after a run, and stage files no longer
+  in the chain are removed. Final videos (`…_pult_001.mp4`) and the report folder are never deleted.
+  Change the number in `output/perception_relay/settings.json` → `"keep_jobs"` (0 = never delete).
 
 Expert chain (Start → … → Finish) is in the "chain, expert" submenu.
 
@@ -201,6 +206,19 @@ over time. Optional upscale: ×2, to 1080p, to 1440p. Now built into the Pult as
 
 Любой этап можно отключить (Bypass) — эстафета это понимает: следующие этапы читают отчёты
 только тех, кто реально отработал.
+
+## 💾 Место на диске
+
+Для каждого ролика Эстафета создаёт рабочую папку `output/perception_relay/<имя ролика>/` и сохраняет
+в ней результат каждого этапа без потерь (примерно **5 ГБ на 10 секунд** видео). Благодаря этому при
+смене одного ползунка пересчитываются только этапы после него.
+
+- Рабочие папки хранятся только для **2 последних роликов**. Более старые удаляются сами после прогона.
+- Файлы этапов, которых больше нет в цепочке (например, карточку отключили), тоже удаляются.
+- **Готовые видео** (`…_pult_001.mp4`, `…_compare_001.mp4`) и папка с отчётами **«для_отправки»**
+  не удаляются никогда.
+- Сколько роликов хранить — в файле `output/perception_relay/settings.json`, параметр `"keep_jobs"`
+  (0 — не удалять ничего).
 
 ## Если что-то не так
 

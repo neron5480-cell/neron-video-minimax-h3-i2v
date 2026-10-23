@@ -466,6 +466,12 @@ class RelayHub:
         if audio is None:
             audio = {"waveform": torch.zeros(1, 2, 1), "sample_rate": 48000}
 
+        try:                                     # лишние файлы этапов этой задачи / unused stage files
+            from . import core_cleanup
+            core_cleanup.prune_unused_stages(relay["job_dir"])
+        except Exception as e:
+            print(f"[PerceptionRelay] уборка пропущена / cleanup skipped: {e}")
+
         ui = {"text": [text]}
         if preview:
             ui["images"] = preview

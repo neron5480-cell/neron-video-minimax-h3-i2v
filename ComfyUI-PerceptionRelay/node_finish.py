@@ -133,4 +133,9 @@ class RelayFinish:
                 "grain": grain, "grain_size": grain_size, "seed": seed, "codec": codec, "crf": crf}
         core_journal.write_stage(relay, "finish", task, summary, files={"final": final},
                                  seconds=time.time() - t0)
+        try:                                     # старые рабочие папки других роликов / old work folders
+            from . import core_cleanup
+            core_cleanup.prune_old_jobs(relay["job_dir"])
+        except Exception as e:
+            print(f"[PerceptionRelay] уборка пропущена / cleanup skipped: {e}")
         return {"ui": {"text": [final]}, "result": (relay, final)}
