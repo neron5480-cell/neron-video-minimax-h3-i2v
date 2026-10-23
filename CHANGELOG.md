@@ -1,5 +1,11 @@
 # Changelog / История изменений
 
+## 2026-10-23 — Perception Relay: растягивание Пульта / Pult resizing
+
+**RU:** Пульт больше не «борется» с мышью. Раньше при растягивании нода сама возвращала свою высоту, и раскладка разваливалась (окно уезжало, внизу оставалось пустое поле). Теперь размер задаёте вы: окно заполняет всё свободное место, кадр вписывается с сохранением пропорций. Размер запоминается в схеме и не меняется при включении режима эксперта. Новая нода, пока её не трогали руками, по-прежнему подстраивается под кадр сама.
+
+**EN:** The Pult no longer fights the mouse. It used to snap its height back while being resized, breaking the layout (the window shifted, an empty area stayed below). Now you own the size: the live window fills the free space and the frame keeps its aspect ratio. The size is saved in the workflow and is kept when expert mode is toggled. A new, untouched node still fits itself to the frame.
+
 ## 2026-10-23 — порядок в репозитории / repository cleanup
 
 ### 🇷🇺 Что изменилось

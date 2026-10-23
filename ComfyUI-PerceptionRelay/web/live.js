@@ -367,31 +367,58 @@ function setupLive(hub) {
     // высота окна: от ширины ноды и пропорций кадра, но не выше MAX_H — вертикальное видео
     // вписывается целиком (с полями по бокам), а не растягивает ноду на весь экран
     const MAX_H = 640;
-    const imgH = (width) => Math.min(MAX_H, Math.max(120, Math.round((width - 20) * st.ar)));
-    const layout = () => { img.style.height = `${imgH(hub.size[0])}px`; paintSplit(); };
-    img.style.objectFit = "contain";
-    let fitting = false;
-    const fitNode = () => {                     // нода ровно под окно (и кнопки/текст над ним)
-        if (fitting) return;
-        const top = st.widget?.last_y;
-        if (top == null) return;
-        let extra = 0;                          // то, что стоит под окном (текст журнала после прогона)
+    const MIN_H = 120;
+    // высота окна «по умолчанию» — от ширины ноды и пропорций кадра (для автоподгонки)
+    const imgH = (width) => Math.min(MAX_H, Math.max(MIN_H, Math.round((width - 20) * st.ar)));
+    // RU: Размер ноды задаёт пользователь. Если он сам растянул Пульт, нода больше
+    //     НЕ подгоняет свою высоту (раньше она «боролась» с мышью и раскладка разваливалась).
+    //     Окно просто заполняет свободное место, кадр вписывается с сохранением пропорций.
+    // EN: The user owns the node size. Once resized by hand, the node no longer forces its
+    //     height (it used to fight the mouse and break the layout); the window fills the space.
+    hub.properties = hub.properties || {};
+    const manual = () => hub.properties.relay_manual_size === true;
+    const extraBelow = () => {                  // то, что стоит под окном (текст журнала после прогона)
+        let extra = 0;
         const ws = hub.widgets || [];
         for (let i = ws.indexOf(st.widget) + 1; i > 0 && i < ws.length; i++) {
             const w = ws[i];
+            if (w.hidden) continue;
             let hh = 120;
             try { const cs = w.computeSize?.(hub.size[0]); if (cs && cs[1] > 0) hh = cs[1]; } catch (_) {}
             extra += hh + 6;
         }
-        const need = Math.round(top + imgH(hub.size[0]) + 40 + extra);
+        return extra;
+    };
+    // высота окна: авто — от ширины; ручная — число, запомненное, когда отпустили мышь
+    // (хранится в схеме; от размера ноды не зависит, поэтому нода не «растёт сама»)
+    const curH = () => {
+        if (!manual()) return imgH(hub.size[0]);
+        const h = Number(hub.properties.relay_live_h);
+        return h > 0 ? Math.max(MIN_H, h) : imgH(hub.size[0]);
+    };
+    const captureH = () => {                    // сколько места под окно сейчас в ноде
+        const top = st.widget?.last_y;
+        if (top == null) return;
+        hub.properties.relay_live_h = Math.max(MIN_H, Math.round(hub.size[1] - top - 40 - extraBelow()));
+    };
+    const layout = () => { img.style.height = `${curH()}px`; paintSplit(); };
+    img.style.objectFit = "contain";
+    let fitting = false;
+    const fitNode = () => {                     // автоподгонка: нода ровно под окно — только пока размер не трогали руками
+        if (fitting || manual()) return;
+        const top = st.widget?.last_y;
+        if (top == null) return;
+        const need = Math.round(top + imgH(hub.size[0]) + 40 + extraBelow());
         if (Math.abs(hub.size[1] - need) > 2) {
             fitting = true;
             hub.setSize([hub.size[0], need]);
             fitting = false;
+            layout();
             app.graph.setDirtyCanvas(true, true);
         }
     };
     st.fitNode = fitNode;
+    st.layout = layout;
     imgB.onload = () => paintSplit();
     img.onload = () => {
         paintSplit();
@@ -528,16 +555,29 @@ function setupLive(hub) {
 
     const widget = hub.addDOMWidget("relay_live", "div", box, {
         serialize: false, hideOnZoom: false,
-        getMinHeight: () => imgH(hub.size[0]) + 26,
-        getMaxHeight: () => imgH(hub.size[0]) + 26,
+        // окно занимает всё свободное место ноды (не меньше MIN_H), а не жёстко заданную высоту
+        getMinHeight: () => MIN_H + 26,
+        getHeight: () => curH() + 26,
+        getMaxHeight: () => curH() + 26,
     });
-    widget.computeSize = (width) => [width, imgH(width) + 26];
+    // Пока ноду тянут мышью — окно просит минимум (чтобы ноду можно было уменьшить),
+    // в остальное время — свою фактическую высоту (всё свободное место).
+    // While dragging: minimum (so the node can shrink); otherwise the real height.
+    widget.computeSize = (width) => {
+        if (!manual()) return [width, imgH(width) + 26];
+        if (app.canvas?.resizing_node === hub) return [width, MIN_H + 26];
+        return [width, curH() + 26];
+    };
     st.widget = widget;
     const onResize = hub.onResize;
     hub.onResize = function () {
         const r = onResize?.apply(this, arguments);
-        layout();
-        if (!fitting) requestAnimationFrame(fitNode);   // растянул ширину — высота подстроится
+        // ручной размер — только когда ноду тянут мышью (холст помечает её как resizing_node)
+        if (!fitting && app.canvas?.resizing_node === hub) {
+            hub.properties.relay_manual_size = true;
+            captureH();
+        }
+        requestAnimationFrame(layout);
         return r;
     };
     layout();
@@ -545,6 +585,7 @@ function setupLive(hub) {
     const ocf = hub.onConfigure;
     hub.onConfigure = function () {
         const r = ocf?.apply(this, arguments);
+        requestAnimationFrame(layout);   // размер из сохранённой схемы
         schedule(1200);           // схема загружена из файла — провода уже на месте
         return r;
     };
@@ -608,9 +649,11 @@ function applyExpert(node) {
     }
     try {
         const sz = node.computeSize();
-        node.setSize([Math.max(node.size[0], sz[0]), sz[1]]);
+        // у Пульта с ручным размером высота окна запомнена числом — нода просто под содержимое
+        const h = sz[1];
+        node.setSize([Math.max(node.size[0], sz[0]), h]);
     } catch (_) {}
-    if (node.__relayLive?.fitNode) requestAnimationFrame(() => node.__relayLive.fitNode());   // Пульт: окно под новый размер
+    if (node.__relayLive?.fitNode) requestAnimationFrame(() => { node.__relayLive.fitNode(); node.__relayLive.layout?.(); });   // Пульт: окно под новый размер
     app.graph?.setDirtyCanvas(true, true);
 }
 
