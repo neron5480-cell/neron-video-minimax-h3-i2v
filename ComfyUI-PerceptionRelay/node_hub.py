@@ -445,6 +445,9 @@ class RelayHub:
         head += notes
         head.append(f"Итог: {final}")
         head.append(f"Отчёт для отправки / report to send: {share}")
+        head.append(f"Рабочая папка / work folder: {relay['job_dir']} — если ролик больше не нужен, её можно удалить "
+                    f"(готовые видео лежат рядом и не пострадают) / if the clip is no longer needed you can delete it "
+                    f"(final videos are next to it and stay safe)")
         text = "\n".join(head) + "\n\n" + text
 
         # выходы для сохранения
