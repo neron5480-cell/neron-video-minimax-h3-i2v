@@ -1,0 +1,853 @@
+{
+  "id": "a477deb9-9dd1-4404-961d-bec6a6671b5e",
+  "revision": 0,
+  "last_node_id": 93,
+  "last_link_id": 159,
+  "nodes": [
+    {
+      "id": 13,
+      "type": "NeronVideoClarity",
+      "pos": [
+        -3455.353955287053,
+        7042.7175365690255
+      ],
+      "size": [
+        375.658203125,
+        782
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 125
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 126
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            108
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            109
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronVideoClarity"
+      },
+      "widgets_values": [
+        "Simple",
+        "✋ Manual / Вручную",
+        true,
+        true,
+        true,
+        1,
+        1,
+        0.3,
+        0.2,
+        0.3,
+        false,
+        "rife",
+        2,
+        false,
+        0,
+        0,
+        0,
+        0,
+        0,
+        "16",
+        "gpu",
+        true,
+        64,
+        0.5,
+        5,
+        0.35,
+        0.08,
+        0.5,
+        "rife49.pth",
+        false,
+        null,
+        null
+      ],
+      "widgets_values_named": {
+        "MODE / РЕЖИМ": "Simple",
+        "PRESET / ПРЕСЕТ": "✋ Manual / Вручную",
+        "STABILIZE / СТАБИЛИЗАЦИЯ": true,
+        "MOTION COMP / КОМПЕНСАЦИЯ": true,
+        "DEFLICKER / ДЕФЛИКЕР": true,
+        "BRIGHTNESS / ЯРКОСТЬ": 1,
+        "SATURATION / НАСЫЩЕННОСТЬ": 1,
+        "SHARPEN / РЕЗКОСТЬ": 0.3,
+        "CONTRAST / ОБЪЁМ": 0.2,
+        "DETAILS / ДЕТАЛИЗАЦИЯ": 0.3,
+        "INTERPOLATE / ИНТЕРПОЛЯЦИЯ": false,
+        "ENGINE / ДВИЖОК": "rife",
+        "MULTIPLIER / МНОЖИТЕЛЬ": 2,
+        "AUDIO / ЗВУК": false,
+        "VOLUME / ГРОМКОСТЬ": 0,
+        "BASS / БАСЫ": 0,
+        "MID / СЕРЕДИНА": 0,
+        "TREBLE / ВЕРХА": 0,
+        "BALANCE / БАЛАНС": 0,
+        "VRAM PRESET / ПАМЯТЬ": "16",
+        "DEVICE / УСТРОЙСТВО": "gpu",
+        "AUTO CHUNK / АВТО-ЧАНК": true,
+        "CHUNK SIZE / РАЗМЕР": 64,
+        "FLOW SCALE / ТОЧНОСТЬ": 0.5,
+        "STAB WINDOW / ОКНО": 5,
+        "STAB STRENGTH / СИЛА": 0.35,
+        "MOTION THR / ПОРОГ": 0.08,
+        "DEFLICK STR / СИЛА ДЕФЛИКЕРА": 0.5,
+        "RIFE MODEL / МОДЕЛЬ": "rife49.pth",
+        "FREE AFTER RUN / ОЧИСТКА ПОСЛЕ": false,
+        "🔄 Reset to Defaults / Сброс": null,
+        "📖 Help / Справка": null
+      },
+      "color": "#4a2f1e",
+      "bgcolor": "#2e1c10"
+    },
+    {
+      "id": 37,
+      "type": "VHS_VideoCombine",
+      "pos": [
+        -3065.971384605326,
+        7043.768394240896
+      ],
+      "size": [
+        289.8662078075754,
+        616.329671490902
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 108
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 109
+        },
+        {
+          "name": "meta_batch",
+          "shape": 7,
+          "type": "VHS_BatchManager",
+          "link": null
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Filenames",
+          "type": "VHS_FILENAMES",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VHS_VideoCombine"
+      },
+      "widgets_values": {
+        "frame_rate": 24,
+        "loop_count": 0,
+        "filename_prefix": "AnimateDiff",
+        "format": "video/h264-mp4",
+        "pix_fmt": "yuv420p",
+        "crf": 19,
+        "save_metadata": true,
+        "trim_to_audio": false,
+        "pingpong": false,
+        "save_output": true,
+        "videopreview": {
+          "hidden": false,
+          "paused": false,
+          "params": {
+            "filename": "AnimateDiff_00021-audio.mp4",
+            "subfolder": "",
+            "type": "output",
+            "format": "video/h264-mp4",
+            "frame_rate": 24,
+            "workflow": "AnimateDiff_00021.png",
+            "fullpath": "C:\\Users\\home\\AppData\\Local\\Comfy-Desktop\\ComfyUI-Shared\\output\\AnimateDiff_00021-audio.mp4",
+            "metadata": {
+              "kind": "video",
+              "width": 1344,
+              "height": 768,
+              "duration": 2.3333333333333335,
+              "fps": 24,
+              "frame_count": 56
+            },
+            "id": "328ffe1e-29a2-4a81-848b-9f040e478079"
+          }
+        }
+      },
+      "widgets_values_named": {
+        "frame_rate": 24,
+        "loop_count": 0,
+        "filename_prefix": "AnimateDiff",
+        "format": "video/h264-mp4",
+        "pix_fmt": "yuv420p",
+        "crf": 19,
+        "save_metadata": true,
+        "trim_to_audio": false,
+        "pingpong": false,
+        "save_output": true,
+        "videopreview": {
+          "hidden": false,
+          "paused": false,
+          "params": {
+            "filename": "AnimateDiff_00021-audio.mp4",
+            "subfolder": "",
+            "type": "output",
+            "format": "video/h264-mp4",
+            "frame_rate": 24,
+            "workflow": "AnimateDiff_00021.png",
+            "fullpath": "C:\\Users\\home\\AppData\\Local\\Comfy-Desktop\\ComfyUI-Shared\\output\\AnimateDiff_00021-audio.mp4",
+            "metadata": {
+              "kind": "video",
+              "width": 1344,
+              "height": 768,
+              "duration": 2.3333333333333335,
+              "fps": 24,
+              "frame_count": 56
+            },
+            "id": "328ffe1e-29a2-4a81-848b-9f040e478079"
+          }
+        }
+      },
+      "color": "#332922",
+      "bgcolor": "#593930"
+    },
+    {
+      "id": 41,
+      "type": "CR Prompt Text",
+      "pos": [
+        -4493.947239877175,
+        7037.560994141269
+      ],
+      "size": [
+        210,
+        261.531364935473
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            156
+          ]
+        },
+        {
+          "name": "show_help",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "title": "Промт",
+      "properties": {
+        "Node name for S&R": "CR Prompt Text"
+      },
+      "widgets_values": [
+        "видео 2 сек.\nдевушка улыбается на камеру. Ветер трепещет ее волосы."
+      ],
+      "widgets_values_named": {
+        "prompt": "видео 2 сек.\nдевушка улыбается на камеру. Ветер трепещет ее волосы."
+      },
+      "color": "#332922",
+      "bgcolor": "#593930"
+    },
+    {
+      "id": 62,
+      "type": "NeronStudioImageProcessor",
+      "pos": [
+        -4860.7412412632275,
+        7042.006969006956
+      ],
+      "size": [
+        353.884765625,
+        1156
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "upscale_model",
+          "shape": 7,
+          "type": "UPSCALE_MODEL",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            155
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronStudioImageProcessor"
+      },
+      "widgets_values": [
+        "",
+        "Cinematic style, Pencil d - Free AI Image _ Tensor_Art.jpg",
+        "Disabled / Отключено",
+        "1024x1024 (1:1 Square)",
+        "1:1",
+        1024,
+        1024,
+        1024,
+        "1.0 MP (1024x1024)",
+        32,
+        0,
+        1,
+        1,
+        0,
+        "Disabled / Откл",
+        2,
+        "image",
+        "",
+        "",
+        null,
+        null
+      ],
+      "widgets_values_named": {
+        "_spacer": "",
+        "image": "Cinematic style, Pencil d - Free AI Image _ Tensor_Art.jpg",
+        "resize_mode": "Disabled / Отключено",
+        "ai_preset": "1024x1024 (1:1 Square)",
+        "aspect_ratio": "1:1",
+        "max_dimension": 1024,
+        "manual_width": 1024,
+        "manual_height": 1024,
+        "megapixels": "1.0 MP (1024x1024)",
+        "divisible_by": 32,
+        "BRIGHTNESS / ЯРКОСТЬ": 0,
+        "CONTRAST / КОНТРАСТ": 1,
+        "SATURATION / НАСЫЩЕННОСТЬ": 1,
+        "SHARPNESS / РЕЗКОСТЬ": 0,
+        "upscale": "Disabled / Откл",
+        "upscale_scale": 2,
+        "upload": "image",
+        "interactive_preview": "",
+        "🔄 Reset to Defaults / Сброс": null,
+        "📖 Help / Справка": null
+      },
+      "color": "#4a2f1e",
+      "bgcolor": "#2e1c10"
+    },
+    {
+      "id": 82,
+      "type": "NeronMiniMaxH3Generator",
+      "pos": [
+        -3849.9992039840863,
+        7042.172853016935
+      ],
+      "size": [
+        375.658203125,
+        658
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prompt",
+          "shape": 7,
+          "type": "STRING",
+          "link": 149
+        },
+        {
+          "name": "ref_image_0",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 151
+        },
+        {
+          "name": "ref_image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 152
+        },
+        {
+          "name": "ref_image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 153
+        },
+        {
+          "name": "ref_image_3",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 154
+        },
+        {
+          "name": "ref_video",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "ref_video_audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "ref_audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "width",
+          "shape": 7,
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "height",
+          "shape": 7,
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "length_in",
+          "shape": 7,
+          "type": "INT",
+          "link": 150
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "IMAGE",
+          "links": [
+            125
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            126
+          ]
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "frames_count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronMiniMaxH3Generator"
+      },
+      "widgets_values": [
+        "",
+        false,
+        "Turbo / Турбо",
+        2,
+        "Пресеты / Presets",
+        "Кино 16:9 (1344x768)",
+        1344,
+        768,
+        32,
+        false,
+        "None / Не выбрано",
+        1,
+        false,
+        "None / Не выбрано",
+        1,
+        false,
+        "None / Не выбрано",
+        1,
+        true,
+        0,
+        "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+        "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "minimax_h3_video_vae_fp16.safetensors",
+        "minimax_h3_audio_vae_fp32.safetensors",
+        "minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors",
+        20,
+        8,
+        520799999211144,
+        "randomize",
+        "",
+        null,
+        null
+      ],
+      "widgets_values_named": {
+        "_spacer": "",
+        "expert_mode": false,
+        "MODE / РЕЖИМ": "Turbo / Турбо",
+        "SECONDS / СЕКУНДЫ": 2,
+        "resolution_mode": "Пресеты / Presets",
+        "resolution_preset": "Кино 16:9 (1344x768)",
+        "manual_width": 1344,
+        "manual_height": 768,
+        "divisible_by": 32,
+        "slot_1_enabled": false,
+        "slot_1_lora": "None / Не выбрано",
+        "slot_1_strength": 1,
+        "slot_2_enabled": false,
+        "slot_2_lora": "None / Не выбрано",
+        "slot_2_strength": 1,
+        "slot_3_enabled": false,
+        "slot_3_lora": "None / Не выбрано",
+        "slot_3_strength": 1,
+        "FREE AFTER RUN / ОЧИСТКА ПОСЛЕ": true,
+        "decode_tile_size": 0,
+        "unet_model": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+        "clip_model": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "vae_video_model": "minimax_h3_video_vae_fp16.safetensors",
+        "vae_audio_model": "minimax_h3_audio_vae_fp32.safetensors",
+        "turbo_lora_model": "minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors",
+        "normal_steps": 20,
+        "turbo_steps": 8,
+        "seed": 520799999211144,
+        "control_after_generate": "randomize",
+        "🔄 Reset to Defaults / Сброс": null,
+        "📖 Help / Справка": null
+      },
+      "color": "#4a2f1e",
+      "bgcolor": "#2e1c10"
+    },
+    {
+      "id": 87,
+      "type": "NeronAutoPrompter",
+      "pos": [
+        -4273.369006436392,
+        7037.301517153222
+      ],
+      "size": [
+        412.572265625,
+        578
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prompt_in",
+          "shape": 7,
+          "type": "STRING",
+          "link": 156
+        },
+        {
+          "name": "image_0",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 155
+        },
+        {
+          "name": "image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "last_frame",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "minimax_prompt",
+          "type": "STRING",
+          "links": [
+            149
+          ]
+        },
+        {
+          "name": "frames_count",
+          "type": "INT",
+          "links": [
+            150
+          ]
+        },
+        {
+          "name": "storyboard_json",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "img_0",
+          "type": "IMAGE",
+          "links": [
+            151
+          ]
+        },
+        {
+          "name": "img_1",
+          "type": "IMAGE",
+          "links": [
+            152
+          ]
+        },
+        {
+          "name": "img_2",
+          "type": "IMAGE",
+          "links": [
+            153
+          ]
+        },
+        {
+          "name": "last_frm",
+          "type": "IMAGE",
+          "links": [
+            154
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronAutoPrompter"
+      },
+      "widgets_values": [
+        "",
+        false,
+        "[LLM] Autoprompter (Naxdy Brief) / Автопромтер",
+        "AUTO / АВТО",
+        "medium shot",
+        1,
+        2,
+        24,
+        "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q4_K_M.gguf",
+        "mmproj-F16.gguf",
+        "H3_NSFW_Engine 1.txt",
+        4096,
+        0.7,
+        16384,
+        -1,
+        false,
+        "",
+        "",
+        "",
+        null,
+        null
+      ],
+      "widgets_values_named": {
+        "_spacer": "",
+        "expert_mode": false,
+        "workflow_mode": "[LLM] Autoprompter (Naxdy Brief) / Автопромтер",
+        "camera_mode": "AUTO / АВТО",
+        "framing_type": "medium shot",
+        "fixed_distance": 1,
+        "seconds": 2,
+        "fps": 24,
+        "model": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q4_K_M.gguf",
+        "mmproj": "mmproj-F16.gguf",
+        "system_prompt": "H3_NSFW_Engine 1.txt",
+        "max_tokens": 4096,
+        "temperature": 0.7,
+        "n_ctx": 16384,
+        "n_gpu_layers": -1,
+        "UNLOAD AFTER RUN / ВЫГРУЖАТЬ ПОСЛЕ": false,
+        "manual_prompt": "",
+        "subject_details": "",
+        "🔄 Reset to Defaults / Сброс": null,
+        "📖 Help / Справка": null
+      },
+      "color": "#4a2f1e",
+      "bgcolor": "#2e1c10"
+    },
+    {
+      "id": 93,
+      "type": "Note",
+      "pos": [
+        -5448.3761045634365,
+        7034.395353636477
+      ],
+      "size": [
+        567.7396269530773,
+        263.2885660937418
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "🛑 ВНИМАНИЕ! ПРОЧТИ МЕНЯ! 🛑",
+      "properties": {},
+      "widgets_values": [
+        " 🛑 ВНИМАНИЕ! ПРОЧТИ МЕНЯ! 🛑\n\n### ПЕРЕД НАЧАЛОМ РАБОТЫ ОБЯЗАТЕЛЬНО ПРОЧИТАЙТЕ СПРАВКУ!\nНажмите кнопку \"📖 Help / Справка\" в самом низу ЛЮБОЙ из нод. Там расписаны все настройки, физика работы модели, советы по разрешению и ответы на частые вопросы.\n\n### 💡 ГИБКОСТЬ НАСТРОЕК\nГенератор и Автопромптер поддерживают замену моделей на более легкие версии. \nЕсли ваше железо не тянет стандартные файлы (указанные ниже), зайдите в EXPERT MODE (Экспертный режим) внутри ноды и выберите более слабую модель. Например, используйте квант Q4_K_M вместо Q8 для LLM, или облегченный FP8 / GGUF для H3.\n\n### 📦 1. БАЗОВЫЕ МОДЕЛИ H3 (Скачать и разложить по путям)\n*   **UNET:** minimax_h3_fl2va_pruned_int8_convrot.safetensors (в models/diffusion_models/)\n    Ссылка: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors\n\n*   **CLIP:** qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors (в models/text_encoders/)\n    Ссылка: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors\n\n*   **VAE Video:** minimax_h3_video_vae_fp16.safetensors (в models/vae/)\n    Ссылка: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors\n\n*   **VAE Audio:** minimax_h3_audio_vae_fp32.safetensors (в models/vae/)\n    Ссылка: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors\n\n*   **Turbo LoRA:** minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors (в models/loras/)\n    Ссылка: https://huggingface.co/lightx2v/Minimax-h3-Turbo/resolve/main/minimax_h3_fl2v_turbo_8step_v1.0_bf16.safetensors\n\n### 🧠 2. МОДЕЛИ ДЛЯ LLM (Автопромптер)\nЗдесь указана модель как пример. Вы можете использовать любые Vision-модели (GGUF), которые потянет ваша видеокарта.\n*   **Модель (GGUF):** Qwen3.5-9B или любые Qwen-VL / LLaVA (в models/LLM/)\n    Ссылка: https://huggingface.co/prithivMLmods/Qwen3.5-9B-MTP-GGUF\n*   **Проектор (mmproj):** mmproj-F16.gguf (в models/LLM/, скачивать из той же репы, откуда и модель)\n\n### 🛠 3. КАСТОМНЫЕ НОДЫ (Установить через ComfyUI Manager или в custom_nodes)\n*   Neron Studio: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n*   ComfyUI-LLM-text-processor: https://github.com/KingManiya/ComfyUI-LLM-text-processor\n*   ComfyUI-VideoHelperSuite: https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite\n*   Comfyroll Studio: https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes\n\n================================================================================\n\n# 🛑 ATTENTION! READ ME! 🛑\n\n### BEFORE YOU START, PLEASE READ THE HELP!\nClick the \"📖 Help / Справка\" button at the bottom of ANY node. It contains all settings, model physics, resolution tips, and FAQ.\n\n### 💡 FLEXIBILITY\nThe Generator and AutoPrompter support swapping models for lighter versions. \nIf your hardware struggles with the default files (listed below), open EXPERT MODE inside the node and select a weaker model. For example, use Q4_K_M instead of Q8 for LLM, or FP8 / GGUF for H3.\n\n### 📦 1. H3 BASE MODELS (Download and place in ComfyUI paths)\n*   **UNET:** minimax_h3_fl2va_pruned_int8_convrot.safetensors (to models/diffusion_models/)\n    Link: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors\n\n*   **CLIP:** qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors (to models/text_encoders/)\n    Link: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors\n\n*   **VAE Video:** minimax_h3_video_vae_fp16.safetensors (to models/vae/)\n    Link: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors\n\n*   **VAE Audio:** minimax_h3_audio_vae_fp32.safetensors (to models/vae/)\n    Link: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors\n\n*   **Turbo LoRA:** minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors (to models/loras/)\n    Link: https://huggingface.co/lightx2v/Minimax-h3-Turbo/resolve/main/minimax_h3_fl2v_turbo_8step_v1.0_bf16.safetensors\n\n### 🧠 2. LLM MODELS (AutoPrompter)\nThis is an example. You can use any Vision GGUF models your GPU can handle.\n*   **Model (GGUF):** Qwen3.5-9B or any Qwen-VL / LLaVA (to models/LLM/)\n    Link: https://huggingface.co/prithivMLmods/Qwen3.5-9B-MTP-GGUF\n*   **Projector (mmproj):** mmproj-F16.gguf (to models/LLM/, download from the same repo as the model)\n\n### 🛠 3. CUSTOM NODES (Install via ComfyUI Manager or into custom_nodes)\n*   Neron Studio: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n*   ComfyUI-LLM-text-processor: https://github.com/KingManiya/ComfyUI-LLM-text-processor\n*   ComfyUI-VideoHelperSuite: https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite\n*   Comfyroll Studio: https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes"
+      ],
+      "widgets_values_named": {
+        "text": " 🛑 ВНИМАНИЕ! ПРОЧТИ МЕНЯ! 🛑\n\n### ПЕРЕД НАЧАЛОМ РАБОТЫ ОБЯЗАТЕЛЬНО ПРОЧИТАЙТЕ СПРАВКУ!\nНажмите кнопку \"📖 Help / Справка\" в самом низу ЛЮБОЙ из нод. Там расписаны все настройки, физика работы модели, советы по разрешению и ответы на частые вопросы.\n\n### 💡 ГИБКОСТЬ НАСТРОЕК\nГенератор и Автопромптер поддерживают замену моделей на более легкие версии. \nЕсли ваше железо не тянет стандартные файлы (указанные ниже), зайдите в EXPERT MODE (Экспертный режим) внутри ноды и выберите более слабую модель. Например, используйте квант Q4_K_M вместо Q8 для LLM, или облегченный FP8 / GGUF для H3.\n\n### 📦 1. БАЗОВЫЕ МОДЕЛИ H3 (Скачать и разложить по путям)\n*   **UNET:** minimax_h3_fl2va_pruned_int8_convrot.safetensors (в models/diffusion_models/)\n    Ссылка: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors\n\n*   **CLIP:** qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors (в models/text_encoders/)\n    Ссылка: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors\n\n*   **VAE Video:** minimax_h3_video_vae_fp16.safetensors (в models/vae/)\n    Ссылка: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors\n\n*   **VAE Audio:** minimax_h3_audio_vae_fp32.safetensors (в models/vae/)\n    Ссылка: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors\n\n*   **Turbo LoRA:** minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors (в models/loras/)\n    Ссылка: https://huggingface.co/lightx2v/Minimax-h3-Turbo/resolve/main/minimax_h3_fl2v_turbo_8step_v1.0_bf16.safetensors\n\n### 🧠 2. МОДЕЛИ ДЛЯ LLM (Автопромптер)\nЗдесь указана модель как пример. Вы можете использовать любые Vision-модели (GGUF), которые потянет ваша видеокарта.\n*   **Модель (GGUF):** Qwen3.5-9B или любые Qwen-VL / LLaVA (в models/LLM/)\n    Ссылка: https://huggingface.co/prithivMLmods/Qwen3.5-9B-MTP-GGUF\n*   **Проектор (mmproj):** mmproj-F16.gguf (в models/LLM/, скачивать из той же репы, откуда и модель)\n\n### 🛠 3. КАСТОМНЫЕ НОДЫ (Установить через ComfyUI Manager или в custom_nodes)\n*   Neron Studio: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n*   ComfyUI-LLM-text-processor: https://github.com/KingManiya/ComfyUI-LLM-text-processor\n*   ComfyUI-VideoHelperSuite: https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite\n*   Comfyroll Studio: https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes\n\n================================================================================\n\n# 🛑 ATTENTION! READ ME! 🛑\n\n### BEFORE YOU START, PLEASE READ THE HELP!\nClick the \"📖 Help / Справка\" button at the bottom of ANY node. It contains all settings, model physics, resolution tips, and FAQ.\n\n### 💡 FLEXIBILITY\nThe Generator and AutoPrompter support swapping models for lighter versions. \nIf your hardware struggles with the default files (listed below), open EXPERT MODE inside the node and select a weaker model. For example, use Q4_K_M instead of Q8 for LLM, or FP8 / GGUF for H3.\n\n### 📦 1. H3 BASE MODELS (Download and place in ComfyUI paths)\n*   **UNET:** minimax_h3_fl2va_pruned_int8_convrot.safetensors (to models/diffusion_models/)\n    Link: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors\n\n*   **CLIP:** qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors (to models/text_encoders/)\n    Link: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors\n\n*   **VAE Video:** minimax_h3_video_vae_fp16.safetensors (to models/vae/)\n    Link: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors\n\n*   **VAE Audio:** minimax_h3_audio_vae_fp32.safetensors (to models/vae/)\n    Link: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors\n\n*   **Turbo LoRA:** minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors (to models/loras/)\n    Link: https://huggingface.co/lightx2v/Minimax-h3-Turbo/resolve/main/minimax_h3_fl2v_turbo_8step_v1.0_bf16.safetensors\n\n### 🧠 2. LLM MODELS (AutoPrompter)\nThis is an example. You can use any Vision GGUF models your GPU can handle.\n*   **Model (GGUF):** Qwen3.5-9B or any Qwen-VL / LLaVA (to models/LLM/)\n    Link: https://huggingface.co/prithivMLmods/Qwen3.5-9B-MTP-GGUF\n*   **Projector (mmproj):** mmproj-F16.gguf (to models/LLM/, download from the same repo as the model)\n\n### 🛠 3. CUSTOM NODES (Install via ComfyUI Manager or into custom_nodes)\n*   Neron Studio: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n*   ComfyUI-LLM-text-processor: https://github.com/KingManiya/ComfyUI-LLM-text-processor\n*   ComfyUI-VideoHelperSuite: https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite\n*   Comfyroll Studio: https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      108,
+      13,
+      0,
+      37,
+      0,
+      "IMAGE"
+    ],
+    [
+      109,
+      13,
+      1,
+      37,
+      1,
+      "AUDIO"
+    ],
+    [
+      125,
+      82,
+      0,
+      13,
+      0,
+      "IMAGE"
+    ],
+    [
+      126,
+      82,
+      1,
+      13,
+      1,
+      "AUDIO"
+    ],
+    [
+      149,
+      87,
+      0,
+      82,
+      0,
+      "STRING"
+    ],
+    [
+      150,
+      87,
+      1,
+      82,
+      10,
+      "INT"
+    ],
+    [
+      151,
+      87,
+      3,
+      82,
+      1,
+      "IMAGE"
+    ],
+    [
+      152,
+      87,
+      4,
+      82,
+      2,
+      "IMAGE"
+    ],
+    [
+      153,
+      87,
+      5,
+      82,
+      3,
+      "IMAGE"
+    ],
+    [
+      154,
+      87,
+      6,
+      82,
+      4,
+      "IMAGE"
+    ],
+    [
+      155,
+      62,
+      0,
+      87,
+      1,
+      "IMAGE"
+    ],
+    [
+      156,
+      41,
+      0,
+      87,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.116781577942497,
+      "offset": [
+        5837.306766097535,
+        -6704.117374390983
+      ]
+    },
+    "frontendVersion": "1.55.17",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

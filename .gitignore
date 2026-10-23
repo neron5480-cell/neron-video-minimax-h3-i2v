@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+
+# Скачивается/создаётся нодами при работе / created by nodes at runtime
+vendor/
+sessions/
+last_selection.json
