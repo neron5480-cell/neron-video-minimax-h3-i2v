@@ -336,6 +336,9 @@ def render_source(src):
         return render_project(kit, bpm, src.get("json", "{}"))
     if kind == "file":
         return render_file(src)
+    if kind == "sampler":
+        from .sampler import render_sampler_spec   # поздний импорт
+        return render_sampler_spec(src)
     if kind == "arrange":
         from .arrange import render_arrange_spec   # поздний импорт: arrange сам опирается на mixer
         return render_arrange_spec(src)
@@ -616,8 +619,13 @@ class NeronMixer:
                 # кубик «Звук ×8»: каждый звук — отдельный канал audio_N/1, audio_N/2, ...
                 for k, snd in enumerate(val.get("sounds") or []):
                     st = proj["settings"].get(f"{slot}/{k + 1}", _default_setting())
-                    channels.append({"wave": render_file({"name": snd["name"], "subfolder": snd.get("subfolder", ""), "kind": snd.get("type", "input"),
-                                                          "start": snd.get("start", 0), "end": snd.get("end", 0)}),
+                    # готовый звук (результат Сэмплера) или файл из «Звук ×8»
+                    wave = np.asarray(snd["wave"], dtype=np.float32) if snd.get("wave") is not None else \
+                        render_file({"name": snd["name"], "subfolder": snd.get("subfolder", ""), "kind": snd.get("type", "input"),
+                                     "start": snd.get("start", 0), "end": snd.get("end", 0)})
+                    if snd.get("wave") is not None and len(val.get("sounds") or []) == 1:
+                        st = proj["settings"].get(slot, st)      # канал Сэмплера в Пульте — audio_N
+                    channels.append({"wave": wave,
                                      "vol": st["vol"], "pan": st["pan"], "mute": st["mute"], "solo": st["solo"]})
                 continue
             st = proj["settings"].get(slot, _default_setting())

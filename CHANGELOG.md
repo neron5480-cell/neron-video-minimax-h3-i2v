@@ -1,5 +1,20 @@
 # Changelog / История изменений
 
+## dev — Neron Audio Studio: Сэмплер / Sampler (на проверке / in testing)
+
+**RU:**
+- **Neron Sampler / Сэмплер** — нода между «Звук ×8» и Пультом. Вид как у Piano Roll: слева дорожки, справа сетка по тактам, каждый звук — блок.
+- **⏭ ПРОПУСТИТЬ** нажата — сэмплер не работает, все звуки идут в Пульт как есть, каждый своим каналом. Отжата — Пульт видит только результат сэмплера, одним каналом «🎛 СЭМПЛЕР».
+- Новый звук сам ложится на свою дорожку в начало. Блоки двигаются (и на другую дорожку — звуки складываются), края обрезаются, квадратики в углах — появление и затухание, двойной клик по пустому — поставить звук, ⧉ копия сразу после (Ctrl+D), ✂ разрезать (S), отмена (Ctrl+Z).
+- Сетка: такт, 1/2, 1/4, 1/8, 1/16 или без сетки. BPM синхронизирует Пульт. У дорожки M, S, громкость.
+- Результат идёт целыми тактами, поэтому в Пульте луп повторяется ровно. Пульт слышит сэмплер сразу, без Queue.
+
+**EN:**
+- **Neron Sampler** — sits between Sound ×8 and the Pult. Looks like the Piano Roll: tracks on the left, a bar grid on the right, every sound is a block.
+- **⏭ BYPASS** on — all sounds go to the Pult as they are; off — the Pult sees only the sampler result as one channel.
+- A new sound places itself on its own track at the start. Move blocks (also between tracks), trim edges, fades, double click to place, copy (Ctrl+D), split (S), undo.
+- Grid: bar, 1/2, 1/4, 1/8, 1/16 or free; BPM synced by the Pult; tracks have M, S, volume. The result is whole bars, so it loops evenly; the Pult hears it without Queue.
+
 ## 2026-10-25 — Neron Audio Studio: кубики и Пульт / cubes and the Pult
 
 **RU:**

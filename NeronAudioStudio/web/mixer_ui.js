@@ -411,6 +411,19 @@ function setupMixerUI(node) {
                 spec: f ? { type: "file", name: f.name, subfolder: f.subfolder, kind: f.kind, start, end } : null,
             };
         }
+        if (cls === "NeronSampler" && typeof o.neronCube === "function") {
+            const st = o.neronCube();
+            if (st.bypass) {
+                // ⏭ ПРОПУСТИТЬ: все звуки идут насквозь, каждый своим каналом
+                return {
+                    originId: o.id, node: o, kind: "cube", multi: st.items.map((f, k) => ({
+                        originId: o.id + "/" + k, node: o, kind: "file", label: `🎵 ${k + 1}. ${f.name}`, sub: T("Сэмплер ⏭ пропущен", "Sampler ⏭ bypassed"),
+                        spec: { type: "file", name: f.name, subfolder: f.subfolder || "", kind: f.type || "input", start: f.start || 0, end: f.end || 0 },
+                    })),
+                };
+            }
+            return { originId: o.id, node: o, kind: "sampler", label: "🎛 " + T("СЭМПЛЕР", "SAMPLER"), sub: title, spec: st.spec };
+        }
         if (cls === "NeronSoundCube") {
             // кубик «Звук ×8»: каждый звук — свой канал
             const items = typeof o.neronCube === "function" ? o.neronCube().items : [];
