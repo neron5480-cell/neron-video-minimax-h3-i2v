@@ -352,6 +352,9 @@ def render_source(src):
     if kind == "sampler":
         from .sampler import render_sampler_spec   # поздний импорт
         return render_sampler_spec(src)
+    if kind == "studio":
+        from .studio import render_studio_spec   # поздний импорт
+        return render_studio_spec(src)
     if kind == "arrange":
         from .arrange import render_arrange_spec   # поздний импорт: arrange сам опирается на mixer
         return render_arrange_spec(src)

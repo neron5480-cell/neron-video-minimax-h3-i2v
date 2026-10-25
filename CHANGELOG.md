@@ -1,5 +1,20 @@
 # Changelog / История изменений
 
+## dev — Neron Audio Studio: Студия / Studio (на проверке / in testing)
+
+**RU:**
+- **Neron Studio / Студия 🎛** — посредник между «Музыкой» (или «Звук ×8», сэмплером) и Пультом. **Каждая дорожка студии** (HIHATS, KICKS, каждая дорожка пианино, каждый звук) — свой канал: ▶ (слушать только её), M, S, громкость, баланс, **НИЗ / СЕР / ВЕРХ**, **ЭХО** + помещение, ↺, индикатор уровня и волна с бегунком.
+- **Общий эквалайзер на выходе — 10 полос** (31 Гц … 16 кГц, ±12 дБ): тяните точки вверх-вниз, колёсико — точнее, двойной клик — в ноль. Под кривой — **живой спектр** звука. Готовые настройки: Ровно, Больше баса, Ярче, Тёплый, Голос впереди, Улыбка, Клуб, Старое радио. **ВКЛ / ВЫКЛ** — сравнить «с ним / без него».
+- ⏭ ПРОПУСТИТЬ — Пульт видит всё, как будто Студии нет (у «Музыки» — барабаны и пианино). Отжата — Пульт слышит Студию одним каналом «🎛 СТУДИЯ» (и заранее, без Queue).
+- «Музыка» теперь отдаёт каждую дорожку отдельно (для Студии); Пульт по-прежнему видит два канала.
+- Ручки и эхо вынесены в общий файл — в Пульте и Студии они одинаковые. Рабочий стол: Музыка → Студия → Пульт.
+
+**EN:**
+- **Neron Studio 🎛** — between Music (or Sound ×8, the sampler) and the Pult. **Every studio track** is its own channel: ▶ (solo listen), M, S, volume, pan, **LOW / MID / HIGH**, **REVERB** + room, ↺, a level meter and a wave with a playhead.
+- **10-band master EQ** (31 Hz … 16 kHz, ±12 dB): drag the points, wheel for fine steps, double-click resets. A **live spectrum** under the curve. Presets: Flat, More bass, Brighter, Warm, Voice up front, Smile, Club, Old radio. **ON / OFF** to compare.
+- ⏭ BYPASS — the Pult sees everything as if the Studio weren't there. Off — the Pult hears the Studio as one "🎛 STUDIO" channel (also before Queue).
+- Music now also outputs every track separately (for the Studio); the Pult still sees two channels. Knobs and reverb live in a shared file. Ready desk: Music → Studio → Pult.
+
 ## dev — Neron Audio Studio: музыка под ролик / music to the clip (на проверке / in testing)
 
 **RU:**

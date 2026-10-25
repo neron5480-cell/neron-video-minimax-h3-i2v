@@ -10,6 +10,7 @@ EN: Drums and piano in one node — 🥁 / 🎹 tabs, one tempo, a "play all" bu
     reverb). The audio output is everything mixed into one sound.
 """
 
+import json
 import numpy as np
 import torch
 
@@ -21,6 +22,35 @@ def render_music(kit_name, bpm, pattern_json, project_json):
     drums = render_pattern(kit_name, bpm, pattern_json)
     piano = render_project(kit_name, bpm, project_json)
     return drums, piano
+
+
+def _tracks(js):
+    try:
+        raw = json.loads(js) if isinstance(js, str) else js
+    except Exception:
+        raw = {}
+    raw = raw if isinstance(raw, dict) else {}
+    tr = raw.get("tracks")
+    return raw, [t for t in (tr if isinstance(tr, list) else []) if isinstance(t, dict)]
+
+
+def stem_name(t, i):
+    """Имя дорожки — так же его считает интерфейс Студии."""
+    return str(t.get("name") or t.get("folder") or f"Track {i + 1}")
+
+
+def music_stems(kit_name, bpm, pattern_json, project_json, limit=16):
+    """Каждая дорожка барабанов и пианино отдельно (для Студии). Порядок: барабаны, потом пианино."""
+    out = []
+    raw, tracks = _tracks(pattern_json)
+    for i, t in enumerate(tracks):
+        one = dict(raw, tracks=[dict(t, solo=False)])
+        out.append({"name": stem_name(t, i), "group": "drums", "wave": render_pattern(kit_name, bpm, json.dumps(one))})
+    raw, tracks = _tracks(project_json)
+    for i, t in enumerate(tracks):
+        one = dict(raw, tracks=[dict(t, solo=False)])
+        out.append({"name": stem_name(t, i), "group": "piano", "wave": render_project(kit_name, bpm, json.dumps(one))})
+    return out[:limit]
 
 
 def mix_loops(waves):
@@ -69,7 +99,9 @@ class NeronMusic:
         sounds = {"neron": "sounds", "sounds": [
             {"name": "Барабаны / Drums", "wave": drums},
             {"name": "Пианино / Piano", "wave": piano},
-        ]}
+        ],
+            # каждая дорожка отдельно — для Студии (Пульт их не трогает)
+            "stems": music_stems(kit_name, bpm, pattern_json, project_json)}
         waveform = torch.from_numpy(np.ascontiguousarray(mix.T)).float().unsqueeze(0)
         return (sounds, {"waveform": waveform, "sample_rate": SAMPLE_RATE}, int(_num(bpm, 90, 40, 300)))
 

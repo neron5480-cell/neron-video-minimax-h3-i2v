@@ -47,13 +47,13 @@ def has_fx(fx):
     return bool(fx) and (any(abs(fx.get(k, 0.0)) > 0.05 for k in ("low", "mid", "high")) or fx.get("rev", 0.0) > 0.005)
 
 
-def _biquad_mag(kind, f0, gain_db, freqs, sr=SR):
+def _biquad_mag(kind, f0, gain_db, freqs, sr=SR, q=MID_Q):
     """|H(f)| фильтра по формулам RBJ — так же считает BiquadFilterNode в браузере."""
     A = 10.0 ** (gain_db / 40.0)
     w0 = 2.0 * np.pi * f0 / sr
     cw, sw = np.cos(w0), np.sin(w0)
     if kind == "peaking":
-        alpha = sw / (2.0 * MID_Q)
+        alpha = sw / (2.0 * q)
         b0, b1, b2 = 1 + alpha * A, -2 * cw, 1 - alpha * A
         a0, a1, a2 = 1 + alpha / A, -2 * cw, 1 - alpha / A
     else:
@@ -148,4 +148,41 @@ def apply_fx(wave, fx):
     else:
         Y = X
     y = np.fft.irfft(Y, n=nfft, axis=0)[:n]
+    return np.ascontiguousarray(y, dtype=np.float32)
+
+
+# ----------------------------------------------------------------------------
+#  Общий эквалайзер на 10 полос (Студия) — те же фильтры, что в браузере
+# ----------------------------------------------------------------------------
+EQ10 = (31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000)
+EQ10_Q = 1.1
+
+
+def eq10_kind(i):
+    return "lowshelf" if i == 0 else ("highshelf" if i == len(EQ10) - 1 else "peaking")
+
+
+def parse_eq10(v):
+    out = []
+    for i in range(len(EQ10)):
+        try:
+            out.append(float(np.clip(float(v[i]), -12.0, 12.0)))
+        except Exception:
+            out.append(0.0)
+    return out
+
+
+def apply_eq10(wave, gains):
+    if wave is None or not len(wave) or not any(abs(g) > 0.05 for g in gains):
+        return wave
+    x = np.asarray(wave, dtype=np.float32)
+    n = len(x)
+    nfft = 1 << int(np.ceil(np.log2(max(2, n))))
+    X = np.fft.rfft(x, n=nfft, axis=0)
+    freqs = np.fft.rfftfreq(nfft, 1.0 / SR)
+    mag = np.ones_like(freqs)
+    for i, g in enumerate(gains):
+        if abs(g) > 0.05:
+            mag *= _biquad_mag(eq10_kind(i), EQ10[i], g, freqs, q=EQ10_Q)
+    y = np.fft.irfft(X * mag[:, None], n=nfft, axis=0)[:n]
     return np.ascontiguousarray(y, dtype=np.float32)

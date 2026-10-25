@@ -1,8 +1,8 @@
 {
- "id": "fd98e7fa-f8db-4abd-bc49-6b1c86fbc629",
+ "id": "1c200703-3965-41f6-9b24-5562c3461b4a",
  "revision": 0,
- "last_node_id": 6,
- "last_link_id": 5,
+ "last_node_id": 7,
+ "last_link_id": 6,
  "nodes": [
   {
    "id": 1,
@@ -334,6 +334,67 @@
   },
   {
    "id": 6,
+   "type": "NeronStudio",
+   "pos": [
+    840,
+    1890
+   ],
+   "size": [
+    1100,
+    394
+   ],
+   "flags": {},
+   "order": 5,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "sounds",
+     "name": "sounds",
+     "shape": 7,
+     "type": "NERON_SOUNDS",
+     "link": 5
+    },
+    {
+     "localized_name": "studio_json",
+     "name": "studio_json",
+     "type": "STRING",
+     "widget": {
+      "name": "studio_json"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "sounds",
+     "name": "sounds",
+     "type": "NERON_SOUNDS",
+     "links": [
+      6
+     ]
+    },
+    {
+     "localized_name": "audio",
+     "name": "audio",
+     "type": "AUDIO",
+     "links": null
+    }
+   ],
+   "title": "🎛 Студия / Studio",
+   "properties": {
+    "Node name for S&R": "NeronStudio"
+   },
+   "widgets_values": [
+    "{\"version\": 1, \"bypass\": false, \"master\": 1.0, \"eq_on\": true, \"eq\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"ch\": {}}",
+    ""
+   ],
+   "widgets_values_named": {
+    "studio_json": "{\"version\": 1, \"bypass\": false, \"master\": 1.0, \"eq_on\": true, \"eq\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"ch\": {}}",
+    "neron_studio": ""
+   }
+  },
+  {
+   "id": 7,
    "type": "NeronMixer",
    "pos": [
     2020,
@@ -341,10 +402,10 @@
    ],
    "size": [
     900,
-    420
+    366
    ],
    "flags": {},
-   "order": 5,
+   "order": 6,
    "mode": 0,
    "inputs": [
     {
@@ -389,7 +450,7 @@
     {
      "name": "audio_2",
      "type": "AUDIO,NERON_SOUNDS",
-     "link": 5
+     "link": 6
     },
     {
      "name": "audio_3",
@@ -434,12 +495,12 @@
     "Node name for S&R": "NeronMixer"
    },
    "widgets_values": [
-    "{\"version\":3,\"repeats\":1,\"master\":0.9,\"bpm\":90,\"bpm_set\":true,\"sync_bpm\":true,\"fit\":true,\"fade\":1.5,\"fit_sec\":0,\"video\":null,\"videos\":[],\"video_manual\":null,\"tracks\":[{\"slot\":\"audio_2/1\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0},{\"slot\":\"audio_2/2\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0}]}",
+    "{\"version\":3,\"repeats\":1,\"master\":0.9,\"bpm\":90,\"bpm_set\":true,\"sync_bpm\":true,\"fit\":true,\"fade\":1.5,\"fit_sec\":0,\"video\":null,\"videos\":[],\"video_manual\":null,\"tracks\":[{\"slot\":\"audio_2\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0}]}",
     "neron_mix",
     ""
    ],
    "widgets_values_named": {
-    "mixer_json": "{\"version\":3,\"repeats\":1,\"master\":0.9,\"bpm\":90,\"bpm_set\":true,\"sync_bpm\":true,\"fit\":true,\"fade\":1.5,\"fit_sec\":0,\"video\":null,\"videos\":[],\"video_manual\":null,\"tracks\":[{\"slot\":\"audio_2/1\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0},{\"slot\":\"audio_2/2\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0}]}",
+    "mixer_json": "{\"version\":3,\"repeats\":1,\"master\":0.9,\"bpm\":90,\"bpm_set\":true,\"sync_bpm\":true,\"fit\":true,\"fade\":1.5,\"fit_sec\":0,\"video\":null,\"videos\":[],\"video_manual\":null,\"tracks\":[{\"slot\":\"audio_2\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0}]}",
     "save_name": "neron_mix",
     "neron_mixer": ""
    }
@@ -458,7 +519,7 @@
    2,
    2,
    0,
-   6,
+   7,
    0,
    "NERON_VIDEOS"
   ],
@@ -474,7 +535,7 @@
    4,
    4,
    0,
-   6,
+   7,
    2,
    "NERON_SOUNDS"
   ],
@@ -483,6 +544,14 @@
    5,
    0,
    6,
+   0,
+   "NERON_SOUNDS"
+  ],
+  [
+   6,
+   6,
+   0,
+   7,
    5,
    "NERON_SOUNDS"
   ]
@@ -514,12 +583,12 @@
   },
   {
    "id": 3,
-   "title": "🥁🎹 МУЗЫКА / MUSIC",
+   "title": "🥁🎹 МУЗЫКА → СТУДИЯ / MUSIC → STUDIO",
    "bounding": [
     820,
     1326,
     1140,
-    504
+    978
    ],
    "color": "#b06634",
    "flags": {}
@@ -531,7 +600,7 @@
     2000,
     6,
     1040,
-    1824
+    2298
    ],
    "color": "#a1309b",
    "flags": {}

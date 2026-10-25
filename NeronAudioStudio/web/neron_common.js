@@ -316,4 +316,111 @@ function meterTap(ctx, nodeOut) {
     return { aL, aR };
 }
 
-export { el, createProjectBar, makeUserSized, peakOf, meterStep, drawMeter, meterTap };
+// ============================================================================
+//  Эхо и ручки — общие для Пульта и Студии
+// ----------------------------------------------------------------------------
+const T = (ru, en) => `${ru} / ${en}`;
+
+// ---------- эхо: отклик помещения (тот же шум, что в fx.py) ----------
+const ROOMS = { room: [0.9, 0.008], hall: [2.2, 0.02], cathedral: [4.5, 0.035] };
+const ROOM_ORDER = ["room", "hall", "cathedral"];
+const ROOM_NAME = { room: ["КОМН", "ROOM"], hall: ["ЗАЛ", "HALL"], cathedral: ["СОБОР", "CHURCH"] };
+function mulberry32(a) {
+    return function () {
+        a |= 0; a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+function roomImpulse(ctx, room) {
+    window.__neronIR = window.__neronIR || {};
+    const key = room + "@" + ctx.sampleRate;
+    if (window.__neronIR[key]) return window.__neronIR[key];
+    const [dur, preS] = ROOMS[room] || ROOMS.hall;
+    const sr = ctx.sampleRate, n = Math.floor(dur * sr), pre = Math.floor(preS * sr);
+    const buf = ctx.createBuffer(2, pre + n, sr);
+    [1234, 5678].forEach((seed, ch) => {
+        const rnd = mulberry32(seed + room.length);
+        const d = buf.getChannelData(ch);
+        let e2 = 0;
+        for (let i = 0; i < n; i++) {
+            const t = i / sr;
+            const env = Math.exp(-6.9 * t / dur) * Math.min(1, t / 0.004 + 0.05);
+            const v = (rnd() * 2 - 1) * env;
+            d[pre + i] = v; e2 += v * v;
+        }
+        const k = 1 / (Math.sqrt(e2) + 1e-9);
+        for (let i = 0; i < d.length; i++) d[i] *= k;
+    });
+    window.__neronIR[key] = buf;
+    return buf;
+}
+
+// ---------- ручка (крутилка) ----------
+function makeKnob(o) {
+    const box = el("div", "nm-knob");
+    const cv = el("canvas");
+    cv.width = 52; cv.height = 52;
+    const lab = el("span", "", o.label);
+    box.appendChild(cv); box.appendChild(lab);
+    let v = o.value;
+    const span = o.max - o.min;
+    const draw = () => {
+        const g = cv.getContext("2d");
+        g.clearRect(0, 0, 52, 52);
+        const cx = 26, cy = 26, r = 19;
+        const a0 = Math.PI * 0.75, a1 = Math.PI * 2.25;
+        const frac = (v - o.min) / span;
+        const av = a0 + (a1 - a0) * frac;
+        const az = o.bipolar ? a0 + (a1 - a0) * ((0 - o.min) / span) : a0;
+        g.lineCap = "round";
+        g.lineWidth = 5; g.strokeStyle = "#363a44";
+        g.beginPath(); g.arc(cx, cy, r, a0, a1); g.stroke();
+        const active = Math.abs(v - o.def) > 1e-3;
+        if (active) {
+            g.strokeStyle = o.color;
+            g.beginPath(); g.arc(cx, cy, r, Math.min(az, av), Math.max(az, av)); g.stroke();
+        }
+        g.fillStyle = active ? "#2b2f3a" : "#22252d";
+        g.beginPath(); g.arc(cx, cy, 13, 0, Math.PI * 2); g.fill();
+        g.strokeStyle = active ? "#fff" : "#8b90a0"; g.lineWidth = 3.5;
+        g.beginPath(); g.moveTo(cx + Math.cos(av) * 4, cy + Math.sin(av) * 4); g.lineTo(cx + Math.cos(av) * 12, cy + Math.sin(av) * 12); g.stroke();
+        box.title = o.title + "\n" + o.fmt(v) + "\n" + T("тянуть вверх/вниз или колесо · двойной клик — сброс", "drag up/down or wheel · double-click — reset");
+        lab.style.color = active ? o.color : "";
+    };
+    const setV = (nv, fire) => {
+        nv = Math.max(o.min, Math.min(o.max, nv));
+        if (o.step) nv = Math.round(nv / o.step) * o.step;
+        if (Math.abs(nv - o.def) < (o.step || 0.01) * 0.5) nv = o.def;   // притягивается к середине
+        if (nv === v) return;
+        v = nv; draw();
+        if (fire) o.onChange(v);
+    };
+    let drag = null;
+    cv.addEventListener("pointerdown", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        cv.setPointerCapture(e.pointerId);
+        drag = { y: e.clientY, v };
+    });
+    cv.addEventListener("pointermove", (e) => {
+        if (!drag) return;
+        const k = e.shiftKey ? 600 : 150;
+        setV(drag.v + (drag.y - e.clientY) * span / k, true);
+    });
+    const end = () => { if (drag) { drag = null; if (o.onEnd) o.onEnd(v); } };
+    cv.addEventListener("pointerup", end);
+    cv.addEventListener("pointercancel", end);
+    cv.addEventListener("dblclick", (e) => { e.stopPropagation(); setV(o.def, true); if (o.onEnd) o.onEnd(v); });
+    cv.addEventListener("wheel", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        setV(v + (e.deltaY < 0 ? 1 : -1) * (o.wheel || span / 24), true);
+        if (o.onEnd) o.onEnd(v);
+    }, { passive: false });
+    draw();
+    box.setValue = (nv) => { v = nv; draw(); };
+    return box;
+}
+
+export { el, createProjectBar, makeUserSized, peakOf, meterStep, drawMeter, meterTap, ROOMS, ROOM_ORDER, ROOM_NAME, roomImpulse, makeKnob };
+
