@@ -208,8 +208,11 @@ class NeronVideoSampler:
     def process(self, vsampler_json, videos=None):
         items = list((videos or {}).get("clips") or []) if isinstance(videos, dict) else []
         vs = parse_vsampler(vsampler_json)
-        if vs["bypass"] or not vs["pieces"]:
+        if vs["bypass"]:
             return ({"neron": "videos", "clips": items, "mute": vs["mute"]},)
+        if not vs["pieces"]:
+            # сэмплер включён, но монтаж пуст — в Пульт не идёт ни одного ролика
+            return ({"neron": "videos", "clips": [], "mute": vs["mute"]},)
         ref, _ = render_edit(items, vs["pieces"], vs["mute"])
         return ({"neron": "videos", "clips": [ref] if ref else [], "mute": vs["mute"]},)
 

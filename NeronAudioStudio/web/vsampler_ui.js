@@ -185,8 +185,13 @@ function setupVSampler(node) {
     const R = { ref: null, key: "", busy: false, timer: null, err: "", len: 0 };
     const editKey = () => JSON.stringify([S.mute, items.map(refKey), S.pieces.map((p) => [p.src, +p.in.toFixed(4), +p.len.toFixed(4)])]);
     node.neronCube = () => {
-        if (S.bypass || !S.pieces.length) return { kind: "videos", items: items.map((x) => ({ ...x })), mute: S.mute, bypass: true };
-        return { kind: "videos", items: R.ref && R.key === editKey() ? [{ ...R.ref }] : [], mute: S.mute, bypass: false };
+        if (S.bypass) return { kind: "videos", items: items.map((x) => ({ ...x })), mute: S.mute, bypass: true };
+        // сэмплер включён: Пульт видит только монтаж — один блок
+        const ready = R.ref && R.key === editKey();
+        let note = "";
+        if (!S.pieces.length) note = T("🎬 Монтаж пуст — положите куски роликов в Видео-сэмплере", "🎬 The edit is empty — put clip pieces into the Video Sampler");
+        else if (!ready) note = R.err ? T("🎬 Монтаж не собрался: ", "🎬 The edit failed: ") + R.err : T("🎬 Собираю монтаж…", "🎬 Building the edit…");
+        return { kind: "videos", items: ready ? [{ ...R.ref }] : [], mute: S.mute, bypass: false, note };
     };
 
     // ---------- каркас ----------
@@ -953,6 +958,7 @@ function setupVSampler(node) {
             return;
         }
         if (R.ref && R.key === editKey()) { setStatus(T(`🎬 Монтаж готов для Пульта · ${fmt(R.len)}`, `Edit ready for the Pult · ${fmt(R.len)}`), "ok"); return; }
+        R.err = "";
         setStatus(T("Монтаж изменён — соберу для Пульта…", "Edit changed — building it for the Pult…"), "");
         R.timer = setTimeout(renderNow, 1400);
     }
@@ -971,10 +977,11 @@ function setupVSampler(node) {
             const d = await res.json();
             if (!d.ok) throw new Error(d.error || "error");
             if (key === editKey()) {
-                R.ref = d.ref; R.key = key; R.len = d.length || 0;
+                R.ref = d.ref; R.key = key; R.len = d.length || 0; R.err = "";
                 setStatus(T(`🎬 Монтаж готов для Пульта · ${fmt(R.len)}`, `Edit ready for the Pult · ${fmt(R.len)}`), "ok");
             }
         } catch (e) {
+            R.err = e.message;
             setStatus(T("Не удалось собрать монтаж: ", "Could not build the edit: ") + e.message, "err");
         } finally {
             R.busy = false;

@@ -82,6 +82,8 @@ function injectStyles() {
 .nm-tile video{width:100%;height:100%;object-fit:contain;display:block}
 .nm-tile b{position:absolute;left:6px;top:4px;font-size:12px;text-shadow:0 1px 3px #000;pointer-events:none}
 .nm-tile span{position:absolute;left:6px;bottom:4px;right:6px;font-size:9px;color:#cfd2d8;text-shadow:0 1px 3px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.nm-vph{flex:1;display:none;align-items:center;justify-content:center;text-align:center;padding:10px;background:#0c0d10;border:2px dashed #3a3e49;
+  border-radius:6px;color:#9aa0ae;font-size:12px;font-weight:700;line-height:1.6}
 .nm-back{position:absolute;right:6px;top:6px;z-index:3;display:none}
 .nm-sum{flex:none;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;font-size:11px;font-weight:700;color:#e6e8ee;
   background:#20232a;border-radius:6px;padding:5px 8px}
@@ -574,7 +576,7 @@ function setupMixerUI(node) {
         if (!r || r.empty) return { wired: true, videos: [] };
         if ((r.node.comfyClass || r.node.type) === "NeronVideoSampler" && typeof r.node.neronCube === "function") {
             const st = r.node.neronCube();
-            return { wired: true, cube: true, videos: st.items.slice(0, 3), mute: !!st.mute, vsampler: true };
+            return { wired: true, cube: true, videos: st.items.slice(0, 3), mute: !!st.mute, vsampler: true, note: st.note || "" };
         }
         if ((r.node.comfyClass || r.node.type) === "NeronVideoCube" && typeof r.node.neronCube === "function") {
             return { wired: true, cube: true, videos: r.node.neronCube().items.slice(0, 3) };
@@ -726,6 +728,9 @@ function setupMixerUI(node) {
     const vbox = el("div", "nm-vbox");
     const backBtn = mkBtn("◀ " + T("ВСЕ РОЛИКИ", "ALL CLIPS"), "#4a4e5a", T("Снова показать все ролики рядом", "Show all clips side by side again"), "sm nm-back");
     vbox.appendChild(backBtn);
+    // Видео-сэмплер включён, а монтаж ещё пуст или собирается — один блок с подсказкой
+    const vph = el("div", "nm-vph");
+    vbox.appendChild(vph);
     root.appendChild(vbox);
 
     // RU: До 3 роликов. Рядом — все сразу (играющий в жёлтой рамке); клик по ролику —
@@ -1240,7 +1245,7 @@ function setupMixerUI(node) {
     function effectiveVideo() {
         const w = wiredVideos();
         const videos = S.video ? [S.video] : w.videos;
-        return { videos, video: videos[0] || null, wired: w.wired, cube: !!w.cube, fromWire: !S.video && w.videos.length > 0, mute: !S.video && !!w.mute };
+        return { videos, video: videos[0] || null, wired: w.wired, cube: !!w.cube, fromWire: !S.video && w.videos.length > 0, mute: !S.video && !!w.mute, note: !S.video ? w.note || "" : "" };
     }
 
     function fillVideoSelect() {
@@ -1295,9 +1300,13 @@ function setupMixerUI(node) {
         }
         const shown = curVideos.length > 0;
         saveVidBtn.style.display = shown ? "" : "none";
-        if (shown !== videoShown) {
+        const note = !shown && ev.note ? ev.note : "";
+        vph.textContent = note;
+        vph.style.display = note ? "flex" : "none";
+        const boxOn = shown || !!note;
+        if (shown !== videoShown || boxOn !== (vbox.style.display === "flex")) {
             videoShown = shown;
-            vbox.style.display = shown ? "flex" : "none";
+            vbox.style.display = boxOn ? "flex" : "none";
             relayout();
         }
         updateVideoInfo(ev);
