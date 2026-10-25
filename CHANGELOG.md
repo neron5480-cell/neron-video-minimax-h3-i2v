@@ -1,6 +1,12 @@
 # Changelog / История изменений
 
-## dev — Neron Audio Studio: темы и «живость» / themes and "life" (на проверке / in testing)
+## v2.0 — Neron Audio Studio 2 (25.10.2026)
+
+**RU:** Модульная студия: кубики (Видео ×3, Звук ×8, Музыка) → посредники (Видео-сэмплер, Сэмплер, Студия) → Пульт-сердце. Эквалайзер и эхо, музыка под ролик, монтаж по кадрам, поле сборки, общий эквалайзер со спектром, темы с живыми огнями. Новая схема: `NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json`; прежняя `Neron_Audio_Studio_v1.0_Beta.json` оставлена. Подробности — в записях ниже.
+
+**EN:** A modular studio: cubes (Video ×3, Sound ×8, Music) → middle nodes (Video Sampler, Sampler, Studio) → the Pult as the heart. EQ and reverb, music to the clip, frame-accurate editing, an arrange field, a master EQ with a spectrum, themes with live lights. New workflow: `NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json`; the previous `Neron_Audio_Studio_v1.0_Beta.json` is kept. Details below.
+
+## v2.0 · Neron Audio Studio: темы и «живость» / themes and "life" (вошло в v2.0 / part of v2.0)
 
 **RU:**
 - **Neron Theme / Тема 🎨** — нода ни к чему не подключается. Есть на столе — ноды Neron в теме; удалили — снова обычный серый вид. Тема сохраняется вместе со схемой: кто скачал workflow, видит его таким, как задумано.
@@ -23,7 +29,7 @@
 - Smoother lights: the flash rises softly (~0.06 s) and fades slowly (~0.9 s), light jumps ease in and out, panel glow fades over 0.35 s — the desk breathes instead of twitching.
 - Video ×3 shows "⏳ loading the clip…" while a big file loads; the preview and the Video Sampler screen show a frame from ~10% of the clip (clip starts are often dark).
 
-## dev — Neron Audio Studio: Студия / Studio (на проверке / in testing)
+## v2.0 · Neron Audio Studio: Студия / Studio (вошло в v2.0 / part of v2.0)
 
 **RU:**
 - **Neron Studio / Студия 🎛** — посредник между «Музыкой» (или «Звук ×8», сэмплером) и Пультом. **Каждая дорожка студии** (HIHATS, KICKS, каждая дорожка пианино, каждый звук) — свой канал: ▶ (слушать только её), M, S, громкость, баланс, **НИЗ / СЕР / ВЕРХ**, **ЭХО** + помещение, ↺, индикатор уровня и волна с бегунком.
@@ -40,7 +46,7 @@
 - Music now also outputs every track separately (for the Studio); the Pult still sees two channels. Knobs and reverb live in a shared file. Ready desk: Music → Studio → Pult.
 - **🧱 ARRANGE field in the Studio** (like the FL Studio playlist): bars across, one lane per track. Click a lane to put a block (track loop length), drag to move, edge — length, double-click / Delete — remove, Ctrl+D — copy after, Ctrl+Z — undo, click the ruler to set the start, wheel zooms. Blocks show the track wave. ⊞ ALL TRACKS puts every track from bar 1. An empty field loops everything as before; with blocks the Studio (the Pult and the file too) plays the arranged track bar-exact.
 
-## dev — Neron Audio Studio: музыка под ролик / music to the clip (на проверке / in testing)
+## v2.0 · Neron Audio Studio: музыка под ролик / music to the clip (вошло в v2.0 / part of v2.0)
 
 **RU:**
 - **ПО ДЛИНЕ ВИДЕО** в новом Пульте включено сразу: короткая музыка повторяется до конца ролика, длинная обрезается — и теперь **мягко затихает в конце** (1,5 с; и при прослушивании, и в файле).
@@ -57,7 +63,7 @@
 - **⚙ EXPERT** in the Video Sampler: **🧲 CUT ON THE BEAT** — cuts, piece edges and the cursor stick to the Pult tempo beats; a new piece is a whole number of beats.
 - Edit cuts are rounded to frames on the overall timeline, so long edits don't drift. The Pult got a bilingual **📖** help.
 
-## dev — Neron Audio Studio: Видео-сэмплер / Video Sampler (на проверке / in testing)
+## v2.0 · Neron Audio Studio: Видео-сэмплер / Video Sampler (вошло в v2.0 / part of v2.0)
 
 **RU:**
 - **Neron Video Sampler / Видео-сэмплер 🎬** — между «Видео ×3» и Пультом. Слева экран, справа три дорожки — три ролика с кадрами-превью: мышкой выделяете кусок «откуда — докуда» (края тянутся, двойной клик — весь ролик), ▶ — посмотреть кусок, **➜** или перетащить вниз (можно наискосок) — кусок встаёт в **МОНТАЖ**.
@@ -77,21 +83,21 @@
 - The Pult with video only and no sound now outputs the clip with silence instead of an error. The ready desk now has Video ×3 → Video Sampler → Pult.
 - Fixed: ⏭ always works (also while playing). Off — the Pult shows exactly one "🎬 Edit" block; while the edit is empty or building, the block says so (before, an empty edit passed the original clips).
 
-## dev — Neron Audio Studio: эквалайзер и эхо в Пульте, модуль «Музыка», готовый рабочий стол (на проверке / in testing)
+## v2.0 · Neron Audio Studio: эквалайзер и эхо в Пульте, модуль «Музыка», готовый рабочий стол (вошло в v2.0 / part of v2.0)
 
 **RU:**
 - **Пульт:** у каждого канала (и у звука видео) — эквалайзер из трёх ручек **НИЗ / СЕР / ВЕРХ** (±12 дБ: 200 Гц, 1 кГц, 4 кГц) и **ЭХО** (одна ручка «сколько» + кнопка помещения **КОМН → ЗАЛ → СОБОР**). Ручки крутятся мышкой вверх-вниз или колёсиком, Shift — точнее, двойной клик — сброс; ↺ — сбросить все эффекты канала. Слышно сразу при прослушивании, и ровно так же сводится в файл после Queue / SAVE.
 - **Neron Music / Музыка 🥁🎹** — барабаны и пианино в одной ноде: вкладки 🥁 / 🎹, общий темп, **▶ ВСЁ ВМЕСТЕ** играет обе части, на вкладке мигает точка, если часть играет. Выход **sounds** → Пульт: **два канала** (барабаны и пианино отдельно). Выход **audio** — всё одним звуком. Размер ноды меняется, как у всех.
 - Пустые «Видео ×3», «Звук ×8» и сэмплер без звуков больше не роняют Queue.
-- Готовый рабочий стол: `NeronAudioStudio/workflow/Neron_Studio_Pult_v2_dev.json` — группы ВИДЕО, МУЗЫКА, ЗВУК, СЭМПЛЕР и ПУЛЬТ, всё уже соединено.
+- Готовый рабочий стол: `NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json` — группы ВИДЕО, МУЗЫКА, ЗВУК, СЭМПЛЕР и ПУЛЬТ, всё уже соединено.
 
 **EN:**
 - **Pult:** every channel (and the video sound) gets a 3-knob EQ **LOW / MID / HIGH** (±12 dB at 200 Hz, 1 kHz, 4 kHz) and **REVERB** (one amount knob + a **ROOM → HALL → CATHEDRAL** button). Drag knobs up/down or use the wheel, Shift for fine steps, double-click resets; ↺ resets the channel's effects. Heard live and rendered the same into the file after Queue / SAVE.
 - **Neron Music / Музыка 🥁🎹** — drums and piano in one node: 🥁 / 🎹 tabs, one tempo, **▶ ALL** plays both, a blinking dot shows which part is playing. **sounds** → Pult gives **two channels**; **audio** is everything as one sound. Resizable like every node.
 - Empty Video ×3, Sound ×8 and a sampler without sounds no longer break Queue.
-- Ready desk: `NeronAudioStudio/workflow/Neron_Studio_Pult_v2_dev.json` — groups VIDEO, MUSIC, SOUND, SAMPLER and PULT, all wired.
+- Ready desk: `NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json` — groups VIDEO, MUSIC, SOUND, SAMPLER and PULT, all wired.
 
-## dev — Neron Audio Studio: Сэмплер, вторая версия / Sampler v2 (на проверке / in testing)
+## v2.0 · Neron Audio Studio: Сэмплер, вторая версия / Sampler v2 (вошло в v2.0 / part of v2.0)
 
 **RU:**
 - Сэмплер теперь из двух частей. **① ИСТОЧНИКИ** — каждый звук целиком, вся волна; мышкой выделяете кусок «откуда — докуда» (видны секунды), ▶ — послушать кусок. **➜** или просто перетащить выделенное вниз — кусок становится кирпичиком. **② ПОЛЕ** — сетка по тактам, 4 слоя; кирпичики складываются друг за другом, Пульт слышит только поле.
@@ -110,7 +116,7 @@
 - Every field layer has its own ▶ / ■: plays only that layer; switch layers on the fly; the top ▶ plays the whole field again.
 - Source row reworked: click sets a play-from cursor; dragging sideways always makes a new selection (a full selection no longer locks it); selection edges drag; dragging the selection down puts it in the field; the wheel zooms the source around the mouse, Shift scrolls.
 
-## dev — Neron Audio Studio: Сэмплер, первая версия / Sampler v1 (на проверке / in testing)
+## v2.0 · Neron Audio Studio: Сэмплер, первая версия / Sampler v1 (вошло в v2.0 / part of v2.0)
 
 **RU:**
 - **Neron Sampler / Сэмплер** — нода между «Звук ×8» и Пультом. Вид как у Piano Roll: слева дорожки, справа сетка по тактам, каждый звук — блок.

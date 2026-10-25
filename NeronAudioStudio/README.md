@@ -548,7 +548,7 @@ Neron Mixer (fps)  ──────────> Neron Video Combine (fps)
 
 ## Готовый рабочий стол / Ready desk
 
-`workflow/Neron_Studio_Pult_v2_dev.json`:
+`workflow/Neron_Audio_Studio_v2.0.json`:
 
 ```
 Видео ×3 ──> Видео-сэмплер ───────────┐

@@ -1,0 +1,630 @@
+{
+  "id": "42d27bb3-5c98-4448-ad1c-7158454ba3ba",
+  "revision": 0,
+  "last_node_id": 10,
+  "last_link_id": 9,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "NeronVideoCube",
+      "pos": [
+        133.87063725155377,
+        45.41151560685746
+      ],
+      "size": [
+        760,
+        267
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "videos",
+          "type": "NERON_VIDEOS",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "title": "🎬 Видео ×3 / Video ×3",
+      "properties": {
+        "Node name for S&R": "NeronVideoCube",
+        "neron_themed": true
+      },
+      "widgets_values": [
+        "{\"clips\": []}",
+        ""
+      ],
+      "widgets_values_named": {
+        "cube_json": "{\"clips\": []}",
+        "neron_video_cube": ""
+      },
+      "color": "#115b7a",
+      "bgcolor": "#0c0820"
+    },
+    {
+      "id": 2,
+      "type": "NeronVideoSampler",
+      "pos": [
+        943.8180452154909,
+        44.04548869612732
+      ],
+      "size": [
+        1000,
+        500
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "videos",
+          "shape": 7,
+          "type": "NERON_VIDEOS",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "videos",
+          "type": "NERON_VIDEOS",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "title": "✂ Видео-сэмплер / Video Sampler",
+      "properties": {
+        "Node name for S&R": "NeronVideoSampler",
+        "neron_themed": true
+      },
+      "widgets_values": [
+        "{\"version\": 1, \"bypass\": true, \"mute\": false, \"pieces\": []}",
+        ""
+      ],
+      "widgets_values_named": {
+        "vsampler_json": "{\"version\": 1, \"bypass\": true, \"mute\": false, \"pieces\": []}",
+        "neron_vsampler": ""
+      },
+      "color": "#115b7a",
+      "bgcolor": "#0c0820"
+    },
+    {
+      "id": 3,
+      "type": "NeronSoundCube",
+      "pos": [
+        323.748377843043,
+        618.9140086059693
+      ],
+      "size": [
+        560,
+        148
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "sounds",
+          "type": "NERON_SOUNDS",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "title": "🎵 Звук ×8 / Sound ×8",
+      "properties": {
+        "Node name for S&R": "NeronSoundCube",
+        "neron_themed": true
+      },
+      "widgets_values": [
+        "{\"sounds\": []}",
+        ""
+      ],
+      "widgets_values_named": {
+        "cube_json": "{\"sounds\": []}",
+        "neron_sound_cube": ""
+      },
+      "color": "#256451",
+      "bgcolor": "#0c0820"
+    },
+    {
+      "id": 4,
+      "type": "NeronSampler",
+      "pos": [
+        971.1385834300936,
+        623.0120893381603
+      ],
+      "size": [
+        960,
+        419
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "sounds",
+          "shape": 7,
+          "type": "NERON_SOUNDS",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "sounds",
+          "type": "NERON_SOUNDS",
+          "links": [
+            4
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "title": "🎛 Сэмплер / Sampler",
+      "properties": {
+        "Node name for S&R": "NeronSampler",
+        "neron_themed": true
+      },
+      "widgets_values": [
+        "{\"version\":2,\"bypass\":true,\"snap\":\"1/4\",\"master\":1,\"zoom\":142,\"cur\":0,\"layers\":[{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false}],\"bricks\":[],\"sel\":{}}",
+        90,
+        ""
+      ],
+      "widgets_values_named": {
+        "sampler_json": "{\"version\":2,\"bypass\":true,\"snap\":\"1/4\",\"master\":1,\"zoom\":142,\"cur\":0,\"layers\":[{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false}],\"bricks\":[],\"sel\":{}}",
+        "bpm": 90,
+        "neron_sampler": ""
+      },
+      "color": "#256451",
+      "bgcolor": "#0c0820"
+    },
+    {
+      "id": 5,
+      "type": "NeronMusic",
+      "pos": [
+        -216.08967048115818,
+        1102.4159273811483
+      ],
+      "size": [
+        1100,
+        382
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "sounds",
+          "type": "NERON_SOUNDS",
+          "links": [
+            5
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "bpm",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "title": "🥁🎹 Музыка / Music",
+      "properties": {
+        "Node name for S&R": "NeronMusic",
+        "neron_music_tab": "drums",
+        "neron_themed": true
+      },
+      "widgets_values": [
+        "default",
+        90,
+        "{\"version\": 4, \"bars\": 1, \"tracks\": []}",
+        "{\"version\": 1, \"bars\": 2, \"tracks\": []}",
+        "neron_music",
+        ""
+      ],
+      "widgets_values_named": {
+        "kit_name": "default",
+        "bpm": 90,
+        "pattern_json": "{\"version\": 4, \"bars\": 1, \"tracks\": []}",
+        "project_json": "{\"version\": 1, \"bars\": 2, \"tracks\": []}",
+        "save_name": "neron_music",
+        "neron_music": ""
+      },
+      "color": "#6a422b",
+      "bgcolor": "#0c0820"
+    },
+    {
+      "id": 6,
+      "type": "NeronStudio",
+      "pos": [
+        906.4950289603344,
+        1104.6525526973621
+      ],
+      "size": [
+        1100,
+        522
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "sounds",
+          "shape": 7,
+          "type": "NERON_SOUNDS",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "sounds",
+          "type": "NERON_SOUNDS",
+          "links": [
+            6
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "title": "🎛 Студия / Studio",
+      "properties": {
+        "Node name for S&R": "NeronStudio",
+        "neron_themed": true
+      },
+      "widgets_values": [
+        "{\"version\": 1, \"bypass\": false, \"master\": 1.0, \"eq_on\": true, \"eq\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"ch\": {}}",
+        ""
+      ],
+      "widgets_values_named": {
+        "studio_json": "{\"version\": 1, \"bypass\": false, \"master\": 1.0, \"eq_on\": true, \"eq\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"ch\": {}}",
+        "neron_studio": ""
+      },
+      "color": "#6a422b",
+      "bgcolor": "#0c0820"
+    },
+    {
+      "id": 7,
+      "type": "NeronTheme",
+      "pos": [
+        2038.803272163002,
+        -239.2008727177476
+      ],
+      "size": [
+        460,
+        262
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "NeronTheme",
+        "neron_themed": true
+      },
+      "widgets_values": [
+        "{\"theme\":\"neon\",\"life\":2}",
+        ""
+      ],
+      "widgets_values_named": {
+        "theme_json": "{\"theme\":\"neon\",\"life\":2}",
+        "neron_theme": ""
+      },
+      "color": "#6a5b21",
+      "bgcolor": "#0c0820"
+    },
+    {
+      "id": 8,
+      "type": "NeronMixer",
+      "pos": [
+        2058.497122029667,
+        77.45105587670989
+      ],
+      "size": [
+        900,
+        715
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "shape": 7,
+          "type": "*",
+          "link": 2
+        },
+        {
+          "name": "bpm",
+          "shape": 7,
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "audio_1",
+          "shape": 7,
+          "type": "AUDIO,NERON_SOUNDS",
+          "link": 4
+        },
+        {
+          "name": "audio_2",
+          "type": "AUDIO,NERON_SOUNDS",
+          "link": 6
+        },
+        {
+          "name": "audio_3",
+          "type": "AUDIO,NERON_SOUNDS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            7
+          ]
+        },
+        {
+          "name": "saved_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "bpm",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": [
+            9
+          ]
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "title": "🎚 ПУЛЬТ / PULT",
+      "properties": {
+        "Node name for S&R": "NeronMixer",
+        "neron_themed": true
+      },
+      "widgets_values": [
+        "{\"version\": 3, \"repeats\": 1, \"master\": 0.9, \"bpm\": 90, \"bpm_set\": true, \"sync_bpm\": true, \"fit\": true, \"fade\": 1.5, \"fit_sec\": 0, \"video\": null, \"videos\": [], \"video_manual\": null, \"tracks\": []}",
+        "neron_mix",
+        ""
+      ],
+      "widgets_values_named": {
+        "mixer_json": "{\"version\": 3, \"repeats\": 1, \"master\": 0.9, \"bpm\": 90, \"bpm_set\": true, \"sync_bpm\": true, \"fit\": true, \"fade\": 1.5, \"fit_sec\": 0, \"video\": null, \"videos\": [], \"video_manual\": null, \"tracks\": []}",
+        "save_name": "neron_mix",
+        "neron_mixer": ""
+      },
+      "color": "#6a196c",
+      "bgcolor": "#0c0820"
+    },
+    {
+      "id": 9,
+      "type": "NeronDancerClip",
+      "pos": [
+        2264.354728848136,
+        904.9623508822126
+      ],
+      "size": [
+        340,
+        464
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "NeronDancerClip",
+        "neron_themed": true
+      },
+      "widgets_values": [
+        "",
+        8,
+        0,
+        false,
+        30,
+        "полосы",
+        "сиреневая",
+        ""
+      ],
+      "widgets_values_named": {
+        "clip": "",
+        "beats": 8,
+        "shift": 0,
+        "remove_bg": false,
+        "bg_tolerance": 30,
+        "background": "полосы",
+        "bg_color": "сиреневая",
+        "neron_dancer_clip": ""
+      },
+      "color": "#6a2b59",
+      "bgcolor": "#0c0820"
+    },
+    {
+      "id": 10,
+      "type": "NeronVideoCombine",
+      "pos": [
+        2999.5617334201847,
+        80.55586099398143
+      ],
+      "size": [
+        420,
+        476
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "shape": 7,
+          "type": "*",
+          "link": 9
+        },
+        {
+          "name": "images",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 7
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "saved_path",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronVideoCombine",
+        "neron_themed": true
+      },
+      "widgets_values": [
+        "Neron_Video",
+        "mp4 (как есть, без перекодирования)",
+        18,
+        24,
+        ""
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "Neron_Video",
+        "format": "mp4 (как есть, без перекодирования)",
+        "quality_crf": 18,
+        "fps": 24,
+        "neron_video_player": ""
+      },
+      "color": "#115b7a",
+      "bgcolor": "#0c0820"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "NERON_VIDEOS"
+    ],
+    [
+      2,
+      2,
+      0,
+      8,
+      0,
+      "NERON_VIDEOS"
+    ],
+    [
+      3,
+      3,
+      0,
+      4,
+      0,
+      "NERON_SOUNDS"
+    ],
+    [
+      4,
+      4,
+      0,
+      8,
+      2,
+      "NERON_SOUNDS"
+    ],
+    [
+      5,
+      5,
+      0,
+      6,
+      0,
+      "NERON_SOUNDS"
+    ],
+    [
+      6,
+      6,
+      0,
+      8,
+      3,
+      "NERON_SOUNDS"
+    ],
+    [
+      7,
+      8,
+      0,
+      10,
+      2,
+      "AUDIO"
+    ],
+    [
+      8,
+      8,
+      4,
+      10,
+      3,
+      "FLOAT"
+    ],
+    [
+      9,
+      8,
+      3,
+      10,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.45,
+      "offset": [
+        400,
+        400
+      ]
+    },
+    "frontendVersion": "1.55.18",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
