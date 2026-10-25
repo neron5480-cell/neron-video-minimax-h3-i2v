@@ -1279,8 +1279,9 @@ function setupMixerUI(node) {
     function updateVideoInfo(ev) {
         let t;
         const n = ev.videos.length;
-        const what = n > 1 ? T(`${n} ролика подряд`, `${n} clips in a row`) : (ev.video ? ev.video.name : "");
-        if (!n) t = ev.wired ? T("провод подключён, но ролик не выбран", "wired, but no clip chosen") : T("подключите «Видео ×3» или загрузчик видео к входу video", "wire \"Video ×3\" or a video loader into the video input");
+        const what = n > 1 ? T(`${n} ролика подряд`, `${n} clips in a row`) : (ev.video ? ev.video.label || ev.video.name : "");
+        if (!n && ev.note) t = T("Видео-сэмплер: ждёт монтаж", "Video Sampler: waiting for the edit");
+        else if (!n) t = ev.wired ? T("провод подключён, но ролик не выбран", "wired, but no clip chosen") : T("подключите «Видео ×3» или загрузчик видео к входу video", "wire \"Video ×3\" or a video loader into the video input");
         else if (videoDur > 0) t = `${what} · ${videoDur.toFixed(2)} ${T("с", "s")}` + (ev.fromWire ? " · " + T("с провода", "wired") : " · " + T("выбрано вручную", "chosen by hand"));
         else t = `${what} · ${T("загружаю...", "loading...")}`;
         vInfo.textContent = t;
