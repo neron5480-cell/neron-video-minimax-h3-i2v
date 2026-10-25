@@ -179,7 +179,7 @@ function createProjectBar(opts) {
 function makeUserSized(node, domWidget, root, opts) {
     const minH = opts.minH || 120;
     const autoH = opts.autoH;
-    const margin = opts.margin ?? 8;
+    const margin = opts.margin ?? 14;
     node.properties = node.properties || {};
     const manual = () => node.properties.neron_manual_size === true;
     const curH = () => {
@@ -199,10 +199,14 @@ function makeUserSized(node, domWidget, root, opts) {
         if (opts.onLayout) { try { opts.onLayout(curH()); } catch (e) { /* ок */ } }
     };
     // высота ноды под содержимое — только пока размер не трогали руками
+    let tries = 0;
     const fit = () => {
         apply();
         const top = domWidget.last_y;
+        // нода ещё не нарисована: позиция панели неизвестна — попробовать чуть позже
+        if (top == null && tries++ < 30) { setTimeout(fit, 100); return; }
         if (fitting || top == null || !node.size) return;
+        tries = 0;
         const need = Math.round(top + curH() + margin);
         if (manual() ? node.size[1] < need : Math.abs(node.size[1] - need) > 2) {
             fitting = true;
@@ -218,8 +222,12 @@ function makeUserSized(node, domWidget, root, opts) {
             node.properties.neron_manual_size = true;
             const top = domWidget.last_y;
             if (top != null) node.properties.neron_panel_h = Math.max(minH, Math.round(node.size[1] - top - margin));
+            requestAnimationFrame(apply);
+        } else if (!fitting && !manual()) {
+            requestAnimationFrame(fit);      // ширина поменялась — высота под содержимое
+        } else {
+            requestAnimationFrame(apply);
         }
-        requestAnimationFrame(apply);
         return r;
     };
     const menu0 = node.getExtraMenuOptions;

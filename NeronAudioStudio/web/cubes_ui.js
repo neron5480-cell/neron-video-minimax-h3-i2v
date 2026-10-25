@@ -24,7 +24,9 @@ function el(tag, cls, text) {
     return e;
 }
 const refKey = (v) => (v ? `${v.type || "input"}|${v.subfolder || ""}|${v.name}` : "");
-const refLabel = (v) => `[${v.type === "output" ? "out" : "in"}] ${v.subfolder ? v.subfolder + "/" : ""}${v.name}`;
+// в списке — только имя файла (папка видна во всплывающей подсказке)
+const refLabel = (v) => v.name + (v.type === "output" ? "  · out" : "");
+const refTitle = (v) => `${v.type || "input"}/${v.subfolder ? v.subfolder + "/" : ""}${v.name}`;
 function viewUrl(v) {
     const p = `/view?filename=${encodeURIComponent(v.name)}&subfolder=${encodeURIComponent(v.subfolder || "")}&type=${encodeURIComponent(v.type || "input")}`;
     return typeof api.apiURL === "function" ? api.apiURL(p) : p;
@@ -42,7 +44,8 @@ function injectStyles() {
     const s = document.createElement("style");
     s.id = "neron-cube-styles";
     s.textContent = `
-.ncb-root{box-sizing:border-box;width:100%;padding:8px 10px;background:#1b1d23;border-radius:8px;font-family:"Segoe UI",Arial,sans-serif;
+.ncb-outer{box-sizing:border-box;width:100%;padding-bottom:10px;background:transparent}
+.ncb-root{box-sizing:border-box;width:100%;height:100%;max-width:100%;padding:8px 10px;background:#1b1d23;border-radius:8px;font-family:"Segoe UI",Arial,sans-serif;
   color:#cfd2d8;user-select:none;display:flex;flex-direction:column;gap:6px;overflow:auto}
 .ncb-top{display:flex;align-items:center;gap:8px;flex:none}
 .ncb-top b{font-size:12px;letter-spacing:.5px;white-space:nowrap}
@@ -55,11 +58,11 @@ function injectStyles() {
   font-size:11px;outline:none;padding:0 2px}
 .ncb-sel option{background:#23252b;color:#cfd2d8}
 .ncb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;flex:1;min-height:0}
-.ncb-card{display:flex;flex-direction:column;gap:5px;background:#242831;border-radius:7px;padding:6px;border:2px solid transparent;min-height:0}
+.ncb-card{display:flex;flex-direction:column;gap:5px;background:#242831;border-radius:7px;padding:6px;border:2px solid transparent;min-height:0;min-width:0;box-sizing:border-box}
 .ncb-card.drop{border-color:#4dabf7}
 .ncb-row{display:flex;align-items:center;gap:5px;min-width:0}
 .ncb-num{font-size:12px;font-weight:700;flex:none}
-.ncb-vbox{position:relative;flex:1;min-height:110px;background:#0e0f12;border-radius:5px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.ncb-vbox{position:relative;flex:none;width:100%;aspect-ratio:16/9;background:#0e0f12;border-radius:5px;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .ncb-vbox video{width:100%;height:100%;object-fit:contain;background:#000}
 .ncb-empty{font-size:11px;color:#6b7080;text-align:center;padding:8px;line-height:1.5}
 .ncb-info{font-size:9px;color:#8b90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -181,7 +184,10 @@ function setupCube(node, kind) {
     // Пульт читает содержимое кубика прямо отсюда (без Queue)
     node.neronCube = () => ({ kind: isV ? "videos" : "sounds", items: items.map((x) => ({ ...x })) });
 
+    // внешний слой прозрачный и с отступом снизу: панель никогда не упирается в край ноды
+    const outer = el("div", "ncb-outer");
     const root = el("div", "ncb-root");
+    outer.appendChild(root);
     const top = el("div", "ncb-top");
     const title = el("b", "", isV ? "🎬 " + T("ВИДЕО ×3", "VIDEO ×3") : "🎵 " + T("ЗВУК ×8", "SOUND ×8"));
     title.style.color = isV ? "#4dabf7" : "#ff9f43";
@@ -246,9 +252,9 @@ function setupCube(node, kind) {
             sel.appendChild(o0);
             const arr = list.slice();
             if (cur && !arr.some((v) => refKey(v) === refKey(cur))) arr.unshift(cur);
-            for (const v of arr) { const o = el("option", "", refLabel(v)); o.value = refKey(v); sel.appendChild(o); }
+            for (const v of arr) { const o = el("option", "", refLabel(v)); o.value = refKey(v); o.title = refTitle(v); sel.appendChild(o); }
             sel.value = cur ? refKey(cur) : "";
-            if (cur) sel.options[0].remove();
+            if (cur) { sel.options[0].remove(); sel.title = refTitle(cur); }
         };
         fill();
         sel.title = T("Файл из папок input / output", "A file from the input / output folders");
@@ -399,18 +405,30 @@ function setupCube(node, kind) {
             }
         }
         summary();
+        measure();
+    }
+
+    // высота по содержимому — меряется, а не угадывается (зависит от ширины ноды)
+    let natH = isV ? 260 : 80;
+    let lastW = 0;
+    function measure() {
+        const h0 = outer.style.height;
+        outer.style.height = "auto";
+        root.style.height = "auto";
+        const h = outer.offsetHeight;
+        outer.style.height = h0;
+        root.style.height = "";
+        if (h > 20) natH = h;
+        lastW = outer.clientWidth;
         if (sizer) sizer.fit();
     }
 
-    const domWidget = node.addDOMWidget(isV ? "neron_video_cube" : "neron_sound_cube", "neron_cube", root, { serialize: false, hideOnZoom: false });
+    const domWidget = node.addDOMWidget(isV ? "neron_video_cube" : "neron_sound_cube", "neron_cube", outer, { serialize: false, hideOnZoom: false });
     let sizer = null;
-    const autoH = () => {
-        const shown = Math.min(MAX, items.length + 1);
-        if (!isV) return 40 + shown * 34;
-        const cols = Math.max(1, Math.floor(((node.size?.[0] || 700) - 30) / 238));
-        return 44 + Math.ceil(shown / cols) * 220;
-    };
-    sizer = makeUserSized(node, domWidget, root, { minH: isV ? 200 : 80, autoH });
+    sizer = makeUserSized(node, domWidget, outer, { minH: isV ? 200 : 80, autoH: () => natH, margin: 4 });
+    outer.style.overflow = "hidden";
+    // ширину ноды поменяли — перемерить высоту (ролики масштабируются по ширине)
+    new ResizeObserver(() => { if (outer.clientWidth && Math.abs(outer.clientWidth - lastW) > 2) requestAnimationFrame(measure); }).observe(outer);
     const wanted = node.computeSize ? node.computeSize() : [600, 200];
     node.setSize([Math.max(wanted[0], isV ? 760 : 560), Math.max(wanted[1], 80)]);
 

@@ -9,6 +9,7 @@
 - **Сводка вверху Пульта:** сколько роликов, сколько звуковых каналов, общая длина.
 - **Ролики в Пульте:** все рядом; клик по ролику — он на весь экран и звук переходит к его началу; во время игры экран сам переключается на следующий ролик; «◀ ВСЕ РОЛИКИ» — снова рядом. В сохранённом клипе ролики идут друг за другом (1 → 2 → 3), склейка точна до кадра; звук роликов склеивается так же.
 - Пульт стал выходной нодой: Queue работает и без нод после него.
+- Кубики аккуратнее: панель не упирается в край ноды, высота считается по содержимому (и при смене ширины), в списках только имя файла (папка — во всплывающей подсказке).
 
 **EN:**
 - **Neron Video ×3** — one node with up to three video loaders; the next slot opens when a clip is loaded; each clip is visible in the node; files can be dropped onto a slot.
@@ -17,6 +18,7 @@
 - **Summary at the top of the Pult:** number of clips, sound channels, total length.
 - **Clips in the Pult:** side by side; click one — it fills the screen and playback jumps to its start; during playback the screen follows the playing clip; "◀ ALL CLIPS" — side by side again. In the saved clip they play one after another (1 → 2 → 3), frame-accurate, with their sound joined the same way.
 - The Pult is now an output node: Queue works without nodes after it.
+- Tidier cubes: the panel no longer touches the node edge, the height follows the content (also when the width changes), lists show just the file name (folder in the tooltip).
 
 ## 2026-10-25 — Neron Audio Studio: размер нод и индикаторы уровня / node size and level meters
 
