@@ -504,19 +504,22 @@ function setupSampler(node) {
         drawHead();
     }
 
-    function preview(i) {
-        if (PV.src && PV.i === i) { stopPreview(); return; }
+    // слушать источник: выделенный кусок, иначе от курсора (или с места клика) до конца
+    function preview(i, from) {
+        if (PV.src && PV.i === i && from === undefined) { stopPreview(); return; }
         stopPreview();
         const s = items[i];
         const e = s ? loadSound(s) : null;
         if (!e || e.state !== "ok") { setStatus(T("Звук ещё загружается", "The sound is still loading")); return; }
         const ctx = audio();
         const sel = S.sel[i];
-        const a = sel ? sel.a : 0, b = sel ? sel.b : e.buf.duration;
+        const a = from !== undefined ? from : sel ? sel.a : (curs[i] || 0);
+        const b = sel && from === undefined ? sel.b : e.buf.duration;
+        if (b - a < 0.02) return;
         const src = ctx.createBufferSource();
         src.buffer = e.buf;
         src.connect(A.prev);
-        src.start(ctx.currentTime + 0.02, a, Math.max(0.02, b - a));
+        src.start(ctx.currentTime + 0.02, a, b - a);
         src.onended = () => { if (PV.src === src) stopPreview(); };
         Object.assign(PV, { src, i, c0: ctx.currentTime + 0.02, a, b });
         startLoop();
@@ -558,7 +561,19 @@ function setupSampler(node) {
     }
 
     // ---------- ИСТОЧНИКИ ----------
+    // RU: Клик — курсор «играть отсюда». Повести вбок — выделить кусок (всегда новый).
+    //     Края выделения тянутся. Выделенный кусок повести вниз — уходит в поле.
+    //     Колёсико над волной — приблизить этот звук вокруг мышки, Shift — сдвинуть.
+    // EN: Click — "play from here" cursor. Drag sideways — a new selection. Selection
+    //     edges can be dragged. Drag the selection down — into the field. Wheel zooms.
     const srcRows = [];      // {cv, info}
+    const curs = {};         // курсор «играть отсюда» у каждого источника (секунды)
+    const sv = {};           // видимое окно каждого источника {t0, t1}
+    const durOf = (i) => { const s = items[i]; const e = s && loadSound(s); return e && e.state === "ok" ? e.buf.duration : 0; };
+    const win = (i) => { const d = durOf(i); const w = sv[i]; return w && w.t1 > w.t0 && w.t1 <= d + 1e-6 ? w : { t0: 0, t1: d }; };
+    const tOfX = (i, x, W) => { const w = win(i); return clamp(w.t0 + (x / W) * (w.t1 - w.t0), 0, durOf(i)); };
+    const xOfT = (i, t, W) => { const w = win(i); return ((t - w.t0) / (w.t1 - w.t0)) * W; };
+
     function buildSources() {
         srcBox.innerHTML = "";
         srcRows.length = 0;
@@ -572,30 +587,58 @@ function setupSampler(node) {
             const b = el("b", "", `${i + 1}. ${s.name}`);
             b.style.color = COLORS[i];
             b.title = s.name;
-            const info = el("span", "", T("весь звук", "whole sound"));
+            const info = el("span", "", "");
             nm.appendChild(b); nm.appendChild(info);
-            const pl = mk("▶", "#3fa34d", T("Послушать выделенный кусок (или весь звук)", "Listen to the selected piece (or the whole sound)"), "sm");
+            const pl = mk("▶", "#3fa34d", T("Играть: выделенный кусок, а если его нет — от курсора", "Play: the selected piece, or from the cursor if there is none"), "sm");
             pl.addEventListener("click", () => preview(i));
             const meter = el("canvas", "nsp-meter");
             meter.dataset.src = String(i);
             const wave = el("canvas", "nsp-wave");
-            wave.title = T("Ведите мышкой — выделить кусок · двойной клик — весь · тяните выделенное вниз — в поле",
-                "Drag — select a piece · double click — all · drag the selection down — into the field");
+            wave.title = T("Клик — играть отсюда · вбок — выделить · края выделения тянутся · выделенное вниз — в поле · колёсико — приблизить",
+                "Click — play from here · sideways — select · drag selection edges · drag the selection down — into the field · wheel — zoom");
             const go = mk("➜", "#6b4fb3", T("Положить кусок в поле (за последним кирпичиком слоя)", "Put the piece into the field (after the last brick of the layer)"), "sm");
             go.addEventListener("click", () => toField(i));
             [nm, pl, meter, wave, go].forEach((x) => row.appendChild(x));
             srcBox.appendChild(row);
-            srcRows[i] = { cv: wave, info };
+            srcRows[i] = { cv: wave, info, play: pl };
             wave.addEventListener("pointerdown", (e) => srcDown(e, i));
+            wave.addEventListener("pointermove", (e) => { if (!sdrag) wave.style.cursor = edgeAt(i, pt(e, wave).x, wave.clientWidth) ? "ew-resize" : "text"; });
             wave.addEventListener("dblclick", () => {
-                const en = loadSound(s);
-                if (en.state !== "ok") return;
-                S.sel[i] = { a: 0, b: en.buf.duration };
+                const d = durOf(i);
+                if (!d) return;
+                const w = win(i);
+                S.sel[i] = { a: w.t0, b: w.t1 };
                 save(); drawSources();
             });
-            wave.addEventListener("wheel", (e) => e.stopPropagation(), { passive: true });
+            wave.addEventListener("wheel", (e) => {
+                e.preventDefault(); e.stopPropagation();
+                const d = durOf(i);
+                if (!d) return;
+                const W = wave.clientWidth;
+                const w = win(i);
+                const span = w.t1 - w.t0;
+                if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+                    const sh = ((e.shiftKey ? e.deltaY : e.deltaX) / W) * span;
+                    const t0 = clamp(w.t0 + sh, 0, d - span);
+                    sv[i] = { t0, t1: t0 + span };
+                } else {
+                    const tm = tOfX(i, pt(e, wave).x, W);
+                    const ns = clamp(span * (e.deltaY < 0 ? 1 / 1.25 : 1.25), Math.min(d, 0.25), d);
+                    const k = (tm - w.t0) / span;
+                    const t0 = clamp(tm - k * ns, 0, d - ns);
+                    sv[i] = { t0, t1: t0 + ns };
+                }
+                drawSources();
+            }, { passive: false });
         });
         drawSources();
+    }
+    function edgeAt(i, x, W) {
+        const sel = S.sel[i];
+        if (!sel) return null;
+        if (Math.abs(x - xOfT(i, sel.a, W)) <= 5) return "a";
+        if (Math.abs(x - xOfT(i, sel.b, W)) <= 5) return "b";
+        return null;
     }
     function drawSources() {
         items.forEach((s, i) => {
@@ -614,39 +657,53 @@ function setupSampler(node) {
                 g.fillStyle = "#6b7080"; g.font = "10px Segoe UI, Arial"; g.textBaseline = "middle";
                 g.fillText(e.state === "err" ? T("ошибка: ", "error: ") + e.err : T("загрузка...", "loading..."), 6, H / 2);
                 if (e.state === "loading") e.p.then(() => { drawSources(); draw(); });
+                cvw._base = null;
                 return;
             }
-            const dur = e.buf.duration;
+            const dur = e.buf.duration, w = win(i), sr = e.buf.sampleRate;
             const sel = S.sel[i];
             if (sel) {
                 g.fillStyle = "rgba(255,255,255,0.12)";
-                g.fillRect((sel.a / dur) * W, 0, ((sel.b - sel.a) / dur) * W, H);
+                g.fillRect(xOfT(i, sel.a, W), 0, xOfT(i, sel.b, W) - xOfT(i, sel.a, W), H);
             }
-            const per = e.peaks.length / W;
             for (let x = 0; x < W; x++) {
+                const ta = w.t0 + (x / W) * (w.t1 - w.t0), tb = w.t0 + ((x + 1) / W) * (w.t1 - w.t0);
+                const ia = Math.floor((ta * sr) / PEAK_BLOCK), ib = Math.max(ia + 1, Math.floor((tb * sr) / PEAK_BLOCK));
                 let p = 0;
-                for (let k = Math.floor(x * per), kk = Math.min(e.peaks.length, Math.floor((x + 1) * per) + 1); k < kk; k++) if (e.peaks[k] > p) p = e.peaks[k];
-                const t = (x / W) * dur;
-                g.fillStyle = sel && t >= sel.a && t <= sel.b ? COLORS[i] : "rgba(160,165,180,0.45)";
+                for (let k = Math.max(0, ia); k < Math.min(ib, e.peaks.length); k++) if (e.peaks[k] > p) p = e.peaks[k];
+                g.fillStyle = sel && ta >= sel.a && ta <= sel.b ? COLORS[i] : "rgba(160,165,180,0.45)";
                 const h = Math.max(1, p * H * 0.9);
                 g.fillRect(x, (H - h) / 2, 1, h);
             }
             if (sel) {
                 g.fillStyle = "#fff";
-                g.fillRect(Math.round((sel.a / dur) * W), 0, 1, H);
-                g.fillRect(Math.round((sel.b / dur) * W) - 1, 0, 1, H);
-                r.info.textContent = `${fmt(sel.a)} – ${fmt(sel.b)} · ${(sel.b - sel.a).toFixed(2)} ${T("с", "s")}`;
-            } else r.info.textContent = `${T("весь звук", "whole sound")} · ${fmt(dur)}`;
+                g.fillRect(Math.round(xOfT(i, sel.a, W)), 0, 2, H);
+                g.fillRect(Math.round(xOfT(i, sel.b, W)) - 2, 0, 2, H);
+            }
+            // курсор «играть отсюда»
+            if (curs[i] !== undefined && !sel) {
+                g.fillStyle = "#ffd166";
+                const cx = Math.round(xOfT(i, curs[i], W));
+                g.fillRect(cx - 1, 0, 2, H);
+                g.beginPath(); g.moveTo(cx - 5, 0); g.lineTo(cx + 5, 0); g.lineTo(cx, 6); g.closePath(); g.fill();
+            }
+            // приближено — показать, какая часть звука на экране
+            if (w.t1 - w.t0 < dur - 0.01) {
+                g.fillStyle = "rgba(0,0,0,0.5)"; g.fillRect(0, H - 4, W, 4);
+                g.fillStyle = "#8b90a0"; g.fillRect((w.t0 / dur) * W, H - 4, Math.max(3, ((w.t1 - w.t0) / dur) * W), 4);
+            }
+            r.info.textContent = sel ? `${fmt(sel.a)} – ${fmt(sel.b)} · ${(sel.b - sel.a).toFixed(2)} ${T("с", "s")}`
+                : curs[i] !== undefined ? `▶ ${T("от", "from")} ${fmt(curs[i])} · ${fmt(dur)}` : `${T("весь звук", "whole sound")} · ${fmt(dur)}`;
+            r.play.textContent = PV.src && PV.i === i ? "■" : "▶";
             cvw._base = null;          // подложка для курсора прослушивания — пересоберётся
         });
         drawSourceHead();
     }
     function drawSourceHead() {
         if (!PV.src || !srcRows[PV.i]) return;
-        const s = items[PV.i]; const e = s && loadSound(s);
-        if (!e || e.state !== "ok") return;
-        const cvw = srcRows[PV.i].cv;
-        // перерисовать строку и поставить курсор
+        const i = PV.i;
+        if (!durOf(i)) return;
+        const cvw = srcRows[i].cv;
         const t = PV.a + (getCtx().currentTime - PV.c0);
         const W = cvw.clientWidth, H = cvw.clientHeight;
         const g = cvw.getContext("2d");
@@ -656,53 +713,55 @@ function setupSampler(node) {
         const d = window.devicePixelRatio || 1;
         g.setTransform(d, 0, 0, d, 0, 0);
         g.fillStyle = "#fff";
-        g.fillRect(Math.round((t / e.buf.duration) * W) - 1, 0, 2, H);
+        g.fillRect(Math.round(xOfT(i, t, W)) - 1, 0, 2, H);
     }
 
-    // выделение куска; если нажали внутри выделения — тащим кусок в поле
+    // мышь на волне источника
     let sdrag = null;
     function srcDown(e, i) {
         refocus();
         if (e.button !== 0) return;
-        const s = items[i];
-        const en = loadSound(s);
-        if (en.state !== "ok") return;
+        const dur = durOf(i);
+        if (!dur) return;
         const cvw = srcRows[i].cv;
+        const W = cvw.clientWidth;
         const p = pt(e, cvw);
-        const dur = en.buf.duration;
-        const t = clamp((p.x / cvw.clientWidth) * dur, 0, dur);
+        const t = tOfX(i, p.x, W);
         const sel = S.sel[i];
-        if (sel && t >= sel.a && t <= sel.b && !S.bypass) {
-            sdrag = { mode: "grab", i, x0: e.clientX, y0: e.clientY, ghost: null };
-        } else {
-            sdrag = { mode: "select", i, t0: t, dur, cvw };
-            S.sel[i] = null;
-            delete S.sel[i];
-        }
+        const edge = edgeAt(i, p.x, W);
+        sdrag = { i, cvw, W, t0: t, x0: e.clientX, y0: e.clientY, mode: edge ? "edge" + edge : "pending",
+            inSel: !!(sel && t >= sel.a && t <= sel.b), ghost: null };
         cvw.setPointerCapture(e.pointerId);
         const mv = (ev) => srcMove(ev);
         const up = (ev) => { cvw.removeEventListener("pointermove", mv); cvw.removeEventListener("pointerup", up); cvw.removeEventListener("pointercancel", up); srcUp(ev); };
         cvw.addEventListener("pointermove", mv);
         cvw.addEventListener("pointerup", up);
         cvw.addEventListener("pointercancel", up);
-        for (const c of srcRows) if (c && c.cv) c.cv._base = null;
-        drawSources();
     }
     function srcMove(e) {
         const d = sdrag;
         if (!d) return;
-        if (d.mode === "select") {
-            const p = pt(e, d.cvw);
-            const t = clamp((p.x / d.cvw.clientWidth) * d.dur, 0, d.dur);
+        const p = pt(e, d.cvw);
+        const t = tOfX(d.i, p.x, d.W);
+        if (d.mode === "pending") {
+            const dx = Math.abs(e.clientX - d.x0), dy = Math.abs(e.clientY - d.y0);
+            // выделенный кусок повели вниз — тащим в поле; вбок — новое выделение
+            if (d.inSel && dy > 12 && dy > dx && !S.bypass) d.mode = "grab";
+            else if (dx > 3) d.mode = "select";
+            else return;
+        }
+        if (d.mode === "edgea" || d.mode === "edgeb") {
+            const sel = S.sel[d.i];
+            if (!sel) return;
+            if (d.mode === "edgea") sel.a = clamp(t, 0, sel.b - 0.01); else sel.b = clamp(t, sel.a + 0.01, durOf(d.i));
+            drawSources();
+        } else if (d.mode === "select") {
             const a = Math.min(d.t0, t), b = Math.max(d.t0, t);
             if (b - a >= 0.01) S.sel[d.i] = { a, b }; else delete S.sel[d.i];
-            for (const c of srcRows) if (c && c.cv) c.cv._base = null;
             drawSources();
-        } else {
-            // тащим кусок: над полем показываем, куда он ляжет
+        } else if (d.mode === "grab") {
             const q = pt(e, cv);
             d.ghost = q.inside && q.y > RULER_H ? { beat: Math.max(0, snapB(beatAt(q.x))), layer: clamp(Math.floor((q.y - RULER_H) / laneH()), 0, LAYERS - 1) } : null;
-            cv.style.cursor = d.ghost ? "copy" : "default";
             draw();
         }
     }
@@ -710,9 +769,16 @@ function setupSampler(node) {
         const d = sdrag;
         sdrag = null;
         if (!d) return;
-        if (d.mode === "select") { save(); return; }
-        if (d.ghost) toField(d.i, d.ghost.beat, d.ghost.layer);
-        draw();
+        if (d.mode === "pending") {
+            // просто клик: курсор «играть отсюда»; клик мимо выделения снимает его
+            if (!d.inSel) delete S.sel[d.i];
+            curs[d.i] = d.t0;
+            if (PV.src && PV.i === d.i) { stopPreview(); preview(d.i, d.t0); }
+            save(); drawSources();
+        } else if (d.mode === "grab") {
+            if (d.ghost) toField(d.i, d.ghost.beat, d.ghost.layer);
+            draw();
+        } else save();
         refocus();
     }
 
@@ -723,7 +789,7 @@ function setupSampler(node) {
         const e = s ? loadSound(s) : null;
         if (!e || e.state !== "ok") { setStatus(T("Звук ещё загружается", "The sound is still loading"), true); return; }
         if (S.bricks.length >= MAX_BRICKS) { setStatus(T("Не больше 128 кирпичиков", "No more than 128 bricks"), true); return; }
-        const sel = S.sel[i] || { a: 0, b: e.buf.duration };
+        const sel = S.sel[i] || { a: curs[i] || 0, b: e.buf.duration };
         pushUndo();
         const L = layer === undefined ? S.cur : layer;
         let at = beat;
