@@ -97,13 +97,13 @@ function injectStyles() {
     document.head.appendChild(s);
 }
 
-let sharedCtx = null;
+// один звуковой движок на всю страницу (общий с «Полем»): меньше нагрузки
 function getCtx() {
-    if (!sharedCtx) {
+    if (!window.__neronAudioCtx) {
         const AC = window.AudioContext || window.webkitAudioContext;
-        sharedCtx = new AC();
+        window.__neronAudioCtx = new AC();
     }
-    return sharedCtx;
+    return window.__neronAudioCtx;
 }
 
 function toStereo(ctx, buf) {
@@ -329,6 +329,11 @@ function setupMixerUI(node) {
                 sub: f ? f.name : "файл не выбран",
                 spec: f ? { type: "file", name: f.name, subfolder: f.subfolder, kind: f.kind, start, end } : null,
             };
+        }
+        if (cls === "NeronArrange") {
+            // поле слышно заранее: сервер сводит его целиком (вместе с его входами)
+            const inputs = typeof o.neronArrangeInputs === "function" ? o.neronArrangeInputs() : {};
+            return { originId: o.id, node: o, kind: "arrange", label: "FIELD / ПОЛЕ", sub: title, spec: { type: "arrange", json: String(widgetValue(o, "field_json") || "{}"), inputs } };
         }
         return { originId: o.id, node: o, kind: "other", label: String(title).toUpperCase(), sub: cls, spec: null };
     }

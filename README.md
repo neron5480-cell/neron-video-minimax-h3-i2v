@@ -127,6 +127,7 @@
 *   **Audio Loader:** загрузка, прослушивание и обрезка любого звукового файла.
 *   **Mixer:** до 8 каналов. Громкость, баланс, Mute/Solo, синхронизация BPM и работа с видео (полная замена/вырезание звука, наложение своих дорожек, синхронизация по длине).
 *   **Video Combine:** умная склейка видео (или пачки кадров) со сведённым звуком.
+*   **Field / Поле:** общее поле, как Playlist в FL Studio. Склейка до 3 роликов с точностью до кадра (сдвиг мышкой, два разделителя, склейка или наплыв) и дорожки со звуком: двигать, обрезать, резать, появление и затухание. Большое окно открывается поверх холста, на холсте остаётся аккуратная карточка.
 *   **Dancer:** для настроения — героиня (или ваш ролик с танцем), которая танцует в такт музыке.
 
 Главная фишка: **звук играет сразу на ноде, кнопка Queue для прослушивания не нужна!** Всё работает в браузере и не нагружает видеокарту.
@@ -277,6 +278,7 @@ This is a separate project that turns ComfyUI into a small digital audio worksta
 *   **Audio Loader:** load, listen to and trim any audio file.
 *   **Mixer:** up to 8 channels. Volume, pan, Mute/Solo, BPM sync, and video support (fully replace/mute video audio, overlay multiple tracks, sync by length).
 *   **Video Combine:** smart muxing of video (or image batches) with the mixed audio.
+*   **Field:** a shared field like the FL Studio Playlist. Frame-accurate cutting of up to 3 clips (drag to shift, two dividers, cut or dissolve) plus audio tracks: move, trim, split, fade in and out. The big window opens above the canvas; the canvas keeps a tidy card.
 *   **Dancer:** just for fun — a little dancer (or your own dance clip) that moves in time with the music.
 
 Main feature: **audio plays directly on the node, no need to hit Queue just to listen!** Everything runs in the browser and doesn't load your GPU.

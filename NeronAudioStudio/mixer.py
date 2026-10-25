@@ -331,6 +331,9 @@ def render_source(src):
         return render_project(kit, bpm, src.get("json", "{}"))
     if kind == "file":
         return render_file(src)
+    if kind == "arrange":
+        from .arrange import render_arrange_spec   # поздний импорт: arrange сам опирается на mixer
+        return render_arrange_spec(src)
     raise RuntimeError("Неизвестный источник: " + str(kind))
 
 

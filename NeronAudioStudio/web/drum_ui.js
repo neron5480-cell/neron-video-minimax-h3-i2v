@@ -157,10 +157,14 @@ let sharedCtx = null;
 const bufferPromises = new Map();
 const bufferReady = new Map();
 
+// один звуковой движок на всю страницу (общий для всех нод Neron)
 function getCtx() {
     if (!sharedCtx) {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        sharedCtx = new AC();
+        if (!window.__neronAudioCtx) {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            window.__neronAudioCtx = new AC();
+        }
+        sharedCtx = window.__neronAudioCtx;
     }
     return sharedCtx;
 }
