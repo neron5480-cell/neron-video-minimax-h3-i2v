@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { makeUserSized } from "./neron_common.js";
+import { neronTap, makeUserSized } from "./neron_common.js";
 
 // ============================================================================
 //  Neron Audio Loader
@@ -26,24 +26,24 @@ function injectStyles() {
     const s = document.createElement("style");
     s.id = "neron-aload-styles";
     s.textContent = `
-.na-root{box-sizing:border-box;width:100%;height:${PANEL_H}px;padding:8px 10px;background:#1b1d23;border-radius:8px;
-  font-family:"Segoe UI",Arial,sans-serif;color:#cfd2d8;user-select:none;display:flex;flex-direction:column;gap:7px;overflow:hidden}
+.na-root{box-sizing:border-box;width:100%;height:${PANEL_H}px;padding:8px 10px;background:var(--nt-panel,#1b1d23);border-radius:8px;
+  font-family:"Segoe UI",Arial,sans-serif;color:var(--nt-text,#cfd2d8);user-select:none;display:flex;flex-direction:column;gap:7px;overflow:hidden}
 .na-row{display:flex;align-items:center;gap:6px;flex:none;min-width:0}
-.na-lbl{font-size:10px;font-weight:700;color:#8b90a0;letter-spacing:.5px;flex:none}
-.na-sel{flex:1;min-width:80px;height:24px;box-sizing:border-box;background:#23252b;color:#cfd2d8;border:1px solid #33363e;
+.na-lbl{font-size:10px;font-weight:700;color:var(--nt-muted,#8b90a0);letter-spacing:.5px;flex:none}
+.na-sel{flex:1;min-width:80px;height:24px;box-sizing:border-box;background:var(--nt-input,#23252b);color:var(--nt-text,#cfd2d8);border:1px solid var(--nt-line,#33363e);
   border-radius:4px;font-size:11px;outline:none;padding:0 2px}
-.na-sel option{background:#23252b;color:#cfd2d8}
+.na-sel option{background:var(--nt-input,#23252b);color:var(--nt-text,#cfd2d8)}
 .na-btn{height:24px;padding:0 10px;border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;
-  flex:none;line-height:24px;background:#4a4e5a;white-space:nowrap}
+  flex:none;line-height:24px;background:var(--nt-btn,#4a4e5a);white-space:nowrap}
 .na-btn:hover{filter:brightness(1.18)}
-.na-wave{position:relative;flex:1;min-height:${H}px;background:#15171c;border-radius:6px;overflow:hidden;cursor:ew-resize;touch-action:none}
+.na-wave{position:relative;flex:1;min-height:${H}px;background:var(--nt-deep,#15171c);border-radius:6px;overflow:hidden;cursor:ew-resize;touch-action:none}
 .na-wave canvas{position:absolute;left:0;top:0;width:100%;height:100%}
 .na-note{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;
-  font-size:11px;color:#8b90a0;text-align:center;padding:0 10px;pointer-events:none}
+  font-size:11px;color:var(--nt-muted,#8b90a0);text-align:center;padding:0 10px;pointer-events:none}
 .na-ph{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.9;display:none;pointer-events:none}
-.na-info{flex:1;font-size:10px;color:#8b90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:60px}
-.na-check{display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#9aa0ae;white-space:nowrap;cursor:pointer;flex:none}
-.na-status{font-size:10px;color:#8b90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.na-info{flex:1;font-size:10px;color:var(--nt-muted,#8b90a0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:60px}
+.na-check{display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--nt-muted2,#9aa0ae);white-space:nowrap;cursor:pointer;flex:none}
+.na-status{font-size:10px;color:var(--nt-muted,#8b90a0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .na-status.err{color:#ff8a80}
 `;
     document.head.appendChild(s);
@@ -353,7 +353,7 @@ function setupLoaderUI(node) {
         if (loopCb.checked) { src.loop = true; src.loopStart = s; src.loopEnd = e; }
         const gain = ctx.createGain();
         gain.gain.value = 0.9;
-        src.connect(gain); gain.connect(ctx.destination);
+        src.connect(gain); gain.connect(ctx.destination); neronTap(ctx, gain);
         const t0 = ctx.currentTime + 0.03;
         if (loopCb.checked) src.start(t0, start);
         else src.start(t0, start, e - start);

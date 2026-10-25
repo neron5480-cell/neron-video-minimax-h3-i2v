@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { makeUserSized, peakOf, meterStep, drawMeter, meterTap } from "./neron_common.js";
+import { neronTap, makeUserSized, peakOf, meterStep, drawMeter, meterTap } from "./neron_common.js";
 
 // ============================================================================
 //  Neron Sampler / Сэмплер
@@ -53,51 +53,51 @@ function injectStyles() {
     s.id = "neron-sampler-styles2";
     s.textContent = `
 .nsp-outer{box-sizing:border-box;width:100%;padding-bottom:10px}
-.nsp-root{box-sizing:border-box;width:100%;height:100%;padding:8px 10px;background:#1b1d23;border-radius:8px;font-family:"Segoe UI",Arial,sans-serif;
-  color:#cfd2d8;user-select:none;display:flex;flex-direction:column;gap:5px;overflow:hidden;position:relative}
+.nsp-root{box-sizing:border-box;width:100%;height:100%;padding:8px 10px;background:var(--nt-panel,#1b1d23);border-radius:8px;font-family:"Segoe UI",Arial,sans-serif;
+  color:var(--nt-text,#cfd2d8);user-select:none;display:flex;flex-direction:column;gap:5px;overflow:hidden;position:relative}
 .nsp-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;flex:none}
-.nsp-btn{height:24px;padding:0 10px;border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;background:#4a4e5a;
+.nsp-btn{height:24px;padding:0 10px;border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;background:var(--nt-btn,#4a4e5a);
   white-space:nowrap;line-height:24px;flex:none;font-family:inherit}
 .nsp-btn:hover{filter:brightness(1.18)}
 .nsp-btn:disabled{opacity:.4;cursor:default;filter:none}
 .nsp-btn.sm{height:20px;line-height:20px;padding:0 7px;font-size:10px}
-.nsp-byp{background:#3a3e48;color:#cfd2d8}
-.nsp-byp.on{background:#d9a72b;color:#1b1d23}
-.nsp-g{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#8b90a0;letter-spacing:.4px}
+.nsp-byp{background:var(--nt-btn2,#3a3e48);color:var(--nt-text,#cfd2d8)}
+.nsp-byp.on{background:#d9a72b;color:var(--nt-panel,#1b1d23)}
+.nsp-g{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--nt-muted,#8b90a0);letter-spacing:.4px}
 .nsp-g input[type=range]{width:80px;height:12px;margin:0;cursor:pointer;accent-color:#ff9f43}
-.nsp-num{width:42px;height:20px;box-sizing:border-box;background:#23252b;color:#e6e8ee;border:1px solid #33363e;border-radius:4px;font-size:11px;text-align:center;outline:none}
-.nsp-sel{height:20px;box-sizing:border-box;background:#23252b;color:#cfd2d8;border:1px solid #33363e;border-radius:4px;font-size:10px;outline:none}
-.nsp-status{flex:1;min-width:100px;font-size:10px;color:#8b90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.nsp-num{width:42px;height:20px;box-sizing:border-box;background:var(--nt-input,#23252b);color:var(--nt-bright,#e6e8ee);border:1px solid var(--nt-line,#33363e);border-radius:4px;font-size:11px;text-align:center;outline:none}
+.nsp-sel{height:20px;box-sizing:border-box;background:var(--nt-input,#23252b);color:var(--nt-text,#cfd2d8);border:1px solid var(--nt-line,#33363e);border-radius:4px;font-size:10px;outline:none}
+.nsp-status{flex:1;min-width:100px;font-size:10px;color:var(--nt-muted,#8b90a0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
 .nsp-status.err{color:#ff8a80}
-.nsp-mm{width:120px;height:14px;flex:none;background:#101216;border-radius:3px}
-.nsp-cap{flex:none;font-size:10px;font-weight:700;color:#8b90a0;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+.nsp-mm{width:120px;height:14px;flex:none;background:var(--nt-well,#101216);border-radius:3px}
+.nsp-cap{flex:none;font-size:10px;font-weight:700;color:var(--nt-muted,#8b90a0);letter-spacing:.5px;display:flex;align-items:center;gap:8px}
 .nsp-cap i{font-style:normal;font-weight:400;color:#6b7080}
 .nsp-srcs{flex:none;display:flex;flex-direction:column;gap:3px}
-.nsp-src{display:flex;align-items:center;gap:6px;height:${SRC_H}px;background:#20232a;border-radius:6px;padding:0 6px;box-sizing:border-box}
+.nsp-src{display:flex;align-items:center;gap:6px;height:${SRC_H}px;background:var(--nt-card,#20232a);border-radius:6px;padding:0 6px;box-sizing:border-box}
 .nsp-sname{width:${HEAD_W - 70}px;flex:none;display:flex;flex-direction:column;justify-content:center;min-width:0}
 .nsp-sname b{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nsp-sname span{font-size:9px;color:#8b90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nsp-meter{width:12px;height:${SRC_H - 8}px;flex:none;background:#101216;border-radius:3px}
-.nsp-wave{flex:1;min-width:60px;height:${SRC_H - 6}px;background:#15171c;border-radius:4px;cursor:text;display:block}
-.nsp-field{flex:1;min-height:90px;display:flex;background:#15171c;border-radius:6px;overflow:hidden;position:relative}
-.nsp-heads{flex:none;width:${HEAD_W}px;display:flex;flex-direction:column;background:#20232a}
+.nsp-sname span{font-size:9px;color:var(--nt-muted,#8b90a0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nsp-meter{width:12px;height:${SRC_H - 8}px;flex:none;background:var(--nt-well,#101216);border-radius:3px}
+.nsp-wave{flex:1;min-width:60px;height:${SRC_H - 6}px;background:var(--nt-deep,#15171c);border-radius:4px;cursor:text;display:block}
+.nsp-field{flex:1;min-height:90px;display:flex;background:var(--nt-deep,#15171c);border-radius:6px;overflow:hidden;position:relative}
+.nsp-heads{flex:none;width:${HEAD_W}px;display:flex;flex-direction:column;background:var(--nt-card,#20232a)}
 .nsp-hcorner{flex:none;height:${RULER_H}px;border-bottom:1px solid #2a2d35;font-size:9px;color:#6b7080;display:flex;align-items:center;padding:0 6px}
 .nsp-head{flex:1;min-height:0;box-sizing:border-box;border-bottom:1px solid #2a2d35;display:flex;align-items:center;gap:4px;padding:0 5px;overflow:hidden;cursor:pointer}
 .nsp-head.cur{background:#272b34;box-shadow:inset 3px 0 0 var(--c)}
 .nsp-head b{flex:1;min-width:0;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nsp-head input[type=range]{width:44px;height:12px;margin:0;cursor:pointer}
-.nsp-ms{width:19px;height:18px;padding:0;border:none;border-radius:4px;background:#363a44;color:#9aa0ae;font-size:10px;font-weight:700;cursor:pointer;flex:none}
+.nsp-ms{width:19px;height:18px;padding:0;border:none;border-radius:4px;background:var(--nt-btn2,#363a44);color:var(--nt-muted2,#9aa0ae);font-size:10px;font-weight:700;cursor:pointer;flex:none}
 .nsp-ms.on-m{background:#b3414a;color:#fff}
-.nsp-ms.on-s{background:#d9a72b;color:#1b1d23}
+.nsp-ms.on-s{background:#d9a72b;color:var(--nt-panel,#1b1d23)}
 .nsp-grid{flex:1;min-width:0;position:relative}
 .nsp-grid canvas{position:absolute;left:0;top:0}
 .nsp-hs{flex:none;width:100%;height:10px;margin:0;accent-color:#6b7080}
-.nsp-selp{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;min-height:22px;font-size:10px;color:#9aa0ae}
-.nsp-selp b{color:#e6e8ee;font-size:11px}
+.nsp-selp{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;min-height:22px;font-size:10px;color:var(--nt-muted2,#9aa0ae)}
+.nsp-selp b{color:var(--nt-bright,#e6e8ee);font-size:11px}
 .nsp-selp input[type=range]{width:90px;height:12px;margin:0;cursor:pointer;accent-color:#ffd166}
 .nsp-byover{position:absolute;inset:0;background:rgba(21,23,28,.8);display:none;align-items:center;justify-content:center;text-align:center;
   font-size:12px;font-weight:700;color:#d9a72b;padding:12px;line-height:1.6;z-index:3}
-.nsp-empty{font-size:11px;color:#6b7080;padding:6px 8px;background:#20232a;border-radius:6px}
+.nsp-empty{font-size:11px;color:#6b7080;padding:6px 8px;background:var(--nt-card,#20232a);border-radius:6px}
 `;
     document.head.appendChild(s);
 }
@@ -369,7 +369,7 @@ function setupSampler(node) {
         if (ctx.state === "suspended") ctx.resume().catch(() => {});
         if (!A.master) {
             A.master = ctx.createGain();
-            A.master.connect(ctx.destination);
+            A.master.connect(ctx.destination); neronTap(ctx, A.master);
             A.mtap = meterTap(ctx, A.master);
             for (let i = 0; i < LAYERS; i++) {
                 const inp = ctx.createGain(); inp.channelCount = 2; inp.channelCountMode = "explicit";

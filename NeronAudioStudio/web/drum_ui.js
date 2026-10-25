@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { createProjectBar, makeUserSized } from "./neron_common.js";
+import { neronTap, createProjectBar, makeUserSized } from "./neron_common.js";
 
 // ============================================================================
 //  Neron Drum Machine - интерфейс
@@ -89,7 +89,7 @@ function injectStyles() {
     s.id = "neron-drum-styles2";
     s.textContent = `
 .neron-root{box-sizing:border-box;width:100%;padding:8px 10px;background:#17181c;border-radius:8px;
-  font-family:"Segoe UI",Arial,sans-serif;color:#cfd2d8;user-select:none;display:flex;flex-direction:column;
+  font-family:"Segoe UI",Arial,sans-serif;color:var(--nt-text,#cfd2d8);user-select:none;display:flex;flex-direction:column;
   gap:4px;overflow:hidden}
 .neron-rows{display:flex;flex-direction:column;gap:4px;flex:none}
 .neron-row{display:grid;grid-template-columns:150px 112px 100px 56px 56px repeat(16,minmax(0,1fr));column-gap:4px;
@@ -97,7 +97,7 @@ function injectStyles() {
 .neron-head{height:14px;font-size:9px;color:#7d8290;letter-spacing:.5px}
 .neron-head div{overflow:hidden;white-space:nowrap}
 .neron-labelbox{display:flex;align-items:center;gap:4px;min-width:0}
-.neron-rm{width:16px;height:16px;flex:none;border:none;border-radius:4px;background:#2b2e36;color:#9aa0ae;
+.neron-rm{width:16px;height:16px;flex:none;border:none;border-radius:4px;background:#2b2e36;color:var(--nt-muted2,#9aa0ae);
   font-size:13px;line-height:16px;padding:0;cursor:pointer}
 .neron-rm:hover{background:#b3414a;color:#fff}
 .neron-color{width:18px;height:18px;flex:none;padding:0;border:none;border-radius:4px;background:none;cursor:pointer}
@@ -105,13 +105,13 @@ function injectStyles() {
 .neron-color::-webkit-color-swatch{border:1px solid #444;border-radius:4px}
 .neron-name{flex:1;min-width:0;height:20px;box-sizing:border-box;background:transparent;border:1px solid transparent;
   border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.3px;padding:0 3px;outline:none;color:var(--c)}
-.neron-name:hover{border-color:#33363e}
-.neron-name:focus{border-color:#4a4f5c;background:#1f2228}
-.neron-sample{width:100%;height:22px;box-sizing:border-box;font-size:10px;background:#23252b;color:#cfd2d8;
-  border:1px solid #33363e;border-radius:4px;padding:0 2px;outline:none;min-width:0}
-.neron-sample option{background:#23252b;color:#cfd2d8}
+.neron-name:hover{border-color:var(--nt-line,#33363e)}
+.neron-name:focus{border-color:#4a4f5c;background:var(--nt-card2,#1f2228)}
+.neron-sample{width:100%;height:22px;box-sizing:border-box;font-size:10px;background:var(--nt-input,#23252b);color:var(--nt-text,#cfd2d8);
+  border:1px solid var(--nt-line,#33363e);border-radius:4px;padding:0 2px;outline:none;min-width:0}
+.neron-sample option{background:var(--nt-input,#23252b);color:var(--nt-text,#cfd2d8)}
 .neron-range{width:100%;height:14px;margin:0;padding:0;accent-color:var(--c);cursor:pointer}
-.neron-cell{height:22px;box-sizing:border-box;border-radius:4px;background:#272a31;border:1px solid #343841;cursor:pointer}
+.neron-cell{height:22px;box-sizing:border-box;border-radius:4px;background:var(--nt-row2,#272a31);border:1px solid #343841;cursor:pointer}
 .neron-cell.grp{background:#2f333b}
 .neron-cell:hover{border-color:#5a5f6b}
 .neron-cell.on{background:var(--c);border-color:var(--c);box-shadow:0 0 5px var(--c)}
@@ -120,31 +120,31 @@ function injectStyles() {
 .neron-lbl2{width:108px;flex:none;font-size:11px;font-weight:700;color:#54a0ff;letter-spacing:.5px}
 .neron-tabs{display:flex;gap:4px;flex:none}
 .neron-tab{min-width:26px;height:22px;box-sizing:border-box;padding:0 6px;border:1px solid #343841;border-radius:5px;
-  background:#272a31;color:#9aa0ae;font-size:11px;font-weight:700;cursor:pointer;position:relative}
+  background:var(--nt-row2,#272a31);color:var(--nt-muted2,#9aa0ae);font-size:11px;font-weight:700;cursor:pointer;position:relative}
 .neron-tab:hover{border-color:#5a5f6b;color:#fff}
 .neron-tab.sel{background:#54a0ff;border-color:#54a0ff;color:#10151c}
 .neron-tab.playing::after{content:"";position:absolute;left:4px;right:4px;bottom:2px;height:2px;background:#fff;border-radius:1px}
 .neron-bpm{display:flex;align-items:center;gap:8px;height:24px;flex:none}
 .neron-bpm-label{width:108px;flex:none;font-size:11px;font-weight:700;color:#ff9f43;letter-spacing:.5px;cursor:pointer}
 .neron-bpm-slider{flex:1;min-width:0;height:16px;margin:0;accent-color:#ff9f43;cursor:pointer}
-.neron-num{width:56px;height:22px;box-sizing:border-box;background:#23252b;color:#cfd2d8;border:1px solid #33363e;
+.neron-num{width:56px;height:22px;box-sizing:border-box;background:var(--nt-input,#23252b);color:var(--nt-text,#cfd2d8);border:1px solid var(--nt-line,#33363e);
   border-radius:4px;font-size:11px;text-align:center;outline:none}
 .neron-bar{display:flex;align-items:center;gap:6px;height:28px;margin-top:2px;flex:none}
 .neron-btn{height:24px;padding:0 10px;border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:700;
   cursor:pointer;flex:none;line-height:24px}
 .neron-btn:hover{filter:brightness(1.15)}
 .neron-small{height:22px;padding:0 8px;line-height:22px;font-size:10px}
-.neron-status{flex:1;min-width:0;font-size:10px;color:#8b90a0;white-space:nowrap;overflow:hidden;
+.neron-status{flex:1;min-width:0;font-size:10px;color:var(--nt-muted,#8b90a0);white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis;text-align:right}
 .neron-status.err{color:#ff8a80}
 .neron-addform{display:none;flex:1;min-width:0;align-items:center;gap:6px}
 .neron-bar.adding .neron-addform{display:flex}
 .neron-bar.adding .neron-status{display:none}
-.neron-addform input[type=text]{flex:1;min-width:60px;height:22px;box-sizing:border-box;background:#23252b;color:#cfd2d8;
+.neron-addform input[type=text]{flex:1;min-width:60px;height:22px;box-sizing:border-box;background:var(--nt-input,#23252b);color:var(--nt-text,#cfd2d8);
   border:1px solid #6b4fb3;border-radius:4px;font-size:11px;padding:0 6px;outline:none}
-.neron-addform select{width:190px;flex:none;height:22px;box-sizing:border-box;background:#23252b;color:#cfd2d8;
+.neron-addform select{width:190px;flex:none;height:22px;box-sizing:border-box;background:var(--nt-input,#23252b);color:var(--nt-text,#cfd2d8);
   border:1px solid #6b4fb3;border-radius:4px;font-size:11px;outline:none}
-.neron-addform select option{background:#23252b;color:#cfd2d8}
+.neron-addform select option{background:var(--nt-input,#23252b);color:var(--nt-text,#cfd2d8)}
 `;
     document.head.appendChild(s);
 }
@@ -559,7 +559,7 @@ function setupNeronUI(node, host) {
         if (!audio) {
             const master = ctx.createGain();
             master.gain.value = 0.9;
-            master.connect(ctx.destination);
+            master.connect(ctx.destination); neronTap(ctx, master);
             audio = { ctx, master, tracks: new Map() };
         }
         return audio;

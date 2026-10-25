@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { makeUserSized, peakOf, meterStep, drawMeter, meterTap, ROOMS, ROOM_ORDER, ROOM_NAME, roomImpulse, makeKnob } from "./neron_common.js";
+import { neronTap, makeUserSized, peakOf, meterStep, drawMeter, meterTap, ROOMS, ROOM_ORDER, ROOM_NAME, roomImpulse, makeKnob } from "./neron_common.js";
 
 // ============================================================================
 //  Neron Studio / Студия
@@ -114,49 +114,49 @@ function injectStyles() {
     s.id = "neron-studio-styles";
     s.textContent = `
 .nst-outer{box-sizing:border-box;width:100%;padding-bottom:10px}
-.nst-root{box-sizing:border-box;width:100%;height:100%;padding:8px 10px;background:#1b1d23;border-radius:8px;font-family:"Segoe UI",Arial,sans-serif;
-  color:#cfd2d8;user-select:none;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.nst-root{box-sizing:border-box;width:100%;height:100%;padding:8px 10px;background:var(--nt-panel,#1b1d23);border-radius:8px;font-family:"Segoe UI",Arial,sans-serif;
+  color:var(--nt-text,#cfd2d8);user-select:none;display:flex;flex-direction:column;gap:6px;overflow:hidden}
 .nst-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;flex:none}
-.nst-btn{height:26px;padding:0 11px;border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:800;cursor:pointer;background:#4a4e5a;
+.nst-btn{height:26px;padding:0 11px;border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:800;cursor:pointer;background:var(--nt-btn,#4a4e5a);
   white-space:nowrap;line-height:26px;flex:none;font-family:inherit}
 .nst-btn:hover{filter:brightness(1.18)}
 .nst-btn.sm{height:22px;line-height:22px;padding:0 8px;font-size:10px}
-.nst-byp.on{background:#d9a72b;color:#1b1d23}
-.nst-lbl{font-size:10px;font-weight:700;color:#8b90a0;letter-spacing:.5px;white-space:nowrap}
-.nst-status{flex:1;min-width:100px;font-size:10px;color:#8b90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.nst-byp.on{background:#d9a72b;color:var(--nt-panel,#1b1d23)}
+.nst-lbl{font-size:10px;font-weight:700;color:var(--nt-muted,#8b90a0);letter-spacing:.5px;white-space:nowrap}
+.nst-status{flex:1;min-width:100px;font-size:10px;color:var(--nt-muted,#8b90a0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
 .nst-status.err{color:#ff8a80}
-.nst-mm{width:130px;height:16px;flex:none;background:#101216;border-radius:3px}
-.nst-help{display:none;flex:none;background:#20232a;border-radius:7px;padding:8px 10px;font-size:11px;line-height:1.55}
+.nst-mm{width:130px;height:16px;flex:none;background:var(--nt-well,#101216);border-radius:3px}
+.nst-help{display:none;flex:none;background:var(--nt-card,#20232a);border-radius:7px;padding:8px 10px;font-size:11px;line-height:1.55}
 .nst-help b{color:#ffd166}
 .nst-list{display:flex;flex-direction:column;gap:4px;flex:1;min-height:40px;overflow-y:auto;overflow-x:hidden}
-.nst-row{display:flex;align-items:center;gap:7px;height:${ROW_H}px;box-sizing:border-box;background:#242831;border-radius:7px;padding:0 8px;flex:none}
+.nst-row{display:flex;align-items:center;gap:7px;height:${ROW_H}px;box-sizing:border-box;background:var(--nt-row,#242831);border-radius:7px;padding:0 8px;flex:none}
 .nst-dot{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
 .nst-name{width:132px;flex:none;display:flex;flex-direction:column;min-width:0}
 .nst-name b{font-size:12px;color:var(--c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nst-name span{font-size:9px;color:#8b90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nst-meter{width:14px;height:36px;flex:none;background:#101216;border-radius:3px}
-.nst-ms{width:22px;height:20px;padding:0;border:none;border-radius:4px;background:#363a44;color:#9aa0ae;font-size:10px;font-weight:700;cursor:pointer;flex:none}
+.nst-name span{font-size:9px;color:var(--nt-muted,#8b90a0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nst-meter{width:14px;height:36px;flex:none;background:var(--nt-well,#101216);border-radius:3px}
+.nst-ms{width:22px;height:20px;padding:0;border:none;border-radius:4px;background:var(--nt-btn2,#363a44);color:var(--nt-muted2,#9aa0ae);font-size:10px;font-weight:700;cursor:pointer;flex:none}
 .nst-ms.on-m{background:#b3414a;color:#fff}
-.nst-ms.on-s{background:#d9a72b;color:#1b1d23}
+.nst-ms.on-s{background:#d9a72b;color:var(--nt-panel,#1b1d23)}
 .nst-ms.on-p{background:#2e8b3d;color:#fff}
-.nst-mini{display:flex;align-items:center;gap:4px;font-size:9px;color:#8b90a0;flex:none}
+.nst-mini{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--nt-muted,#8b90a0);flex:none}
 .nst-mini input{width:66px;height:14px;margin:0;accent-color:var(--c)}
-.nst-wave{position:relative;flex:1;min-width:60px;height:34px;background:#15171c;border-radius:4px;overflow:hidden}
+.nst-wave{position:relative;flex:1;min-width:60px;height:34px;background:var(--nt-deep,#15171c);border-radius:4px;overflow:hidden}
 .nst-wave canvas{position:absolute;inset:0;width:100%;height:100%}
 .nst-wave i{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.85;display:none}
-.nst-wave span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:#8b90a0}
-.nst-fx{display:flex;align-items:center;gap:2px;flex:none;padding:0 4px;border-left:1px solid #33363e;border-right:1px solid #33363e}
-.nst-empty{padding:14px 10px;font-size:11px;color:#8b90a0;line-height:1.55;background:#20232a;border-radius:7px}
+.nst-wave span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--nt-muted,#8b90a0)}
+.nst-fx{display:flex;align-items:center;gap:2px;flex:none;padding:0 4px;border-left:1px solid var(--nt-line,#33363e);border-right:1px solid var(--nt-line,#33363e)}
+.nst-empty{padding:14px 10px;font-size:11px;color:var(--nt-muted,#8b90a0);line-height:1.55;background:var(--nt-card,#20232a);border-radius:7px}
 .nst-eqhead{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;flex:none}
-.nst-eqhead b{font-size:11px;font-weight:800;color:#e6e8ee;letter-spacing:.5px}
-.nst-sel{height:22px;box-sizing:border-box;background:#23252b;color:#cfd2d8;border:1px solid #33363e;border-radius:4px;font-size:11px;outline:none}
-.nst-sel option{background:#23252b}
-.nst-fcv{width:100%;display:block;border-radius:7px;background:#121318;touch-action:none;flex:none}
-.nst-eq{width:100%;height:${EQ_H}px;display:block;border-radius:7px;background:#121318;touch-action:none;cursor:ns-resize;flex:none}
+.nst-eqhead b{font-size:11px;font-weight:800;color:var(--nt-bright,#e6e8ee);letter-spacing:.5px}
+.nst-sel{height:22px;box-sizing:border-box;background:var(--nt-input,#23252b);color:var(--nt-text,#cfd2d8);border:1px solid var(--nt-line,#33363e);border-radius:4px;font-size:11px;outline:none}
+.nst-sel option{background:var(--nt-input,#23252b)}
+.nst-fcv{width:100%;display:block;border-radius:7px;background:var(--nt-well,#121318);touch-action:none;flex:none}
+.nst-eq{width:100%;height:${EQ_H}px;display:block;border-radius:7px;background:var(--nt-well,#121318);touch-action:none;cursor:ns-resize;flex:none}
 .nm-knob{display:flex;flex-direction:column;align-items:center;width:30px;flex:none;cursor:ns-resize}
 .nm-knob canvas{width:26px;height:26px;display:block;touch-action:none}
-.nm-knob span{font-size:8px;font-weight:700;color:#8b90a0;line-height:9px;letter-spacing:.3px;white-space:nowrap}
-.nm-room{width:40px;height:20px;padding:0;border:none;border-radius:4px;background:#363a44;color:#9aa0ae;font-size:9px;font-weight:700;cursor:pointer;flex:none}
+.nm-knob span{font-size:8px;font-weight:700;color:var(--nt-muted,#8b90a0);line-height:9px;letter-spacing:.3px;white-space:nowrap}
+.nm-room{width:40px;height:20px;padding:0;border:none;border-radius:4px;background:var(--nt-btn2,#363a44);color:var(--nt-muted2,#9aa0ae);font-size:9px;font-weight:700;cursor:pointer;flex:none}
 .nm-room.on{background:#6b4fb3;color:#fff}
 .nm-fxreset{width:16px;height:16px;padding:0;border:none;border-radius:3px;background:transparent;color:#6c7180;font-size:11px;cursor:pointer;flex:none;visibility:hidden}
 .nm-fxreset:hover{color:#fff}
@@ -331,7 +331,7 @@ function setupStudio(node) {
             const lim = ctx.createDynamicsCompressor();
             lim.threshold.value = -3; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.002; lim.release.value = 0.12;
             A.master.connect(lim);
-            lim.connect(ctx.destination);
+            lim.connect(ctx.destination); neronTap(ctx, lim);
             A.an = ctx.createAnalyser();
             A.an.fftSize = 4096; A.an.smoothingTimeConstant = 0.8;
             lim.connect(A.an);

@@ -1,5 +1,22 @@
 # Changelog / История изменений
 
+## dev — Neron Audio Studio: темы и «живость» / themes and "life" (на проверке / in testing)
+
+**RU:**
+- **Neron Theme / Тема 🎨** — нода ни к чему не подключается. Есть на столе — ноды Neron в теме; удалили — снова обычный серый вид. Тема сохраняется вместе со схемой: кто скачал workflow, видит его таким, как задумано.
+- Три темы карточками с превью: **Графит** (спокойный серый), **Neron Brown** (фирменная тёплая), **Неон** (яркая, светящаяся).
+- У каждого кубика свой цвет: видео — синий, звук — зелёный, музыка и студия — оранжевый, Пульт — фиолетовый. В этот цвет окрашены шапка ноды, рамка панели и **провода** по типу (видео / звуки / AUDIO). Группы рабочего стола (🎬 🎵 🥁 🎚 🎨) — в тон теме.
+- **✨ Живость**: ВЫКЛ — без анимации; СПОКОЙНО — огонёк медленно ползёт по рамкам нод, искры бегут по проводам, пока играет музыка; НА ПОЛНУЮ — по рамкам бегут по два огня со светящимся хвостом, искры по проводам всегда, а **на каждом ударе музыки** рамки и панели вспыхивают. Музыку «слышит» общая шина уровня: туда отводится звук Пульта, Студии, сэмплера, барабанов, пианино, загрузчиков.
+- Все панели переведены на «цвета темы» (с запасным серым) — без ноды темы вид ровно прежний.
+- Рабочий стол: добавлена нода «Тема» (Neron Brown, спокойно).
+
+**EN:**
+- **Neron Theme 🎨** — not wired to anything. On the canvas — Neron nodes take the theme; delete it — back to the plain grey look. The theme is saved with the workflow.
+- Three theme cards with previews: **Graphite**, **Neron Brown** (the warm signature one), **Neon** (bright, glowing).
+- Every cube has its colour (video blue, sound green, music/studio orange, Pult purple) for the title, the panel frame and the **wires** by type. Desk groups follow the theme.
+- **✨ Life**: OFF; CALM — a slow light on node frames and wire sparks while music plays; FULL — two running lights with glowing tails, sparks always, and frames and panels **flash on every beat** (a shared level bus hears the Pult, Studio, sampler, drums, piano and loaders).
+- All panels now use theme colours with grey fallbacks — without the Theme node everything looks exactly as before. The ready desk has a Theme node (Neron Brown, calm).
+
 ## dev — Neron Audio Studio: Студия / Studio (на проверке / in testing)
 
 **RU:**

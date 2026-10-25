@@ -21,6 +21,7 @@
 | **Neron Music / Музыка 🥁🎹** | Барабаны + пианино в одной ноде (вкладки), общий темп; в Пульт — 2 канала / Drums + piano in one node, 2 channels to the Pult |
 | **Neron Video Sampler / Видео-сэмплер 🎬** | Между «Видео ×3» и Пультом: куски роликов → монтаж (резать, переставлять, обрезать), экран, ⏭, 🔇 / Video edit between Video ×3 and the Pult |
 | **Neron Studio / Студия 🎛** | Между «Музыкой» и Пультом: каждая дорожка — канал с НИЗ/СЕР/ВЕРХ/ЭХО, общий эквалайзер на 10 полос со спектром / Every track a channel with EQ and reverb, 10-band master EQ |
+| **Neron Theme / Тема 🎨** | Ни к чему не подключается: тема нод Neron (Графит / Neron Brown / Неон), цвета кубиков и проводов, ✨ живые огни в такт музыке / Theme for Neron nodes with live lights on the beat |
 | **Neron Field / Поле** | Общее поле, как Playlist в FL Studio: склейка до 3 роликов по кадрам и дорожки со звуком (двигать, обрезать, резать, появление и затухание) |
 | **Neron Dancer** | Для настроения: маленькая героиня, которая танцует под звук Neron-нод |
 

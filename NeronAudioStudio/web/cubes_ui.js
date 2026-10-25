@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { makeUserSized } from "./neron_common.js";
+import { neronTap, makeUserSized } from "./neron_common.js";
 
 // ============================================================================
 //  Кубики для Пульта / Cubes for the Pult
@@ -45,31 +45,31 @@ function injectStyles() {
     s.id = "neron-cube-styles";
     s.textContent = `
 .ncb-outer{box-sizing:border-box;width:100%;padding-bottom:10px;background:transparent}
-.ncb-root{box-sizing:border-box;width:100%;height:100%;max-width:100%;padding:8px 10px;background:#1b1d23;border-radius:8px;font-family:"Segoe UI",Arial,sans-serif;
-  color:#cfd2d8;user-select:none;display:flex;flex-direction:column;gap:6px;overflow:auto}
+.ncb-root{box-sizing:border-box;width:100%;height:100%;max-width:100%;padding:8px 10px;background:var(--nt-panel,#1b1d23);border-radius:8px;font-family:"Segoe UI",Arial,sans-serif;
+  color:var(--nt-text,#cfd2d8);user-select:none;display:flex;flex-direction:column;gap:6px;overflow:auto}
 .ncb-top{display:flex;align-items:center;gap:8px;flex:none}
 .ncb-top b{font-size:12px;letter-spacing:.5px;white-space:nowrap}
-.ncb-status{flex:1;min-width:0;font-size:10px;color:#8b90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ncb-status{flex:1;min-width:0;font-size:10px;color:var(--nt-muted,#8b90a0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ncb-status.err{color:#ff8a80}
-.ncb-btn{height:22px;padding:0 8px;border:none;border-radius:5px;color:#fff;font-size:10px;font-weight:700;cursor:pointer;background:#4a4e5a;
+.ncb-btn{height:22px;padding:0 8px;border:none;border-radius:5px;color:#fff;font-size:10px;font-weight:700;cursor:pointer;background:var(--nt-btn,#4a4e5a);
   white-space:nowrap;line-height:22px;flex:none;font-family:inherit}
 .ncb-btn:hover{filter:brightness(1.18)}
-.ncb-sel{flex:1;min-width:60px;height:22px;box-sizing:border-box;background:#23252b;color:#cfd2d8;border:1px solid #33363e;border-radius:4px;
+.ncb-sel{flex:1;min-width:60px;height:22px;box-sizing:border-box;background:var(--nt-input,#23252b);color:var(--nt-text,#cfd2d8);border:1px solid var(--nt-line,#33363e);border-radius:4px;
   font-size:11px;outline:none;padding:0 2px}
-.ncb-sel option{background:#23252b;color:#cfd2d8}
+.ncb-sel option{background:var(--nt-input,#23252b);color:var(--nt-text,#cfd2d8)}
 .ncb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;flex:1;min-height:0}
-.ncb-card{display:flex;flex-direction:column;gap:5px;background:#242831;border-radius:7px;padding:6px;border:2px solid transparent;min-height:0;min-width:0;box-sizing:border-box}
+.ncb-card{display:flex;flex-direction:column;gap:5px;background:var(--nt-row,#242831);border-radius:7px;padding:6px;border:2px solid transparent;min-height:0;min-width:0;box-sizing:border-box}
 .ncb-card.drop{border-color:#4dabf7}
 .ncb-row{display:flex;align-items:center;gap:5px;min-width:0}
 .ncb-num{font-size:12px;font-weight:700;flex:none}
-.ncb-vbox{position:relative;flex:none;width:100%;aspect-ratio:16/9;background:#0e0f12;border-radius:5px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.ncb-vbox{position:relative;flex:none;width:100%;aspect-ratio:16/9;background:var(--nt-well,#0e0f12);border-radius:5px;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .ncb-vbox video{width:100%;height:100%;object-fit:contain;background:#000}
 .ncb-empty{font-size:11px;color:#6b7080;text-align:center;padding:8px;line-height:1.5}
-.ncb-info{font-size:9px;color:#8b90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ncb-info{font-size:9px;color:var(--nt-muted,#8b90a0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ncb-list{display:flex;flex-direction:column;gap:4px}
-.ncb-srow{display:flex;align-items:center;gap:6px;height:30px;background:#242831;border-radius:6px;padding:0 6px;border:2px solid transparent}
+.ncb-srow{display:flex;align-items:center;gap:6px;height:30px;background:var(--nt-row,#242831);border-radius:6px;padding:0 6px;border:2px solid transparent}
 .ncb-srow.drop{border-color:#4dabf7}
-.ncb-wave{flex:none;width:130px;height:22px;background:#15171c;border-radius:3px}
+.ncb-wave{flex:none;width:130px;height:22px;background:var(--nt-deep,#15171c);border-radius:3px}
 .ncb-dot{width:9px;height:9px;border-radius:50%;flex:none}
 `;
     document.head.appendChild(s);
@@ -388,7 +388,7 @@ function setupCube(node, kind) {
                             if (ctx.state === "suspended") await ctx.resume();
                             const src = ctx.createBufferSource();
                             src.buffer = buf;
-                            src.connect(ctx.destination);
+                            src.connect(ctx.destination); neronTap(ctx, src);
                             src.onended = () => { if (snd.src === src) stopSound(); };
                             src.start();
                             snd.src = src; snd.i = i;

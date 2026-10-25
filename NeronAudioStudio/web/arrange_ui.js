@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { createProjectBar } from "./neron_common.js";
+import { neronTap, createProjectBar } from "./neron_common.js";
 
 // ============================================================================
 //  Neron Field / Поле
@@ -94,76 +94,76 @@ function injectStyles() {
     const s = document.createElement("style");
     s.id = "neron-field-styles";
     s.textContent = `
-.nf-card{box-sizing:border-box;width:100%;padding:6px 8px;background:#1b1d23;border-radius:8px;font-family:"Segoe UI",Arial,sans-serif;
-  color:#cfd2d8;display:flex;flex-direction:column;gap:5px;overflow:hidden;user-select:none}
+.nf-card{box-sizing:border-box;width:100%;padding:6px 8px;background:var(--nt-panel,#1b1d23);border-radius:8px;font-family:"Segoe UI",Arial,sans-serif;
+  color:var(--nt-text,#cfd2d8);display:flex;flex-direction:column;gap:5px;overflow:hidden;user-select:none}
 .nf-bar{display:flex;align-items:center;gap:6px;flex:none;flex-wrap:wrap}
-.nf-btn{height:24px;padding:0 10px;border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;background:#4a4e5a;
+.nf-btn{height:24px;padding:0 10px;border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;background:var(--nt-btn,#4a4e5a);
   white-space:nowrap;line-height:24px;flex:none;font-family:inherit}
 .nf-btn:hover{filter:brightness(1.18)}
 .nf-btn.sm{height:20px;line-height:20px;padding:0 7px;font-size:10px}
 .nf-btn.on{box-shadow:inset 0 0 0 2px #ffd166}
 .nf-btn:disabled{opacity:.4;cursor:default;filter:none}
-.nf-time{font:700 12px/1 Consolas,"Courier New",monospace;color:#e6e8ee;white-space:nowrap}
-.nf-status{font-size:10px;color:#8b90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none;min-height:13px}
+.nf-time{font:700 12px/1 Consolas,"Courier New",monospace;color:var(--nt-bright,#e6e8ee);white-space:nowrap}
+.nf-status{font-size:10px;color:var(--nt-muted,#8b90a0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none;min-height:13px}
 .nf-status.err{color:#ff8a80}
-.nf-stagehost{flex:1;min-height:0;display:flex;background:#0e0f12;border-radius:6px;overflow:hidden}
+.nf-stagehost{flex:1;min-height:0;display:flex;background:var(--nt-well,#0e0f12);border-radius:6px;overflow:hidden}
 .nf-stage{position:relative;flex:1;min-width:0;min-height:0;background:#000}
 .nf-stage video{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;opacity:0;pointer-events:none;background:transparent}
 .nf-miss{position:absolute;left:0;right:0;top:0;bottom:0;display:none;align-items:center;justify-content:center;text-align:center;
   font-size:11px;color:#ff8a80;padding:6px;pointer-events:none}
 .nf-novid{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;text-align:center;
   font-size:11px;color:#6b7080;padding:8px;line-height:1.5;pointer-events:none}
-.nf-ov{flex:none;height:44px;width:100%;display:block;background:#15171c;border-radius:5px;cursor:pointer}
-.nf-win{position:fixed;z-index:9000;display:none;flex-direction:column;background:#1b1d23;border:1px solid #3a3e48;border-radius:10px;
-  box-shadow:0 14px 44px rgba(0,0,0,.65);font-family:"Segoe UI",Arial,sans-serif;color:#cfd2d8;user-select:none;overflow:hidden;outline:none}
+.nf-ov{flex:none;height:44px;width:100%;display:block;background:var(--nt-deep,#15171c);border-radius:5px;cursor:pointer}
+.nf-win{position:fixed;z-index:9000;display:none;flex-direction:column;background:var(--nt-panel,#1b1d23);border:1px solid var(--nt-btn2,#3a3e48);border-radius:10px;
+  box-shadow:0 14px 44px rgba(0,0,0,.65);font-family:"Segoe UI",Arial,sans-serif;color:var(--nt-text,#cfd2d8);user-select:none;overflow:hidden;outline:none}
 .nf-title{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 8px;background:#23262e;cursor:move;flex:none;border-bottom:1px solid #2f323b}
 .nf-title b{font-size:12px;color:#ffd166;letter-spacing:.5px;margin-right:4px;white-space:nowrap}
-.nf-sep{width:1px;height:18px;background:#3a3e48;flex:none}
+.nf-sep{width:1px;height:18px;background:var(--nt-btn2,#3a3e48);flex:none}
 .nf-sp{flex:1;min-width:4px}
 .nf-body{flex:1;min-height:0;display:flex;flex-direction:column}
-.nf-wstage{flex:none;display:flex;background:#0e0f12;min-height:60px}
+.nf-wstage{flex:none;display:flex;background:var(--nt-well,#0e0f12);min-height:60px}
 .nf-split{flex:none;height:7px;cursor:ns-resize;background:#23262e;border-top:1px solid #2f323b;border-bottom:1px solid #2f323b}
-.nf-split:hover{background:#2f333d}
-.nf-rrow{flex:none;display:flex;height:${RULER_H}px;background:#1f2229;border-bottom:1px solid #2f323b}
-.nf-rhead{flex:none;width:${HEAD_W}px;display:flex;align-items:center;padding:0 6px;box-sizing:border-box;font-size:10px;color:#8b90a0;gap:4px}
+.nf-split:hover{background:var(--nt-btn2,#2f333d)}
+.nf-rrow{flex:none;display:flex;height:${RULER_H}px;background:var(--nt-card2,#1f2229);border-bottom:1px solid #2f323b}
+.nf-rhead{flex:none;width:${HEAD_W}px;display:flex;align-items:center;padding:0 6px;box-sizing:border-box;font-size:10px;color:var(--nt-muted,#8b90a0);gap:4px}
 .nf-rcv{flex:1;min-width:0;position:relative}
 .nf-rcv canvas{position:absolute;left:0;top:0;cursor:pointer}
 .nf-tl{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;position:relative}
 .nf-tlin{display:flex;align-items:stretch;position:relative}
 .nf-heads{flex:none;width:${HEAD_W}px;display:flex;flex-direction:column}
 .nf-head{box-sizing:border-box;border-bottom:1px solid #2a2d35;padding:3px 6px;display:flex;flex-direction:column;justify-content:center;gap:3px;
-  background:#20232a;overflow:hidden;font-size:11px}
+  background:var(--nt-card,#20232a);overflow:hidden;font-size:11px}
 .nf-hl{display:flex;align-items:center;gap:4px;min-width:0}
 .nf-hl b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
 .nf-hl input[type=range]{flex:1;min-width:30px;height:12px;margin:0;accent-color:var(--c,#4dabf7);cursor:pointer}
-.nf-hl span{font-size:9px;color:#8b90a0;flex:none}
-.nf-ms{width:20px;height:18px;padding:0;border:none;border-radius:4px;background:#363a44;color:#9aa0ae;font-size:10px;font-weight:700;cursor:pointer;flex:none}
+.nf-hl span{font-size:9px;color:var(--nt-muted,#8b90a0);flex:none}
+.nf-ms{width:20px;height:18px;padding:0;border:none;border-radius:4px;background:var(--nt-btn2,#363a44);color:var(--nt-muted2,#9aa0ae);font-size:10px;font-weight:700;cursor:pointer;flex:none}
 .nf-ms.on-m{background:#b3414a;color:#fff}
-.nf-ms.on-s{background:#d9a72b;color:#1b1d23}
+.nf-ms.on-s{background:#d9a72b;color:var(--nt-panel,#1b1d23)}
 .nf-dot{width:9px;height:9px;border-radius:50%;flex:none}
 .nf-lanes{flex:1;min-width:0;position:relative}
 .nf-lanes canvas{position:absolute;left:0;top:0}
-.nf-hs{flex:none;display:flex;align-items:center;gap:6px;padding:2px 8px 2px ${HEAD_W + 8}px;background:#1f2229}
+.nf-hs{flex:none;display:flex;align-items:center;gap:6px;padding:2px 8px 2px ${HEAD_W + 8}px;background:var(--nt-card2,#1f2229)}
 .nf-hs input{flex:1;margin:0;height:12px;accent-color:#6b7080}
-.nf-selp{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 8px;background:#20232a;min-height:32px;
+.nf-selp{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 8px;background:var(--nt-card,#20232a);min-height:32px;
   box-sizing:border-box;font-size:11px;border-top:1px solid #2f323b}
-.nf-selp b{color:#e6e8ee}
-.nf-hint{color:#8b90a0;font-size:10px;line-height:1.5}
-.nf-f{display:flex;align-items:center;gap:4px;font-size:10px;color:#9aa0ae;white-space:nowrap}
+.nf-selp b{color:var(--nt-bright,#e6e8ee)}
+.nf-hint{color:var(--nt-muted,#8b90a0);font-size:10px;line-height:1.5}
+.nf-f{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--nt-muted2,#9aa0ae);white-space:nowrap}
 .nf-f input[type=range]{width:110px;height:12px;margin:0;cursor:pointer;accent-color:#ffd166}
-.nf-num{width:70px;height:20px;box-sizing:border-box;background:#23252b;color:#e6e8ee;border:1px solid #33363e;border-radius:4px;font-size:11px;
+.nf-num{width:70px;height:20px;box-sizing:border-box;background:var(--nt-input,#23252b);color:var(--nt-bright,#e6e8ee);border:1px solid var(--nt-line,#33363e);border-radius:4px;font-size:11px;
   text-align:center;outline:none;padding:0}
 .nf-num:focus{border-color:#6b4fb3}
-.nf-sel{height:20px;box-sizing:border-box;background:#23252b;color:#cfd2d8;border:1px solid #33363e;border-radius:4px;font-size:10px;outline:none}
+.nf-sel{height:20px;box-sizing:border-box;background:var(--nt-input,#23252b);color:var(--nt-text,#cfd2d8);border:1px solid var(--nt-line,#33363e);border-radius:4px;font-size:10px;outline:none}
 .nf-exp{flex:none;display:none;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:6px 8px;background:#262119;border-top:2px solid #d9a72b}
 .nf-grip{position:absolute;right:0;bottom:0;width:18px;height:18px;cursor:nwse-resize;background:linear-gradient(135deg,transparent 55%,#6b7080 55%,#6b7080 62%,transparent 62%,transparent 72%,#6b7080 72%,#6b7080 79%,transparent 79%)}
-.nf-menu{position:fixed;z-index:9200;background:#23262e;border:1px solid #3a3e48;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.6);
-  min-width:260px;max-width:440px;max-height:60vh;display:flex;flex-direction:column;font-family:"Segoe UI",Arial,sans-serif;color:#cfd2d8;font-size:11px}
-.nf-menu input{margin:6px;height:22px;box-sizing:border-box;background:#1b1d23;color:#e6e8ee;border:1px solid #3a3e48;border-radius:4px;padding:0 6px;outline:none}
+.nf-menu{position:fixed;z-index:9200;background:#23262e;border:1px solid var(--nt-btn2,#3a3e48);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.6);
+  min-width:260px;max-width:440px;max-height:60vh;display:flex;flex-direction:column;font-family:"Segoe UI",Arial,sans-serif;color:var(--nt-text,#cfd2d8);font-size:11px}
+.nf-menu input{margin:6px;height:22px;box-sizing:border-box;background:var(--nt-panel,#1b1d23);color:var(--nt-bright,#e6e8ee);border:1px solid var(--nt-btn2,#3a3e48);border-radius:4px;padding:0 6px;outline:none}
 .nf-mlist{overflow-y:auto;padding:2px 0 6px}
-.nf-mh{padding:6px 10px 2px;font-size:10px;font-weight:700;color:#8b90a0;letter-spacing:.5px}
+.nf-mh{padding:6px 10px 2px;font-size:10px;font-weight:700;color:var(--nt-muted,#8b90a0);letter-spacing:.5px}
 .nf-mi{padding:5px 10px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nf-mi:hover{background:#2f333d}
+.nf-mi:hover{background:var(--nt-btn2,#2f333d)}
 .nf-mi.dis{color:#6b7080;cursor:default;background:none}
 .nf-drop{position:absolute;inset:0;background:rgba(77,171,247,.12);border:2px dashed #4dabf7;border-radius:10px;display:none;align-items:center;
   justify-content:center;font-size:16px;font-weight:700;color:#4dabf7;pointer-events:none;z-index:5}
@@ -837,7 +837,7 @@ function setupFieldUI(node) {
             P.lim = ctx.createDynamicsCompressor();
             P.lim.threshold.value = -3; P.lim.knee.value = 0; P.lim.ratio.value = 20; P.lim.attack.value = 0.002; P.lim.release.value = 0.12;
             P.master.connect(P.lim);
-            P.lim.connect(ctx.destination);
+            P.lim.connect(ctx.destination); neronTap(ctx, P.lim);
         }
         return ctx;
     }

@@ -1,7 +1,7 @@
 {
- "id": "1c200703-3965-41f6-9b24-5562c3461b4a",
+ "id": "42d27bb3-5c98-4448-ad1c-7158454ba3ba",
  "revision": 0,
- "last_node_id": 7,
+ "last_node_id": 8,
  "last_link_id": 6,
  "nodes": [
   {
@@ -41,7 +41,8 @@
    ],
    "title": "🎬 Видео ×3 / Video ×3",
    "properties": {
-    "Node name for S&R": "NeronVideoCube"
+    "Node name for S&R": "NeronVideoCube",
+    "neron_themed": true
    },
    "widgets_values": [
     "{\"clips\": []}",
@@ -50,7 +51,9 @@
    "widgets_values_named": {
     "cube_json": "{\"clips\": []}",
     "neron_video_cube": ""
-   }
+   },
+   "color": "#5b595c",
+   "bgcolor": "#2e1c10"
   },
   {
    "id": 2,
@@ -96,7 +99,8 @@
    ],
    "title": "✂ Видео-сэмплер / Video Sampler",
    "properties": {
-    "Node name for S&R": "NeronVideoSampler"
+    "Node name for S&R": "NeronVideoSampler",
+    "neron_themed": true
    },
    "widgets_values": [
     "{\"version\": 1, \"bypass\": true, \"mute\": false, \"pieces\": []}",
@@ -105,7 +109,9 @@
    "widgets_values_named": {
     "vsampler_json": "{\"version\": 1, \"bypass\": true, \"mute\": false, \"pieces\": []}",
     "neron_vsampler": ""
-   }
+   },
+   "color": "#5b595c",
+   "bgcolor": "#2e1c10"
   },
   {
    "id": 3,
@@ -144,7 +150,8 @@
    ],
    "title": "🎵 Звук ×8 / Sound ×8",
    "properties": {
-    "Node name for S&R": "NeronSoundCube"
+    "Node name for S&R": "NeronSoundCube",
+    "neron_themed": true
    },
    "widgets_values": [
     "{\"sounds\": []}",
@@ -153,7 +160,9 @@
    "widgets_values_named": {
     "cube_json": "{\"sounds\": []}",
     "neron_sound_cube": ""
-   }
+   },
+   "color": "#63633d",
+   "bgcolor": "#2e1c10"
   },
   {
    "id": 4,
@@ -214,7 +223,8 @@
    ],
    "title": "🎛 Сэмплер / Sampler",
    "properties": {
-    "Node name for S&R": "NeronSampler"
+    "Node name for S&R": "NeronSampler",
+    "neron_themed": true
    },
    "widgets_values": [
     "{\"version\":2,\"bypass\":true,\"snap\":\"1/4\",\"master\":1,\"zoom\":142,\"cur\":0,\"layers\":[{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false}],\"bricks\":[],\"sel\":{}}",
@@ -225,7 +235,9 @@
     "sampler_json": "{\"version\":2,\"bypass\":true,\"snap\":\"1/4\",\"master\":1,\"zoom\":142,\"cur\":0,\"layers\":[{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false}],\"bricks\":[],\"sel\":{}}",
     "bpm": 90,
     "neron_sampler": ""
-   }
+   },
+   "color": "#63633d",
+   "bgcolor": "#2e1c10"
   },
   {
    "id": 5,
@@ -313,7 +325,8 @@
    "title": "🥁🎹 Музыка / Music",
    "properties": {
     "Node name for S&R": "NeronMusic",
-    "neron_music_tab": "drums"
+    "neron_music_tab": "drums",
+    "neron_themed": true
    },
    "widgets_values": [
     "default",
@@ -330,7 +343,9 @@
     "project_json": "{\"version\": 1, \"bars\": 2, \"tracks\": []}",
     "save_name": "neron_music",
     "neron_music": ""
-   }
+   },
+   "color": "#80542f",
+   "bgcolor": "#2e1c10"
   },
   {
    "id": 6,
@@ -341,7 +356,7 @@
    ],
    "size": [
     1100,
-    394
+    514
    ],
    "flags": {},
    "order": 5,
@@ -382,7 +397,8 @@
    ],
    "title": "🎛 Студия / Studio",
    "properties": {
-    "Node name for S&R": "NeronStudio"
+    "Node name for S&R": "NeronStudio",
+    "neron_themed": true
    },
    "widgets_values": [
     "{\"version\": 1, \"bypass\": false, \"master\": 1.0, \"eq_on\": true, \"eq\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"ch\": {}}",
@@ -391,10 +407,53 @@
    "widgets_values_named": {
     "studio_json": "{\"version\": 1, \"bypass\": false, \"master\": 1.0, \"eq_on\": true, \"eq\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"ch\": {}}",
     "neron_studio": ""
-   }
+   },
+   "color": "#80542f",
+   "bgcolor": "#2e1c10"
   },
   {
    "id": 7,
+   "type": "NeronTheme",
+   "pos": [
+    0,
+    1390
+   ],
+   "size": [
+    460,
+    262
+   ],
+   "flags": {},
+   "order": 6,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "theme_json",
+     "name": "theme_json",
+     "type": "STRING",
+     "widget": {
+      "name": "theme_json"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "Node name for S&R": "NeronTheme",
+    "neron_themed": true
+   },
+   "widgets_values": [
+    "{\"theme\": \"brown\", \"life\": 1}",
+    ""
+   ],
+   "widgets_values_named": {
+    "theme_json": "{\"theme\": \"brown\", \"life\": 1}",
+    "neron_theme": ""
+   },
+   "color": "#846238",
+   "bgcolor": "#2e1c10"
+  },
+  {
+   "id": 8,
    "type": "NeronMixer",
    "pos": [
     2020,
@@ -405,7 +464,7 @@
     366
    ],
    "flags": {},
-   "order": 6,
+   "order": 7,
    "mode": 0,
    "inputs": [
     {
@@ -492,7 +551,8 @@
    ],
    "title": "🎚 ПУЛЬТ / PULT",
    "properties": {
-    "Node name for S&R": "NeronMixer"
+    "Node name for S&R": "NeronMixer",
+    "neron_themed": true
    },
    "widgets_values": [
     "{\"version\":3,\"repeats\":1,\"master\":0.9,\"bpm\":90,\"bpm_set\":true,\"sync_bpm\":true,\"fit\":true,\"fade\":1.5,\"fit_sec\":0,\"video\":null,\"videos\":[],\"video_manual\":null,\"tracks\":[{\"slot\":\"audio_2\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0}]}",
@@ -503,7 +563,9 @@
     "mixer_json": "{\"version\":3,\"repeats\":1,\"master\":0.9,\"bpm\":90,\"bpm_set\":true,\"sync_bpm\":true,\"fit\":true,\"fade\":1.5,\"fit_sec\":0,\"video\":null,\"videos\":[],\"video_manual\":null,\"tracks\":[{\"slot\":\"audio_2\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0}]}",
     "save_name": "neron_mix",
     "neron_mixer": ""
-   }
+   },
+   "color": "#7a4e5a",
+   "bgcolor": "#2e1c10"
   }
  ],
  "links": [
@@ -519,7 +581,7 @@
    2,
    2,
    0,
-   7,
+   8,
    0,
    "NERON_VIDEOS"
   ],
@@ -535,7 +597,7 @@
    4,
    4,
    0,
-   7,
+   8,
    2,
    "NERON_SOUNDS"
   ],
@@ -551,7 +613,7 @@
    6,
    6,
    0,
-   7,
+   8,
    5,
    "NERON_SOUNDS"
   ]
@@ -588,19 +650,31 @@
     820,
     1326,
     1140,
-    978
+    1098
    ],
    "color": "#b06634",
    "flags": {}
   },
   {
    "id": 4,
+   "title": "🎨 ТЕМА / THEME",
+   "bounding": [
+    -20,
+    1326,
+    500,
+    346
+   ],
+   "color": "#8a7a3a",
+   "flags": {}
+  },
+  {
+   "id": 5,
    "title": "🎚 ПУЛЬТ — СЕРДЦЕ / PULT — THE HEART",
    "bounding": [
     2000,
     6,
     1040,
-    2298
+    2418
    ],
    "color": "#a1309b",
    "flags": {}

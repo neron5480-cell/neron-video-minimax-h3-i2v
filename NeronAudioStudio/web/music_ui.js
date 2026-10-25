@@ -19,24 +19,24 @@ function injectStyles() {
     const s = document.createElement("style");
     s.id = "neron-music-styles";
     s.textContent = `
-.nmu-root{box-sizing:border-box;width:100%;display:flex;flex-direction:column;gap:6px;background:#15171c;border-radius:8px;padding:6px;overflow:hidden;
+.nmu-root{box-sizing:border-box;width:100%;display:flex;flex-direction:column;gap:6px;background:var(--nt-deep,#15171c);border-radius:8px;padding:6px;overflow:hidden;
   font-family:"Segoe UI",Arial,sans-serif;user-select:none}
 .nmu-tabs{display:flex;align-items:center;gap:6px;flex:none;height:${TAB_H - 6}px}
-.nmu-tab{height:30px;padding:0 16px;border:none;border-radius:7px 7px 0 0;background:#23252b;color:#8b90a0;font-size:12px;font-weight:800;
+.nmu-tab{height:30px;padding:0 16px;border:none;border-radius:7px 7px 0 0;background:var(--nt-input,#23252b);color:var(--nt-muted,#8b90a0);font-size:12px;font-weight:800;
   cursor:pointer;letter-spacing:.4px;border-bottom:3px solid transparent;flex:none}
-.nmu-tab:hover{color:#cfd2d8}
-.nmu-tab.on{background:#2b2f3a;color:#fff;border-bottom-color:var(--c)}
-.nmu-tab i{font-style:normal;font-size:10px;font-weight:600;color:#8b90a0;margin-left:6px}
+.nmu-tab:hover{color:var(--nt-text,#cfd2d8)}
+.nmu-tab.on{background:var(--nt-line2,#2b2f3a);color:#fff;border-bottom-color:var(--c)}
+.nmu-tab i{font-style:normal;font-size:10px;font-weight:600;color:var(--nt-muted,#8b90a0);margin-left:6px}
 .nmu-tab .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#3fa34d;margin-left:7px;vertical-align:1px;visibility:hidden}
 .nmu-tab .dot.on{visibility:visible;animation:nmuPulse .9s infinite alternate}
 @keyframes nmuPulse{from{opacity:1}to{opacity:.35}}
 .nmu-sp{flex:1}
 .nmu-btn{height:28px;padding:0 14px;border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:800;cursor:pointer;flex:none}
 .nmu-btn:hover{filter:brightness(1.15)}
-.nmu-hint{font-size:10px;color:#8b90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:60px;flex:0 1 auto}
+.nmu-hint{font-size:10px;color:var(--nt-muted,#8b90a0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:60px;flex:0 1 auto}
 .nmu-part{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column}
 .nmu-part > *{flex:1 1 auto}
-.nmu-help{display:none;flex:none;background:#20232a;border-radius:7px;padding:8px 10px;font-size:11px;line-height:1.55;color:#cfd2d8}
+.nmu-help{display:none;flex:none;background:var(--nt-card,#20232a);border-radius:7px;padding:8px 10px;font-size:11px;line-height:1.55;color:var(--nt-text,#cfd2d8)}
 .nmu-help b{color:#ffd166}
 `;
     document.head.appendChild(s);

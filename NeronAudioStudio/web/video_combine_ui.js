@@ -22,12 +22,12 @@ function injectStyles() {
     const s = document.createElement("style");
     s.id = "neron-vc-styles";
     s.textContent = `
-.nv-root{box-sizing:border-box;width:100%;height:${PANEL_H}px;padding:8px;background:#1b1d23;border-radius:8px;
-  font-family:"Segoe UI",Arial,sans-serif;color:#cfd2d8;display:flex;flex-direction:column;gap:6px;overflow:hidden}
-.nv-box{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:#101216;border-radius:6px;overflow:hidden}
+.nv-root{box-sizing:border-box;width:100%;height:${PANEL_H}px;padding:8px;background:var(--nt-panel,#1b1d23);border-radius:8px;
+  font-family:"Segoe UI",Arial,sans-serif;color:var(--nt-text,#cfd2d8);display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.nv-box{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:var(--nt-well,#101216);border-radius:6px;overflow:hidden}
 .nv-box video{max-width:100%;max-height:100%;display:none;background:#000}
-.nv-hint{font-size:11px;color:#8b90a0;text-align:center;padding:0 12px;line-height:1.5}
-.nv-info{flex:none;font-size:10px;color:#8b90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nv-hint{font-size:11px;color:var(--nt-muted,#8b90a0);text-align:center;padding:0 12px;line-height:1.5}
+.nv-info{flex:none;font-size:10px;color:var(--nt-muted,#8b90a0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 `;
     document.head.appendChild(s);
 }

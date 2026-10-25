@@ -21,16 +21,16 @@ function injectCommonStyles() {
 .nc-proj{display:flex;align-items:center;gap:6px;min-width:0;height:24px;flex:none;
   font-family:"Segoe UI",Arial,sans-serif}
 .nc-lbl{font-size:11px;font-weight:700;color:#b388ff;letter-spacing:.5px;flex:none}
-.nc-in{flex:1;min-width:60px;height:22px;box-sizing:border-box;background:#23252b;color:#cfd2d8;border:1px solid #33363e;
+.nc-in{flex:1;min-width:60px;height:22px;box-sizing:border-box;background:var(--nt-input,#23252b);color:var(--nt-text,#cfd2d8);border:1px solid var(--nt-line,#33363e);
   border-radius:4px;font-size:11px;padding:0 6px;outline:none}
 .nc-in:focus{border-color:#6b4fb3}
-.nc-sel{width:150px;flex:none;height:22px;box-sizing:border-box;background:#23252b;color:#cfd2d8;border:1px solid #33363e;
+.nc-sel{width:150px;flex:none;height:22px;box-sizing:border-box;background:var(--nt-input,#23252b);color:var(--nt-text,#cfd2d8);border:1px solid var(--nt-line,#33363e);
   border-radius:4px;font-size:11px;outline:none;padding:0 2px}
-.nc-sel option{background:#23252b;color:#cfd2d8}
+.nc-sel option{background:var(--nt-input,#23252b);color:var(--nt-text,#cfd2d8)}
 .nc-btn{height:22px;padding:0 9px;border:none;border-radius:5px;color:#fff;font-size:10px;font-weight:700;cursor:pointer;
-  flex:none;line-height:22px;background:#4a4e5a;white-space:nowrap}
+  flex:none;line-height:22px;background:var(--nt-btn,#4a4e5a);white-space:nowrap}
 .nc-btn:hover{filter:brightness(1.18)}
-.nc-check{display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#9aa0ae;white-space:nowrap;
+.nc-check{display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--nt-muted2,#9aa0ae);white-space:nowrap;
   cursor:pointer;flex:none}
 `;
     document.head.appendChild(s);
@@ -422,5 +422,22 @@ function makeKnob(o) {
     return box;
 }
 
-export { el, createProjectBar, makeUserSized, peakOf, meterStep, drawMeter, meterTap, ROOMS, ROOM_ORDER, ROOM_NAME, roomImpulse, makeKnob };
+// ============================================================================
+//  Шина уровня: все звуки Neron отводятся сюда — по ней живая тема «слышит» музыку
+// ----------------------------------------------------------------------------
+function neronTap(ctx, nodeOut) {
+    try {
+        if (!window.__neronBus || window.__neronBus.context !== ctx) {
+            const g = ctx.createGain();
+            const an = ctx.createAnalyser();
+            an.fftSize = 1024; an.smoothingTimeConstant = 0.2;
+            const z = ctx.createGain(); z.gain.value = 0;      // тишина: только чтобы шина «жила»
+            g.connect(an); an.connect(z); z.connect(ctx.destination);
+            window.__neronBus = g; window.__neronBusAn = an;
+        }
+        nodeOut.connect(window.__neronBus);
+    } catch (e) { /* не страшно */ }
+}
+
+export { neronTap, el, createProjectBar, makeUserSized, peakOf, meterStep, drawMeter, meterTap, ROOMS, ROOM_ORDER, ROOM_NAME, roomImpulse, makeKnob };
 
