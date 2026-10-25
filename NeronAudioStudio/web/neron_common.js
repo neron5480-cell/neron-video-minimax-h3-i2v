@@ -432,8 +432,11 @@ function neronTap(ctx, nodeOut) {
             const an = ctx.createAnalyser();
             an.fftSize = 1024; an.smoothingTimeConstant = 0.2;
             const z = ctx.createGain(); z.gain.value = 0;      // тишина: только чтобы шина «жила»
-            g.connect(an); an.connect(z); z.connect(ctx.destination);
-            window.__neronBus = g; window.__neronBusAn = an;
+            // второй «слух» — по частотам: по басам ловим удары бочки
+            const af = ctx.createAnalyser();
+            af.fftSize = 2048; af.smoothingTimeConstant = 0;
+            g.connect(an); an.connect(z); g.connect(af); af.connect(z); z.connect(ctx.destination);
+            window.__neronBus = g; window.__neronBusAn = an; window.__neronBusAf = af;
         }
         nodeOut.connect(window.__neronBus);
     } catch (e) { /* не страшно */ }

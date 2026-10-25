@@ -182,11 +182,14 @@ function refresh(force) {
 // ---------------------------------------------------------------------------
 //  Живость: огоньки по рамкам, искры по проводам, вспышки на ударах
 // ---------------------------------------------------------------------------
-const FX = { raf: null, last: 0, t: 0, lvl: 0, slow: 0, flash: 0, lastHit: 0, playing: 0 };
+const FX = { raf: null, last: 0, t: 0, lvl: 0, slow: 0, flash: 0, lastHit: 0, playing: 0, hits: 0, kick: 0, prevBass: 0, hist: [], bassSeen: 0 };
+window.__neronFX = FX;   // для проверки
 const buf = new Float32Array(1024);
+let fbuf = null;
 
+// удар: всплеск басов (бочка). Если басов в музыке нет совсем — всплеск общей громкости.
 function listen(dt) {
-    const an = window.__neronBusAn;
+    const an = window.__neronBusAn, af = window.__neronBusAf;
     let lvl = 0;
     if (an) {
         an.getFloatTimeDomainData(buf);
@@ -194,12 +197,36 @@ function listen(dt) {
         for (let i = 0; i < buf.length; i++) s += buf[i] * buf[i];
         lvl = Math.sqrt(s / buf.length);
     }
+    const now = performance.now();
+    let beat = 0;
+    if (af) {
+        if (!fbuf || fbuf.length !== af.frequencyBinCount) fbuf = new Float32Array(af.frequencyBinCount);
+        af.getFloatFrequencyData(fbuf);
+        const hz = af.context.sampleRate / af.fftSize;
+        const i0 = Math.max(1, Math.ceil(40 / hz)), i1 = Math.max(i0 + 1, Math.floor(160 / hz));
+        let bass = 0;
+        for (let i = i0; i <= i1; i++) bass += Math.pow(10, fbuf[i] / 20);
+        bass /= (i1 - i0 + 1);
+        const flux = Math.max(0, bass - FX.prevBass);
+        FX.prevBass = bass;
+        FX.bassSeen = Math.max(bass, FX.bassSeen * 0.995);
+        const h = FX.hist;
+        h.push(flux); if (h.length > 50) h.shift();
+        const mean = h.reduce((a, b) => a + b, 0) / h.length;
+        const sd = Math.sqrt(h.reduce((a, b) => a + (b - mean) * (b - mean), 0) / h.length);
+        if (flux > mean + 1.6 * sd && flux > 0.0015 && now - FX.lastHit > 170) beat = Math.min(1, 0.6 + flux * 40);
+    }
+    // в музыке нет басов (пианино, хэты) — удар по общей громкости
+    if (!beat && FX.bassSeen < 0.002 && lvl > 0.03 && lvl > FX.slow * 1.45 && now - FX.lastHit > 170) beat = Math.min(1, 0.55 + lvl * 3);
     FX.lvl = lvl;
     FX.slow = FX.slow * 0.95 + lvl * 0.05;
-    const now = performance.now();
-    // удар: резкий рост громкости над средней
-    if (lvl > 0.03 && lvl > FX.slow * 1.45 && now - FX.lastHit > 110) { FX.flash = Math.min(1, 0.55 + lvl * 3); FX.lastHit = now; }
-    FX.flash *= Math.pow(0.0025, dt);        // ~ гаснет за 0.4 с
+    if (beat) {
+        FX.flash = Math.max(FX.flash, beat);
+        FX.kick += (STATE.life === 2 ? 1100 : 520) * beat;     // рывок огня вперёд
+        FX.lastHit = now; FX.hits++;
+    }
+    FX.flash *= Math.pow(0.004, dt);          // вспышка гаснет за ~0,3 с
+    FX.kick *= Math.exp(-7 * dt);             // рывок гаснет — до следующего удара
     FX.playing = FX.playing * 0.9 + (lvl > 0.004 ? 1 : 0) * 0.1;
 }
 
@@ -219,9 +246,10 @@ function startFx() {
         if (dt >= minDt && !document.hidden) {
             FX.last = now;
             listen(dt);
-            const speed = (STATE.life === 2 ? 70 : 34) + FX.playing * (STATE.life === 2 ? 190 : 80) + FX.flash * 160;
-            FX.t += dt * speed;
-            const p = (FX.flash * (STATE.life === 2 ? 1 : 0.5)).toFixed(2);
+            // между ударами огонь ползёт медленно, на ударе — рывок
+            const base = (STATE.life === 2 ? 55 : 28) + FX.playing * (STATE.life === 2 ? 40 : 18);
+            FX.t += dt * (base + FX.kick);
+            const p = (FX.flash * (STATE.life === 2 ? 1 : 0.6)).toFixed(2);
             if (document.documentElement.style.getPropertyValue("--nt-pulse") !== p) document.documentElement.style.setProperty("--nt-pulse", p);
             app.graph && app.graph.setDirtyCanvas(true, false);
         }
@@ -247,9 +275,9 @@ function drawNodeLights(ctx, n, th) {
     ctx.save();
     // вспышка на удар — вся рамка
     if (FX.flash > 0.05) {
-        ctx.strokeStyle = rgba(acc, Math.min(0.9, FX.flash * (full ? 0.85 : 0.5)));
-        ctx.lineWidth = full ? 3 : 2;
-        ctx.shadowColor = acc; ctx.shadowBlur = (full ? 26 : 12) * FX.flash;
+        ctx.strokeStyle = rgba(acc, Math.min(0.95, FX.flash * (full ? 0.95 : 0.6)));
+        ctx.lineWidth = (full ? 3 : 2) + FX.flash * 2;
+        ctx.shadowColor = acc; ctx.shadowBlur = (full ? 34 : 16) * FX.flash;
         roundRectPath(ctx, x, y, w, h, 10); ctx.stroke();
     }
     // бегущий огонёк с хвостом (в «на полную» — два, навстречу друг другу)
@@ -257,14 +285,14 @@ function drawNodeLights(ctx, n, th) {
     const phase = (n.id * 97) % per;
     for (let r = 0; r < runners; r++) {
         const head = (FX.t + phase + r * per / 2) % per;
-        const L = (full ? 110 : 70) * (1 + FX.flash * 0.8);
+        const L = (full ? 110 : 70) * (1 + FX.flash * 1.4);
         const layers = [[L * 3.2, 0.12, 5], [L * 1.7, 0.3, 3.5], [L, 0.95, 2.5]];
         for (const [len, a, lw] of layers) {
             ctx.setLineDash([len, Math.max(1, per - len)]);
             ctx.lineDashOffset = -(head - len);
             ctx.strokeStyle = rgba(acc, a);
-            ctx.lineWidth = lw;
-            ctx.shadowColor = acc; ctx.shadowBlur = full ? 14 : 6;
+            ctx.lineWidth = lw + FX.flash * 1.5;
+            ctx.shadowColor = acc; ctx.shadowBlur = (full ? 14 : 6) + FX.flash * 18;
             roundRectPath(ctx, x, y, w, h, 10); ctx.stroke();
         }
     }
@@ -303,7 +331,7 @@ function drawWireSparks(ctx, th) {
         const off = Math.max(30, dist * 0.25);
         const x1 = x0 + off, y1 = y0, x2 = x3 - off, y2 = y3;
         const n = full ? 3 : 2;
-        const sp = (active ? 0.55 : 0.18) + FX.flash * 0.6;
+        const sp = active ? 0.55 : 0.18;
         for (let k = 0; k < n; k++) {
             const t = ((FX.t / Math.max(200, dist)) * sp * 2.2 + k / n + (l.id % 7) / 7) % 1;
             let px, py;
@@ -313,7 +341,7 @@ function drawWireSparks(ctx, th) {
                 px = u * u * u * x0 + 3 * u * u * t * x1 + 3 * u * t * t * x2 + t * t * t * x3;
                 py = u * u * u * y0 + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * y3;
             }
-            const rad = (full ? 3.2 : 2.4) + FX.flash * 2.5;
+            const rad = (full ? 3.2 : 2.4) + FX.flash * 3.5;
             ctx.fillStyle = acc;
             ctx.shadowColor = acc; ctx.shadowBlur = full ? 16 : 8;
             ctx.beginPath(); ctx.arc(px, py, rad, 0, Math.PI * 2); ctx.fill();
