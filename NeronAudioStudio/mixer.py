@@ -645,9 +645,17 @@ class NeronMixer:
         vin = audios.get("video")
         videos = vin["clips"] if isinstance(vin, dict) and vin.get("neron") == "videos" else proj["videos"]
         vst = proj["settings"].get(VIDEO_SLOT, _default_setting())
-        vch = _videos_channel(videos, vst)
+        # 🔇 в видео-сэмплере: звука роликов в миксе нет
+        vmute = isinstance(vin, dict) and bool(vin.get("mute"))
+        vch = None if vmute else _videos_channel(videos, vst)
         if vch:
             channels.append(vch)
+        # только видео (звук роликов выключен, музыки нет) — тишина длиной в видео, а не ошибка
+        if videos and not any(not c["mute"] for c in channels):
+            vlen = videos_length(videos)
+            if vlen > 0:
+                channels.append({"wave": np.zeros((max(1, int(round(vlen * SAMPLE_RATE))), 2), dtype=np.float32),
+                                 "vol": 1.0, "pan": 0.0, "mute": False, "solo": False, "fx": None})
         if videos and proj["fit_sec"] > 0:
             proj["fit_sec"] = videos_length(videos) or proj["fit_sec"]
         mix = mix_channels(channels, proj["repeats"], proj["master"], proj["fit_sec"])

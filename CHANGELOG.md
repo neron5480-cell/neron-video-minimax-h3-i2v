@@ -1,5 +1,23 @@
 # Changelog / История изменений
 
+## dev — Neron Audio Studio: Видео-сэмплер / Video Sampler (на проверке / in testing)
+
+**RU:**
+- **Neron Video Sampler / Видео-сэмплер 🎬** — между «Видео ×3» и Пультом. Слева экран, справа три дорожки — три ролика с кадрами-превью: мышкой выделяете кусок «откуда — докуда» (края тянутся, двойной клик — весь ролик), ▶ — посмотреть кусок, **➜** или перетащить вниз (можно наискосок) — кусок встаёт в **МОНТАЖ**.
+- **Монтаж** — куски идут друг за другом: тянуть кусок — переставить, тянуть края — обрезать, клик — курсор (экран показывает этот кадр), **✂ / S** — разрезать на курсоре (точно по кадру), **⧉ / Ctrl+D** — копия, **◀ ▶** — переставить, **🗑 / Delete** — убрать, **Ctrl+Z / Ctrl+Y** — отменить / вернуть, ←/→ — по кадру, колёсико — масштаб, Shift+колёсико — прокрутка, пробел — смотреть.
+- **⏭ ПРОПУСТИТЬ** — ролики идут в Пульт как есть. Положили первый кусок — пропуск выключается сам, Пульт видит монтаж.
+- **🔇 / 🔊 звук роликов** — убрать звук роликов совсем (в просмотре, в Пульте и в готовом видео).
+- Монтаж сам собирается в точный по кадрам mp4 (через 1,5 с после правки) и уходит в Пульт одним роликом «🎬 Монтаж». Старые черновые сборки удаляются сами.
+- Пульт: если в нём только видео без звука — отдаёт ролик с тишиной, а не ошибку.
+- Рабочий стол обновлён: Видео ×3 → Видео-сэмплер → Пульт.
+
+**EN:**
+- **Neron Video Sampler 🎬** — between Video ×3 and the Pult. A screen on the left, three clip rows with thumbnails: select a piece (drag edges, double-click = whole clip), ▶ watches it, **➜** or drag it down (diagonal is fine) puts it into the **EDIT**.
+- **Edit**: pieces play one after another — drag to reorder, drag edges to trim, click to set the cursor, **✂ / S** cuts at the cursor (frame-exact), **⧉ / Ctrl+D** copies, **◀ ▶** moves, **🗑 / Delete** removes, Ctrl+Z / Ctrl+Y, ←/→ step a frame, wheel zooms, Shift+wheel scrolls, space plays.
+- **⏭ BYPASS** sends the clips as they are; the first piece you add turns it off. **🔇** removes the clip sound everywhere.
+- The edit is built into a frame-accurate mp4 automatically and goes to the Pult as one clip "🎬 Edit". Old draft builds are cleaned up.
+- The Pult with video only and no sound now outputs the clip with silence instead of an error. The ready desk now has Video ×3 → Video Sampler → Pult.
+
 ## dev — Neron Audio Studio: эквалайзер и эхо в Пульте, модуль «Музыка», готовый рабочий стол (на проверке / in testing)
 
 **RU:**

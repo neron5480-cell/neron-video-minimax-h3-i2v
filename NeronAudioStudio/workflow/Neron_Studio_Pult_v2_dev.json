@@ -1,8 +1,8 @@
 {
- "id": "2397128f-76a1-4883-b6a0-966425e37432",
+ "id": "34043a12-c521-416d-b147-c01b91827467",
  "revision": 0,
- "last_node_id": 5,
- "last_link_id": 4,
+ "last_node_id": 6,
+ "last_link_id": 5,
  "nodes": [
   {
    "id": 1,
@@ -54,17 +54,72 @@
   },
   {
    "id": 2,
+   "type": "NeronVideoSampler",
+   "pos": [
+    840,
+    70
+   ],
+   "size": [
+    1000,
+    500
+   ],
+   "flags": {},
+   "order": 1,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "videos",
+     "name": "videos",
+     "shape": 7,
+     "type": "NERON_VIDEOS",
+     "link": 1
+    },
+    {
+     "localized_name": "vsampler_json",
+     "name": "vsampler_json",
+     "type": "STRING",
+     "widget": {
+      "name": "vsampler_json"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "videos",
+     "name": "videos",
+     "type": "NERON_VIDEOS",
+     "links": [
+      2
+     ]
+    }
+   ],
+   "title": "✂ Видео-сэмплер / Video Sampler",
+   "properties": {
+    "Node name for S&R": "NeronVideoSampler"
+   },
+   "widgets_values": [
+    "{\"version\": 1, \"bypass\": true, \"mute\": false, \"pieces\": []}",
+    ""
+   ],
+   "widgets_values_named": {
+    "vsampler_json": "{\"version\": 1, \"bypass\": true, \"mute\": false, \"pieces\": []}",
+    "neron_vsampler": ""
+   }
+  },
+  {
+   "id": 3,
    "type": "NeronSoundCube",
    "pos": [
     0,
-    640
+    720
    ],
    "size": [
     560,
     114
    ],
    "flags": {},
-   "order": 1,
+   "order": 2,
    "mode": 0,
    "inputs": [
     {
@@ -83,7 +138,7 @@
      "name": "sounds",
      "type": "NERON_SOUNDS",
      "links": [
-      2
+      3
      ]
     }
    ],
@@ -101,18 +156,18 @@
    }
   },
   {
-   "id": 3,
+   "id": 4,
    "type": "NeronSampler",
    "pos": [
     840,
-    640
+    720
    ],
    "size": [
     960,
     419
    ],
    "flags": {},
-   "order": 2,
+   "order": 3,
    "mode": 0,
    "inputs": [
     {
@@ -120,7 +175,7 @@
      "name": "sounds",
      "shape": 7,
      "type": "NERON_SOUNDS",
-     "link": 2
+     "link": 3
     },
     {
      "localized_name": "sampler_json",
@@ -147,7 +202,7 @@
      "name": "sounds",
      "type": "NERON_SOUNDS",
      "links": [
-      3
+      4
      ]
     },
     {
@@ -173,18 +228,18 @@
    }
   },
   {
-   "id": 4,
+   "id": 5,
    "type": "NeronMusic",
    "pos": [
     840,
-    70
+    1390
    ],
    "size": [
     1100,
     382
    ],
    "flags": {},
-   "order": 3,
+   "order": 4,
    "mode": 0,
    "inputs": [
     {
@@ -239,7 +294,7 @@
      "name": "sounds",
      "type": "NERON_SOUNDS",
      "links": [
-      4
+      5
      ]
     },
     {
@@ -278,7 +333,7 @@
    }
   },
   {
-   "id": 5,
+   "id": 6,
    "type": "NeronMixer",
    "pos": [
     2020,
@@ -289,7 +344,7 @@
     420
    ],
    "flags": {},
-   "order": 4,
+   "order": 5,
    "mode": 0,
    "inputs": [
     {
@@ -297,7 +352,7 @@
      "name": "video",
      "shape": 7,
      "type": "*",
-     "link": 1
+     "link": 2
     },
     {
      "localized_name": "bpm",
@@ -311,7 +366,7 @@
      "name": "audio_1",
      "shape": 7,
      "type": "AUDIO,NERON_SOUNDS",
-     "link": 3
+     "link": 4
     },
     {
      "localized_name": "mixer_json",
@@ -334,7 +389,7 @@
     {
      "name": "audio_2",
      "type": "AUDIO,NERON_SOUNDS",
-     "link": 4
+     "link": 5
     },
     {
      "name": "audio_3",
@@ -395,7 +450,7 @@
    1,
    1,
    0,
-   5,
+   2,
    0,
    "NERON_VIDEOS"
   ],
@@ -403,23 +458,31 @@
    2,
    2,
    0,
-   3,
+   6,
    0,
-   "NERON_SOUNDS"
+   "NERON_VIDEOS"
   ],
   [
    3,
    3,
    0,
-   5,
+   4,
+   0,
+   "NERON_SOUNDS"
+  ],
+  [
+   4,
+   4,
+   0,
+   6,
    2,
    "NERON_SOUNDS"
   ],
   [
-   4,
-   4,
-   0,
    5,
+   5,
+   0,
+   6,
    5,
    "NERON_SOUNDS"
   ]
@@ -427,22 +490,34 @@
  "groups": [
   {
    "id": 1,
-   "title": "🎬 ВИДЕО / VIDEO",
+   "title": "🎬 ВИДЕО ×3 → ВИДЕО-СЭМПЛЕР / VIDEO ×3 → VIDEO SAMPLER",
    "bounding": [
     -20,
     6,
-    800,
-    504
+    1980,
+    584
    ],
    "color": "#3f789e",
    "flags": {}
   },
   {
    "id": 2,
+   "title": "🎵 ЗВУК ×8 → СЭМПЛЕР / SOUND ×8 → SAMPLER",
+   "bounding": [
+    -20,
+    656,
+    1980,
+    604
+   ],
+   "color": "#88aa88",
+   "flags": {}
+  },
+  {
+   "id": 3,
    "title": "🥁🎹 МУЗЫКА / MUSIC",
    "bounding": [
     820,
-    6,
+    1326,
     1140,
     504
    ],
@@ -450,37 +525,13 @@
    "flags": {}
   },
   {
-   "id": 3,
-   "title": "🎵 ЗВУК / SOUND",
-   "bounding": [
-    -20,
-    576,
-    800,
-    604
-   ],
-   "color": "#88aa88",
-   "flags": {}
-  },
-  {
    "id": 4,
-   "title": "🎛 СЭМПЛЕР / SAMPLER",
-   "bounding": [
-    820,
-    576,
-    1000,
-    604
-   ],
-   "color": "#6a8f6a",
-   "flags": {}
-  },
-  {
-   "id": 5,
    "title": "🎚 ПУЛЬТ — СЕРДЦЕ / PULT — THE HEART",
    "bounding": [
     2000,
     6,
     1040,
-    1174
+    1824
    ],
    "color": "#a1309b",
    "flags": {}

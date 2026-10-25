@@ -437,7 +437,7 @@ def _f(x):
     return f"{max(0.0, float(x)):.6f}"
 
 
-def build_video(plan, wav_path, out_path):
+def build_video(plan, wav_path, out_path, preset="medium"):
     exe = _ffmpeg_exe()
     if not exe:
         raise RuntimeError(_t("не найден ffmpeg: видео собрать нельзя", "ffmpeg not found: cannot build the video"))
@@ -494,7 +494,7 @@ def build_video(plan, wav_path, out_path):
     args += [
         "-filter_complex", ";".join(chains),
         "-map", "[vout]", "-map", f"{a_in}:a:0",
-        "-c:v", "libx264", "-preset", "medium", "-crf", "17", "-pix_fmt", "yuv420p",
+        "-c:v", "libx264", "-preset", preset, "-crf", "17", "-pix_fmt", "yuv420p",
         "-r", str(F), "-c:a", "aac", "-b:a", "192k",
         "-t", _f(plan["length"]), "-movflags", "+faststart", out_path,
     ]
