@@ -1088,7 +1088,13 @@ function setupVSampler(node) {
         const tok = thumbToken;
         (async () => { for (let k = 0; k < items.length; k++) { if (!info[k] || !thumbs[k] || !thumbs[k].length) { fetchInfo(k); await makeThumbs(k, tok); } } })();
         if (shown < 0 || !items[shown]) showPlayer(items.length ? 0 : -1);
-        if (S.pieces.length) showEditAt(S.cur); else if (items.length) seekShow(0, 0);
+        if (S.pieces.length) showEditAt(S.cur);
+        else if (items.length && vids[0]) {
+            // монтаж пуст — показать кадр из ~10% первого ролика (начало часто тёмное)
+            const v0 = vids[0];
+            const go = () => seekShow(0, (v0.duration > 1 ? v0.duration : 0) * 0.1);
+            if (v0.readyState >= 1) go(); else v0.addEventListener("loadedmetadata", go, { once: true });
+        }
         sizer.fit();
         drawAll();
         scheduleRender();

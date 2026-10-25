@@ -351,10 +351,21 @@ function setupCube(node, kind) {
                     vid.controls = true; vid.muted = true; vid.preload = "metadata"; vid.playsInline = true;
                     vid.src = viewUrl(v);
                     const info = el("div", "ncb-info", v.name);
+                    // пока большой файл грузится — понятная надпись вместо пустого плеера
+                    const wait = el("div", "ncb-empty", "⏳ " + T("загружаю ролик…", "loading the clip…"));
+                    wait.style.cssText = "position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);pointer-events:none;z-index:2";
+                    vb.style.position = "relative";
                     vid.addEventListener("loadedmetadata", () => {
                         info.textContent = `${v.name} · ${vid.duration.toFixed(2)} ${T("с", "s")} · ${vid.videoWidth}×${vid.videoHeight}`;
+                        // превью — кадр из ~10% ролика (начало часто тёмное)
+                        if (vid.currentTime === 0 && vid.duration > 1) { try { vid.currentTime = vid.duration * 0.1; } catch (e) { /* ок */ } }
                     });
+                    const ready = () => { wait.style.display = "none"; };
+                    vid.addEventListener("seeked", ready, { once: true });
+                    vid.addEventListener("loadeddata", () => { if (!(vid.duration > 1)) ready(); }, { once: true });
+                    vid.addEventListener("error", () => { wait.textContent = "⚠ " + T("не удалось открыть ролик", "cannot open the clip"); });
                     vb.appendChild(vid);
+                    vb.appendChild(wait);
                     card.appendChild(vb);
                     card.appendChild(info);
                 } else {
