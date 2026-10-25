@@ -58,6 +58,8 @@ def parse_mixer(mixer_json):
             "mute": bool(t.get("mute", False)),
             "solo": bool(t.get("solo", False)),
             "fx": parse_fx(t),
+            # с какого места трека начинается звук под роликом (секунды)
+            "off": _num(t.get("off", 0), 0.0, 0.0, 36000.0),
         }
     def vref(v):
         if isinstance(v, dict) and isinstance(v.get("name"), str):
@@ -75,6 +77,8 @@ def parse_mixer(mixer_json):
         "bpm": int(_num(raw.get("bpm", 90), 90, 40, 300)),
         # если больше 0 - итоговый звук ровно такой длины (под видео)
         "fit_sec": _num(raw.get("fit_sec", 0), 0.0, 0.0, MAX_FIT_SECONDS),
+        # мягкое затухание в конце ролика (секунды; только в режиме «по длине видео»)
+        "fade": _num(raw.get("fade", 1.5), 1.5, 0.0, 10.0),
         "settings": settings,
     }
 
@@ -103,7 +107,7 @@ def audio_to_stereo(audio):
     return np.ascontiguousarray(data, dtype=np.float32)
 
 
-def mix_channels(channels, repeats, master, fit_sec=0.0):
+def mix_channels(channels, repeats, master, fit_sec=0.0, fade_sec=0.0):
     """channels: список {wave (отсчёты, 2), vol, pan, mute, solo}.
     fit_sec > 0: итоговая длина ровно столько секунд (короткие лупы повторяются, длинные обрезаются)."""
     solo_any = any(c["solo"] for c in channels)
@@ -115,7 +119,7 @@ def mix_channels(channels, repeats, master, fit_sec=0.0):
             [c["vol"] * min(1.0, 1.0 - c["pan"]), c["vol"] * min(1.0, 1.0 + c["pan"])],
             dtype=np.float32,
         )
-        waves.append((c["wave"], gains, c.get("fx")))
+        waves.append((c["wave"], gains, c.get("fx"), int(round(float(c.get("off") or 0.0) * SAMPLE_RATE))))
 
     if not waves:
         raise RuntimeError("[Neron] Микшер: нет ни одного звучащего канала (подключите ноды к входам audio_N или снимите Mute)")
@@ -125,13 +129,17 @@ def mix_channels(channels, repeats, master, fit_sec=0.0):
     if fit_sec and fit_sec > 0:
         total = max(1, int(round(fit_sec * SAMPLE_RATE)))
     mix = np.zeros((total, 2), dtype=np.float32)
-    for w, gains, fx in waves:
-        tiled = w[np.arange(total) % len(w)]
+    for w, gains, fx, off in waves:
+        tiled = w[(np.arange(total) + off) % len(w)]
         # эквалайзер и эхо канала (после повторов — хвост эха переходит в следующий круг)
         tiled = apply_fx(tiled, fx) if fx else tiled
         mix += tiled * gains
 
     mix *= master
+    if fit_sec and fit_sec > 0 and fade_sec and fade_sec > 0:
+        n = min(int(round(fade_sec * SAMPLE_RATE)), total // 2)
+        if n > 0:
+            mix[-n:] *= np.linspace(1.0, 0.0, n, dtype=np.float32)[:, None]
     peak = float(np.max(np.abs(mix))) if mix.size else 0.0
     if peak > 0.99:
         mix *= 0.99 / peak
@@ -522,6 +530,7 @@ def _render_from_request(data):
             "mute": bool(c.get("mute", False)),
             "solo": bool(c.get("solo", False)),
             "fx": parse_fx(c),
+            "off": _num(c.get("off", 0), 0.0, 0.0, 36000.0),
         })
     vids = [v for v in (data.get("videos") or []) if isinstance(v, dict)][:3] or ([data["video"]] if isinstance(data.get("video"), dict) else [])
     vch = _videos_channel(vids, data.get("video_audio"))
@@ -530,7 +539,8 @@ def _render_from_request(data):
     repeats = int(_num(data.get("repeats", 1), 1, 1, MAX_REPEATS))
     master = _num(data.get("master", 0.9), 0.9, 0.0, 1.5)
     fit_sec = _num(data.get("fit_sec", 0), 0.0, 0.0, MAX_FIT_SECONDS)
-    return mix_channels(channels, repeats, master, fit_sec)
+    fade = _num(data.get("fade", 0), 0.0, 0.0, 10.0)
+    return mix_channels(channels, repeats, master, fit_sec, fade)
 
 
 @routes.post("/neron/mixer_render")
@@ -634,12 +644,12 @@ class NeronMixer:
                     if snd.get("wave") is not None and len(val.get("sounds") or []) == 1:
                         st = proj["settings"].get(slot, st)      # канал Сэмплера в Пульте — audio_N
                     channels.append({"wave": wave,
-                                     "vol": st["vol"], "pan": st["pan"], "mute": st["mute"], "solo": st["solo"], "fx": st.get("fx")})
+                                     "vol": st["vol"], "pan": st["pan"], "mute": st["mute"], "solo": st["solo"], "fx": st.get("fx"), "off": st.get("off", 0.0)})
                 continue
             st = proj["settings"].get(slot, _default_setting())
             channels.append({
                 "wave": audio_to_stereo(val),
-                "vol": st["vol"], "pan": st["pan"], "mute": st["mute"], "solo": st["solo"], "fx": st.get("fx"),
+                "vol": st["vol"], "pan": st["pan"], "mute": st["mute"], "solo": st["solo"], "fx": st.get("fx"), "off": st.get("off", 0.0),
             })
         # видео: кубик «Видео ×3» по проводу, иначе то, что выбрано в Пульте
         vin = audios.get("video")
@@ -658,7 +668,7 @@ class NeronMixer:
                                  "vol": 1.0, "pan": 0.0, "mute": False, "solo": False, "fx": None})
         if videos and proj["fit_sec"] > 0:
             proj["fit_sec"] = videos_length(videos) or proj["fit_sec"]
-        mix = mix_channels(channels, proj["repeats"], proj["master"], proj["fit_sec"])
+        mix = mix_channels(channels, proj["repeats"], proj["master"], proj["fit_sec"], proj["fade"])
         out_path, clean = save_mix_wav(mix, save_name)
         bpm_in = audios.get("bpm")
         out_bpm = int(_num(bpm_in, proj["bpm"], 40, 300)) if bpm_in is not None else proj["bpm"]

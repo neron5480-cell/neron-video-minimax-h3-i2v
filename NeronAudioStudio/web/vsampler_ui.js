@@ -119,7 +119,7 @@ function setupVSampler(node) {
     function normalize(o) {
         o = o && typeof o === "object" ? o : {};
         const S = {
-            version: 1, bypass: o.bypass !== false, mute: !!o.mute,
+            version: 1, bypass: o.bypass !== false, mute: !!o.mute, snap: !!o.snap,
             pieces: [], zoom: Number(o.zoom) > 0 ? Number(o.zoom) : 0, x0: Math.max(0, Number(o.x0) || 0),
             cur: Math.max(0, Number(o.cur) || 0), sel: {}, selId: null,
         };
@@ -164,6 +164,24 @@ function setupVSampler(node) {
         }
         return [];
     }
+
+    // ---------- темп из Пульта (для 🧲) ----------
+    function pultBpm() {
+        const out = node.outputs && node.outputs[0];
+        for (const id of (out && out.links) || []) {
+            let l = getLink(id);
+            for (let hop = 0; l && hop < 6; hop++) {
+                const t = node.graph.getNodeById(l.target_id);
+                if (!t) break;
+                if (typeof t.neronBpm === "function") return { bpm: t.neronBpm(), wired: true };
+                if (t.type === "Reroute" && t.outputs && t.outputs[0] && (t.outputs[0].links || []).length) { l = getLink(t.outputs[0].links[0]); continue; }
+                break;
+            }
+        }
+        return { bpm: 90, wired: false };
+    }
+    const beatLen = () => 60 / clamp(pultBpm().bpm || 90, 40, 300);
+    const snapT = (t) => (S.snap ? Math.round(t / beatLen()) * beatLen() : t);
 
     // ---------- монтаж: где какой кусок ----------
     const editLen = () => S.pieces.reduce((a, p) => a + p.len, 0);
@@ -215,8 +233,20 @@ function setupVSampler(node) {
     const helpBtn = el("button", "nvs-btn sm", "📖");
     helpBtn.title = T("Помощь", "Help");
     const status = el("div", "nvs-status");
-    [bypBtn, playBtn, stopBtn, muteBtn, fitBtn, status, helpBtn].forEach((b) => bar.appendChild(b));
+    const xBtn = el("button", "nvs-btn sm", "⚙ " + T("ДЛЯ СПЕЦОВ", "EXPERT"));
+    xBtn.title = T("Тонкие настройки: резать в долю", "Fine settings: cut on the beat");
+    [bypBtn, playBtn, stopBtn, muteBtn, fitBtn, status, xBtn, helpBtn].forEach((b) => bar.appendChild(b));
     root.appendChild(bar);
+    const xrow = el("div", "nvs-bar");
+    xrow.style.cssText = "display:none;background:#20232a;border:1px dashed #3a3e49;border-radius:6px;padding:4px 8px";
+    const snapBtn = el("button", "nvs-btn sm", "🧲 " + T("РЕЗАТЬ В ДОЛЮ", "CUT ON THE BEAT"));
+    snapBtn.title = T("Склейки, края и курсор прилипают к долям темпа из Пульта — смена кадра попадает в удар",
+        "Cuts, edges and the cursor stick to the beats of the Pult tempo — every cut lands on a beat");
+    const bpmLbl = el("span", "nvs-h", "");
+    bpmLbl.style.fontWeight = "700";
+    xrow.appendChild(snapBtn);
+    xrow.appendChild(bpmLbl);
+    root.appendChild(xrow);
 
     const help = el("div", "nvs-help");
     help.innerHTML =
@@ -226,12 +256,14 @@ function setupVSampler(node) {
         + "<b>✂</b> (или S) — разрезать на курсоре; <b>⧉</b> (Ctrl+D) — копия; <b>🗑</b> (Delete) — убрать; Ctrl+Z — отменить. "
         + "Колёсико — приблизить, Shift+колёсико — прокрутка. Пробел — смотреть. "
         + "<b>⏭ ПРОПУСТИТЬ</b> — ролики идут в Пульт как есть. <b>🔇</b> — без звука роликов. "
-        + "Монтаж сам собирается в точный по кадрам mp4 и уходит в Пульт.<br>"
+        + "Монтаж сам собирается в точный по кадрам mp4 и уходит в Пульт. "
+        + "<b>⚙ ДЛЯ СПЕЦОВ → 🧲 РЕЗАТЬ В ДОЛЮ</b>: склейки, края и курсор прилипают к долям темпа Пульта — смена кадра попадает в удар.<br>"
         + "<b>EN:</b> ① Your clips from Video ×3 on top. Drag across the frames to select a piece; ▶ watches it; <b>➜</b> or drag it down — "
         + "it goes into the edit. Double-click selects the whole clip. ② <b>EDIT</b> — pieces play one after another. Drag a piece to reorder, "
         + "drag its edges to trim, click to set the cursor; <b>✂</b> (S) cuts at the cursor; <b>⧉</b> (Ctrl+D) copies; <b>🗑</b> (Delete) removes; "
         + "Ctrl+Z undoes. Wheel zooms, Shift+wheel scrolls, space plays. <b>⏭ BYPASS</b> sends the clips as they are; <b>🔇</b> drops the clip sound. "
-        + "The edit is built into a frame-accurate mp4 for the Pult automatically.";
+        + "The edit is built into a frame-accurate mp4 for the Pult automatically. "
+        + "<b>⚙ EXPERT → 🧲 CUT ON THE BEAT</b>: cuts, edges and the cursor stick to the Pult tempo beats.";
     root.appendChild(help);
 
     const main = el("div", "nvs-main");
@@ -582,6 +614,16 @@ function setupVSampler(node) {
                 "Empty: select a piece of a clip above and press ➜ or drag it here"), w / 2, RULER_H + LANE_H / 2);
             g.textAlign = "left";
         }
+        // доли темпа (🧲)
+        if (S.snap) {
+            const b = beatLen();
+            const first = Math.max(0, Math.floor(S.x0 / b));
+            for (let n = first; X(n * b) < w; n++) {
+                const x = Math.round(X(n * b)) + 0.5;
+                g.fillStyle = n % 4 === 0 ? "rgba(177,151,252,.55)" : "rgba(177,151,252,.18)";
+                g.fillRect(x, RULER_H, 1, LANE_H);
+            }
+        }
         // куда встанет перетаскиваемый кусок
         if (drag.ghost) {
             const gi = drag.ghost.idx;
@@ -667,11 +709,20 @@ function setupVSampler(node) {
         if (ed.mode === "trimr") {
             pc.len = clamp(ed.len0 + dt, 0.1, dur - pc.in);
             const st = starts(), i = S.pieces.indexOf(pc);
+            if (S.snap) {        // конец куска — на долю
+                const L = snapT(st[i] + pc.len) - st[i];
+                if (L >= 0.1 && L <= dur - pc.in + 1e-6) pc.len = L;
+            }
             seekShow(pc.src, pc.in + pc.len - 0.02);
             S.cur = st[i] + pc.len;
         } else if (ed.mode === "triml") {
             const ni = clamp(ed.in0 + dt, 0, ed.in0 + ed.len0 - 0.1);
             pc.len = ed.len0 - (ni - ed.in0); pc.in = ni;
+            if (S.snap) {        // конец куска (а значит, и следующая склейка) — на долю
+                const a0 = starts()[S.pieces.indexOf(pc)];
+                const L = snapT(a0 + pc.len) - a0, srcEnd = ed.in0 + ed.len0;
+                if (L >= 0.1 && srcEnd - L >= 0) { pc.len = L; pc.in = srcEnd - L; }
+            }
             seekShow(pc.src, pc.in);
             S.cur = starts()[S.pieces.indexOf(pc)];
         } else if (ed.mode === "move") {
@@ -717,7 +768,7 @@ function setupVSampler(node) {
     fitBtn.addEventListener("click", () => { S.zoom = 0; S.x0 = 0; drawEdit(); save(); refocus(); });
 
     function setCursor(t) {
-        S.cur = clamp(t, 0, editLen());
+        S.cur = clamp(P.on ? t : snapT(t), 0, editLen());
         if (P.on && P.mode === "edit") playEdit(S.cur);
         else showEditAt(S.cur);
         drawEdit();
@@ -731,6 +782,12 @@ function setupVSampler(node) {
         pushUndo();
         const sel = S.sel[k] || { a: 0, b: dur };
         const pc = { id: uid(), src: k, in: sel.a, len: Math.max(0.1, sel.b - sel.a) };
+        if (S.snap) {           // длина — целое число долей
+            const b = beatLen();
+            let L = Math.max(b, Math.round(pc.len / b) * b);
+            while (L > b && pc.in + L > dur + 1e-6) L -= b;
+            if (pc.in + L <= dur + 1e-6) pc.len = L;
+        }
         const at = idx == null ? S.pieces.length : clamp(idx, 0, S.pieces.length);
         S.pieces.splice(at, 0, pc);
         S.selId = pc.id;
@@ -910,6 +967,7 @@ function setupVSampler(node) {
 
     // ---------- кнопки ----------
     function paintTop() {
+        paintX();
         bypBtn.classList.toggle("on", S.bypass);
         muteBtn.classList.toggle("on", S.mute);
         muteBtn.textContent = S.mute ? "🔇 БЕЗ ЗВУКА РОЛИКОВ" : "🔊 ЗВУК РОЛИКОВ";
@@ -921,6 +979,22 @@ function setupVSampler(node) {
         refocus();
     });
     muteBtn.addEventListener("click", () => { pushUndo(); S.mute = !S.mute; changed(); refocus(); });
+    const paintX = () => {
+        const on = node.properties && node.properties.neron_expert === true;
+        xrow.style.display = on ? "flex" : "none";
+        xBtn.style.background = on ? "#6b4fb3" : "";
+        snapBtn.style.background = S.snap ? "#b197fc" : "";
+        snapBtn.style.color = S.snap ? "#1b1d23" : "";
+        const pb = pultBpm();
+        bpmLbl.textContent = `BPM ${pb.bpm} · ` + (pb.wired ? T("из Пульта", "from the Pult") : T("Пульт не подключён — 90", "Pult not wired — 90"))
+            + (S.snap ? " · " + T("сиреневые линии — доли, яркие — такты", "lilac lines — beats, bright — bars") : "");
+    };
+    xBtn.addEventListener("click", () => { node.properties = node.properties || {}; node.properties.neron_expert = !(node.properties.neron_expert === true); paintX(); sizer.fit(); refocus(); });
+    snapBtn.addEventListener("click", () => {
+        pushUndo(); S.snap = !S.snap; save(); paintX(); drawEdit();
+        setStatus(S.snap ? T("🧲 Склейки прилипают к долям", "🧲 Cuts stick to the beats") : T("🧲 выключено", "🧲 off"), "ok");
+        refocus();
+    });
     helpBtn.addEventListener("click", () => { help.style.display = help.style.display === "block" ? "none" : "block"; sizer.fit(); });
 
     // ---------- клавиши ----------
@@ -1000,6 +1074,7 @@ function setupVSampler(node) {
         if (disposed || document.hidden) return;
         const cur = upstream();
         const sig = cur.map(refKey).join("||");
+        if (node.properties && node.properties.neron_expert === true) paintX();   // темп в Пульте могли поменять
         if (sig === itemsSig) return;
         const old = items.map(refKey);
         itemsSig = sig;
@@ -1023,7 +1098,8 @@ function setupVSampler(node) {
     // ---------- нода ----------
     const dom = node.addDOMWidget("neron_vsampler", "neron_vsampler", outer, { serialize: false, hideOnZoom: false });
     const helpH = () => (help.style.display === "block" ? help.offsetHeight + 6 : 0);
-    const autoH = () => 34 + helpH() + Math.max(250, 18 + Math.max(1, items.length) * (SRC_H + 4)) + 6 + 18 + RULER_H + LANE_H + 14 + 30 + 34;
+    const xH = () => (xrow.style.display === "flex" ? 36 : 0);
+    const autoH = () => 34 + helpH() + xH() + Math.max(250, 18 + Math.max(1, items.length) * (SRC_H + 4)) + 6 + 18 + RULER_H + LANE_H + 14 + 30 + 34;
     const sizer = makeUserSized(node, dom, outer, { minH: 300, autoH, margin: 4, onLayout: () => drawAll() });
     outer.style.overflow = "hidden";
     new ResizeObserver(() => drawAll()).observe(root);

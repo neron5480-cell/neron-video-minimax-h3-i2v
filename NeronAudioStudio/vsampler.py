@@ -82,13 +82,15 @@ def _edit_plan(items, pieces):
         return None, None
     fps = float(first.get("fps") or 24.0)
     # кадр — ровно 1/fps: края кусков ставим на кадры, чтобы склейка была точной
-    t = 0.0
+    # концы кусков округляем от начала монтажа (а не каждую длину) — ошибка не копится
+    t, exact = 0.0, 0.0
     for s in segs:
-        ln = max(1.0 / fps, round((s["b"] - s["a"]) * fps) / fps)
+        exact += s["b"] - s["a"]
+        end = max(t + 1.0 / fps, round(exact * fps) / fps)
         src_a = s["a"] - s["off"]
-        s["a"], s["b"] = t, t + ln
+        s["a"], s["b"] = t, end
         s["off"] = t - src_a
-        t += ln
+        t = end
     plan = {"width": int(first.get("width") or 1280) // 2 * 2, "height": int(first.get("height") or 720) // 2 * 2, "fps": fps,
             "segments": segs, "trans": "cut", "trans_dur": 0.0, "length": t}
     return plan, waves_src

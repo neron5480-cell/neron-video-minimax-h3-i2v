@@ -116,6 +116,11 @@ function injectStyles() {
 .nm-room.on{background:#6b4fb3;color:#fff}
 .nm-fxreset{width:16px;height:16px;padding:0;border:none;border-radius:3px;background:transparent;color:#6c7180;font-size:11px;cursor:pointer;flex:none;visibility:hidden}
 .nm-fxreset:hover{color:#fff}
+.nm-frame{position:absolute;top:0;bottom:0;min-width:12px;border:2px solid #ffd166;border-radius:3px;box-sizing:border-box;display:none;cursor:grab;
+  box-shadow:0 0 0 9999px rgba(10,11,14,.55);z-index:1}
+.nm-frame span{position:absolute;left:3px;top:1px;font-size:9px;font-weight:800;color:#ffd166;text-shadow:0 1px 2px #000;white-space:nowrap;pointer-events:none}
+.nm-xrow{display:none;flex-wrap:wrap;align-items:center;gap:6px 14px;flex:none;background:#20232a;border-radius:6px;padding:5px 8px;border:1px dashed #3a3e49}
+.nm-xrow .nm-lbl{color:#b197fc}
 .nm-meter{width:14px;height:36px;flex:none;background:#101216;border-radius:3px}
 .nm-mmeter{width:140px;height:16px;flex:none;background:#101216;border-radius:3px}
 .nm-empty{padding:14px 10px;font-size:11px;color:#8b90a0;line-height:1.55;background:#20232a;border-radius:7px}
@@ -357,19 +362,19 @@ function setupMixerUI(node) {
         if (!S.ch[slot]) {
             const m = SUB_RE.exec(slot);
             const color = m ? COLORS[(parseInt(m[1], 10) - 1 + (m[2] ? parseInt(m[2], 10) - 1 : 0)) % COLORS.length] : "#c9ccd6";
-            S.ch[slot] = { vol: DEFAULT_VOL, pan: 0, mute: false, solo: false, color, low: 0, mid: 0, high: 0, rev: 0, room: "hall" };
+            S.ch[slot] = { vol: DEFAULT_VOL, pan: 0, mute: false, solo: false, color, low: 0, mid: 0, high: 0, rev: 0, room: "hall", off: 0 };
         }
         return S.ch[slot];
     }
 
-    const fxOf = (st) => ({ low: st.low || 0, mid: st.mid || 0, high: st.high || 0, rev: st.rev || 0, room: st.room || "hall" });
+    const fxOf = (st) => ({ low: st.low || 0, mid: st.mid || 0, high: st.high || 0, rev: st.rev || 0, room: st.room || "hall", off: st.off || 0 });
     const fitActive = () => S.fit && videoDur > 0 && videoShown;
 
     function serialize() {
         return JSON.stringify({
             version: 3, repeats: S.repeats, master: S.master,
             bpm: Math.round(S.bpm == null ? 90 : S.bpm), bpm_set: S.bpm != null, sync_bpm: S.syncBpm,
-            fit: S.fit, fit_sec: fitActive() ? Math.round(videoDur * 1000) / 1000 : 0,
+            fit: S.fit, fade: S.fade, fit_sec: fitActive() ? Math.round(videoDur * 1000) / 1000 : 0,
             video: curVideos[0] || null, videos: curVideos, video_manual: S.video,
             tracks: Object.keys(S.ch).map((slot) => ({
                 slot, vol: S.ch[slot].vol, pan: S.ch[slot].pan, mute: S.ch[slot].mute, solo: S.ch[slot].solo, ...fxOf(S.ch[slot]),
@@ -385,7 +390,8 @@ function setupMixerUI(node) {
         S.master = typeof o.master === "number" ? clamp(o.master, 0, 1.5) : 0.9;
         S.bpm = o.bpm_set === true && typeof o.bpm === "number" ? clamp(o.bpm, 40, 300) : null;
         S.syncBpm = o.sync_bpm !== false;
-        S.fit = o.fit === true;
+        S.fit = o.fit !== false;          // новые Пульты: «по длине видео» включено сразу
+        S.fade = typeof o.fade === "number" ? clamp(o.fade, 0, 10) : 1.5;
         const v = o.video_manual;
         S.video = v && typeof v === "object" && typeof v.name === "string"
             ? { name: v.name, subfolder: String(v.subfolder || ""), type: String(v.type || "input") } : null;
@@ -401,6 +407,7 @@ function setupMixerUI(node) {
                 for (const k of ["low", "mid", "high"]) if (typeof t[k] === "number") s[k] = clamp(t[k], -12, 12);
                 if (typeof t.rev === "number") s.rev = clamp(t.rev, 0, 1);
                 if (ROOMS[t.room]) s.room = t.room;
+                if (typeof t.off === "number") s.off = Math.max(0, t.off);
             }
         }
     }
@@ -723,7 +730,81 @@ function setupMixerUI(node) {
     vrow.appendChild(fitLbl);
     const vInfo = el("div", "nm-vinfo", "");
     vrow.appendChild(vInfo);
+    const xBtn = mkBtn("⚙ " + T("ДЛЯ СПЕЦОВ", "EXPERT"), null, T("Тонкие настройки: затухание, темп под видео", "Fine settings: fade, tempo to video"), "sm");
+    vrow.appendChild(xBtn);
+    const helpBtn = mkBtn("📖", null, T("Помощь", "Help"), "sm");
+    vrow.appendChild(helpBtn);
     root.appendChild(vrow);
+    const help = el("div", "nm-empty");
+    help.style.display = "none";
+    help.innerHTML =
+        "<b style='color:#ffd166'>RU:</b> Пульт — сердце: сюда приходят кубики. <b>video</b> — «Видео ×3» или Видео-сэмплер; <b>audio_N</b> — звук, «Звук ×8», сэмплер, «Музыка». "
+        + "У каждого канала: ▶ ■ M S, громкость, баланс, <b>НИЗ / СЕР / ВЕРХ</b>, <b>ЭХО</b> + помещение. "
+        + "<b>ПО ДЛИНЕ ВИДЕО</b> (включено сразу) — музыка ровно под ролик: короткая повторяется, длинная обрезается и мягко затихает в конце. "
+        + "Если трек длиннее ролика, на его волне жёлтая <b>рамка</b> — тяните её, чтобы выбрать, какой кусок трека звучит (например, припев). "
+        + "<b>⚙ ДЛЯ СПЕЦОВ</b>: длина затухания, 🎯 темп под видео (чуть меняет BPM — музыка кончается ровно с роликом). "
+        + "SAVE WAV / SAVE VIDEO или Queue — готовый файл.<br>"
+        + "<b style='color:#ffd166'>EN:</b> The Pult is the heart: cubes plug in here. <b>video</b> — Video ×3 or the Video Sampler; <b>audio_N</b> — sound, Sound ×8, the sampler, Music. "
+        + "Every channel: ▶ ■ M S, volume, pan, <b>LOW / MID / HIGH</b>, <b>REVERB</b> + room. <b>FIT TO VIDEO</b> (on by default) — the music matches the clip: "
+        + "short loops repeat, long tracks are cut and fade out. A track longer than the clip shows a yellow <b>frame</b> on its wave — drag it to choose which part plays. "
+        + "<b>⚙ EXPERT</b>: fade length, 🎯 tempo to video. SAVE WAV / SAVE VIDEO or Queue — the final file.";
+    root.appendChild(help);
+    helpBtn.addEventListener("click", () => { help.style.display = help.style.display === "none" ? "block" : "none"; relayout(); });
+
+    // ---------- для спецов ----------
+    const xrow = el("div", "nm-xrow");
+    const gF = el("div", "nm-grp");
+    gF.appendChild(el("span", "nm-lbl", T("ЗАТУХАНИЕ В КОНЦЕ", "END FADE")));
+    const fadeSl = el("input", "nm-range");
+    fadeSl.type = "range"; fadeSl.min = "0"; fadeSl.max = "6"; fadeSl.step = "0.1"; fadeSl.style.width = "110px";
+    const fadeLbl = el("span", "nm-lbl");
+    fadeLbl.style.color = "#e6e8ee";
+    gF.title = T("Музыка мягко стихает к концу ролика (0 — без затухания). Работает в режиме «по длине видео»",
+        "The music fades out towards the end of the clip (0 — no fade). Works with \"fit to video\"");
+    [fadeSl, fadeLbl].forEach((x) => gF.appendChild(x));
+    xrow.appendChild(gF);
+    const tempoBtn = mkBtn("🎯 " + T("ТЕМП ПОД ВИДЕО", "TEMPO TO VIDEO"), "#6b4fb3",
+        T("Чуть меняет BPM, чтобы целое число тактов (барабаны, пианино, сэмплер) закончилось ровно с роликом",
+            "Nudges the BPM so a whole number of bars (drums, piano, sampler) ends exactly with the clip"), "sm");
+    xrow.appendChild(tempoBtn);
+    const offReset = mkBtn("⇤ " + T("РАМКИ В НАЧАЛО", "FRAMES TO START"), null, T("Все треки снова играют с начала", "All tracks play from the start again"), "sm");
+    xrow.appendChild(offReset);
+    const xHint = el("span", "nm-lbl", T("рамка на волне — какой кусок трека звучит под роликом", "the frame on a wave — which part of the track plays under the clip"));
+    xHint.style.cssText = "color:#8b90a0;font-weight:400";
+    xrow.appendChild(xHint);
+    root.appendChild(xrow);
+    const showFade = () => { fadeSl.value = String(S.fade); fadeLbl.textContent = S.fade > 0 ? `${S.fade.toFixed(1)} ${T("с", "s")}` : T("нет", "off"); };
+    fadeSl.addEventListener("input", () => { S.fade = parseFloat(fadeSl.value); showFade(); saveState(); });
+    fadeSl.addEventListener("change", () => restartIfPlaying());
+    fadeSl.addEventListener("dblclick", () => { S.fade = 1.5; showFade(); saveState(); restartIfPlaying(); });
+    const paintExpert = () => {
+        const on = node.properties && node.properties.neron_expert === true;
+        xrow.style.display = on ? "flex" : "none";
+        xBtn.style.background = on ? "#6b4fb3" : "";
+        relayout();
+    };
+    xBtn.addEventListener("click", () => { node.properties = node.properties || {}; node.properties.neron_expert = !(node.properties.neron_expert === true); paintExpert(); });
+    offReset.addEventListener("click", () => { for (const k of Object.keys(S.ch)) S.ch[k].off = 0; saveState(); refreshFrames(); restartIfPlaying(); });
+    // 🎯 BPM, при котором целое число повторов музыки заканчивается ровно с роликом
+    tempoBtn.addEventListener("click", () => {
+        if (!(videoDur > 0) || !videoShown) { setStatus(T("Сначала подключите видео", "Wire a video first"), true); return; }
+        const mus = chs.filter((c) => c.spec && typeof c.spec.bpm === "number" && readyBuf(c.slot, c.specKey));
+        if (!mus.length) { setStatus(T("Нужна наша музыка: барабаны, пианино, «Музыка» или сэмплер", "Needs our music: drums, piano, Music or the sampler"), true); return; }
+        const bpm0 = Math.round(S.bpm == null ? mus[0].spec.bpm : S.bpm);
+        // ищем темп, при котором в ролик влезает целое число тактов, — поближе к прежнему
+        let best = null;
+        for (let bpm = 40; bpm <= 300; bpm++) {
+            const bar = 240 / bpm;
+            const n = Math.max(1, Math.round(videoDur / bar));
+            const err = Math.abs(n * bar - videoDur);
+            const score = err * 4 + Math.abs(bpm - bpm0) / bpm0;
+            if (!best || score < best.score) best = { bpm, err, n, score };
+        }
+        setMixerBpm(best.bpm);
+        restartIfPlaying();
+        setStatus(T(`🎯 Темп ${bpm0} → ${best.bpm}: в ролик входит ровно ${best.n} тактов (±${best.err.toFixed(2)} с)`,
+            `🎯 Tempo ${bpm0} → ${best.bpm}: exactly ${best.n} bars fit the clip (±${best.err.toFixed(2)} s)`), false);
+    });
 
     const vbox = el("div", "nm-vbox");
     const backBtn = mkBtn("◀ " + T("ВСЕ РОЛИКИ", "ALL CLIPS"), "#4a4e5a", T("Снова показать все ролики рядом", "Show all clips side by side again"), "sm nm-back");
@@ -854,7 +935,10 @@ function setupMixerUI(node) {
             lim.ratio.value = 20;
             lim.attack.value = 0.002;
             lim.release.value = 0.12;
-            master.connect(lim);
+            // затухание в конце ролика (режим «по длине видео»)
+            const fadeG = ctx.createGain();
+            master.connect(fadeG);
+            fadeG.connect(lim);
             lim.connect(ctx.destination);
             const tap = ctx.createChannelSplitter(2);
             const aL = ctx.createAnalyser(), aR = ctx.createAnalyser();
@@ -862,7 +946,7 @@ function setupMixerUI(node) {
             lim.connect(tap);
             tap.connect(aL, 0);
             tap.connect(aR, 1);
-            audio = { ctx, master, aL, aR };
+            audio = { ctx, master, aL, aR, fadeG };
         }
         return audio;
     }
@@ -1032,7 +1116,24 @@ function setupMixerUI(node) {
         return pos.t;
     }
 
+    // рамки на волнах: показываются, когда трек длиннее ролика (режим «по длине видео»)
+    function refreshFrames() {
+        const on = fitActive();
+        for (const c of chs) {
+            const u = ui.get(c.slot);
+            if (!u || !u.frame) continue;
+            const b = readyBuf(c.slot, c.specKey);
+            if (!on || c.isVideo || !b || b.duration <= videoDur + 0.05) { u.frame.style.display = "none"; continue; }
+            const st = settingFor(c.slot);
+            st.off = clamp(st.off || 0, 0, Math.max(0, b.duration - videoDur));
+            u.frame.style.display = "block";
+            u.frame.style.left = (st.off / b.duration) * 100 + "%";
+            u.frame.style.width = (videoDur / b.duration) * 100 + "%";
+            u.frameLbl.textContent = `▶ ${fmtT(st.off)}`;
+        }
+    }
     function showPos(t) {
+        refreshFrames();
         const T = timelineLen();
         tSlider.disabled = !(T > 0);
         tSlider.max = String(Math.max(1, Math.round(T * 100)));
@@ -1051,7 +1152,7 @@ function setupMixerUI(node) {
             if (!u) continue;
             if (!b) { u.ph.style.display = "none"; continue; }
             u.ph.style.display = "block";
-            u.ph.style.left = (((inCycle % b.duration) / b.duration) * 100) + "%";
+            u.ph.style.left = ((((inCycle + chOff(c, b)) % b.duration) / b.duration) * 100) + "%";
         }
     }
 
@@ -1073,10 +1174,31 @@ function setupMixerUI(node) {
             src.buffer = buf;
             src.loop = true;
             src.connect(getChain(c.slot).input);
-            src.start(when, inCycle % buf.duration);
+            src.start(when, (inCycle + chOff(c, buf)) % buf.duration);
             src.stop(start + play.D);
             play.items.push({ src, slot: c.slot, dur: buf.duration, end: start + play.D });
         }
+        // мягкое затухание к концу ролика
+        const f = Math.min(S.fade || 0, play.D * 0.5);
+        if (f > 0.01) {
+            const end = start + play.D, g = a.fadeG.gain;
+            if (when < end - f) {
+                g.setValueAtTime(1, end - f);
+                g.linearRampToValueAtTime(0.0001, end);
+                g.setValueAtTime(1, end + 0.002);
+            }
+        }
+    }
+    // с какого места трека играет канал (рамка на волне)
+    function chOff(c, buf) {
+        const o = settingFor(c.slot).off || 0;
+        return buf && buf.duration > 0 ? o % buf.duration : 0;
+    }
+    function resetFade() {
+        if (!audio) return;
+        const g = audio.fadeG.gain;
+        g.cancelScheduledValues(0);
+        g.setValueAtTime(1, audio.ctx.currentTime);
     }
 
     function fitPump() {
@@ -1102,6 +1224,7 @@ function setupMixerUI(node) {
         play.tReal = t0;
         play.t0 = t0 - offset;
         play.nextCycle = 0;
+        resetFade();
         for (const c of playable) applyMix(c.slot, true);
         if (play.D) {
             play.on = true;
@@ -1114,7 +1237,7 @@ function setupMixerUI(node) {
                 src.buffer = buf;
                 src.loop = true;
                 src.connect(getChain(c.slot).input);
-                src.start(t0, offset % buf.duration);
+                src.start(t0, (offset + chOff(c, buf)) % buf.duration);
                 play.items.push({ src, slot: c.slot, dur: buf.duration });
             }
             play.on = true;
@@ -1154,6 +1277,7 @@ function setupMixerUI(node) {
         if (play.raf) { cancelAnimationFrame(play.raf); play.raf = null; }
         if (play.timer) { clearInterval(play.timer); play.timer = null; }
         stopSources();
+        resetFade();
         vsPause();
         showPos(pos.t);
         refreshRowButtons();
@@ -1549,14 +1673,19 @@ function setupMixerUI(node) {
             const wave = el("div", "nm-wave");
             const canvas = el("canvas");
             const ph = el("div", "nm-ph");
+            const frame = el("div", "nm-frame");
+            const frameLbl = el("span", "");
+            frame.appendChild(frameLbl);
+            frame.title = T("Этот кусок трека звучит под роликом — тяните рамку влево-вправо", "This part of the track plays under the clip — drag the frame left/right");
             const note = el("div", "nm-note");
             note.textContent = c.isVideo ? "Достаю звук из видео..." : (c.spec ? "Готовлю звук..." : "Эту ноду не слышно заранее: звук появится после Queue");
             wave.appendChild(canvas);
             wave.appendChild(note);
             wave.appendChild(ph);
+            wave.appendChild(frame);
             row.appendChild(wave);
 
-            ui.set(c.slot, { ph, canvas, note, rowPlay, meter, mL: {}, mR: {} });
+            ui.set(c.slot, { ph, canvas, note, rowPlay, meter, mL: {}, mR: {}, frame, frameLbl });
             rowPlay.addEventListener("click", () => {
                 if (play.on || play.starting) stopPlayback();
                 play.only = c.slot;
@@ -1572,8 +1701,42 @@ function setupMixerUI(node) {
             };
             wave.style.cursor = "pointer";
             wave.title = "Клик - перемотать на это место";
-            wave.addEventListener("pointerdown", (ev) => { wave.setPointerCapture(ev.pointerId); waveSeek(ev); });
-            wave.addEventListener("pointermove", (ev) => { if (ev.buttons & 1) waveSeek(ev); });
+            let fd = null;       // тянем рамку
+            wave.addEventListener("pointerdown", (ev) => {
+                wave.setPointerCapture(ev.pointerId);
+                const b = readyBuf(c.slot, c.specKey);
+                if (frame.style.display === "block" && b) {
+                    const fr = frame.getBoundingClientRect();
+                    if (ev.clientX >= fr.left && ev.clientX <= fr.right) {
+                        fd = { x: ev.clientX, off0: st.off || 0, w: wave.getBoundingClientRect().width, dur: b.duration, moved: false };
+                        frame.style.cursor = "grabbing";
+                        return;
+                    }
+                }
+                waveSeek(ev);
+            });
+            wave.addEventListener("pointermove", (ev) => {
+                if (fd) {
+                    if (!fd.moved && Math.abs(ev.clientX - fd.x) < 3) return;
+                    fd.moved = true;
+                    const maxOff = Math.max(0, fd.dur - videoDur);
+                    st.off = clamp(fd.off0 + ((ev.clientX - fd.x) / Math.max(1, fd.w)) * fd.dur, 0, maxOff);
+                    refreshFrames();
+                    if (!play.on) showHeads(pos.t);
+                    return;
+                }
+                if (ev.buttons & 1) waveSeek(ev);
+            });
+            const fdEnd = (ev) => {
+                if (!fd) return;
+                const moved = fd.moved;
+                fd = null;
+                frame.style.cursor = "grab";
+                if (moved) { saveState(); restartIfPlaying(); setStatus(T(`${c.label}: под роликом звучит кусок с ${fmtT(st.off)}`, `${c.label}: the part from ${fmtT(st.off)} plays under the clip`), false); }
+                else waveSeek(ev);
+            };
+            wave.addEventListener("pointerup", fdEnd);
+            wave.addEventListener("pointercancel", fdEnd);
 
             mBtn.addEventListener("click", () => { st.mute = !st.mute; mBtn.classList.toggle("on-m", st.mute); applyMixAll(); saveState(); });
             sBtn.addEventListener("click", () => { st.solo = !st.solo; sBtn.classList.toggle("on-s", st.solo); applyMixAll(); saveState(); });
@@ -1715,6 +1878,7 @@ function setupMixerUI(node) {
                     repeats: S.repeats,
                     master: S.master,
                     fit_sec: fitActive() ? videoDur : 0,
+                    fade: S.fade,
                     video: curVideos[0] || null,
                     videos: curVideos,
                     video_audio: curVideos.length ? { ...settingFor(VIDEO_SLOT), ...fxOf(settingFor(VIDEO_SLOT)) } : null,
@@ -1739,9 +1903,14 @@ function setupMixerUI(node) {
 
     // ---------- запуск ----------
 
+    // для Видео-сэмплера: общий темп (🧲 резать в долю)
+    node.neronBpm = () => Math.round(S.bpm == null ? 90 : S.bpm);
+
     function syncAll() {
         showRepeats();
         showBpm();
+        showFade();
+        paintExpert();
         masterSlider.value = String(S.master);
         for (const c of chs) settingFor(c.slot);
         fillVideoSelect();

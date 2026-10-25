@@ -1,5 +1,5 @@
 {
- "id": "34043a12-c521-416d-b147-c01b91827467",
+ "id": "fd98e7fa-f8db-4abd-bc49-6b1c86fbc629",
  "revision": 0,
  "last_node_id": 6,
  "last_link_id": 5,
@@ -434,12 +434,12 @@
     "Node name for S&R": "NeronMixer"
    },
    "widgets_values": [
-    "{\"version\":3,\"repeats\":1,\"master\":0.9,\"bpm\":90,\"bpm_set\":true,\"sync_bpm\":true,\"fit\":false,\"fit_sec\":0,\"video\":null,\"videos\":[],\"video_manual\":null,\"tracks\":[{\"slot\":\"audio_2/1\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\"},{\"slot\":\"audio_2/2\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\"}]}",
+    "{\"version\":3,\"repeats\":1,\"master\":0.9,\"bpm\":90,\"bpm_set\":true,\"sync_bpm\":true,\"fit\":true,\"fade\":1.5,\"fit_sec\":0,\"video\":null,\"videos\":[],\"video_manual\":null,\"tracks\":[{\"slot\":\"audio_2/1\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0},{\"slot\":\"audio_2/2\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0}]}",
     "neron_mix",
     ""
    ],
    "widgets_values_named": {
-    "mixer_json": "{\"version\":3,\"repeats\":1,\"master\":0.9,\"bpm\":90,\"bpm_set\":true,\"sync_bpm\":true,\"fit\":false,\"fit_sec\":0,\"video\":null,\"videos\":[],\"video_manual\":null,\"tracks\":[{\"slot\":\"audio_2/1\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\"},{\"slot\":\"audio_2/2\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\"}]}",
+    "mixer_json": "{\"version\":3,\"repeats\":1,\"master\":0.9,\"bpm\":90,\"bpm_set\":true,\"sync_bpm\":true,\"fit\":true,\"fade\":1.5,\"fit_sec\":0,\"video\":null,\"videos\":[],\"video_manual\":null,\"tracks\":[{\"slot\":\"audio_2/1\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0},{\"slot\":\"audio_2/2\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0}]}",
     "save_name": "neron_mix",
     "neron_mixer": ""
    }

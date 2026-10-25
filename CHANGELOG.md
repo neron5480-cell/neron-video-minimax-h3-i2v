@@ -1,5 +1,22 @@
 # Changelog / История изменений
 
+## dev — Neron Audio Studio: музыка под ролик / music to the clip (на проверке / in testing)
+
+**RU:**
+- **ПО ДЛИНЕ ВИДЕО** в новом Пульте включено сразу: короткая музыка повторяется до конца ролика, длинная обрезается — и теперь **мягко затихает в конце** (1,5 с; и при прослушивании, и в файле).
+- **Рамка на волне:** если трек длиннее ролика, на его волне жёлтая рамка «▶ 0:18» — тяните её, чтобы выбрать, какой кусок трека звучит под роликом (например, припев). Клик мимо рамки — перемотка, как раньше.
+- **⚙ ДЛЯ СПЕЦОВ** в Пульте: длина затухания (0–6 с, двойной клик — 1,5), **🎯 ТЕМП ПОД ВИДЕО** — Пульт чуть меняет BPM, чтобы в ролик входило целое число тактов (для барабанов, пианино, «Музыки», сэмплера; пишет, насколько точно), **⇤ РАМКИ В НАЧАЛО**.
+- **⚙ ДЛЯ СПЕЦОВ** в Видео-сэмплере: **🧲 РЕЗАТЬ В ДОЛЮ** — склейки, края кусков и курсор прилипают к долям темпа Пульта (сиреневые линии — доли, яркие — такты); новый кусок — целое число долей.
+- Склейки монтажа считаются от начала (концы кусков округляются к кадру по общему времени) — на длинном монтаже ошибка не копится.
+- В Пульте появилась кнопка **📖** с помощью на двух языках.
+
+**EN:**
+- **FIT TO VIDEO** is on by default in a new Pult: short music repeats, long music is cut — and now **fades out at the end** (1.5 s, in preview and in the file).
+- **Frame on the wave:** a track longer than the clip shows a yellow frame "▶ 0:18" — drag it to choose which part plays under the clip. A click outside the frame seeks as before.
+- **⚙ EXPERT** in the Pult: fade length, **🎯 TEMPO TO VIDEO** (nudges the BPM so a whole number of bars fits the clip, reports the accuracy), **⇤ FRAMES TO START**.
+- **⚙ EXPERT** in the Video Sampler: **🧲 CUT ON THE BEAT** — cuts, piece edges and the cursor stick to the Pult tempo beats; a new piece is a whole number of beats.
+- Edit cuts are rounded to frames on the overall timeline, so long edits don't drift. The Pult got a bilingual **📖** help.
+
 ## dev — Neron Audio Studio: Видео-сэмплер / Video Sampler (на проверке / in testing)
 
 **RU:**
