@@ -127,7 +127,19 @@
 *   **Audio Loader:** загрузка, прослушивание и обрезка любого звукового файла.
 *   **Mixer:** до 8 каналов. Громкость, баланс, Mute/Solo, синхронизация BPM и работа с видео (полная замена/вырезание звука, наложение своих дорожек, синхронизация по длине).
 *   **Video Combine:** умная склейка видео (или пачки кадров) со сведённым звуком.
+*   **Video ×3 и Sound ×8 (кубики):** до 3 роликов и до 8 звуков в одной ноде, одним проводом в Пульт (Mixer). Пульт показывает сводку, ролики рядом или на весь экран, каждый звук — свой канал.
+*   **Field / Поле:** общее поле, как Playlist в FL Studio. Склейка до 3 роликов с точностью до кадра (сдвиг мышкой, два разделителя, склейка или наплыв) и дорожки со звуком: двигать, обрезать, резать, появление и затухание. Большое окно открывается поверх холста, на холсте остаётся аккуратная карточка.
 *   **Dancer:** для настроения — героиня (или ваш ролик с танцем), которая танцует в такт музыке.
+
+**🆕 Версия 2.0 — модульная студия: кубики + Пульт-сердце.**
+*   **Пульт:** у каждого канала эквалайзер НИЗ / СЕР / ВЕРХ и ЭХО (комната / зал / собор), прыгающие индикаторы; музыка сама подстраивается под длину ролика и мягко затихает в конце; жёлтая рамка на волне — какой кусок трека звучит под роликом; ⚙ для спецов — темп под видео.
+*   **Видео-сэмплер:** режем куски из 3 роликов и собираем монтаж точно по кадрам; ⏭ пропустить, 🔇 без звука роликов, 🧲 резать в долю.
+*   **Сэмплер:** собираем звук из кусков дорожек на сетке по тактам, 4 слоя, у каждого слоя свой ▶.
+*   **Музыка:** барабаны и пианино в одной ноде, общий темп, ▶ всё вместе.
+*   **Студия:** каждая дорожка — свой канал с эквалайзером и эхом, поле сборки как в FL Studio, общий эквалайзер на 10 полос с живым спектром.
+*   **Тема 🎨:** Графит / Neron Brown / Неон; у каждого кубика свой цвет, огни по рамкам и искры по проводам в такт бочке.
+
+Готовые схемы: `NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json` (новая) и `Neron_Audio_Studio_v1.0_Beta.json` (прежняя).
 
 Главная фишка: **звук играет сразу на ноде, кнопка Queue для прослушивания не нужна!** Всё работает в браузере и не нагружает видеокарту.
 
@@ -277,7 +289,19 @@ This is a separate project that turns ComfyUI into a small digital audio worksta
 *   **Audio Loader:** load, listen to and trim any audio file.
 *   **Mixer:** up to 8 channels. Volume, pan, Mute/Solo, BPM sync, and video support (fully replace/mute video audio, overlay multiple tracks, sync by length).
 *   **Video Combine:** smart muxing of video (or image batches) with the mixed audio.
+*   **Video ×3 and Sound ×8 (cubes):** up to 3 clips and 8 sounds in one node, one wire into the Pult (Mixer). The Pult shows a summary, clips side by side or full screen, each sound as its own channel.
+*   **Field:** a shared field like the FL Studio Playlist. Frame-accurate cutting of up to 3 clips (drag to shift, two dividers, cut or dissolve) plus audio tracks: move, trim, split, fade in and out. The big window opens above the canvas; the canvas keeps a tidy card.
 *   **Dancer:** just for fun — a little dancer (or your own dance clip) that moves in time with the music.
+
+**🆕 Version 2.0 — a modular studio: cubes + the Pult as the heart.**
+*   **Pult:** LOW / MID / HIGH EQ and REVERB (room / hall / cathedral) on every channel, live meters; music fits the clip length and fades out at the end; a yellow frame on the wave picks which part of the track plays; ⚙ expert — tempo to video.
+*   **Video Sampler:** cut pieces from 3 clips into a frame-accurate edit; ⏭ bypass, 🔇 no clip sound, 🧲 cut on the beat.
+*   **Sampler:** build sound from track pieces on a bar grid, 4 layers, ▶ per layer.
+*   **Music:** drums and piano in one node, one tempo, ▶ play all.
+*   **Studio:** every track is a channel with EQ and reverb, an FL-Studio-like arrange field, a 10-band master EQ with a live spectrum.
+*   **Theme 🎨:** Graphite / Neron Brown / Neon; every cube has its colour, lights on the frames and sparks on the wires follow the kick.
+
+Ready workflows: `NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json` (new) and `Neron_Audio_Studio_v1.0_Beta.json` (previous).
 
 Main feature: **audio plays directly on the node, no need to hit Queue just to listen!** Everything runs in the browser and doesn't load your GPU.
 

@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { createProjectBar } from "./neron_common.js";
+import { neronTap, createProjectBar, makeUserSized } from "./neron_common.js";
 
 // ============================================================================
 //  Neron Piano Roll - интерфейс в духе FL Studio
@@ -76,22 +76,22 @@ function injectStyles() {
     s.id = "neron-piano-styles2";
     s.textContent = `
 .npr-root{box-sizing:border-box;width:100%;height:100%;display:flex;flex-direction:column;gap:6px;padding:8px;
-  background:#1b1d23;border-radius:8px;font-family:"Segoe UI",Arial,sans-serif;color:#cfd2d8;user-select:none;
+  background:var(--nt-panel,#1b1d23);border-radius:8px;font-family:"Segoe UI",Arial,sans-serif;color:var(--nt-text,#cfd2d8);user-select:none;
   outline:none;overflow:hidden}
 .npr-top{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;flex:none}
 .npr-grp{display:flex;align-items:center;gap:5px}
-.npr-lbl{font-size:10px;font-weight:700;color:#8b90a0;letter-spacing:.5px}
+.npr-lbl{font-size:10px;font-weight:700;color:var(--nt-muted,#8b90a0);letter-spacing:.5px}
 .npr-btn{height:24px;padding:0 10px;border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:700;
-  cursor:pointer;flex:none;line-height:24px;background:#4a4e5a}
+  cursor:pointer;flex:none;line-height:24px;background:var(--nt-btn,#4a4e5a)}
 .npr-btn:hover{filter:brightness(1.18)}
 .npr-btn.sm{height:20px;padding:0 7px;line-height:20px;font-size:11px}
-.npr-sel{height:22px;box-sizing:border-box;background:#262a32;color:#cfd2d8;border:1px solid #363a44;border-radius:4px;
+.npr-sel{height:22px;box-sizing:border-box;background:var(--nt-row2,#262a32);color:var(--nt-text,#cfd2d8);border:1px solid var(--nt-btn2,#363a44);border-radius:4px;
   font-size:11px;outline:none;padding:0 2px;min-width:0}
-.npr-sel option,.npr-sel optgroup{background:#262a32;color:#cfd2d8}
-.npr-num{width:48px;height:22px;box-sizing:border-box;background:#262a32;color:#cfd2d8;border:1px solid #363a44;
+.npr-sel option,.npr-sel optgroup{background:var(--nt-row2,#262a32);color:var(--nt-text,#cfd2d8)}
+.npr-num{width:48px;height:22px;box-sizing:border-box;background:var(--nt-row2,#262a32);color:var(--nt-text,#cfd2d8);border:1px solid var(--nt-btn2,#363a44);
   border-radius:4px;font-size:11px;text-align:center;outline:none}
 .npr-range{height:14px;margin:0;padding:0;cursor:pointer;accent-color:var(--c,#ff9f43)}
-.npr-status{flex:1;min-width:120px;font-size:10px;color:#8b90a0;white-space:nowrap;overflow:hidden;
+.npr-status{flex:1;min-width:120px;font-size:10px;color:var(--nt-muted,#8b90a0);white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis;text-align:right}
 .npr-status.err{color:#ff8a80}
 .npr-edit{font-size:10px;font-weight:700;white-space:nowrap}
@@ -103,36 +103,36 @@ function injectStyles() {
 .npr-card.sel{border-color:var(--c);background:#2a2f38}
 .npr-r{display:flex;align-items:center;gap:5px;min-width:0}
 .npr-dot{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
-.npr-name{flex:1;min-width:0;height:20px;box-sizing:border-box;background:transparent;color:#e6e8ee;border:1px solid transparent;
+.npr-name{flex:1;min-width:0;height:20px;box-sizing:border-box;background:transparent;color:var(--nt-bright,#e6e8ee);border:1px solid transparent;
   border-radius:4px;font-size:11px;font-weight:700;padding:0 4px;outline:none}
-.npr-name:focus{border-color:#4a4f5c;background:#1f2228}
-.npr-ms{width:22px;height:20px;padding:0;border:none;border-radius:4px;background:#363a44;color:#9aa0ae;font-size:10px;
+.npr-name:focus{border-color:#4a4f5c;background:var(--nt-card2,#1f2228)}
+.npr-ms{width:22px;height:20px;padding:0;border:none;border-radius:4px;background:var(--nt-btn2,#363a44);color:var(--nt-muted2,#9aa0ae);font-size:10px;
   font-weight:700;cursor:pointer;flex:none}
 .npr-ms.on-m{background:#b3414a;color:#fff}
-.npr-ms.on-s{background:#d9a72b;color:#1b1d23}
-.npr-x{width:20px;height:20px;padding:0;border:none;border-radius:4px;background:#363a44;color:#9aa0ae;font-size:12px;
+.npr-ms.on-s{background:#d9a72b;color:var(--nt-panel,#1b1d23)}
+.npr-x{width:20px;height:20px;padding:0;border:none;border-radius:4px;background:var(--nt-btn2,#363a44);color:var(--nt-muted2,#9aa0ae);font-size:12px;
   cursor:pointer;flex:none}
 .npr-x:hover{background:#b3414a;color:#fff}
 .npr-card .npr-sel{flex:1}
-.npr-mini{display:flex;align-items:center;gap:4px;font-size:9px;color:#8b90a0;flex:1;min-width:0}
+.npr-mini{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--nt-muted,#8b90a0);flex:1;min-width:0}
 .npr-mini input{flex:1;min-width:0;width:100%}
-.npr-gate{display:flex;align-items:center;gap:3px;font-size:10px;color:#9aa0ae;white-space:nowrap}
+.npr-gate{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--nt-muted2,#9aa0ae);white-space:nowrap}
 .npr-foot{flex:none;display:flex;flex-direction:column;gap:6px;border-top:1px solid #2c3039;padding-top:6px}
-.npr-roll{position:relative;flex:1;min-width:0;background:#15171c;border-radius:6px;overflow:hidden}
-.npr-corner{position:absolute;left:0;top:0;width:${KEYS_W}px;height:${RULER_H}px;background:#1d2027;z-index:5}
-.npr-ruler{position:absolute;left:${KEYS_W}px;top:0;right:0;height:${RULER_H}px;overflow:hidden;background:#1d2027;z-index:4}
-.npr-keys{position:absolute;left:0;top:${RULER_H}px;width:${KEYS_W}px;bottom:0;overflow:hidden;z-index:3;background:#15171c}
+.npr-roll{position:relative;flex:1;min-width:0;background:var(--nt-deep,#15171c);border-radius:6px;overflow:hidden}
+.npr-corner{position:absolute;left:0;top:0;width:${KEYS_W}px;height:${RULER_H}px;background:var(--nt-card2,#1d2027);z-index:5}
+.npr-ruler{position:absolute;left:${KEYS_W}px;top:0;right:0;height:${RULER_H}px;overflow:hidden;background:var(--nt-card2,#1d2027);z-index:4}
+.npr-keys{position:absolute;left:0;top:${RULER_H}px;width:${KEYS_W}px;bottom:0;overflow:hidden;z-index:3;background:var(--nt-deep,#15171c)}
 .npr-key{box-sizing:border-box;height:${ROW_H}px;display:flex;align-items:center;justify-content:flex-end;padding-right:5px;
-  font-size:9px;border-bottom:1px solid #15171c;cursor:pointer}
+  font-size:9px;border-bottom:1px solid var(--nt-deep,#15171c);cursor:pointer}
 .npr-key.w{background:#d9dce3;color:#3a3d46}
-.npr-key.b{background:#2b2d34;color:#8b90a0}
+.npr-key.b{background:#2b2d34;color:var(--nt-muted,#8b90a0)}
 .npr-key:hover{filter:brightness(1.15)}
-.npr-key.down{background:var(--c,#ff9f43);color:#1b1d23}
+.npr-key.down{background:var(--c,#ff9f43);color:var(--nt-panel,#1b1d23)}
 .npr-scroll{position:absolute;left:${KEYS_W}px;top:${RULER_H}px;right:0;bottom:0;overflow:auto}
 .npr-scroll::-webkit-scrollbar{width:11px;height:11px}
 .npr-scroll::-webkit-scrollbar-thumb{background:#3a3f4c;border-radius:6px}
-.npr-scroll::-webkit-scrollbar-track{background:#1b1d23}
-.npr-scroll::-webkit-scrollbar-corner{background:#1b1d23}
+.npr-scroll::-webkit-scrollbar-track{background:var(--nt-panel,#1b1d23)}
+.npr-scroll::-webkit-scrollbar-corner{background:var(--nt-panel,#1b1d23)}
 .npr-gridin{position:relative;cursor:crosshair}
 .npr-gridin canvas{display:block}
 .npr-layer{position:absolute;left:0;top:0;right:0;bottom:0;pointer-events:none}
@@ -155,10 +155,14 @@ const bufCache = new Map();   // ключ -> { promise, buf }
 let activeFetches = 0;
 const fetchWaiters = [];
 
+// один звуковой движок на всю страницу (общий для всех нод Neron)
 function getCtx() {
     if (!sharedCtx) {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        sharedCtx = new AC();
+        if (!window.__neronAudioCtx) {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            window.__neronAudioCtx = new AC();
+        }
+        sharedCtx = window.__neronAudioCtx;
     }
     return sharedCtx;
 }
@@ -239,7 +243,7 @@ function buildTrackChain(ctx, master) {
 //  Интерфейс ноды
 // ----------------------------------------------------------------------------
 
-function setupPianoUI(node) {
+function setupPianoUI(node, host) {
     injectStyles();
 
     const getWidget = (name) => (node.widgets || []).find((x) => x.name === name);
@@ -529,7 +533,7 @@ function setupPianoUI(node) {
             lim.attack.value = 0.002;
             lim.release.value = 0.12;
             master.connect(lim);
-            lim.connect(ctx.destination);
+            lim.connect(ctx.destination); neronTap(ctx, lim);
             audio = { ctx, master };
         }
         return audio;
@@ -1406,17 +1410,20 @@ function setupPianoUI(node) {
     loadState(projectWidget ? projectWidget.value : "");
     syncAll();
 
-    const domWidget = node.addDOMWidget("neron_piano", "neron_piano", root, {
-        serialize: false,
-        hideOnZoom: false,
-        getMinHeight: () => PANEL_H,
-        getMaxHeight: () => PANEL_H,
-    });
-    domWidget.computeSize = (width) => [width, PANEL_H];
-    root.style.height = PANEL_H + "px";
-
-    const wanted = node.computeSize ? node.computeSize() : [1080, 400];
-    node.setSize([Math.max(wanted[0], 1080), Math.max(wanted[1], BASE_NODE_H + PANEL_H)]);
+    let domWidget = null;
+    if (host) {
+        host.mount(root, () => PANEL_H);
+    } else {
+        domWidget = node.addDOMWidget("neron_piano", "neron_piano", root, {
+            serialize: false,
+            hideOnZoom: false,
+        });
+        // размер задаёт пользователь: сетка нот подстраивается и прокручивается
+        makeUserSized(node, domWidget, root, { minH: 260, autoH: () => PANEL_H });
+    
+        const wanted = node.computeSize ? node.computeSize() : [1080, 400];
+        node.setSize([Math.max(wanted[0], 1080), Math.max(wanted[1], BASE_NODE_H + PANEL_H)]);
+    }
     setTimeout(centerView, 80);
 
     node.neronReload = () => {
@@ -1476,3 +1483,5 @@ app.registerExtension({
         };
     },
 });
+
+export { setupPianoUI };
