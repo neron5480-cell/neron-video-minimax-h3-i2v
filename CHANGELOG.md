@@ -10,11 +10,13 @@
 - Квадратики появления и затухания крупнее и работают всегда.
 - Индикаторы уровня: у источника при прослушивании, у каждого слоя и общий L/R.
 - Пустое поле не роняет Пульт: звучит один такт тишины.
+- У каждого слоя поля своя кнопка ▶ / ■: играет только этот слой; можно сразу переключиться на другой слой его ▶; верхний ▶ — снова всё поле.
 - Строка источника переделана: клик — курсор «играть отсюда» (▶ играет от него, во время игры клик перескакивает); повести вбок — всегда новое выделение (раньше при выделенном целиком треке всё «зависало»); края выделения тянутся; выделенное вниз — в поле; колёсико над волной — приблизить звук вокруг мышки (полоска внизу показывает, где вы), Shift — сдвинуть.
 
 **EN:**
 - The sampler now has two parts: **① SOURCES** — every sound in full, select a piece with the mouse, ▶ to listen, **➜** or drag it down; **② FIELD** — a bar grid with 4 layers where bricks are assembled; the Pult hears only the field.
 - Mouse wheel zooms (Shift+wheel scrolls), ⤢ fits all. Clicks are exact at any canvas zoom. Everything can be edited while playing. Bigger, reliable fade handles. Level meters for sources, layers and master. An empty field gives one bar of silence instead of an error.
+- Every field layer has its own ▶ / ■: plays only that layer; switch layers on the fly; the top ▶ plays the whole field again.
 - Source row reworked: click sets a play-from cursor; dragging sideways always makes a new selection (a full selection no longer locks it); selection edges drag; dragging the selection down puts it in the field; the wheel zooms the source around the mouse, Shift scrolls.
 
 ## dev — Neron Audio Studio: Сэмплер, первая версия / Sampler v1 (на проверке / in testing)

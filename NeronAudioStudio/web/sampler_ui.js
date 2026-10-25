@@ -391,13 +391,15 @@ function setupSampler(node) {
         const solo = S.layers.some((l) => l.solo);
         S.layers.forEach((l, i) => {
             const c = A.layers[i];
-            c.vol.gain.setTargetAtTime(!l.mute && (!solo || l.solo) ? l.vol : 0, ctx.currentTime, 0.01);
+            // ▶ у слоя: играет только он (M и S при этом не мешают)
+            const on = P.only >= 0 ? i === P.only : !l.mute && (!solo || l.solo);
+            c.vol.gain.setTargetAtTime(on ? l.vol : 0, ctx.currentTime, 0.01);
             c.gl.gain.value = Math.min(1, 1 - l.pan); c.gr.gain.value = Math.min(1, 1 + l.pan);
         });
     }
 
     // поле по кругу
-    const P = { on: false, c0: 0, t0: 0, L: 0, next: 0, srcs: [], timer: null, raf: null };
+    const P = { on: false, c0: 0, t0: 0, L: 0, next: 0, srcs: [], timer: null, raf: null, only: -1 };
     let pos = 0;
     // предпрослушивание куска источника
     const PV = { src: null, i: -1, c0: 0, a: 0, b: 0 };
@@ -463,7 +465,28 @@ function setupSampler(node) {
         P.srcs = [];
         if (P.timer) { clearInterval(P.timer); P.timer = null; }
         playB.style.background = "#3fa34d";
+        P.only = -1;
+        mix();
+        showLayerPlay();
         drawHead();
+    }
+    // кнопки ▶ / ■ у слоёв
+    function showLayerPlay() {
+        heads.querySelectorAll("button[data-lplay]").forEach((b) => {
+            const i = Number(b.dataset.lplay);
+            const act = P.on && P.only === i;
+            b.textContent = act ? "■" : "▶";
+            b.style.background = act ? "#2e8b3d" : "#2f4a35";
+            b.style.color = act ? "#fff" : "#9ad8a4";
+        });
+    }
+    function playLayer(i) {
+        if (P.on && P.only === i) { stopField(); return; }
+        P.only = i;
+        mix();
+        showLayerPlay();
+        if (!P.on) play().then(showLayerPlay);
+        else setStatus(T(`Играет только слой ${i + 1}`, `Playing only layer ${i + 1}`));
     }
     function curPos() {
         if (!P.on) return pos;
@@ -839,6 +862,10 @@ function setupSampler(node) {
             const n = el("b", "", `${i + 1}`);
             n.style.fontSize = "13px";
             n.style.color = LCOLORS[i];
+            const lp = el("button", "nsp-ms", "▶");
+            lp.dataset.lplay = String(i);
+            lp.title = T("Играть только этот слой (ещё раз — стоп)", "Play only this layer (again — stop)");
+            lp.addEventListener("click", (e) => { e.stopPropagation(); playLayer(i); });
             const m = el("button", "nsp-ms" + (l.mute ? " on-m" : ""), "M");
             m.title = T("Выключить слой", "Mute");
             const s = el("button", "nsp-ms" + (l.solo ? " on-s" : ""), "S");
@@ -850,14 +877,16 @@ function setupSampler(node) {
             const met = el("canvas", "nsp-meter");
             met.dataset.layer = String(i);
             met.style.height = "70%";
-            h.addEventListener("click", (e) => { if (e.target === h || e.target === n) { S.cur = i; save(); buildHeads(); } });
+            // клик по слою (не по кнопкам) — новые кирпичики пойдут в него
+            h.addEventListener("click", (e) => { if (!["INPUT", "BUTTON"].includes(e.target.tagName)) { S.cur = i; save(); buildHeads(); draw(); } });
             m.addEventListener("click", () => { l.mute = !l.mute; m.classList.toggle("on-m", l.mute); mix(); save(); draw(); });
             s.addEventListener("click", () => { l.solo = !l.solo; s.classList.toggle("on-s", l.solo); mix(); save(); draw(); });
             v.addEventListener("input", () => { l.vol = parseFloat(v.value); mix(); save(); });
             v.addEventListener("dblclick", () => { v.value = "0.8"; l.vol = 0.8; mix(); save(); });
-            [n, m, s, v, met].forEach((x) => h.appendChild(x));
+            [n, lp, m, s, v, met].forEach((x) => h.appendChild(x));
             heads.appendChild(h);
         }
+        showLayerPlay();
     }
 
     // ---------- ПОЛЕ: рисование ----------
@@ -1108,7 +1137,7 @@ function setupSampler(node) {
     keys.addEventListener("keydown", (e) => {
         e.stopPropagation();
         const k = e.key, ctrl = e.ctrlKey || e.metaKey;
-        if (k === " ") { e.preventDefault(); P.on ? stopField() : play(); }
+        if (k === " ") { e.preventDefault(); if (P.on) stopField(); else { P.only = -1; play(); } }
         else if (k === "Delete" || k === "Backspace") { e.preventDefault(); deleteSel(); }
         else if (ctrl && /^[zZяЯ]$/.test(k)) { e.preventDefault(); e.shiftKey ? redo() : undo(); }
         else if (ctrl && /^[yYнН]$/.test(k)) { e.preventDefault(); redo(); }
@@ -1177,7 +1206,11 @@ function setupSampler(node) {
         setStatus(S.bypass ? T("Пульт видит все звуки по отдельности", "The Pult sees every sound separately")
             : T("Пульт слышит только поле. Выделите кусок в источнике и нажмите ➜", "The Pult hears only the field. Select a piece in a source and press ➜"));
     });
-    playB.addEventListener("click", () => (P.on ? stopField() : play()));
+    // верхний ▶ — всё поле; если играл один слой — переключиться на всё поле
+    playB.addEventListener("click", () => {
+        if (P.on && P.only >= 0) { P.only = -1; mix(); showLayerPlay(); setStatus(T("Играет всё поле", "Playing the whole field")); return; }
+        P.on ? stopField() : play();
+    });
     stopB.addEventListener("click", () => { stopField(); stopPreview(); seek(0); });
     fitB.addEventListener("click", () => { fitView(); draw(); });
     helpB.addEventListener("click", showHelp);
