@@ -247,4 +247,73 @@ function makeUserSized(node, domWidget, root, opts) {
     return { curH, manual, fit, apply };
 }
 
-export { el, createProjectBar, makeUserSized };
+// ============================================================================
+//  Индикаторы уровня (прыгающие столбики) — общие для Пульта и Сэмплера
+// ----------------------------------------------------------------------------
+
+const meterBuf = new Float32Array(512);
+function peakOf(an) {
+    if (!an) return 0;
+    an.getFloatTimeDomainData(meterBuf);
+    let p = 0;
+    for (let i = 0; i < meterBuf.length; i++) { const v = Math.abs(meterBuf[i]); if (v > p) p = v; }
+    return p;
+}
+// 0..1 по шкале -48..0 дБ
+const toLevel = (p) => (p > 0.00001 ? Math.max(0, Math.min(1, (20 * Math.log10(p) + 48) / 48)) : 0);
+// сглаживание: подскакивает сразу, опускается плавно; пиковая метка держится 1 с
+function meterStep(m, peak, now) {
+    const v = toLevel(peak);
+    m.v = Math.max(v, (m.v || 0) - 0.025);
+    if (v >= (m.hold || 0) || now - (m.holdT || 0) > 1000) { m.hold = v; m.holdT = now; }
+    return m;
+}
+const ledColor = (f) => (f > 0.9 ? "#e5484d" : f > 0.72 ? "#e0b030" : "#3fbf5a");
+// vertical=true: два столбика снизу вверх (L, R); иначе две полосы слева направо
+function drawMeter(cv, mL, mR, vertical) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth || 14, h = cv.clientHeight || 36;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    const g = cv.getContext("2d");
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, w, h);
+    const bars = [mL, mR];
+    const seg = 3, gap = 1;
+    for (let b = 0; b < 2; b++) {
+        const m = bars[b] || {};
+        if (vertical) {
+            const bw = (w - 3) / 2, x = 1 + b * (bw + 1);
+            const n = Math.floor((h - 2) / (seg + gap));
+            const on = Math.round((m.v || 0) * n);
+            for (let i = 0; i < n; i++) {
+                const f = (i + 1) / n;
+                g.fillStyle = i < on ? ledColor(f) : "#23262e";
+                g.fillRect(x, h - 1 - (i + 1) * (seg + gap) + gap, bw, seg);
+            }
+            if (m.hold > 0.02) { const i = Math.min(n - 1, Math.round(m.hold * n) - 1); g.fillStyle = ledColor((i + 1) / n); g.fillRect(x, h - 1 - (i + 1) * (seg + gap) + gap, bw, seg); }
+        } else {
+            const bh = (h - 3) / 2, y = 1 + b * (bh + 1);
+            const n = Math.floor((w - 2) / (seg + gap));
+            const on = Math.round((m.v || 0) * n);
+            for (let i = 0; i < n; i++) {
+                const f = (i + 1) / n;
+                g.fillStyle = i < on ? ledColor(f) : "#23262e";
+                g.fillRect(1 + i * (seg + gap), y, seg, bh);
+            }
+            if (m.hold > 0.02) { const i = Math.min(n - 1, Math.round(m.hold * n) - 1); g.fillStyle = ledColor((i + 1) / n); g.fillRect(1 + i * (seg + gap), y, seg, bh); }
+        }
+    }
+}
+
+// отвод на индикатор: слушает узел, звук не меняет
+function meterTap(ctx, nodeOut) {
+    const tap = ctx.createChannelSplitter(2);
+    const aL = ctx.createAnalyser(), aR = ctx.createAnalyser();
+    aL.fftSize = 512; aR.fftSize = 512;
+    nodeOut.connect(tap);
+    tap.connect(aL, 0);
+    tap.connect(aR, 1);
+    return { aL, aR };
+}
+
+export { el, createProjectBar, makeUserSized, peakOf, meterStep, drawMeter, meterTap };

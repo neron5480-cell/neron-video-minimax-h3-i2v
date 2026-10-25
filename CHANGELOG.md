@@ -1,6 +1,21 @@
 # Changelog / История изменений
 
-## dev — Neron Audio Studio: Сэмплер / Sampler (на проверке / in testing)
+## dev — Neron Audio Studio: Сэмплер, вторая версия / Sampler v2 (на проверке / in testing)
+
+**RU:**
+- Сэмплер теперь из двух частей. **① ИСТОЧНИКИ** — каждый звук целиком, вся волна; мышкой выделяете кусок «откуда — докуда» (видны секунды), ▶ — послушать кусок. **➜** или просто перетащить выделенное вниз — кусок становится кирпичиком. **② ПОЛЕ** — сетка по тактам, 4 слоя; кирпичики складываются друг за другом, Пульт слышит только поле.
+- Колёсико мыши — приблизить / отдалить (Shift + колёсико — прокрутка), ⤢ — показать всё.
+- Клики попадают точно при любом зуме схемы (раньше курсор и блоки «промахивались»).
+- Во время игры можно двигать кирпичики, ставить курсор, менять громкость — звук подхватывает сразу.
+- Квадратики появления и затухания крупнее и работают всегда.
+- Индикаторы уровня: у источника при прослушивании, у каждого слоя и общий L/R.
+- Пустое поле не роняет Пульт: звучит один такт тишины.
+
+**EN:**
+- The sampler now has two parts: **① SOURCES** — every sound in full, select a piece with the mouse, ▶ to listen, **➜** or drag it down; **② FIELD** — a bar grid with 4 layers where bricks are assembled; the Pult hears only the field.
+- Mouse wheel zooms (Shift+wheel scrolls), ⤢ fits all. Clicks are exact at any canvas zoom. Everything can be edited while playing. Bigger, reliable fade handles. Level meters for sources, layers and master. An empty field gives one bar of silence instead of an error.
+
+## dev — Neron Audio Studio: Сэмплер, первая версия / Sampler v1 (на проверке / in testing)
 
 **RU:**
 - **Neron Sampler / Сэмплер** — нода между «Звук ×8» и Пультом. Вид как у Piano Roll: слева дорожки, справа сетка по тактам, каждый звук — блок.

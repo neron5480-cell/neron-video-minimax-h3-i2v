@@ -21,13 +21,14 @@ from .drum_machine import SAMPLE_RATE, _num
 from .mixer import AUDIO_EXTS, media_path, audio_to_stereo
 from .arrange import file_wave, _place
 
-MAX_LANES = 8
+MAX_LANES = 8              # источников (звуков из «Звук ×8»)
+LAYERS = 4                 # слоёв в поле
 MAX_CLIPS = 128
 MAX_BEATS = 4 * 64          # до 64 тактов
 
 
 def _default_json():
-    return json.dumps({"version": 1, "bypass": True, "snap": "1/4", "master": 1.0, "lanes": [], "clips": []})
+    return json.dumps({"version": 2, "bypass": True, "snap": "1/4", "master": 1.0, "layers": [], "bricks": []})
 
 
 def parse_sampler(sampler_json):
@@ -37,8 +38,9 @@ def parse_sampler(sampler_json):
         raw = {}
     if not isinstance(raw, dict):
         raw = {}
+    # поле: слои (раньше назывались lanes) и кирпичики (раньше clips)
     lanes = []
-    for t in (raw.get("lanes") or [])[:MAX_LANES]:
+    for t in (raw.get("layers") or raw.get("lanes") or [])[:LAYERS]:
         t = t if isinstance(t, dict) else {}
         lanes.append({
             "vol": _num(t.get("vol", 0.8), 0.8, 0.0, 1.5),
@@ -46,10 +48,10 @@ def parse_sampler(sampler_json):
             "mute": bool(t.get("mute", False)),
             "solo": bool(t.get("solo", False)),
         })
-    while len(lanes) < MAX_LANES:
+    while len(lanes) < LAYERS:
         lanes.append({"vol": 0.8, "pan": 0.0, "mute": False, "solo": False})
     clips = []
-    for c in (raw.get("clips") or [])[:MAX_CLIPS]:
+    for c in (raw.get("bricks") or raw.get("clips") or [])[:MAX_CLIPS]:
         if not isinstance(c, dict):
             continue
         ln = _num(c.get("len", 0), 0.0, 0.0, 3600.0)
@@ -57,7 +59,7 @@ def parse_sampler(sampler_json):
             continue
         clips.append({
             "src": int(_num(c.get("src", 0), 0, 0, MAX_LANES - 1)),
-            "lane": int(_num(c.get("lane", 0), 0, 0, MAX_LANES - 1)),
+            "lane": int(_num(c.get("layer", c.get("lane", 0)), 0, 0, LAYERS - 1)),
             "beat": _num(c.get("beat", 0), 0.0, 0.0, MAX_BEATS),
             "in": _num(c.get("in", 0), 0.0, 0.0, 3600.0),
             "len": ln,
@@ -89,7 +91,8 @@ def render_sampler(sp, sounds, bpm):
     (чтобы в Пульте луп повторялся ровно)."""
     spb = 60.0 / float(_num(bpm, 90, 40, 300))
     if not sp["clips"]:
-        raise RuntimeError("[Neron] Сэмплер: на сетке нет ни одного блока / no blocks on the grid")
+        # поле пустое — один такт тишины (Пульт не падает, просто ничего не слышно)
+        return np.zeros((int(round(4 * spb * SAMPLE_RATE)), 2), dtype=np.float32)
     waves = {}
     end = 0.0
     for c in sp["clips"]:

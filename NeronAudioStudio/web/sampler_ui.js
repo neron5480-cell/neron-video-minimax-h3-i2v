@@ -1,25 +1,29 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { makeUserSized } from "./neron_common.js";
+import { makeUserSized, peakOf, meterStep, drawMeter, meterTap } from "./neron_common.js";
 
 // ============================================================================
 //  Neron Sampler / Сэмплер
-//  RU: Между «Звук ×8» и Пультом. Вид как у Piano Roll: слева дорожки, справа
-//      сетка по тактам, каждый звук — блок. Блоки двигают, копируют, обрезают,
-//      кладут друг на друга. ⏭ ПРОПУСТИТЬ — сэмплер не работает, все звуки идут
-//      в Пульт как есть. Выключено — Пульт видит только результат сэмплера.
-//  EN: Between "Sound ×8" and the Pult. Looks like the Piano Roll: tracks on the
-//      left, a bar grid on the right, every sound is a block. ⏭ BYPASS — the
-//      sampler does nothing; off — the Pult sees only the sampler result.
+//  RU: Между «Звук ×8» и Пультом. Две части:
+//      ИСТОЧНИКИ — каждый звук целиком; мышкой выделяете кусок «откуда — докуда».
+//      ПОЛЕ — сетка по тактам, 4 слоя; выделенный кусок становится кирпичиком
+//      (кнопка ➜ В ПОЛЕ или просто перетащить вниз). Кирпичики двигают, копируют,
+//      обрезают. Пульт слышит только поле. ⏭ ПРОПУСТИТЬ — все звуки идут в Пульт как есть.
+//  EN: Between "Sound ×8" and the Pult. SOURCES — every sound in full; select a piece
+//      with the mouse. FIELD — a bar grid with 4 layers; a selected piece becomes a brick
+//      (➜ TO FIELD or drag it down). The Pult hears only the field. ⏭ BYPASS — all
+//      sounds go to the Pult as they are.
 // ============================================================================
 
 const NODE = "NeronSampler";
-const LANES = 8;
+const MAX_SRC = 8, LAYERS = 4, MAX_BRICKS = 128;
 const COLORS = ["#ff9f43", "#54a0ff", "#1dd1a1", "#ff6b81", "#feca57", "#a29bfe", "#48dbfb", "#ee5253"];
+const LCOLORS = ["#ffd166", "#4dabf7", "#69db7c", "#f783ac"];
 const SNAPS = [["bar", 4], ["1/2", 2], ["1/4", 1], ["1/8", 0.5], ["1/16", 0.25], ["off", 0]];
-const HEAD_W = 172, RULER_H = 20, PEAK_BLOCK = 256;
+const SRC_H = 36, HEAD_W = 190, RULER_H = 20, PEAK_BLOCK = 256, HANDLE = 10;
 const T = (ru, en) => `${ru} / ${en}`;
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const fmt = (t) => { t = Math.max(0, t || 0); const m = Math.floor(t / 60); return `${m}:${(t - m * 60).toFixed(2).padStart(5, "0")}`; };
 
 function el(tag, cls, text) {
     const e = document.createElement(tag);
@@ -36,45 +40,64 @@ function getCtx() {
     }
     return window.__neronAudioCtx;
 }
+// координаты мыши внутри холста с учётом зума схемы ComfyUI (иначе клик «мимо»)
+function pt(e, cv) {
+    const r = cv.getBoundingClientRect();
+    const kx = cv.clientWidth / (r.width || 1), ky = cv.clientHeight / (r.height || 1);
+    return { x: (e.clientX - r.left) * kx, y: (e.clientY - r.top) * ky, inside: e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom };
+}
 
 function injectStyles() {
-    if (document.getElementById("neron-sampler-styles")) return;
+    if (document.getElementById("neron-sampler-styles2")) return;
     const s = document.createElement("style");
-    s.id = "neron-sampler-styles";
+    s.id = "neron-sampler-styles2";
     s.textContent = `
 .nsp-outer{box-sizing:border-box;width:100%;padding-bottom:10px}
 .nsp-root{box-sizing:border-box;width:100%;height:100%;padding:8px 10px;background:#1b1d23;border-radius:8px;font-family:"Segoe UI",Arial,sans-serif;
-  color:#cfd2d8;user-select:none;display:flex;flex-direction:column;gap:6px;overflow:hidden;position:relative}
+  color:#cfd2d8;user-select:none;display:flex;flex-direction:column;gap:5px;overflow:hidden;position:relative}
 .nsp-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;flex:none}
 .nsp-btn{height:24px;padding:0 10px;border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;background:#4a4e5a;
   white-space:nowrap;line-height:24px;flex:none;font-family:inherit}
 .nsp-btn:hover{filter:brightness(1.18)}
+.nsp-btn:disabled{opacity:.4;cursor:default;filter:none}
 .nsp-btn.sm{height:20px;line-height:20px;padding:0 7px;font-size:10px}
 .nsp-byp{background:#3a3e48;color:#cfd2d8}
 .nsp-byp.on{background:#d9a72b;color:#1b1d23}
 .nsp-g{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#8b90a0;letter-spacing:.4px}
-.nsp-g input[type=range]{width:90px;height:12px;margin:0;cursor:pointer;accent-color:#ff9f43}
+.nsp-g input[type=range]{width:80px;height:12px;margin:0;cursor:pointer;accent-color:#ff9f43}
 .nsp-num{width:42px;height:20px;box-sizing:border-box;background:#23252b;color:#e6e8ee;border:1px solid #33363e;border-radius:4px;font-size:11px;text-align:center;outline:none}
 .nsp-sel{height:20px;box-sizing:border-box;background:#23252b;color:#cfd2d8;border:1px solid #33363e;border-radius:4px;font-size:10px;outline:none}
 .nsp-status{flex:1;min-width:100px;font-size:10px;color:#8b90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
 .nsp-status.err{color:#ff8a80}
-.nsp-main{flex:1;min-height:0;display:flex;position:relative;background:#15171c;border-radius:6px;overflow:hidden}
+.nsp-mm{width:120px;height:14px;flex:none;background:#101216;border-radius:3px}
+.nsp-cap{flex:none;font-size:10px;font-weight:700;color:#8b90a0;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+.nsp-cap i{font-style:normal;font-weight:400;color:#6b7080}
+.nsp-srcs{flex:none;display:flex;flex-direction:column;gap:3px}
+.nsp-src{display:flex;align-items:center;gap:6px;height:${SRC_H}px;background:#20232a;border-radius:6px;padding:0 6px;box-sizing:border-box}
+.nsp-sname{width:${HEAD_W - 70}px;flex:none;display:flex;flex-direction:column;justify-content:center;min-width:0}
+.nsp-sname b{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nsp-sname span{font-size:9px;color:#8b90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nsp-meter{width:12px;height:${SRC_H - 8}px;flex:none;background:#101216;border-radius:3px}
+.nsp-wave{flex:1;min-width:60px;height:${SRC_H - 6}px;background:#15171c;border-radius:4px;cursor:text;display:block}
+.nsp-field{flex:1;min-height:90px;display:flex;background:#15171c;border-radius:6px;overflow:hidden;position:relative}
 .nsp-heads{flex:none;width:${HEAD_W}px;display:flex;flex-direction:column;background:#20232a}
 .nsp-hcorner{flex:none;height:${RULER_H}px;border-bottom:1px solid #2a2d35;font-size:9px;color:#6b7080;display:flex;align-items:center;padding:0 6px}
-.nsp-head{flex:1;min-height:0;box-sizing:border-box;border-bottom:1px solid #2a2d35;display:flex;align-items:center;gap:4px;padding:0 5px;overflow:hidden}
+.nsp-head{flex:1;min-height:0;box-sizing:border-box;border-bottom:1px solid #2a2d35;display:flex;align-items:center;gap:4px;padding:0 5px;overflow:hidden;cursor:pointer}
+.nsp-head.cur{background:#272b34;box-shadow:inset 3px 0 0 var(--c)}
 .nsp-head b{flex:1;min-width:0;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nsp-head input[type=range]{width:46px;height:12px;margin:0;cursor:pointer}
+.nsp-head input[type=range]{width:44px;height:12px;margin:0;cursor:pointer}
 .nsp-ms{width:19px;height:18px;padding:0;border:none;border-radius:4px;background:#363a44;color:#9aa0ae;font-size:10px;font-weight:700;cursor:pointer;flex:none}
 .nsp-ms.on-m{background:#b3414a;color:#fff}
 .nsp-ms.on-s{background:#d9a72b;color:#1b1d23}
 .nsp-grid{flex:1;min-width:0;position:relative}
 .nsp-grid canvas{position:absolute;left:0;top:0}
 .nsp-hs{flex:none;width:100%;height:10px;margin:0;accent-color:#6b7080}
-.nsp-selp{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;min-height:24px;font-size:10px;color:#9aa0ae}
+.nsp-selp{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;min-height:22px;font-size:10px;color:#9aa0ae}
 .nsp-selp b{color:#e6e8ee;font-size:11px}
 .nsp-selp input[type=range]{width:90px;height:12px;margin:0;cursor:pointer;accent-color:#ffd166}
-.nsp-byover{position:absolute;inset:0;background:rgba(21,23,28,.78);display:none;align-items:center;justify-content:center;text-align:center;
+.nsp-byover{position:absolute;inset:0;background:rgba(21,23,28,.8);display:none;align-items:center;justify-content:center;text-align:center;
   font-size:12px;font-weight:700;color:#d9a72b;padding:12px;line-height:1.6;z-index:3}
+.nsp-empty{font-size:11px;color:#6b7080;padding:6px 8px;background:#20232a;border-radius:6px}
 `;
     document.head.appendChild(s);
 }
@@ -83,60 +106,69 @@ const HELP = `NERON SAMPLER
 ===================================================
 Sits between "Sound ×8" and the Pult (Neron Mixer).
 
-⏭ BYPASS (on) — the sampler does nothing: every sound goes to the Pult as it is,
-  each one its own channel.
-⏭ BYPASS (off) — the sampler works: the Pult sees only its result, one channel.
+⏭ BYPASS (on) — the sampler does nothing: every sound goes to the Pult as it is.
+⏭ BYPASS (off) — the Pult hears only the FIELD (one channel).
 
-THE GRID (like the Piano Roll)
-  • Left: tracks. Right: bars and beats. Every sound is a block.
-  • A new sound appears on its own track at the start by itself.
-  • Drag a block to move it (also to another track — stack sounds).
-  • Drag its edges to trim. Small squares at the top corners — fade in / out.
-  • Double click an empty place — put the sound of that track there.
-  • GRID — blocks snap to bars / beats. BPM — the tempo (the Pult syncs it).
-  • Track: M (mute), S (solo), volume.
-  • Bottom panel: block volume, fades, ✂ split, ⧉ copy, 🗑 delete.
+SOURCES (top) — every sound in full
+  • Drag the mouse along a waveform — select a piece "from — to".
+  • Double click — select the whole sound. A click without dragging — clear.
+  • ▶ in the row — listen to the piece (or the whole sound).
+  • ➜ — put the piece into the FIELD, right after the last brick of the
+    current layer. Or just drag the selected piece down into the field.
 
-KEYS (click the grid first)
-  Space — play/stop · S — split at the cursor · Delete — delete
+FIELD (bottom) — the result, a bar grid with 4 layers
+  • Bricks: drag to move (also to another layer), drag edges to trim,
+    white squares at the top corners — fade in / fade out.
+  • Click a layer name — new bricks go to that layer.
+  • GRID — bricks snap to bars / beats. BPM — tempo (the Pult syncs it).
+  • Layer: M, S, volume, level meter. Top right — overall level.
+  • Bottom panel: brick volume, fades, ✂ split, ⧉ copy, 🗑 delete.
+
+MOUSE AND KEYS
+  Wheel — zoom in / out · Shift+wheel or the bar below — scroll · ⤢ — fit all
+  Space — play / stop · S — split at the cursor · Delete — delete
   Ctrl+D — copy right after · Ctrl+Z / Ctrl+Y — undo / redo
-  Wheel — scroll · Ctrl+wheel — zoom
+  Everything works while playing too.
 
-The result loops in whole bars, so it repeats evenly in the Pult.
+The field plays in whole bars, so it loops evenly in the Pult.
 
 ===================================================
 🇷🇺 РУССКИЙ
 ===================================================
 Стоит между «Звук ×8» и Пультом (Neron Mixer).
 
-⏭ ПРОПУСТИТЬ (нажата) — сэмплер не работает: все звуки идут в Пульт как есть,
-  каждый своим каналом.
-⏭ ПРОПУСТИТЬ (отжата) — сэмплер работает: Пульт видит только его результат,
-  одним каналом.
+⏭ ПРОПУСТИТЬ (нажата) — сэмплер не работает: все звуки идут в Пульт как есть.
+⏭ ПРОПУСТИТЬ (отжата) — Пульт слышит только ПОЛЕ (одним каналом).
 
-СЕТКА (как у Piano Roll)
-  • Слева дорожки, справа такты и доли. Каждый звук — блок.
-  • Новый звук сам появляется на своей дорожке в начале.
-  • Тяните блок — двигается (и на другую дорожку: звуки можно класть друг на друга).
-  • Тяните края — обрезка. Квадратики в верхних углах — появление и затухание.
-  • Двойной клик по пустому месту — поставить туда звук этой дорожки.
-  • СЕТКА — блоки прилипают к тактам и долям. BPM — темп (Пульт синхронизирует сам).
-  • У дорожки: M (выключить), S (только она), громкость.
-  • Панель внизу: громкость блока, появление, затухание, ✂ разрезать, ⧉ копия, 🗑 удалить.
+ИСТОЧНИКИ (вверху) — каждый звук целиком
+  • Ведите мышкой по волне — выделяется кусок «откуда — докуда».
+  • Двойной клик — выделить весь звук. Просто клик — снять выделение.
+  • ▶ в строке — послушать кусок (или весь звук).
+  • ➜ — положить кусок в ПОЛЕ, сразу за последним кирпичиком текущего слоя.
+    Или просто перетащите выделенный кусок вниз, в поле.
 
-КЛАВИШИ (сначала щёлкните по сетке)
-  Пробел — играть/стоп · S — разрезать по курсору · Delete — удалить
+ПОЛЕ (внизу) — результат, сетка по тактам, 4 слоя
+  • Кирпичики: тяните — двигаются (и на другой слой), края — обрезка,
+    белые квадратики в верхних углах — появление и затухание.
+  • Клик по имени слоя — новые кирпичики пойдут в этот слой.
+  • СЕТКА — кирпичики прилипают к тактам и долям. BPM — темп (Пульт подстраивает сам).
+  • У слоя: M, S, громкость, индикатор уровня. Справа вверху — общий уровень.
+  • Панель внизу: громкость кирпичика, появление, затухание, ✂ разрезать, ⧉ копия, 🗑 удалить.
+
+МЫШЬ И КЛАВИШИ
+  Колёсико — приблизить / отдалить · Shift+колёсико или полоса внизу — прокрутка · ⤢ — показать всё
+  Пробел — играть / стоп · S — разрезать по курсору · Delete — удалить
   Ctrl+D — копия сразу после · Ctrl+Z / Ctrl+Y — отмена / повтор
-  Колёсико — прокрутка · Ctrl+колёсико — масштаб
+  Всё работает и во время игры.
 
-Результат идёт целыми тактами, поэтому в Пульте повторяется ровно.
+Поле играет целыми тактами, поэтому в Пульте повторяется ровно.
 `;
 
 function showHelp() {
     const overlay = el("div");
     overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:center;justify-content:center;";
     const box = el("div");
-    box.style.cssText = "background:#1a1a1a;color:#e0e0e0;border:1px solid #444;border-radius:8px;padding:20px;max-width:800px;max-height:85vh;" +
+    box.style.cssText = "background:#1a1a1a;color:#e0e0e0;border:1px solid #444;border-radius:8px;padding:20px;max-width:820px;max-height:85vh;" +
         "overflow-y:auto;font:13px/1.5 monospace;white-space:pre-wrap;box-shadow:0 8px 32px rgba(0,0,0,0.8);";
     box.textContent = HELP;
     const btn = el("button", "", "Close / Закрыть");
@@ -149,7 +181,7 @@ function showHelp() {
 }
 
 // ---------- звук источников: общий кеш на страницу ----------
-const bufCache = new Map();     // key -> {state, buf, peaks, p}
+const bufCache = new Map();
 function computePeaks(buf) {
     const L = buf.getChannelData(0), R = buf.numberOfChannels > 1 ? buf.getChannelData(1) : L;
     const n = Math.ceil(buf.length / PEAK_BLOCK);
@@ -163,7 +195,7 @@ function computePeaks(buf) {
     }
     return out;
 }
-function soundSpec(s) { return { type: "file", name: s.name, subfolder: s.subfolder || "", kind: s.type || "input", start: s.start || 0, end: s.end || 0 }; }
+const soundSpec = (s) => ({ type: "file", name: s.name, subfolder: s.subfolder || "", kind: s.type || "input", start: s.start || 0, end: s.end || 0 });
 function loadSound(s) {
     const key = JSON.stringify(soundSpec(s));
     let e = bufCache.get(key);
@@ -185,8 +217,8 @@ function loadSound(s) {
 }
 
 function blank() {
-    return { version: 1, bypass: true, snap: "1/4", master: 1.0, zoom: 36,
-        lanes: Array.from({ length: LANES }, () => ({ vol: 0.8, pan: 0, mute: false, solo: false })), clips: [], known: [] };
+    return { version: 2, bypass: true, snap: "1/4", master: 1.0, zoom: 30, cur: 0,
+        layers: Array.from({ length: LAYERS }, () => ({ vol: 0.8, pan: 0, mute: false, solo: false })), bricks: [], sel: {} };
 }
 function normalize(o) {
     const S = blank();
@@ -194,18 +226,19 @@ function normalize(o) {
     S.bypass = o.bypass !== false;
     if (SNAPS.some(([k]) => k === o.snap)) S.snap = o.snap;
     if (typeof o.master === "number") S.master = clamp(o.master, 0, 1.5);
-    if (typeof o.zoom === "number") S.zoom = clamp(o.zoom, 8, 200);
-    (Array.isArray(o.lanes) ? o.lanes : []).slice(0, LANES).forEach((l, i) => {
+    if (typeof o.zoom === "number") S.zoom = clamp(o.zoom, 4, 240);
+    S.cur = clamp(Math.round(Number(o.cur) || 0), 0, LAYERS - 1);
+    (Array.isArray(o.layers) ? o.layers : []).slice(0, LAYERS).forEach((l, i) => {
         if (!l) return;
-        S.lanes[i] = { vol: typeof l.vol === "number" ? clamp(l.vol, 0, 1.5) : 0.8, pan: typeof l.pan === "number" ? clamp(l.pan, -1, 1) : 0, mute: !!l.mute, solo: !!l.solo };
+        S.layers[i] = { vol: typeof l.vol === "number" ? clamp(l.vol, 0, 1.5) : 0.8, pan: typeof l.pan === "number" ? clamp(l.pan, -1, 1) : 0, mute: !!l.mute, solo: !!l.solo };
     });
-    for (const c of (Array.isArray(o.clips) ? o.clips : []).slice(0, 128)) {
+    for (const c of (Array.isArray(o.bricks) ? o.bricks : []).slice(0, MAX_BRICKS)) {
         if (!c) continue;
-        S.clips.push({ id: c.id || uid(), src: clamp(Math.round(Number(c.src) || 0), 0, LANES - 1), lane: clamp(Math.round(Number(c.lane) || 0), 0, LANES - 1),
+        S.bricks.push({ id: c.id || uid(), src: clamp(Math.round(Number(c.src) || 0), 0, MAX_SRC - 1), layer: clamp(Math.round(Number(c.layer) || 0), 0, LAYERS - 1),
             beat: Math.max(0, Number(c.beat) || 0), in: Math.max(0, Number(c.in) || 0), len: Math.max(0.02, Number(c.len) || 1),
-            gain: typeof c.gain === "number" ? clamp(c.gain, 0, 2) : 1, fin: Math.max(0, Number(c.fin) || 0), fout: Math.max(0, Number(c.fout) || 0), autoLen: !!c.autoLen });
+            gain: typeof c.gain === "number" ? clamp(c.gain, 0, 2) : 1, fin: Math.max(0, Number(c.fin) || 0), fout: Math.max(0, Number(c.fout) || 0) });
     }
-    S.known = Array.isArray(o.known) ? o.known.slice(0, LANES).map(String) : [];
+    if (o.sel && typeof o.sel === "object") for (const [k, v] of Object.entries(o.sel)) if (v && v.b > v.a) S.sel[k] = { a: Number(v.a), b: Number(v.b) };
     return S;
 }
 
@@ -216,8 +249,8 @@ function setupSampler(node) {
     for (const w of [wJson, wBpm]) if (w) { w.type = "hidden"; w.hidden = true; w.computeSize = () => [0, -4]; }
 
     let S = blank();
-    let items = [];          // звуки, пришедшие по проводу из «Звук ×8»
-    let sel = null;          // id выделенного блока
+    let items = [];
+    let selB = null;                 // выделенный кирпичик
     const undoS = [], redoS = [];
     let disposed = false;
     const bpm = () => clamp(Math.round(Number(wBpm ? wBpm.value : 90) || 90), 40, 300);
@@ -236,8 +269,8 @@ function setupSampler(node) {
         }, 120);
     };
     const pushUndo = () => { undoS.push(JSON.stringify(S)); if (undoS.length > 60) undoS.shift(); redoS.length = 0; };
-    const undo = () => { if (!undoS.length) return; redoS.push(JSON.stringify(S)); S = normalize(JSON.parse(undoS.pop())); changed(true); };
-    const redo = () => { if (!redoS.length) return; undoS.push(JSON.stringify(S)); S = normalize(JSON.parse(redoS.pop())); changed(true); };
+    const undo = () => { if (!undoS.length) return; redoS.push(JSON.stringify(S)); S = normalize(JSON.parse(undoS.pop())); changed(); };
+    const redo = () => { if (!redoS.length) return; undoS.push(JSON.stringify(S)); S = normalize(JSON.parse(redoS.pop())); changed(); };
 
     // ---------- что пришло по проводу ----------
     function getLink(id) { const g = node.graph; if (!g || !g.links) return null; return g.links instanceof Map ? g.links.get(id) : g.links[id]; }
@@ -251,14 +284,13 @@ function setupSampler(node) {
             const o = node.graph.getNodeById(l.origin_id);
             if (!o) return [];
             if (o.type === "Reroute") { const i0 = o.inputs && o.inputs[0]; if (i0 && i0.link != null) { id = i0.link; continue; } return []; }
-            if (typeof o.neronCube === "function") { const c = o.neronCube(); return c && c.kind === "sounds" && !c.spec ? c.items.slice(0, LANES) : []; }
+            if (typeof o.neronCube === "function") { const c = o.neronCube(); return c && c.kind === "sounds" && !c.spec ? c.items.slice(0, MAX_SRC) : []; }
             return [];
         }
         return [];
     }
     const keyOf = (s) => (s ? JSON.stringify(soundSpec(s)) : "");
 
-    // Пульт читает сэмплер отсюда (без Queue)
     node.neronCube = () => ({
         kind: "sounds", bypass: S.bypass, items: items.map((x) => ({ ...x })),
         spec: S.bypass ? null : { type: "sampler", json: JSON.stringify(S), sounds: items.map((x) => ({ ...x })), bpm: bpm() },
@@ -269,51 +301,55 @@ function setupSampler(node) {
     const outer = el("div", "nsp-outer");
     const root = el("div", "nsp-root");
     outer.appendChild(root);
-    const bar = el("div", "nsp-bar");
     const mk = (t, c, title, cls) => { const b = el("button", "nsp-btn" + (cls ? " " + cls : ""), t); if (c) b.style.background = c; if (title) b.title = title; return b; };
-    const byp = mk("⏭ " + T("ПРОПУСТИТЬ", "BYPASS"), null, T("Нажата — сэмплер не работает, все звуки идут в Пульт как есть. Отжата — Пульт слышит только сэмплер.",
-        "On — the sampler does nothing, all sounds go to the Pult as they are. Off — the Pult hears only the sampler."), "nsp-byp");
-    const playB = mk("▶", "#3fa34d", T("Играть по кругу (Пробел)", "Play in a loop (Space)"));
+
+    const bar = el("div", "nsp-bar");
+    const byp = mk("⏭ " + T("ПРОПУСТИТЬ", "BYPASS"), null, T("Нажата — все звуки идут в Пульт как есть. Отжата — Пульт слышит только ПОЛЕ.",
+        "On — all sounds go to the Pult as they are. Off — the Pult hears only the FIELD."), "nsp-byp");
+    const playB = mk("▶", "#3fa34d", T("Играть поле по кругу (Пробел)", "Play the field in a loop (Space)"));
     const stopB = mk("■", "#b3414a", T("Стоп", "Stop"));
     const gB = el("div", "nsp-g");
     gB.appendChild(document.createTextNode("BPM"));
     const bpmR = el("input"); bpmR.type = "range"; bpmR.min = "40"; bpmR.max = "300"; bpmR.step = "1";
     const bpmN = el("input", "nsp-num"); bpmN.type = "text";
     gB.appendChild(bpmR); gB.appendChild(bpmN);
-    gB.title = T("Темп сетки. Пульт подстраивает его сам (СИНХР.)", "Grid tempo. The Pult syncs it (SYNC)");
+    gB.title = T("Темп поля. Пульт подстраивает его сам (СИНХР.)", "Field tempo. The Pult syncs it (SYNC)");
     const gS = el("div", "nsp-g");
     gS.appendChild(document.createTextNode(T("СЕТКА", "GRID")));
     const snapSel = el("select", "nsp-sel");
-    for (const [k] of SNAPS) {
-        const o = el("option", "", k === "bar" ? T("такт", "bar") : k === "off" ? T("без сетки", "free") : k);
-        o.value = k;
-        snapSel.appendChild(o);
-    }
+    for (const [k] of SNAPS) { const o = el("option", "", k === "bar" ? T("такт", "bar") : k === "off" ? T("без сетки", "free") : k); o.value = k; snapSel.appendChild(o); }
     gS.appendChild(snapSel);
-    gS.title = T("К чему прилипают блоки", "What blocks snap to");
-    const gZ = el("div", "nsp-g");
-    gZ.appendChild(document.createTextNode(T("ЗУМ", "ZOOM")));
-    const zoomR = el("input"); zoomR.type = "range"; zoomR.min = "8"; zoomR.max = "200"; zoomR.step = "1";
-    gZ.appendChild(zoomR);
-    gZ.title = T("Масштаб (Ctrl+колёсико)", "Zoom (Ctrl+wheel)");
+    const fitB = mk("⤢", null, T("Показать всё поле", "Fit the whole field"), "sm");
     const status = el("div", "nsp-status", "");
+    const mMeter = el("canvas", "nsp-mm");
+    mMeter.title = T("Общий уровень L/R. Красное — перегруз", "Overall level L/R. Red — clipping");
     const helpB = mk("📖", null, T("Справка", "Help"), "sm");
-    [byp, playB, stopB, gB, gS, gZ, status, helpB].forEach((x) => bar.appendChild(x));
+    [byp, playB, stopB, gB, gS, fitB, status, mMeter, helpB].forEach((x) => bar.appendChild(x));
     root.appendChild(bar);
 
-    const main = el("div", "nsp-main");
+    const cap1 = el("div", "nsp-cap");
+    cap1.appendChild(document.createTextNode("① " + T("ИСТОЧНИКИ", "SOURCES")));
+    cap1.appendChild(el("i", "", T("ведите мышкой по волне — выделится кусок; ➜ или перетащите его вниз", "drag along a wave to select a piece; ➜ or drag it down")));
+    root.appendChild(cap1);
+    const srcBox = el("div", "nsp-srcs");
+    root.appendChild(srcBox);
+    const cap2 = el("div", "nsp-cap");
+    cap2.appendChild(document.createTextNode("② " + T("ПОЛЕ", "FIELD")));
+    cap2.appendChild(el("i", "", T("результат — его слышит Пульт", "the result — the Pult hears it")));
+    root.appendChild(cap2);
+    const field = el("div", "nsp-field");
     const heads = el("div", "nsp-heads");
     const grid = el("div", "nsp-grid");
     const cv = el("canvas"), ov = el("canvas");
     ov.style.pointerEvents = "none";
     grid.appendChild(cv); grid.appendChild(ov);
-    const byOver = el("div", "nsp-byover", T("⏭ ПРОПУСТИТЬ включена: все звуки идут в Пульт как есть, каждый своим каналом. Отожмите, чтобы собрать их здесь.",
-        "⏭ BYPASS is on: all sounds go to the Pult as they are, each its own channel. Turn it off to arrange them here."));
-    main.appendChild(heads); main.appendChild(grid); main.appendChild(byOver);
-    root.appendChild(main);
+    const byOver = el("div", "nsp-byover", T("⏭ ПРОПУСТИТЬ включена: все звуки идут в Пульт как есть, каждый своим каналом. Отожмите, чтобы собрать поле.",
+        "⏭ BYPASS is on: all sounds go to the Pult as they are. Turn it off to build the field."));
+    field.appendChild(heads); field.appendChild(grid); field.appendChild(byOver);
+    root.appendChild(field);
     const hs = el("input", "nsp-hs");
     hs.type = "range"; hs.min = "0"; hs.max = "1000"; hs.value = "0";
-    hs.title = T("Прокрутка", "Scroll");
+    hs.title = T("Прокрутка (Shift+колёсико)", "Scroll (Shift+wheel)");
     root.appendChild(hs);
     const selp = el("div", "nsp-selp");
     root.appendChild(selp);
@@ -322,227 +358,72 @@ function setupSampler(node) {
     keys.readOnly = true; keys.tabIndex = -1;
     keys.style.cssText = "position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";
     root.appendChild(keys);
+    const refocus = () => setTimeout(() => { if (!disposed) keys.focus({ preventScroll: true }); }, 0);
 
     function setStatus(t, err) { status.textContent = t || ""; status.title = t || ""; status.className = "nsp-status" + (err ? " err" : ""); }
 
-    // ---------- геометрия ----------
-    const view = { sx: 0 };
-    let lanesN = 1;
-    const laneH = () => Math.max(16, (grid.clientHeight - RULER_H) / lanesN);
-    const pxb = () => S.zoom;                             // пикселей на долю
-    const xAt = (beat) => beat * pxb() - view.sx;
-    const beatAt = (x) => (x + view.sx) / pxb();
-    const lenBeats = (c) => c.len / spb();
-    function patternBeats() {
-        let e = 0;
-        for (const c of S.clips) e = Math.max(e, c.beat + lenBeats(c));
-        return Math.max(4, Math.ceil(e / 4 - 1e-6) * 4);
-    }
-    const viewBeats = () => Math.max(patternBeats() + 4, 32);
-    const snapB = (b) => { const s = snapBeats(); return s > 0 ? Math.round(b / s) * s : b; };
-    // дорожек столько, сколько звуков (и занятых строк) + одна пустая — чтобы было куда сложить звуки
-    function computeLanes() {
-        let n = Math.max(1, items.length);
-        for (const c of S.clips) n = Math.max(n, c.lane + 1);
-        lanesN = clamp(n + 1, 1, LANES);
-    }
-
-    // ---------- заголовки дорожек ----------
-    function buildHeads() {
-        computeLanes();
-        heads.innerHTML = "";
-        heads.appendChild(el("div", "nsp-hcorner", T("дорожки", "tracks")));
-        for (let i = 0; i < lanesN; i++) {
-            const l = S.lanes[i];
-            const h = el("div", "nsp-head");
-            const n = el("b", "", `${i + 1}. ${items[i] ? items[i].name : "—"}`);
-            n.style.color = COLORS[i];
-            n.title = items[i] ? items[i].name : T("пусто — двойной клик по сетке ставит выделенный звук", "empty — double click puts the selected sound");
-            const m = el("button", "nsp-ms" + (l.mute ? " on-m" : ""), "M");
-            m.title = T("Выключить дорожку", "Mute");
-            const s = el("button", "nsp-ms" + (l.solo ? " on-s" : ""), "S");
-            s.title = T("Только эта дорожка", "Solo");
-            const v = el("input");
-            v.type = "range"; v.min = "0"; v.max = "1.2"; v.step = "0.01"; v.value = String(l.vol);
-            v.style.accentColor = COLORS[i];
-            v.title = T("Громкость дорожки (двойной клик — сброс)", "Track volume (double click — reset)");
-            m.addEventListener("click", () => { l.mute = !l.mute; m.classList.toggle("on-m", l.mute); mix(); save(); });
-            s.addEventListener("click", () => { l.solo = !l.solo; s.classList.toggle("on-s", l.solo); mix(); save(); });
-            v.addEventListener("input", () => { l.vol = parseFloat(v.value); mix(); save(); });
-            v.addEventListener("dblclick", () => { v.value = "0.8"; l.vol = 0.8; mix(); save(); });
-            [n, m, s, v].forEach((x) => h.appendChild(x));
-            heads.appendChild(h);
-        }
-    }
-
-    // ---------- рисование ----------
-    let pending = false;
-    function draw() { if (pending) return; pending = true; requestAnimationFrame(() => { pending = false; if (!disposed) drawNow(); }); }
-    function size(c, w, h) {
-        const d = window.devicePixelRatio || 1;
-        if (c.width !== Math.round(w * d) || c.height !== Math.round(h * d)) { c.width = Math.round(w * d); c.height = Math.round(h * d); }
-        c.style.width = w + "px"; c.style.height = h + "px";
-        const g = c.getContext("2d"); g.setTransform(d, 0, 0, d, 0, 0); return g;
-    }
-    function drawNow() {
-        const W = grid.clientWidth, H = grid.clientHeight;
-        if (W < 10 || H < 10) return;
-        computeLanes();
-        if (heads.childElementCount !== lanesN + 1) buildHeads();
-        const maxSx = Math.max(0, viewBeats() * pxb() - W);
-        view.sx = clamp(view.sx, 0, maxSx);
-        hs.style.display = maxSx > 1 ? "" : "none";
-        hs.value = String(maxSx ? Math.round((view.sx / maxSx) * 1000) : 0);
-        const g = size(cv, W, H);
-        size(ov, W, H);
-        g.fillStyle = "#15171c"; g.fillRect(0, 0, W, H);
-        const lh = laneH();
-        for (let i = 0; i < lanesN; i++) {
-            g.fillStyle = i % 2 ? "#1a1c22" : "#17191e";
-            g.fillRect(0, RULER_H + i * lh, W, lh);
-        }
-        // сетка: такты, доли, мелкие деления
-        const b0 = Math.floor(beatAt(0)), b1 = Math.ceil(beatAt(W));
-        const sb = snapBeats();
-        if (sb > 0 && sb < 1 && pxb() * sb >= 6) {
-            g.fillStyle = "rgba(255,255,255,0.03)";
-            for (let b = Math.floor(beatAt(0) / sb) * sb; b <= b1; b += sb) g.fillRect(Math.round(xAt(b)), RULER_H, 1, H);
-        }
-        for (let b = b0; b <= b1; b++) {
-            const x = Math.round(xAt(b));
-            g.fillStyle = b % 4 === 0 ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.06)";
-            g.fillRect(x, RULER_H, 1, H);
-        }
-        // длина результата
-        const pb = patternBeats();
-        g.fillStyle = "rgba(255,209,102,0.06)";
-        g.fillRect(xAt(pb), RULER_H, W, H);
-        g.fillStyle = "#ffd166"; g.fillRect(Math.round(xAt(pb)), RULER_H, 2, H);
-        // линейка
-        g.fillStyle = "#1f2229"; g.fillRect(0, 0, W, RULER_H);
-        g.font = "10px Segoe UI, Arial"; g.textBaseline = "middle";
-        for (let b = Math.floor(b0 / 4) * 4; b <= b1; b += 4) {
-            const x = Math.round(xAt(b));
-            g.fillStyle = "#8b90a0"; g.fillRect(x, 10, 1, RULER_H - 10);
-            g.fillText(String(b / 4 + 1), x + 3, RULER_H / 2);
-        }
-        // блоки
-        for (const c of S.clips) {
-            if (c.lane >= lanesN) continue;
-            const x0 = xAt(c.beat), x1 = xAt(c.beat + lenBeats(c));
-            if (x1 < 0 || x0 > W) continue;
-            const y = RULER_H + c.lane * lh + 2, h = lh - 4;
-            const col = COLORS[c.src % COLORS.length];
-            const lane = S.lanes[c.lane];
-            const solo = S.lanes.some((l) => l.solo);
-            const on = !lane.mute && (!solo || lane.solo);
-            g.fillStyle = on ? "#2a2f3a" : "#22252c";
-            g.fillRect(x0, y, x1 - x0, h);
-            g.globalAlpha = on ? 1 : 0.35;
-            g.fillStyle = col;
-            g.fillRect(x0, y, x1 - x0, Math.min(12, h));
-            const snd = items[c.src];
-            const e = snd ? loadSound(snd) : null;
-            if (e && e.state === "ok") {
-                g.save(); g.beginPath(); g.rect(x0, y + 12, x1 - x0, h - 12); g.clip();
-                const mid = y + 12 + (h - 12) / 2, sr = e.buf.sampleRate;
-                for (let x = Math.max(0, Math.floor(x0)); x < Math.min(W, Math.ceil(x1)); x++) {
-                    const ta = c.in + ((x - x0) / pxb()) * spb(), tb = c.in + ((x + 1 - x0) / pxb()) * spb();
-                    let ia = Math.floor((ta * sr) / PEAK_BLOCK), ib = Math.max(ia + 1, Math.floor((tb * sr) / PEAK_BLOCK));
-                    if (ia >= e.peaks.length) break;
-                    let p = 0;
-                    for (let i = Math.max(0, ia); i < Math.min(ib, e.peaks.length); i++) if (e.peaks[i] > p) p = e.peaks[i];
-                    const hh = Math.max(1, p * (h - 12) * 0.9);
-                    g.fillRect(x, mid - hh / 2, 1, hh);
-                }
-                g.restore();
-            } else if (e && e.state === "loading") e.p.then(() => { fixAuto(); draw(); });
-            g.globalAlpha = 1;
-            g.fillStyle = "rgba(0,0,0,0.35)";
-            const fx = c.fin / spb() * pxb(), gx = c.fout / spb() * pxb();
-            if (c.fin > 0) { g.beginPath(); g.moveTo(x0, y + 12); g.lineTo(x0 + fx, y + 12); g.lineTo(x0, y + h); g.closePath(); g.fill(); }
-            if (c.fout > 0) { g.beginPath(); g.moveTo(x1, y + 12); g.lineTo(x1 - gx, y + 12); g.lineTo(x1, y + h); g.closePath(); g.fill(); }
-            const isSel = sel === c.id;
-            g.strokeStyle = isSel ? "#fff" : "rgba(0,0,0,.6)"; g.lineWidth = isSel ? 2 : 1;
-            g.strokeRect(x0 + 0.5, y + 0.5, x1 - x0 - 1, h - 1);
-            if (x1 - x0 > 22) { g.fillStyle = "#fff"; g.fillRect(x0 + fx - 3, y + 1, 6, 6); g.fillRect(x1 - gx - 3, y + 1, 6, 6); }
-            g.save(); g.beginPath(); g.rect(x0 + 8, y, Math.max(0, x1 - x0 - 16), 12); g.clip();
-            g.fillStyle = "#111"; g.font = "bold 9px Segoe UI, Arial"; g.textBaseline = "top";
-            g.fillText((snd ? snd.name : T("нет звука", "no sound")) + (Math.abs(c.gain - 1) > 0.005 ? `  ${Math.round(c.gain * 100)}%` : ""), Math.max(x0, 0) + 8, y + 1);
-            g.restore();
-        }
-        drawHead();
-    }
-    function drawHead(t) {
-        const W = grid.clientWidth, H = grid.clientHeight;
-        const g = ov.getContext("2d");
-        const d = window.devicePixelRatio || 1;
-        g.setTransform(d, 0, 0, d, 0, 0);
-        g.clearRect(0, 0, W, H);
-        const b = (t === undefined ? curPos() : t) / spb();
-        const x = Math.round(xAt(b));
-        if (x >= -2 && x <= W + 2) { g.fillStyle = "#fff"; g.fillRect(x - 1, 0, 2, H); }
-    }
-
-    // ---------- проигрывание по кругу ----------
-    const P = { on: false, c0: 0, t0: 0, L: 0, next: 0, srcs: [], timer: null, raf: null, chains: new Map(), master: null };
-    let pos = 0;
+    // ---------- звук: слои поля, предпрослушивание источника, индикаторы ----------
+    const A = { master: null, mtap: null, layers: [], prev: null, ptap: null };
     function audio() {
         const ctx = getCtx();
         if (ctx.state === "suspended") ctx.resume().catch(() => {});
-        if (!P.master) { P.master = ctx.createGain(); P.master.connect(ctx.destination); }
+        if (!A.master) {
+            A.master = ctx.createGain();
+            A.master.connect(ctx.destination);
+            A.mtap = meterTap(ctx, A.master);
+            for (let i = 0; i < LAYERS; i++) {
+                const inp = ctx.createGain(); inp.channelCount = 2; inp.channelCountMode = "explicit";
+                const sp = ctx.createChannelSplitter(2), gl = ctx.createGain(), gr = ctx.createGain(), mg = ctx.createChannelMerger(2), vol = ctx.createGain();
+                inp.connect(sp); sp.connect(gl, 0); sp.connect(gr, 1); gl.connect(mg, 0, 0); gr.connect(mg, 0, 1); mg.connect(vol); vol.connect(A.master);
+                A.layers.push({ inp, gl, gr, vol, tap: meterTap(ctx, vol), mL: {}, mR: {} });
+            }
+            A.prev = ctx.createGain();
+            A.prev.connect(A.master);
+            A.ptap = meterTap(ctx, A.prev);
+        }
+        mix();
         return ctx;
     }
-    function chain(i) {
-        const ctx = audio();
-        let c = P.chains.get(i);
-        if (!c) {
-            const inp = ctx.createGain(); inp.channelCount = 2; inp.channelCountMode = "explicit";
-            const sp = ctx.createChannelSplitter(2), gl = ctx.createGain(), gr = ctx.createGain(), mg = ctx.createChannelMerger(2), vol = ctx.createGain();
-            inp.connect(sp); sp.connect(gl, 0); sp.connect(gr, 1); gl.connect(mg, 0, 0); gr.connect(mg, 0, 1); mg.connect(vol); vol.connect(P.master);
-            c = { inp, gl, gr, vol };
-            P.chains.set(i, c);
-        }
-        return c;
-    }
     function mix() {
-        if (!P.master) return;
+        if (!A.master) return;
         const ctx = getCtx();
-        P.master.gain.setTargetAtTime(S.master, ctx.currentTime, 0.01);
-        const solo = S.lanes.some((l) => l.solo);
-        S.lanes.forEach((l, i) => {
-            const c = P.chains.get(i); if (!c) return;
+        A.master.gain.setTargetAtTime(S.master, ctx.currentTime, 0.01);
+        const solo = S.layers.some((l) => l.solo);
+        S.layers.forEach((l, i) => {
+            const c = A.layers[i];
             c.vol.gain.setTargetAtTime(!l.mute && (!solo || l.solo) ? l.vol : 0, ctx.currentTime, 0.01);
             c.gl.gain.value = Math.min(1, 1 - l.pan); c.gr.gain.value = Math.min(1, 1 + l.pan);
         });
-        draw();
     }
+
+    // поле по кругу
+    const P = { on: false, c0: 0, t0: 0, L: 0, next: 0, srcs: [], timer: null, raf: null };
+    let pos = 0;
+    // предпрослушивание куска источника
+    const PV = { src: null, i: -1, c0: 0, a: 0, b: 0 };
     function piece(ctx, buf, c, cycleStart, from) {
-        // cycleStart — время движка, когда начинается этот круг; from — с какой секунды круга начинаем
-        const start = c.beat * spb(), len = c.len, end = start + len;
-        if (end <= from) return;
+        const start = c.beat * spb(), len = c.len;
+        if (start + len <= from) return;
         const skip = Math.max(0, from - start);
         const off = c.in + skip;
         if (off >= buf.duration) return;
         const dur = Math.min(len - skip, buf.duration - off);
-        const when = cycleStart + Math.max(start, from);
-        const cs = cycleStart + start;
+        const when = cycleStart + Math.max(start, from), cs = cycleStart + start;
         const env = (t) => { let v = 1; if (c.fin > 0 && t < c.fin) v = Math.min(v, t / c.fin); if (c.fout > 0 && t > len - c.fout) v = Math.min(v, (len - t) / c.fout); return Math.max(0, v) * c.gain; };
         const s = ctx.createBufferSource(); s.buffer = buf;
         const gn = ctx.createGain();
-        s.connect(gn); gn.connect(chain(c.lane).inp);
+        s.connect(gn); gn.connect(A.layers[c.layer].inp);
         gn.gain.setValueAtTime(env(skip), when);
         if (c.fin > 0 && skip < c.fin) gn.gain.linearRampToValueAtTime(env(c.fin), cs + c.fin);
         if (c.fout > 0) { const fs = len - c.fout; if (skip < fs) gn.gain.setValueAtTime(env(fs), cs + fs); gn.gain.linearRampToValueAtTime(0, cs + len); }
         s.start(Math.max(when, ctx.currentTime), off, dur);
         P.srcs.push({ s, end: cs + len });
     }
-    // круг k начинается во времени движка в P.c0 - P.t0 + k * P.L
     function scheduleCycle(k) {
         const ctx = getCtx();
         const cycleStart = P.c0 - P.t0 + k * P.L;
         const from = k === 0 ? P.t0 : 0;
-        for (const c of S.clips) {
+        for (const c of S.bricks) {
             const snd = items[c.src];
             const e = snd ? loadSound(snd) : null;
             if (e && e.state === "ok") piece(ctx, e.buf, c, cycleStart, from);
@@ -554,34 +435,33 @@ function setupSampler(node) {
         while (P.c0 - P.t0 + P.next * P.L < now + 0.5) { scheduleCycle(P.next); P.next++; }
         P.srcs = P.srcs.filter((x) => x.end > now - 0.5);
     }
+    const patternBeats = () => { let e = 0; for (const c of S.bricks) e = Math.max(e, c.beat + c.len / spb()); return Math.max(4, Math.ceil(e / 4 - 1e-6) * 4); };
     async function play() {
         if (S.bypass) { setStatus(T("Включена ⏭ ПРОПУСТИТЬ: слушайте в Пульте", "⏭ BYPASS is on: listen in the Pult")); return; }
         if (P.on) return;
+        stopPreview();
+        if (!S.bricks.length) { setStatus(T("Поле пустое: выделите кусок в источнике и нажмите ➜", "The field is empty: select a piece in a source and press ➜"), true); return; }
         const waits = items.map((s) => loadSound(s)).filter((e) => e.state === "loading").map((e) => e.p);
         if (waits.length) { setStatus(T("Готовлю звук...", "Preparing sound...")); await Promise.all(waits); }
-        if (disposed) return;
+        if (disposed || P.on) return;
         const ctx = audio();
-        mix();
-        for (let i = 0; i < LANES; i++) chain(i);
-        mix();
         P.L = patternBeats() * spb();
-        P.t0 = pos % P.L;
+        P.t0 = ((pos % P.L) + P.L) % P.L;
         P.c0 = ctx.currentTime + 0.05;
         P.next = 0;
         P.on = true;
         pump();
-        P.timer = setInterval(pump, 120);
-        if (!P.raf) P.raf = requestAnimationFrame(frame);
+        P.timer = setInterval(pump, 100);
+        startLoop();
         playB.style.background = "#2e8b3d";
-        setStatus(T("Играет по кругу", "Playing in a loop"));
+        setStatus(T("Играет по кругу — можно править прямо во время игры", "Playing in a loop — you can edit while it plays"));
     }
-    function stop() {
+    function stopField() {
         if (P.on) pos = curPos();
         P.on = false;
         for (const x of P.srcs) { try { x.s.stop(); } catch (e) { /* ок */ } }
         P.srcs = [];
         if (P.timer) { clearInterval(P.timer); P.timer = null; }
-        if (P.raf) { cancelAnimationFrame(P.raf); P.raf = null; }
         playB.style.background = "#3fa34d";
         drawHead();
     }
@@ -590,157 +470,521 @@ function setupSampler(node) {
         const t = getCtx().currentTime - P.c0 + P.t0;
         return P.L > 0 ? ((t % P.L) + P.L) % P.L : t;
     }
-    function frame() { P.raf = null; if (!P.on || disposed) return; drawHead(); P.raf = requestAnimationFrame(frame); }
-    function restart() { if (P.on) { const t = curPos(); stop(); pos = t; play(); } }
+    // правка во время игры: звук пересобирается с того же места, без паузы для глаза
     let restartT = null;
-    const restartSoon = () => { if (!P.on) return; if (restartT) clearTimeout(restartT); restartT = setTimeout(() => { restartT = null; restart(); }, 150); };
-
-    // ---------- блоки ----------
-    const findClip = (id) => S.clips.find((c) => c.id === id);
-    function srcDur(c) { const s = items[c.src]; const e = s ? loadSound(s) : null; return e && e.state === "ok" ? e.buf.duration : Infinity; }
-    function fixAuto() {
-        let any = false;
-        for (const c of S.clips) {
-            if (!c.autoLen) continue;
-            const s = items[c.src];
-            const e = s ? loadSound(s) : null;
-            if (e && e.state === "ok") { c.len = Math.max(0.05, e.buf.duration - c.in); delete c.autoLen; any = true; }
-            else if (!s || (e && e.state === "err")) { delete c.autoLen; any = true; }
+    function restartSoon() {
+        if (!P.on) return;
+        if (restartT) clearTimeout(restartT);
+        restartT = setTimeout(() => {
+            restartT = null;
+            if (!P.on) return;
+            const t = curPos();
+            for (const x of P.srcs) { try { x.s.stop(); } catch (e) { /* ок */ } }
+            P.srcs = [];
+            const ctx = getCtx();
+            P.L = patternBeats() * spb();
+            P.t0 = ((t % P.L) + P.L) % P.L;
+            P.c0 = ctx.currentTime + 0.03;
+            P.next = 0;
+            pump();
+        }, 80);
+    }
+    function seek(t) {
+        pos = Math.max(0, t);
+        if (P.on) {
+            for (const x of P.srcs) { try { x.s.stop(); } catch (e) { /* ок */ } }
+            P.srcs = [];
+            const ctx = getCtx();
+            P.L = patternBeats() * spb();
+            P.t0 = ((pos % P.L) + P.L) % P.L;
+            P.c0 = ctx.currentTime + 0.03;
+            P.next = 0;
+            pump();
         }
-        if (any) { save(); draw(); }
+        drawHead();
     }
-    // новый звук в «Звук ×8» — сам ложится на свою дорожку в начало
-    function syncItems() {
-        const cur = upstream();
-        const sig = cur.map(keyOf).join("|");
-        const was = items.map(keyOf).join("|");
-        if (sig === was) return false;
-        items = cur;
-        let added = false;
-        items.forEach((s, i) => {
-            const k = keyOf(s);
-            if (S.known[i] === k) return;
-            if (!S.clips.some((c) => c.src === i)) {
-                S.clips.push({ id: uid(), src: i, lane: i, beat: 0, in: 0, len: 4 * spb(), gain: 1, fin: 0, fout: 0, autoLen: true });
-                added = true;
-            } else {
-                for (const c of S.clips) if (c.src === i) { c.in = 0; c.autoLen = true; }
-            }
-            S.known[i] = k;
-            loadSound(s).p.then(() => { fixAuto(); draw(); });
+
+    function preview(i) {
+        if (PV.src && PV.i === i) { stopPreview(); return; }
+        stopPreview();
+        const s = items[i];
+        const e = s ? loadSound(s) : null;
+        if (!e || e.state !== "ok") { setStatus(T("Звук ещё загружается", "The sound is still loading")); return; }
+        const ctx = audio();
+        const sel = S.sel[i];
+        const a = sel ? sel.a : 0, b = sel ? sel.b : e.buf.duration;
+        const src = ctx.createBufferSource();
+        src.buffer = e.buf;
+        src.connect(A.prev);
+        src.start(ctx.currentTime + 0.02, a, Math.max(0.02, b - a));
+        src.onended = () => { if (PV.src === src) stopPreview(); };
+        Object.assign(PV, { src, i, c0: ctx.currentTime + 0.02, a, b });
+        startLoop();
+        drawSources();
+    }
+    function stopPreview() {
+        if (PV.src) { try { PV.src.stop(); } catch (e) { /* ок */ } }
+        PV.src = null; PV.i = -1;
+        drawSources();
+    }
+
+    // один цикл анимации: курсор, индикаторы. Пока ничего не играет — останавливается сам.
+    let loopRaf = null;
+    const meters = { mL: {}, mR: {}, sL: {}, sR: {} };
+    function startLoop() { if (!loopRaf) loopRaf = requestAnimationFrame(tickAnim); }
+    function tickAnim() {
+        loopRaf = null;
+        if (disposed || !A.master) return;
+        const now = performance.now();
+        let alive = P.on || !!PV.src;
+        meterStep(meters.mL, peakOf(A.mtap.aL), now); meterStep(meters.mR, peakOf(A.mtap.aR), now);
+        drawMeter(mMeter, meters.mL, meters.mR, false);
+        if (meters.mL.v > 0.002 || meters.mR.v > 0.002) alive = true;
+        A.layers.forEach((L, i) => {
+            meterStep(L.mL, peakOf(L.tap.aL), now); meterStep(L.mR, peakOf(L.tap.aR), now);
+            const cvm = heads.querySelector(`canvas[data-layer="${i}"]`);
+            if (cvm) drawMeter(cvm, L.mL, L.mR, true);
+            if (L.mL.v > 0.002 || L.mR.v > 0.002) alive = true;
         });
-        S.known.length = Math.min(S.known.length, LANES);
-        save(); buildHeads(); draw();
-        void added;
-        restartSoon();
-        return true;
+        meterStep(meters.sL, peakOf(A.ptap.aL), now); meterStep(meters.sR, peakOf(A.ptap.aR), now);
+        srcBox.querySelectorAll("canvas.nsp-meter").forEach((c) => {
+            const on = PV.src && Number(c.dataset.src) === PV.i;
+            drawMeter(c, on ? meters.sL : {}, on ? meters.sR : {}, true);
+        });
+        if (meters.sL.v > 0.002) alive = true;
+        if (P.on) drawHead();
+        if (PV.src) drawSourceHead();
+        if (alive && !document.hidden) loopRaf = requestAnimationFrame(tickAnim);
     }
 
-    function changed(structural) {
-        save();
-        if (structural) buildHeads();
-        buildSel();
+    // ---------- ИСТОЧНИКИ ----------
+    const srcRows = [];      // {cv, info}
+    function buildSources() {
+        srcBox.innerHTML = "";
+        srcRows.length = 0;
+        if (!items.length) {
+            srcBox.appendChild(el("div", "nsp-empty", T("Подключите «Звук ×8» ко входу sounds — здесь появятся звуки.", "Wire \"Sound ×8\" into the sounds input — the sounds appear here.")));
+            return;
+        }
+        items.forEach((s, i) => {
+            const row = el("div", "nsp-src");
+            const nm = el("div", "nsp-sname");
+            const b = el("b", "", `${i + 1}. ${s.name}`);
+            b.style.color = COLORS[i];
+            b.title = s.name;
+            const info = el("span", "", T("весь звук", "whole sound"));
+            nm.appendChild(b); nm.appendChild(info);
+            const pl = mk("▶", "#3fa34d", T("Послушать выделенный кусок (или весь звук)", "Listen to the selected piece (or the whole sound)"), "sm");
+            pl.addEventListener("click", () => preview(i));
+            const meter = el("canvas", "nsp-meter");
+            meter.dataset.src = String(i);
+            const wave = el("canvas", "nsp-wave");
+            wave.title = T("Ведите мышкой — выделить кусок · двойной клик — весь · тяните выделенное вниз — в поле",
+                "Drag — select a piece · double click — all · drag the selection down — into the field");
+            const go = mk("➜", "#6b4fb3", T("Положить кусок в поле (за последним кирпичиком слоя)", "Put the piece into the field (after the last brick of the layer)"), "sm");
+            go.addEventListener("click", () => toField(i));
+            [nm, pl, meter, wave, go].forEach((x) => row.appendChild(x));
+            srcBox.appendChild(row);
+            srcRows[i] = { cv: wave, info };
+            wave.addEventListener("pointerdown", (e) => srcDown(e, i));
+            wave.addEventListener("dblclick", () => {
+                const en = loadSound(s);
+                if (en.state !== "ok") return;
+                S.sel[i] = { a: 0, b: en.buf.duration };
+                save(); drawSources();
+            });
+            wave.addEventListener("wheel", (e) => e.stopPropagation(), { passive: true });
+        });
+        drawSources();
+    }
+    function drawSources() {
+        items.forEach((s, i) => {
+            const r = srcRows[i];
+            if (!r) return;
+            const cvw = r.cv;
+            const W = cvw.clientWidth, H = cvw.clientHeight;
+            if (W < 4) return;
+            const d = window.devicePixelRatio || 1;
+            if (cvw.width !== Math.round(W * d) || cvw.height !== Math.round(H * d)) { cvw.width = Math.round(W * d); cvw.height = Math.round(H * d); }
+            const g = cvw.getContext("2d");
+            g.setTransform(d, 0, 0, d, 0, 0);
+            g.clearRect(0, 0, W, H);
+            const e = loadSound(s);
+            if (e.state !== "ok") {
+                g.fillStyle = "#6b7080"; g.font = "10px Segoe UI, Arial"; g.textBaseline = "middle";
+                g.fillText(e.state === "err" ? T("ошибка: ", "error: ") + e.err : T("загрузка...", "loading..."), 6, H / 2);
+                if (e.state === "loading") e.p.then(() => { drawSources(); draw(); });
+                return;
+            }
+            const dur = e.buf.duration;
+            const sel = S.sel[i];
+            if (sel) {
+                g.fillStyle = "rgba(255,255,255,0.12)";
+                g.fillRect((sel.a / dur) * W, 0, ((sel.b - sel.a) / dur) * W, H);
+            }
+            const per = e.peaks.length / W;
+            for (let x = 0; x < W; x++) {
+                let p = 0;
+                for (let k = Math.floor(x * per), kk = Math.min(e.peaks.length, Math.floor((x + 1) * per) + 1); k < kk; k++) if (e.peaks[k] > p) p = e.peaks[k];
+                const t = (x / W) * dur;
+                g.fillStyle = sel && t >= sel.a && t <= sel.b ? COLORS[i] : "rgba(160,165,180,0.45)";
+                const h = Math.max(1, p * H * 0.9);
+                g.fillRect(x, (H - h) / 2, 1, h);
+            }
+            if (sel) {
+                g.fillStyle = "#fff";
+                g.fillRect(Math.round((sel.a / dur) * W), 0, 1, H);
+                g.fillRect(Math.round((sel.b / dur) * W) - 1, 0, 1, H);
+                r.info.textContent = `${fmt(sel.a)} – ${fmt(sel.b)} · ${(sel.b - sel.a).toFixed(2)} ${T("с", "s")}`;
+            } else r.info.textContent = `${T("весь звук", "whole sound")} · ${fmt(dur)}`;
+            cvw._base = null;          // подложка для курсора прослушивания — пересоберётся
+        });
+        drawSourceHead();
+    }
+    function drawSourceHead() {
+        if (!PV.src || !srcRows[PV.i]) return;
+        const s = items[PV.i]; const e = s && loadSound(s);
+        if (!e || e.state !== "ok") return;
+        const cvw = srcRows[PV.i].cv;
+        // перерисовать строку и поставить курсор
+        const t = PV.a + (getCtx().currentTime - PV.c0);
+        const W = cvw.clientWidth, H = cvw.clientHeight;
+        const g = cvw.getContext("2d");
+        if (!cvw._base || cvw._base.width !== cvw.width) { cvw._base = document.createElement("canvas"); cvw._base.width = cvw.width; cvw._base.height = cvw.height; cvw._base.getContext("2d").drawImage(cvw, 0, 0); }
+        g.setTransform(1, 0, 0, 1, 0, 0);
+        g.drawImage(cvw._base, 0, 0);
+        const d = window.devicePixelRatio || 1;
+        g.setTransform(d, 0, 0, d, 0, 0);
+        g.fillStyle = "#fff";
+        g.fillRect(Math.round((t / e.buf.duration) * W) - 1, 0, 2, H);
+    }
+
+    // выделение куска; если нажали внутри выделения — тащим кусок в поле
+    let sdrag = null;
+    function srcDown(e, i) {
+        refocus();
+        if (e.button !== 0) return;
+        const s = items[i];
+        const en = loadSound(s);
+        if (en.state !== "ok") return;
+        const cvw = srcRows[i].cv;
+        const p = pt(e, cvw);
+        const dur = en.buf.duration;
+        const t = clamp((p.x / cvw.clientWidth) * dur, 0, dur);
+        const sel = S.sel[i];
+        if (sel && t >= sel.a && t <= sel.b && !S.bypass) {
+            sdrag = { mode: "grab", i, x0: e.clientX, y0: e.clientY, ghost: null };
+        } else {
+            sdrag = { mode: "select", i, t0: t, dur, cvw };
+            S.sel[i] = null;
+            delete S.sel[i];
+        }
+        cvw.setPointerCapture(e.pointerId);
+        const mv = (ev) => srcMove(ev);
+        const up = (ev) => { cvw.removeEventListener("pointermove", mv); cvw.removeEventListener("pointerup", up); cvw.removeEventListener("pointercancel", up); srcUp(ev); };
+        cvw.addEventListener("pointermove", mv);
+        cvw.addEventListener("pointerup", up);
+        cvw.addEventListener("pointercancel", up);
+        for (const c of srcRows) if (c && c.cv) c.cv._base = null;
+        drawSources();
+    }
+    function srcMove(e) {
+        const d = sdrag;
+        if (!d) return;
+        if (d.mode === "select") {
+            const p = pt(e, d.cvw);
+            const t = clamp((p.x / d.cvw.clientWidth) * d.dur, 0, d.dur);
+            const a = Math.min(d.t0, t), b = Math.max(d.t0, t);
+            if (b - a >= 0.01) S.sel[d.i] = { a, b }; else delete S.sel[d.i];
+            for (const c of srcRows) if (c && c.cv) c.cv._base = null;
+            drawSources();
+        } else {
+            // тащим кусок: над полем показываем, куда он ляжет
+            const q = pt(e, cv);
+            d.ghost = q.inside && q.y > RULER_H ? { beat: Math.max(0, snapB(beatAt(q.x))), layer: clamp(Math.floor((q.y - RULER_H) / laneH()), 0, LAYERS - 1) } : null;
+            cv.style.cursor = d.ghost ? "copy" : "default";
+            draw();
+        }
+    }
+    function srcUp() {
+        const d = sdrag;
+        sdrag = null;
+        if (!d) return;
+        if (d.mode === "select") { save(); return; }
+        if (d.ghost) toField(d.i, d.ghost.beat, d.ghost.layer);
         draw();
-        restartSoon();
+        refocus();
     }
 
-    function deleteSel() { const c = findClip(sel); if (!c) return; pushUndo(); S.clips = S.clips.filter((x) => x !== c); sel = null; changed(true); }
-    function dupSel() {
-        const c = findClip(sel); if (!c) return;
-        if (S.clips.length >= 128) return;
+    // кусок источника -> кирпичик в поле
+    function toField(i, beat, layer) {
+        if (S.bypass) { setStatus(T("Сначала отожмите ⏭ ПРОПУСТИТЬ", "Turn ⏭ BYPASS off first"), true); return; }
+        const s = items[i];
+        const e = s ? loadSound(s) : null;
+        if (!e || e.state !== "ok") { setStatus(T("Звук ещё загружается", "The sound is still loading"), true); return; }
+        if (S.bricks.length >= MAX_BRICKS) { setStatus(T("Не больше 128 кирпичиков", "No more than 128 bricks"), true); return; }
+        const sel = S.sel[i] || { a: 0, b: e.buf.duration };
         pushUndo();
-        const sb = snapBeats() || 0.25;
-        const nb = Math.ceil((c.beat + lenBeats(c)) / sb - 1e-6) * sb;
-        const d = { ...c, id: uid(), beat: nb };
-        S.clips.push(d);
-        sel = d.id;
-        changed(true);
-        setStatus(T("Копия поставлена сразу после", "Copy placed right after"));
-    }
-    function splitSel() {
-        const c = findClip(sel); if (!c) { setStatus(T("Выделите блок, потом S", "Select a block, then S"), true); return; }
-        const t = curPos(), st = c.beat * spb();
-        if (t <= st + 0.02 || t >= st + c.len - 0.02) { setStatus(T("Поставьте курсор внутрь блока (клик по линейке)", "Put the cursor inside the block (click the ruler)"), true); return; }
-        pushUndo();
-        const k = t - st;
-        const d = { ...c, id: uid(), beat: t / spb(), in: c.in + k, len: c.len - k, fin: 0 };
-        c.len = k; c.fout = 0; c.fin = Math.min(c.fin, c.len); d.fout = Math.min(d.fout, d.len);
-        S.clips.push(d);
-        sel = d.id;
-        changed(true);
+        const L = layer === undefined ? S.cur : layer;
+        let at = beat;
+        if (at === undefined) {
+            // сразу за последним кирпичиком слоя, по сетке
+            let end = 0;
+            for (const c of S.bricks) if (c.layer === L) end = Math.max(end, c.beat + c.len / spb());
+            const sb = snapBeats() || 0.25;
+            at = Math.ceil(end / sb - 1e-6) * sb;
+        }
+        const c = { id: uid(), src: i, layer: L, beat: at, in: sel.a, len: Math.max(0.02, sel.b - sel.a), gain: 1, fin: 0, fout: 0 };
+        S.bricks.push(c);
+        selB = c.id;
+        // поле стало длиннее видимого — показать всё
+        if ((c.beat + c.len / spb()) * S.zoom - view.sx > grid.clientWidth - 10) fitView();
+        changed();
+        setStatus(T(`Кирпичик в слой ${L + 1}: ${(c.len).toFixed(2)} с`, `Brick into layer ${L + 1}: ${(c.len).toFixed(2)} s`));
     }
 
-    // ---------- мышь ----------
-    const lp = (e) => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+    // ---------- ПОЛЕ: геометрия ----------
+    const view = { sx: 0 };
+    const laneH = () => Math.max(14, (grid.clientHeight - RULER_H) / LAYERS);
+    const pxb = () => S.zoom;
+    const xAt = (beat) => beat * pxb() - view.sx;
+    const beatAt = (x) => (x + view.sx) / pxb();
+    const lenB = (c) => c.len / spb();
+    const viewBeats = () => Math.max(patternBeats() + 4, 16);
+    const snapB = (b) => { const s = snapBeats(); return s > 0 ? Math.round(b / s) * s : b; };
+    function fitView() {
+        const W = grid.clientWidth;
+        if (W < 20) return;
+        S.zoom = clamp((W - 20) / (patternBeats() + 1), 4, 240);
+        view.sx = 0;
+        save();
+    }
+
+    function buildHeads() {
+        heads.innerHTML = "";
+        const corner = el("div", "nsp-hcorner", T("слои", "layers"));
+        corner.title = T("Клик по слою — новые кирпичики пойдут в него", "Click a layer — new bricks go into it");
+        heads.appendChild(corner);
+        for (let i = 0; i < LAYERS; i++) {
+            const l = S.layers[i];
+            const h = el("div", "nsp-head" + (S.cur === i ? " cur" : ""));
+            h.style.setProperty("--c", LCOLORS[i]);
+            h.title = T("Клик — новые кирпичики пойдут в этот слой", "Click — new bricks go to this layer");
+            const n = el("b", "", `${i + 1}`);
+            n.style.fontSize = "13px";
+            n.style.color = LCOLORS[i];
+            const m = el("button", "nsp-ms" + (l.mute ? " on-m" : ""), "M");
+            m.title = T("Выключить слой", "Mute");
+            const s = el("button", "nsp-ms" + (l.solo ? " on-s" : ""), "S");
+            s.title = T("Только этот слой", "Solo");
+            const v = el("input");
+            v.type = "range"; v.min = "0"; v.max = "1.2"; v.step = "0.01"; v.value = String(l.vol);
+            v.style.accentColor = LCOLORS[i];
+            v.title = T("Громкость слоя (двойной клик — сброс)", "Layer volume (double click — reset)");
+            const met = el("canvas", "nsp-meter");
+            met.dataset.layer = String(i);
+            met.style.height = "70%";
+            h.addEventListener("click", (e) => { if (e.target === h || e.target === n) { S.cur = i; save(); buildHeads(); } });
+            m.addEventListener("click", () => { l.mute = !l.mute; m.classList.toggle("on-m", l.mute); mix(); save(); draw(); });
+            s.addEventListener("click", () => { l.solo = !l.solo; s.classList.toggle("on-s", l.solo); mix(); save(); draw(); });
+            v.addEventListener("input", () => { l.vol = parseFloat(v.value); mix(); save(); });
+            v.addEventListener("dblclick", () => { v.value = "0.8"; l.vol = 0.8; mix(); save(); });
+            [n, m, s, v, met].forEach((x) => h.appendChild(x));
+            heads.appendChild(h);
+        }
+    }
+
+    // ---------- ПОЛЕ: рисование ----------
+    let pending = false;
+    function draw() { if (pending) return; pending = true; requestAnimationFrame(() => { pending = false; if (!disposed) drawNow(); }); }
+    function size(c, w, h) {
+        const d = window.devicePixelRatio || 1;
+        if (c.width !== Math.round(w * d) || c.height !== Math.round(h * d)) { c.width = Math.round(w * d); c.height = Math.round(h * d); }
+        c.style.width = w + "px"; c.style.height = h + "px";
+        const g = c.getContext("2d"); g.setTransform(d, 0, 0, d, 0, 0); return g;
+    }
+    function drawNow() {
+        const W = grid.clientWidth, H = grid.clientHeight;
+        if (W < 10 || H < 10) return;
+        const maxSx = Math.max(0, viewBeats() * pxb() - W);
+        view.sx = clamp(view.sx, 0, maxSx);
+        hs.style.visibility = maxSx > 1 ? "visible" : "hidden";
+        hs.value = String(maxSx ? Math.round((view.sx / maxSx) * 1000) : 0);
+        const g = size(cv, W, H);
+        size(ov, W, H);
+        g.fillStyle = "#15171c"; g.fillRect(0, 0, W, H);
+        const lh = laneH();
+        for (let i = 0; i < LAYERS; i++) {
+            g.fillStyle = i === S.cur ? "#1c2028" : (i % 2 ? "#1a1c22" : "#17191e");
+            g.fillRect(0, RULER_H + i * lh, W, lh);
+        }
+        const b0 = Math.floor(beatAt(0)), b1 = Math.ceil(beatAt(W));
+        const sb = snapBeats();
+        if (sb > 0 && sb < 1 && pxb() * sb >= 6) {
+            g.fillStyle = "rgba(255,255,255,0.03)";
+            for (let b = Math.floor(beatAt(0) / sb) * sb; b <= b1; b += sb) g.fillRect(Math.round(xAt(b)), RULER_H, 1, H);
+        }
+        const beatStep = pxb() >= 6 ? 1 : 4;
+        for (let b = Math.floor(b0 / beatStep) * beatStep; b <= b1; b += beatStep) {
+            g.fillStyle = b % 4 === 0 ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.06)";
+            g.fillRect(Math.round(xAt(b)), RULER_H, 1, H);
+        }
+        const pb = patternBeats();
+        g.fillStyle = "rgba(255,209,102,0.05)"; g.fillRect(xAt(pb), RULER_H, W, H);
+        g.fillStyle = "#ffd166"; g.fillRect(Math.round(xAt(pb)), RULER_H, 2, H);
+        g.fillStyle = "#1f2229"; g.fillRect(0, 0, W, RULER_H);
+        g.font = "10px Segoe UI, Arial"; g.textBaseline = "middle";
+        const barStep = pxb() * 4 >= 28 ? 4 : pxb() * 16 >= 28 ? 16 : 64;
+        for (let b = Math.floor(b0 / barStep) * barStep; b <= b1; b += barStep) {
+            const x = Math.round(xAt(b));
+            g.fillStyle = "#8b90a0"; g.fillRect(x, 10, 1, RULER_H - 10);
+            g.fillText(String(b / 4 + 1), x + 3, RULER_H / 2);
+        }
+        const solo = S.layers.some((l) => l.solo);
+        for (const c of S.bricks) {
+            const x0 = xAt(c.beat), x1 = xAt(c.beat + lenB(c));
+            if (x1 < 0 || x0 > W) continue;
+            const y = RULER_H + c.layer * lh + 2, h = lh - 4;
+            const col = COLORS[c.src % COLORS.length];
+            const L = S.layers[c.layer];
+            const on = !L.mute && (!solo || L.solo);
+            g.fillStyle = on ? "#2a2f3a" : "#22252c";
+            g.fillRect(x0, y, x1 - x0, h);
+            g.globalAlpha = on ? 1 : 0.35;
+            g.fillStyle = col;
+            const hh = Math.min(13, h);
+            g.fillRect(x0, y, x1 - x0, hh);
+            const snd = items[c.src];
+            const e = snd ? loadSound(snd) : null;
+            if (e && e.state === "ok" && h > hh + 3) {
+                g.save(); g.beginPath(); g.rect(x0, y + hh, x1 - x0, h - hh); g.clip();
+                const mid = y + hh + (h - hh) / 2, sr = e.buf.sampleRate;
+                for (let x = Math.max(0, Math.floor(x0)); x < Math.min(W, Math.ceil(x1)); x++) {
+                    const ta = c.in + ((x - x0) / pxb()) * spb(), tb = c.in + ((x + 1 - x0) / pxb()) * spb();
+                    const ia = Math.floor((ta * sr) / PEAK_BLOCK), ib = Math.max(ia + 1, Math.floor((tb * sr) / PEAK_BLOCK));
+                    if (ia >= e.peaks.length) break;
+                    let p = 0;
+                    for (let k = Math.max(0, ia); k < Math.min(ib, e.peaks.length); k++) if (e.peaks[k] > p) p = e.peaks[k];
+                    const ph = Math.max(1, p * (h - hh) * 0.9);
+                    g.fillRect(x, mid - ph / 2, 1, ph);
+                }
+                g.restore();
+            }
+            g.globalAlpha = 1;
+            // появление / затухание — тёмные клинья
+            const fx = (c.fin / spb()) * pxb(), gx = (c.fout / spb()) * pxb();
+            g.fillStyle = "rgba(0,0,0,0.4)";
+            if (c.fin > 0) { g.beginPath(); g.moveTo(x0, y + hh); g.lineTo(x0 + fx, y + hh); g.lineTo(x0, y + h); g.closePath(); g.fill(); }
+            if (c.fout > 0) { g.beginPath(); g.moveTo(x1, y + hh); g.lineTo(x1 - gx, y + hh); g.lineTo(x1, y + h); g.closePath(); g.fill(); }
+            const isSel = selB === c.id;
+            g.strokeStyle = isSel ? "#fff" : "rgba(0,0,0,.6)"; g.lineWidth = isSel ? 2 : 1;
+            g.strokeRect(x0 + 0.5, y + 0.5, x1 - x0 - 1, h - 1);
+            if (x1 - x0 > 2 * HANDLE + 6) {
+                g.fillStyle = "#fff";
+                g.fillRect(x0 + fx, y, HANDLE, HANDLE);
+                g.fillRect(x1 - gx - HANDLE, y, HANDLE, HANDLE);
+            }
+            g.save(); g.beginPath(); g.rect(x0 + HANDLE + 4, y, Math.max(0, x1 - x0 - 2 * HANDLE - 8), hh); g.clip();
+            g.fillStyle = "#111"; g.font = "bold 9px Segoe UI, Arial"; g.textBaseline = "top";
+            const label = (snd ? snd.name : "—") + ` ${fmt(c.in)}` + (Math.abs(c.gain - 1) > 0.005 ? `  ${Math.round(c.gain * 100)}%` : "");
+            g.fillText(label, Math.max(x0, 0) + HANDLE + 4, y + 2);
+            g.restore();
+        }
+        // призрак куска, который тащат из источника
+        if (sdrag && sdrag.mode === "grab" && sdrag.ghost) {
+            const s = items[sdrag.i];
+            const e = s && loadSound(s);
+            const sel = S.sel[sdrag.i];
+            if (e && e.state === "ok" && sel) {
+                const x0 = xAt(sdrag.ghost.beat), w = ((sel.b - sel.a) / spb()) * pxb();
+                g.fillStyle = COLORS[sdrag.i]; g.globalAlpha = 0.45;
+                g.fillRect(x0, RULER_H + sdrag.ghost.layer * lh + 2, w, lh - 4);
+                g.globalAlpha = 1;
+            }
+        }
+        drawHead();
+    }
+    function drawHead() {
+        const W = grid.clientWidth, H = grid.clientHeight;
+        const g = ov.getContext("2d");
+        const d = window.devicePixelRatio || 1;
+        g.setTransform(d, 0, 0, d, 0, 0);
+        g.clearRect(0, 0, W, H);
+        const x = Math.round(xAt(curPos() / spb()));
+        if (x >= -2 && x <= W + 2) {
+            g.fillStyle = "#fff"; g.fillRect(x - 1, 0, 2, H);
+            g.beginPath(); g.moveTo(x - 6, 0); g.lineTo(x + 6, 0); g.lineTo(x, 8); g.closePath(); g.fill();
+        }
+    }
+
+    // ---------- ПОЛЕ: мышь ----------
+    const findB = (id) => S.bricks.find((c) => c.id === id);
     function hit(x, y) {
         if (y < RULER_H) return { type: "ruler" };
         const lh = laneH();
-        const lane = Math.floor((y - RULER_H) / lh);
-        for (let i = S.clips.length - 1; i >= 0; i--) {
-            const c = S.clips[i];
-            if (c.lane !== lane) continue;
-            const x0 = xAt(c.beat), x1 = xAt(c.beat + lenBeats(c));
-            if (x < x0 - 2 || x > x1 + 2) continue;
-            const yy = y - RULER_H - lane * lh;
-            const fx = c.fin / spb() * pxb(), gx = c.fout / spb() * pxb();
-            if (yy <= 12 && x1 - x0 > 22) {
-                if (Math.abs(x - (x0 + fx)) <= 6) return { type: "fin", c };
-                if (Math.abs(x - (x1 - gx)) <= 6) return { type: "fout", c };
+        const layer = clamp(Math.floor((y - RULER_H) / lh), 0, LAYERS - 1);
+        for (let i = S.bricks.length - 1; i >= 0; i--) {
+            const c = S.bricks[i];
+            if (c.layer !== layer) continue;
+            const x0 = xAt(c.beat), x1 = xAt(c.beat + lenB(c));
+            if (x < x0 - 3 || x > x1 + 3) continue;
+            const yy = y - RULER_H - layer * lh - 2;
+            const fx = (c.fin / spb()) * pxb(), gx = (c.fout / spb()) * pxb();
+            if (yy <= HANDLE + 3 && x1 - x0 > 2 * HANDLE + 6) {
+                if (x >= x0 + fx - 3 && x <= x0 + fx + HANDLE + 3) return { type: "fin", c };
+                if (x >= x1 - gx - HANDLE - 3 && x <= x1 - gx + 3) return { type: "fout", c };
             }
             if (x - x0 <= 6) return { type: "edgeL", c };
             if (x1 - x <= 6) return { type: "edgeR", c };
             return { type: "body", c };
         }
-        return { type: "empty", lane };
+        return { type: "empty", layer };
     }
-    const CURS = { body: "grab", edgeL: "w-resize", edgeR: "e-resize", fin: "pointer", fout: "pointer", ruler: "pointer" };
-    cv.addEventListener("pointermove", (e) => { if (!drag) cv.style.cursor = CURS[hit(lp(e).x, lp(e).y).type] || "default"; });
+    const CURS = { body: "grab", edgeL: "w-resize", edgeR: "e-resize", fin: "ew-resize", fout: "ew-resize", ruler: "pointer" };
     let drag = null;
+    cv.addEventListener("pointermove", (e) => { if (!drag && !sdrag) { const p = pt(e, cv); cv.style.cursor = CURS[hit(p.x, p.y).type] || "default"; } });
     cv.addEventListener("pointerdown", (e) => {
-        keys.focus({ preventScroll: true });
+        refocus();
         if (S.bypass) return;
-        const p = lp(e);
+        const p = pt(e, cv);
         const h = hit(p.x, p.y);
-        if (e.button === 2) { if (h.c) { sel = h.c.id; deleteSel(); } return; }
+        if (e.button === 2) { if (h.c) { selB = h.c.id; deleteSel(); } return; }
         if (e.button !== 0) return;
         cv.setPointerCapture(e.pointerId);
         if (h.type === "ruler" || h.type === "empty") {
-            sel = null; buildSel();
-            pos = Math.max(0, beatAt(p.x)) * spb();
-            if (P.on) restart(); else drawHead();
+            selB = null; buildSel();
+            if (h.type === "empty") { S.cur = h.layer; buildHeads(); save(); }
+            seek(Math.max(0, beatAt(p.x)) * spb());
             drag = { type: "seek" };
             draw();
             return;
         }
-        sel = h.c.id;
+        selB = h.c.id;
         buildSel();
-        drag = { type: h.type, c: h.c, x0: p.x, y0: p.y, o: { beat: h.c.beat, in: h.c.in, len: h.c.len, fin: h.c.fin, fout: h.c.fout, lane: h.c.lane }, moved: false };
+        drag = { type: h.type, c: h.c, x0: p.x, y0: p.y, o: { beat: h.c.beat, in: h.c.in, len: h.c.len, fin: h.c.fin, fout: h.c.fout }, moved: false };
         draw();
     });
     cv.addEventListener("pointermove", (e) => {
         const d = drag;
         if (!d) return;
-        const p = lp(e);
-        if (d.type === "seek") { pos = Math.max(0, beatAt(p.x)) * spb(); if (!P.on) drawHead(); return; }
+        const p = pt(e, cv);
+        if (d.type === "seek") { seek(Math.max(0, beatAt(p.x)) * spb()); return; }
         if (!d.moved && Math.abs(p.x - d.x0) < 3 && Math.abs(p.y - d.y0) < 3) return;
         if (!d.moved) { pushUndo(); d.moved = true; }
         const c = d.c, o = d.o;
         const db = (p.x - d.x0) / pxb();
-        const sDur = srcDur(c);
+        const sd = (() => { const s = items[c.src]; const en = s ? loadSound(s) : null; return en && en.state === "ok" ? en.buf.duration : Infinity; })();
         if (d.type === "body") {
             c.beat = Math.max(0, snapB(o.beat + db));
-            const lane = clamp(Math.floor((p.y - RULER_H) / laneH()), 0, LANES - 1);
-            c.lane = clamp(lane, 0, Math.min(LANES - 1, lanesN - 1));
+            c.layer = clamp(Math.floor((p.y - RULER_H) / laneH()), 0, LAYERS - 1);
         } else if (d.type === "edgeL") {
-            let nb = snapB(o.beat + db);
-            const minB = o.beat - o.in / spb(), maxB = o.beat + o.len / spb() - 0.05 / spb();
-            nb = clamp(nb, Math.max(0, minB), maxB);
+            const nb = clamp(snapB(o.beat + db), Math.max(0, o.beat - o.in / spb()), o.beat + (o.len - 0.05) / spb());
             const k = (nb - o.beat) * spb();
             c.beat = nb; c.in = o.in + k; c.len = o.len - k; c.fin = Math.min(c.fin, c.len - c.fout);
         } else if (d.type === "edgeR") {
-            let ne = snapB(o.beat + o.len / spb() + db);
-            const nl = clamp((ne - o.beat) * spb(), 0.05, Math.min(3600, sDur - o.in));
-            c.len = nl; c.fout = Math.min(c.fout, c.len - c.fin); delete c.autoLen;
+            const ne = snapB(o.beat + o.len / spb() + db);
+            c.len = clamp((ne - o.beat) * spb(), 0.05, Math.min(3600, sd - o.in));
+            c.fout = Math.min(c.fout, c.len - c.fin);
         } else if (d.type === "fin") {
             c.fin = clamp(o.fin + db * spb(), 0, c.len - c.fout);
             setStatus(`${T("Появление", "Fade in")}: ${c.fin.toFixed(2)} ${T("с", "s")}`);
@@ -749,45 +993,56 @@ function setupSampler(node) {
             setStatus(`${T("Затухание", "Fade out")}: ${c.fout.toFixed(2)} ${T("с", "s")}`);
         }
         draw();
+        restartSoon();
     });
-    // ComfyUI после отпускания мыши может снять фокус — возвращаем его, чтобы клавиши работали
-    const refocus = () => setTimeout(() => { if (!disposed) keys.focus({ preventScroll: true }); }, 0);
-    const endDrag = () => { const d = drag; drag = null; if (d && d.moved) changed(true); refocus(); };
+    const endDrag = () => { const d = drag; drag = null; if (d && d.moved) changed(); refocus(); };
     cv.addEventListener("pointerup", endDrag);
     cv.addEventListener("pointercancel", endDrag);
     cv.addEventListener("contextmenu", (e) => { e.preventDefault(); e.stopPropagation(); });
-    cv.addEventListener("dblclick", (e) => {
-        if (S.bypass) return;
-        const p = lp(e);
-        const h = hit(p.x, p.y);
-        if (h.type !== "empty") return;
-        const selC = findClip(sel);
-        const src = items[h.lane] ? h.lane : selC ? selC.src : -1;
-        if (src < 0 || !items[src]) { setStatus(T("На этой дорожке нет звука: выделите блок, потом двойной клик", "No sound on this track: select a block, then double click"), true); return; }
-        if (S.clips.length >= 128) return;
-        pushUndo();
-        const c = { id: uid(), src, lane: h.lane, beat: Math.max(0, snapB(beatAt(p.x))), in: 0, len: srcDur({ src }) < Infinity ? srcDur({ src }) : 4 * spb(), gain: 1, fin: 0, fout: 0 };
-        S.clips.push(c);
-        sel = c.id;
-        changed(true);
-    });
-    const onWheel = (e) => {
+    // колёсико — приблизить / отдалить вокруг мышки; Shift — прокрутка
+    cv.addEventListener("wheel", (e) => {
         e.preventDefault(); e.stopPropagation();
-        if (e.ctrlKey || e.metaKey) {
-            const r = cv.getBoundingClientRect(); const x = e.clientX - r.left; const b = beatAt(x);
-            S.zoom = clamp(S.zoom * (e.deltaY < 0 ? 1.2 : 1 / 1.2), 8, 200); zoomR.value = String(Math.round(S.zoom));
-            view.sx = b * pxb() - x; save();
-        } else view.sx += (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY);
+        const p = pt(e, cv);
+        if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) { view.sx += e.shiftKey ? e.deltaY : e.deltaX; draw(); return; }
+        const b = beatAt(p.x);
+        S.zoom = clamp(S.zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), 4, 240);
+        view.sx = b * pxb() - p.x;
+        save();
         draw();
-    };
-    cv.addEventListener("wheel", onWheel, { passive: false });
-    hs.addEventListener("input", () => { const W = grid.clientWidth; view.sx = (Number(hs.value) / 1000) * Math.max(0, viewBeats() * pxb() - W); draw(); });
+    }, { passive: false });
+    hs.addEventListener("input", () => { view.sx = (Number(hs.value) / 1000) * Math.max(0, viewBeats() * pxb() - grid.clientWidth); draw(); });
     for (const x of [hs, bpmN, snapSel]) x.addEventListener("keydown", (e) => e.stopPropagation());
 
+    // ---------- действия с кирпичиками ----------
+    function changed() { save(); buildHeads(); buildSel(); draw(); restartSoon(); }
+    function deleteSel() { const c = findB(selB); if (!c) return; pushUndo(); S.bricks = S.bricks.filter((x) => x !== c); selB = null; changed(); }
+    function dupSel() {
+        const c = findB(selB); if (!c || S.bricks.length >= MAX_BRICKS) return;
+        pushUndo();
+        const sb = snapBeats() || 0.25;
+        const d = { ...c, id: uid(), beat: Math.ceil((c.beat + lenB(c)) / sb - 1e-6) * sb };
+        S.bricks.push(d);
+        selB = d.id;
+        changed();
+        setStatus(T("Копия поставлена сразу после", "Copy placed right after"));
+    }
+    function splitSel() {
+        const c = findB(selB);
+        if (!c) { setStatus(T("Выделите кирпичик, потом S", "Select a brick, then S"), true); return; }
+        const t = curPos(), st = c.beat * spb();
+        if (t <= st + 0.02 || t >= st + c.len - 0.02) { setStatus(T("Поставьте курсор внутрь кирпичика (клик по линейке)", "Put the cursor inside the brick (click the ruler)"), true); return; }
+        pushUndo();
+        const k = t - st;
+        const d = { ...c, id: uid(), beat: t / spb(), in: c.in + k, len: c.len - k, fin: 0 };
+        c.len = k; c.fout = 0; c.fin = Math.min(c.fin, c.len); d.fout = Math.min(d.fout, d.len);
+        S.bricks.push(d);
+        selB = d.id;
+        changed();
+    }
     keys.addEventListener("keydown", (e) => {
         e.stopPropagation();
         const k = e.key, ctrl = e.ctrlKey || e.metaKey;
-        if (k === " ") { e.preventDefault(); P.on ? stop() : play(); }
+        if (k === " ") { e.preventDefault(); P.on ? stopField() : play(); }
         else if (k === "Delete" || k === "Backspace") { e.preventDefault(); deleteSel(); }
         else if (ctrl && /^[zZяЯ]$/.test(k)) { e.preventDefault(); e.shiftKey ? redo() : undo(); }
         else if (ctrl && /^[yYнН]$/.test(k)) { e.preventDefault(); redo(); }
@@ -796,31 +1051,31 @@ function setupSampler(node) {
     });
     keys.addEventListener("keyup", (e) => e.stopPropagation());
 
-    // ---------- панель выделенного ----------
-    function rng(label, min, max, step, val, fmt, set) {
-        const f = el("label", "");
-        f.style.cssText = "display:flex;align-items:center;gap:4px";
-        f.appendChild(document.createTextNode(label));
+    // ---------- панель выделенного кирпичика ----------
+    function rng(label, min, max, step, val, f, set) {
+        const w = el("label", "");
+        w.style.cssText = "display:flex;align-items:center;gap:4px";
+        w.appendChild(document.createTextNode(label));
         const r = el("input"); r.type = "range"; r.min = String(min); r.max = String(max); r.step = String(step); r.value = String(val);
-        const v = el("span", "", fmt(val));
+        const v = el("span", "", f(val));
         let pushed = false;
-        r.addEventListener("input", () => { if (!pushed) { pushUndo(); pushed = true; } const x = parseFloat(r.value); v.textContent = fmt(x); set(x); draw(); });
-        r.addEventListener("change", () => { pushed = false; save(); restartSoon(); });
+        r.addEventListener("input", () => { if (!pushed) { pushUndo(); pushed = true; } const x = parseFloat(r.value); v.textContent = f(x); set(x); draw(); restartSoon(); });
+        r.addEventListener("change", () => { pushed = false; save(); });
         r.addEventListener("keydown", (e) => e.stopPropagation());
-        f.appendChild(r); f.appendChild(v);
-        return f;
+        w.appendChild(r); w.appendChild(v);
+        return w;
     }
     function buildSel() {
         selp.innerHTML = "";
-        const c = findClip(sel);
+        const c = findB(selB);
         if (!c || S.bypass) {
             selp.appendChild(document.createTextNode(S.bypass
                 ? T("⏭ ПРОПУСТИТЬ включена — все звуки идут в Пульт как есть", "⏭ BYPASS is on — all sounds go to the Pult as they are")
-                : T("Тяните блоки · края — обрезка · двойной клик по пустому — поставить звук · Пробел — играть · Delete — удалить · Ctrl+D — копия",
-                    "Drag blocks · edges — trim · double click empty — place a sound · Space — play · Delete — delete · Ctrl+D — copy")));
+                : T("Колёсико — масштаб · клик по полю — курсор · Пробел — играть · Delete — удалить · Ctrl+D — копия · S — разрезать",
+                    "Wheel — zoom · click the field — cursor · Space — play · Delete — delete · Ctrl+D — copy · S — split")));
             return;
         }
-        const nm = el("b", "", (items[c.src] ? items[c.src].name : "—"));
+        const nm = el("b", "", `${items[c.src] ? items[c.src].name : "—"} · ${fmt(c.in)}–${fmt(c.in + c.len)}`);
         nm.style.color = COLORS[c.src % COLORS.length];
         selp.appendChild(nm);
         selp.appendChild(rng(T("Громкость", "Volume"), 0, 2, 0.01, c.gain, (x) => Math.round(x * 100) + "%", (x) => { c.gain = x; }));
@@ -840,7 +1095,6 @@ function setupSampler(node) {
         bpmR.value = String(bpm());
         if (document.activeElement !== bpmN) bpmN.value = String(bpm());
         snapSel.value = S.snap;
-        zoomR.value = String(Math.round(S.zoom));
     }
     function setBpm(v) {
         v = clamp(Math.round(v), 40, 300);
@@ -852,43 +1106,57 @@ function setupSampler(node) {
     byp.addEventListener("click", () => {
         pushUndo();
         S.bypass = !S.bypass;
-        if (S.bypass) stop();
+        if (S.bypass) stopField();
         save(); showTop(); buildSel(); draw();
-        setStatus(S.bypass ? T("Пульт видит все звуки по отдельности", "The Pult sees every sound separately") : T("Пульт видит только результат сэмплера", "The Pult sees only the sampler result"));
+        setStatus(S.bypass ? T("Пульт видит все звуки по отдельности", "The Pult sees every sound separately")
+            : T("Пульт слышит только поле. Выделите кусок в источнике и нажмите ➜", "The Pult hears only the field. Select a piece in a source and press ➜"));
     });
-    playB.addEventListener("click", () => (P.on ? stop() : play()));
-    stopB.addEventListener("click", () => { stop(); pos = 0; drawHead(); });
+    playB.addEventListener("click", () => (P.on ? stopField() : play()));
+    stopB.addEventListener("click", () => { stopField(); stopPreview(); seek(0); });
+    fitB.addEventListener("click", () => { fitView(); draw(); });
     helpB.addEventListener("click", showHelp);
     bpmR.addEventListener("input", () => setBpm(parseFloat(bpmR.value)));
     bpmN.addEventListener("keydown", (e) => { if (e.key === "Enter") { const v = parseFloat(bpmN.value); if (Number.isFinite(v)) setBpm(v); bpmN.blur(); } });
     bpmN.addEventListener("blur", () => { const v = parseFloat(bpmN.value); if (Number.isFinite(v) && v !== bpm()) setBpm(v); else showTop(); });
     snapSel.addEventListener("change", () => { S.snap = snapSel.value; save(); draw(); });
-    zoomR.addEventListener("input", () => { S.zoom = parseFloat(zoomR.value); save(); draw(); });
 
     // ---------- нода ----------
     const dom = node.addDOMWidget("neron_sampler", "neron_sampler", outer, { serialize: false, hideOnZoom: false });
-    makeUserSized(node, dom, outer, { minH: 200, autoH: () => 360, margin: 4, onLayout: () => draw() });
+    const autoH = () => 34 + 18 + Math.max(1, items.length) * (SRC_H + 3) + 18 + 200 + 14 + 26 + 20;
+    const sizer = makeUserSized(node, dom, outer, { minH: 260, autoH, margin: 4, onLayout: () => { drawSources(); draw(); } });
     outer.style.overflow = "hidden";
-    new ResizeObserver(() => draw()).observe(grid);
-    const wanted = node.computeSize ? node.computeSize() : [900, 400];
-    node.setSize([Math.max(wanted[0], 900), Math.max(wanted[1], 200)]);
+    new ResizeObserver(() => { drawSources(); draw(); }).observe(root);
+    const wanted = node.computeSize ? node.computeSize() : [960, 460];
+    node.setSize([Math.max(wanted[0], 960), Math.max(wanted[1], 200)]);
 
+    function syncItems() {
+        const cur = upstream();
+        if (cur.map(keyOf).join("|") === items.map(keyOf).join("|")) return;
+        items = cur;
+        for (const k of Object.keys(S.sel)) if (Number(k) >= items.length) delete S.sel[k];
+        buildSources();
+        items.forEach((s) => loadSound(s).p.then(() => { drawSources(); draw(); }));
+        sizer.fit();
+        draw();
+        restartSoon();
+    }
     let lastBpm = bpm();
     const poll = setInterval(() => {
         if (document.hidden || disposed) return;
         syncItems();
-        if (bpm() !== lastBpm) { lastBpm = bpm(); showTop(); draw(); restartSoon(); }   // Пульт поменял темп
+        if (bpm() !== lastBpm) { lastBpm = bpm(); showTop(); draw(); restartSoon(); }
     }, 400);
 
-    node.neronReload = () => { stop(); loadState(); items = []; syncItems(); showTop(); buildHeads(); buildSel(); draw(); };
-    node.neronDispose = () => { disposed = true; stop(); clearInterval(poll); };
+    node.neronReload = () => { stopField(); stopPreview(); loadState(); items = []; syncItems(); showTop(); buildHeads(); buildSel(); buildSources(); draw(); };
+    node.neronDispose = () => { disposed = true; stopField(); stopPreview(); clearInterval(poll); };
 
     loadState();
     showTop();
     buildHeads();
     buildSel();
+    buildSources();
     syncItems();
-    setTimeout(draw, 50);
+    setTimeout(() => { if (!S.bricks.length) fitView(); draw(); }, 80);
 }
 
 app.registerExtension({
