@@ -1,7 +1,7 @@
 {
   "id": "42d27bb3-5c98-4448-ad1c-7158454ba3ba",
   "revision": 0,
-  "last_node_id": 10,
+  "last_node_id": 14,
   "last_link_id": 9,
   "nodes": [
     {
@@ -534,6 +534,102 @@
       },
       "color": "#115b7a",
       "bgcolor": "#0c0820"
+    },
+    {
+      "id": 11,
+      "type": "Note",
+      "pos": [
+        2634.354728848136,
+        904.9623508822126
+      ],
+      "size": [
+        260,
+        464
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "танцовщица",
+      "properties": {},
+      "widgets_values": [
+        " Neron Dancer (видео) - танцовщица из  ролика\n\nПросто для настроения. Нода никуда не подключается и ничего не считает: она стоит на столе схемы, слушает звук\nNeron-нод . танцует.\n\n- `palette` - цвет волос и наряда (розовая, голубая, сиреневая, рыжая, серебро).\n- `energy` - насколько активно она двигается.\n- Слышит только звук, который играет эта страница (то, что вы запустили кнопкой PLAY). Ничего не записывает и не отправляет.\n\nНода показывает ваш видеоролик с танцем и подгоняет его под музыку: слушает звук Neron-нод, определяет темп по ударам и меняет скорость ролика так, чтобы шаги попадали в такт. Музыка остановилась - ролик плавно замирает. Никуда не подключается, в очереди (Queue) не участвует.\n\n**Как пользоваться**\n1. Добавьте ноду: NeronAudio -> Neron Dancer (видео).\n2. Положите ролик в папку `input/Neron_Dancers` или нажмите ЗАГРУЗИТЬ. Выберите его в списке (⟳ обновляет список).\n3. Включите музыку в любой Neron-ноде.\n\n**Правила для роликов** (чтобы не перегружать браузер; при загрузке кнопкой проверяются автоматически)\n- размер до 40 МБ;\n- длина до 20 секунд (лучше 4-10);\n- картинка не больше 1280 пикселей по большей стороне (хватает 480-720);\n- форматы: webm, mp4, m4v, mov, gif. Лучше всего webm (VP9) или mp4 (h264).\n- лучший ролик - зацикленный танец, где конец плавно переходит в начало.\n\n**Поля**\n- `beats` - сколько ударов музыки укладывается в один круг вашего ролика (например, танец из 8 шагов - 8).\n- `shift` - сдвиг ролика от 0 до 1, чтобы удар музыки попал на нужное движение.\n- `remove_bg` - убрать однотонный фон (цвет берётся по углам кадра). `bg_tolerance` - насколько близкие к фону цвета считать фоном. Если у ролика прозрачный фон (webm с альфа-каналом), эта галочка не нужна.\n\n- `background` - свой фон за танцовщицей: `полосы` (полосы летят навстречу из глубины), `сетка` (неоновая сетка вдаль), `лучи` (вращающиеся лучи) или `нет`. Фон двигается быстрее, когда музыка громче, и вспыхивает на удар. Когда фон выбран, однотонный фон ролика (например, зелёный) вырезается автоматически, галочку `remove_bg` отдельно включать не нужно.\n- `bg_color` - цвет фона: розовая, голубая, сиреневая, рыжая, серебро.\n\n**Чистый экран.** По умолчанию нода выглядит как просто картинка: без заголовка, рамки и ползунков. Наведите мышь - сверху выедут все настройки (ролик, фон, цвет, ударов в круге, сдвиг, вырезание фона), снизу покажется темп. Кнопка ⚙ внизу справа закрепляет панель. Ноду можно перетаскивать за саму картинку. Если хотите обычный вид с заголовком и полями, снимите галочку «ЧИСТЫЙ ЭКРАН» в панели настроек.\n\nСкорость ролика подстраивается в пределах примерно от x0.45 до x2.2; если нужна больше - измените `beats` (вдвое больше или меньше).\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 12,
+      "type": "Note",
+      "pos": [
+        2924.354728848136,
+        904.9623508822126
+      ],
+      "size": [
+        260,
+        464
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "dancer",
+      "properties": {},
+      "widgets_values": [
+        "Neron Dancer (Video) – A dancer from a video clip\n\nJust for fun. This node doesn’t connect to anything and doesn’t perform any computations; it simply sits on your workspace and listens to the audio.\nIt’s a \"Neron-node\" that dances.\n\n- `palette`: Sets the color of the dancer’s hair and outfit (pink, blue, lilac, red/ginger, or silver).\n- `energy`: Controls how actively she moves.\n- It only listens to the audio playing within this page (triggered by the PLAY button). It does not record or transmit any data.\n\nThe node displays your video clip and synchronizes it with the music: it listens to the audio from a Neron-node, detects the tempo based on the beat, and adjusts the video playback speed so that the dance steps land on the beat. When the music stops, the video smoothly comes to a halt. It does not connect to other nodes and is not part of the processing queue.\n\n**How ​​to use**\n1. Add the node: NeronAudio -> Neron Dancer (Video).\n2. Place your video file in the `input/Neron_Dancers` folder, or click UPLOAD. Select it from the list (use ⟳ to refresh the list).\n3. Start the music using any Neron-node.\n\n**Video Guidelines** (to prevent browser overload; these are checked automatically upon upload)\n- File size: up to 40 MB.\n- Duration: up to 20 seconds (4–10 seconds is ideal).\n- Resolution: maximum 1280 pixels on the longest side (480–720 pixels is sufficient).\n- Supported formats: webm, mp4, m4v, mov, gif. Webm (VP9) or mp4 (h264) are recommended.\n- The best type of video is a looped dance sequence where the end transitions smoothly back into the beginning. **Fields**\n- `beats` — the number of musical beats that fit into one full cycle of your video (e.g., an 8-step dance sequence would be 8).\n- `shift` — an offset for the video (ranging from 0 to 1) used to align the musical beat with the corresponding movement.\n- `remove_bg` — removes a solid-colored background (the color is sampled from the corners of the frame). `bg_tolerance` determines how close a color must be to the background color to be removed. If your video already has a transparent background (such as a WebM file with an alpha channel), this option is not needed.\n\n- `background` — adds a background behind the dancer: `stripes` (stripes moving toward the viewer from the distance), `grid` (a neon grid extending into the distance), `rays` (rotating rays), or `none`. The background moves faster when the music is louder and flashes on the beat. When a background is selected, any solid-colored background in the video (e.g., green screen) is removed automatically; there is no need to enable the `remove_bg` option separately.\n- `bg_color` — the color of the background: pink, light blue, lilac, orange, or silver.\n\n**Clean Screen.** By default, the node appears simply as an image, without a header, border, or sliders. Hover your mouse over it to reveal the settings (video, background, color, beats per cycle, shift, and background removal) at the top, and the tempo at the bottom. The ⚙ button in the bottom-right corner allows you to pin the settings panel in place. You can drag the node by clicking and holding the image itself. If you prefer the standard view—complete with a header and visible input fields—simply uncheck the \"CLEAN SCREEN\" option in the settings panel.\n\nThe video playback speed can be adjusted within a range of approximately x0.45 to x2.2. If you need a speed outside this range, adjust the `beats` value (e.g., by doubling or halving it)."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 13,
+      "type": "Note",
+      "pos": [
+        -420,
+        45
+      ],
+      "size": [
+        354,
+        118
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "РУССКИЙ",
+      "properties": {},
+      "widgets_values": [
+        "=== NERON AUDIO STUDIO 2.0 ===\n\nНабор нод для ComfyUI, который превращает его в маленькую студию: режете и склеиваете видео, собираете звук из кусков, пишете бит и мелодию, сводите всё в Пульте с эквалайзером и эхом и сохраняете готовый клип со звуком. Слушать можно сразу на нодах, без Queue.\n\n--------------------------------------------------\n\nКАК УСТРОЕНО: КУБИКИ → ПОСРЕДНИКИ → ПУЛЬТ\n\nКубики (откуда берётся материал):\n🎬 Видео ×3 — до 3 роликов в одной ноде.\n🎵 Звук ×8 — до 8 звуков (mp3, wav и др.).\n🥁🎹 Музыка — барабаны и пианино в одной ноде.\n\nПосредники (что с материалом делают). У каждого есть ⏭ ПРОПУСТИТЬ — материал идёт в Пульт как есть:\n✂ Видео-сэмплер — режете куски роликов и собираете монтаж точно по кадрам.\n🎛 Сэмплер — собираете звук из кусков на сетке по тактам.\n🎛 Студия — каждая дорожка музыки отдельным каналом, поле сборки трека, общий эквалайзер на 10 полос.\n\n🎚 Пульт — сердце: сюда приходит всё. Видео, каналы звука, громкость, эквалайзер, эхо, SAVE WAV / SAVE VIDEO.\n🎨 Тема — ни к чему не подключается: оформление и живые огни в такт музыке.\nVideo Combine — сохраняет готовый ролик и показывает его.\nТанцовщица — просто для настроения (см. заметку рядом с ней).\n\nВсе ноды — в меню NeronAudio. У каждой ноды есть кнопка 📖 с подробной помощью.\n\n--------------------------------------------------\n\nУСТАНОВКА\n\n1. Скопируйте папку NeronAudioStudio в ComfyUI/custom_nodes/.\n2. Полностью перезапустите ComfyUI.\n3. Обновите страницу с очисткой кэша: Ctrl+F5.\n4. Откройте эту схему (Neron_Audio_Studio_v2.0.json) или двойной клик по пустому месту — поиск — Neron.\n\nСкачать: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n\nТребования: современный ComfyUI (Desktop подходит), ffmpeg для видео (уже есть, если стоит VideoHelperSuite или imageio-ffmpeg), браузер Chrome / Edge / ComfyUI Desktop.\n\n--------------------------------------------------\n\nС ЧЕГО НАЧАТЬ\n\n1. 🎬 Видео ×3: выберите ролик в списке или перетащите файл прямо на ноду.\n2. 🎵 Звук ×8: выберите трек. Или напишите бит в 🥁 Музыке.\n3. 🎚 Пульт: ▶ PLAY — музыка сама подстроится под длину ролика и мягко затихнет в конце.\n4. Хотите свой монтаж — отожмите ⏭ в Видео-сэмплере и положите куски роликов вниз.\n5. SAVE VIDEO в Пульте (или Queue) — готовый клип.\n\n--------------------------------------------------\n\nГДЕ ЧТО ЛЕЖИТ\n\nРолики: input/Neron_Video          Звуки: input/Neron_Audio\nСэмплы для барабанов и пианино: input/Neron_Drums/<набор>/<папки со звуками>\nПроекты (СОХРАНИТЬ/ОТКРЫТЬ): output/Neron_Projects\nСвёденный звук: output/Neron_Mixes     Готовые видео: output/Neron_Videos\nСборки монтажа Видео-сэмплера: output/Neron_Videos/_edits (старые удаляются сами)\nРолики танцовщицы: input/Neron_Dancers\n\n--------------------------------------------------\n\nПУЛЬТ — ГЛАВНОЕ\n\nКаждый канал: ▶ ■ M S, громкость, баланс, НИЗ / СЕР / ВЕРХ, ЭХО + помещение (комната / зал / собор), индикатор уровня.\nПО ДЛИНЕ ВИДЕО — музыка ровно под ролик; длинный трек затихает в конце.\nЖёлтая рамка на волне трека — тяните её, чтобы выбрать, какой кусок трека звучит под роликом.\n⚙ ДЛЯ СПЕЦОВ — длина затухания, 🎯 темп под видео.\n\n--------------------------------------------------\n\nЧАСТЫЕ ПРОБЛЕМЫ\n\nНода выглядит странно / нет новых кнопок: Ctrl+F5, при необходимости удалите ноду и добавьте заново.\nПульт молчит: нажмите PLAY, проверьте M, S, MASTER и ⏭ у посредников.\nВ Пульте «Монтаж пуст»: Видео-сэмплер включён, но кусков нет — положите куски или нажмите ⏭.\nSAVE VIDEO не склеивает: нужен ffmpeg.\nОгни темы тормозят: в ноде 🎨 Тема выберите ЖИВОСТЬ — СПОКОЙНО или ВЫКЛ.\n\n--------------------------------------------------\n\nОГРАНИЧЕНИЯ\n\nДо 3 роликов, до 8 звуков, до 8 входов в Пульте, до 16 дорожек в Студии.\nСхема версии 1 (Neron_Audio_Studio_v1.0_Beta.json) по-прежнему работает."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 14,
+      "type": "Note",
+      "pos": [
+        -420,
+        200
+      ],
+      "size": [
+        354,
+        118
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "English",
+      "properties": {},
+      "widgets_values": [
+        "=== NERON AUDIO STUDIO 2.0 ===\n\nA set of nodes that turns ComfyUI into a small studio: cut and join video, build sound from pieces, write beats and melodies, mix everything in the Pult with EQ and reverb, and save a finished clip with sound. You hear everything right on the nodes, no Queue needed.\n\n--------------------------------------------------\n\nHOW IT WORKS: CUBES → MIDDLE NODES → PULT\n\nCubes (where the material comes from):\n🎬 Video ×3 — up to 3 clips in one node.\n🎵 Sound ×8 — up to 8 sounds (mp3, wav, …).\n🥁🎹 Music — drums and piano in one node.\n\nMiddle nodes (what you do with it). Each has ⏭ BYPASS — the material goes to the Pult as it is:\n✂ Video Sampler — cut clip pieces into a frame-accurate edit.\n🎛 Sampler — build sound from pieces on a bar grid.\n🎛 Studio — every music track as its own channel, an arrange field, a 10-band master EQ.\n\n🎚 Pult — the heart: everything comes here. Video, sound channels, volume, EQ, reverb, SAVE WAV / SAVE VIDEO.\n🎨 Theme — not wired to anything: the look and live lights on the beat.\nVideo Combine — saves and shows the finished clip.\nDancer — just for fun (see the note next to her).\n\nAll nodes are in the NeronAudio menu. Every node has a 📖 button with detailed help.\n\n--------------------------------------------------\n\nINSTALLATION\n\n1. Copy the NeronAudioStudio folder into ComfyUI/custom_nodes/.\n2. Restart ComfyUI completely.\n3. Refresh the page with cache clear: Ctrl+F5.\n4. Open this workflow (Neron_Audio_Studio_v2.0.json) or double-click the canvas — search — Neron.\n\nDownload: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n\nRequirements: a modern ComfyUI (Desktop works), ffmpeg for video (already there with VideoHelperSuite or imageio-ffmpeg), Chrome / Edge / ComfyUI Desktop.\n\n--------------------------------------------------\n\nQUICK START\n\n1. 🎬 Video ×3: pick a clip in the list or drop a file onto the node.\n2. 🎵 Sound ×8: pick a track. Or write a beat in 🥁 Music.\n3. 🎚 Pult: ▶ PLAY — the music fits the clip length and fades out at the end.\n4. Want your own edit — release ⏭ in the Video Sampler and drop clip pieces down.\n5. SAVE VIDEO in the Pult (or Queue) — the finished clip.\n\n--------------------------------------------------\n\nWHERE THINGS ARE\n\nClips: input/Neron_Video          Sounds: input/Neron_Audio\nSamples for drums and piano: input/Neron_Drums/<kit>/<sound folders>\nProjects (SAVE/OPEN): output/Neron_Projects\nMixed sound: output/Neron_Mixes     Finished videos: output/Neron_Videos\nVideo Sampler edit builds: output/Neron_Videos/_edits (old ones are removed automatically)\nDancer clips: input/Neron_Dancers\n\n--------------------------------------------------\n\nPULT — THE ESSENTIALS\n\nEvery channel: ▶ ■ M S, volume, pan, LOW / MID / HIGH, REVERB + room (room / hall / cathedral), level meter.\nFIT TO VIDEO — the music matches the clip; long tracks fade out at the end.\nThe yellow frame on a track wave — drag it to choose which part plays under the clip.\n⚙ EXPERT — fade length, 🎯 tempo to video.\n\n--------------------------------------------------\n\nTROUBLESHOOTING\n\nA node looks odd / new buttons missing: Ctrl+F5; if needed delete the node and add it again.\nThe Pult is silent: press PLAY, check M, S, MASTER and ⏭ on the middle nodes.\n\"The edit is empty\" in the Pult: the Video Sampler is on but has no pieces — add pieces or press ⏭.\nSAVE VIDEO does not join: ffmpeg is required.\nTheme lights are slow: in the 🎨 Theme node set LIFE to CALM or OFF.\n\n--------------------------------------------------\n\nLIMITATIONS\n\nUp to 3 clips, up to 8 sounds, up to 8 inputs in the Pult, up to 16 tracks in the Studio.\nThe version 1 workflow (Neron_Audio_Studio_v1.0_Beta.json) still works."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
     }
   ],
   "links": [
