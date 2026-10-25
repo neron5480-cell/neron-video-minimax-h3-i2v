@@ -94,78 +94,78 @@ function injectStyles() {
     const s = document.createElement("style");
     s.id = "neron-field-styles";
     s.textContent = `
-.na-card{box-sizing:border-box;width:100%;padding:6px 8px;background:#1b1d23;border-radius:8px;font-family:"Segoe UI",Arial,sans-serif;
+.nf-card{box-sizing:border-box;width:100%;padding:6px 8px;background:#1b1d23;border-radius:8px;font-family:"Segoe UI",Arial,sans-serif;
   color:#cfd2d8;display:flex;flex-direction:column;gap:5px;overflow:hidden;user-select:none}
-.na-bar{display:flex;align-items:center;gap:6px;flex:none;flex-wrap:wrap}
-.na-btn{height:24px;padding:0 10px;border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;background:#4a4e5a;
+.nf-bar{display:flex;align-items:center;gap:6px;flex:none;flex-wrap:wrap}
+.nf-btn{height:24px;padding:0 10px;border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;background:#4a4e5a;
   white-space:nowrap;line-height:24px;flex:none;font-family:inherit}
-.na-btn:hover{filter:brightness(1.18)}
-.na-btn.sm{height:20px;line-height:20px;padding:0 7px;font-size:10px}
-.na-btn.on{box-shadow:inset 0 0 0 2px #ffd166}
-.na-btn:disabled{opacity:.4;cursor:default;filter:none}
-.na-time{font:700 12px/1 Consolas,"Courier New",monospace;color:#e6e8ee;white-space:nowrap}
-.na-status{font-size:10px;color:#8b90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none;min-height:13px}
-.na-status.err{color:#ff8a80}
-.na-stagehost{flex:1;min-height:0;display:flex;background:#0e0f12;border-radius:6px;overflow:hidden}
-.na-stage{position:relative;flex:1;min-width:0;min-height:0;background:#000}
-.na-stage video{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;opacity:0;pointer-events:none;background:transparent}
-.na-miss{position:absolute;left:0;right:0;top:0;bottom:0;display:none;align-items:center;justify-content:center;text-align:center;
+.nf-btn:hover{filter:brightness(1.18)}
+.nf-btn.sm{height:20px;line-height:20px;padding:0 7px;font-size:10px}
+.nf-btn.on{box-shadow:inset 0 0 0 2px #ffd166}
+.nf-btn:disabled{opacity:.4;cursor:default;filter:none}
+.nf-time{font:700 12px/1 Consolas,"Courier New",monospace;color:#e6e8ee;white-space:nowrap}
+.nf-status{font-size:10px;color:#8b90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none;min-height:13px}
+.nf-status.err{color:#ff8a80}
+.nf-stagehost{flex:1;min-height:0;display:flex;background:#0e0f12;border-radius:6px;overflow:hidden}
+.nf-stage{position:relative;flex:1;min-width:0;min-height:0;background:#000}
+.nf-stage video{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;opacity:0;pointer-events:none;background:transparent}
+.nf-miss{position:absolute;left:0;right:0;top:0;bottom:0;display:none;align-items:center;justify-content:center;text-align:center;
   font-size:11px;color:#ff8a80;padding:6px;pointer-events:none}
-.na-novid{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;text-align:center;
+.nf-novid{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;text-align:center;
   font-size:11px;color:#6b7080;padding:8px;line-height:1.5;pointer-events:none}
-.na-ov{flex:none;height:44px;width:100%;display:block;background:#15171c;border-radius:5px;cursor:pointer}
-.na-win{position:fixed;z-index:9000;display:none;flex-direction:column;background:#1b1d23;border:1px solid #3a3e48;border-radius:10px;
+.nf-ov{flex:none;height:44px;width:100%;display:block;background:#15171c;border-radius:5px;cursor:pointer}
+.nf-win{position:fixed;z-index:9000;display:none;flex-direction:column;background:#1b1d23;border:1px solid #3a3e48;border-radius:10px;
   box-shadow:0 14px 44px rgba(0,0,0,.65);font-family:"Segoe UI",Arial,sans-serif;color:#cfd2d8;user-select:none;overflow:hidden;outline:none}
-.na-title{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 8px;background:#23262e;cursor:move;flex:none;border-bottom:1px solid #2f323b}
-.na-title b{font-size:12px;color:#ffd166;letter-spacing:.5px;margin-right:4px;white-space:nowrap}
-.na-sep{width:1px;height:18px;background:#3a3e48;flex:none}
-.na-sp{flex:1;min-width:4px}
-.na-body{flex:1;min-height:0;display:flex;flex-direction:column}
-.na-wstage{flex:none;display:flex;background:#0e0f12;min-height:60px}
-.na-split{flex:none;height:7px;cursor:ns-resize;background:#23262e;border-top:1px solid #2f323b;border-bottom:1px solid #2f323b}
-.na-split:hover{background:#2f333d}
-.na-rrow{flex:none;display:flex;height:${RULER_H}px;background:#1f2229;border-bottom:1px solid #2f323b}
-.na-rhead{flex:none;width:${HEAD_W}px;display:flex;align-items:center;padding:0 6px;box-sizing:border-box;font-size:10px;color:#8b90a0;gap:4px}
-.na-rcv{flex:1;min-width:0;position:relative}
-.na-rcv canvas{position:absolute;left:0;top:0;cursor:pointer}
-.na-tl{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;position:relative}
-.na-tlin{display:flex;align-items:stretch;position:relative}
-.na-heads{flex:none;width:${HEAD_W}px;display:flex;flex-direction:column}
-.na-head{box-sizing:border-box;border-bottom:1px solid #2a2d35;padding:3px 6px;display:flex;flex-direction:column;justify-content:center;gap:3px;
+.nf-title{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 8px;background:#23262e;cursor:move;flex:none;border-bottom:1px solid #2f323b}
+.nf-title b{font-size:12px;color:#ffd166;letter-spacing:.5px;margin-right:4px;white-space:nowrap}
+.nf-sep{width:1px;height:18px;background:#3a3e48;flex:none}
+.nf-sp{flex:1;min-width:4px}
+.nf-body{flex:1;min-height:0;display:flex;flex-direction:column}
+.nf-wstage{flex:none;display:flex;background:#0e0f12;min-height:60px}
+.nf-split{flex:none;height:7px;cursor:ns-resize;background:#23262e;border-top:1px solid #2f323b;border-bottom:1px solid #2f323b}
+.nf-split:hover{background:#2f333d}
+.nf-rrow{flex:none;display:flex;height:${RULER_H}px;background:#1f2229;border-bottom:1px solid #2f323b}
+.nf-rhead{flex:none;width:${HEAD_W}px;display:flex;align-items:center;padding:0 6px;box-sizing:border-box;font-size:10px;color:#8b90a0;gap:4px}
+.nf-rcv{flex:1;min-width:0;position:relative}
+.nf-rcv canvas{position:absolute;left:0;top:0;cursor:pointer}
+.nf-tl{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;position:relative}
+.nf-tlin{display:flex;align-items:stretch;position:relative}
+.nf-heads{flex:none;width:${HEAD_W}px;display:flex;flex-direction:column}
+.nf-head{box-sizing:border-box;border-bottom:1px solid #2a2d35;padding:3px 6px;display:flex;flex-direction:column;justify-content:center;gap:3px;
   background:#20232a;overflow:hidden;font-size:11px}
-.na-hl{display:flex;align-items:center;gap:4px;min-width:0}
-.na-hl b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
-.na-hl input[type=range]{flex:1;min-width:30px;height:12px;margin:0;accent-color:var(--c,#4dabf7);cursor:pointer}
-.na-hl span{font-size:9px;color:#8b90a0;flex:none}
-.na-ms{width:20px;height:18px;padding:0;border:none;border-radius:4px;background:#363a44;color:#9aa0ae;font-size:10px;font-weight:700;cursor:pointer;flex:none}
-.na-ms.on-m{background:#b3414a;color:#fff}
-.na-ms.on-s{background:#d9a72b;color:#1b1d23}
-.na-dot{width:9px;height:9px;border-radius:50%;flex:none}
-.na-lanes{flex:1;min-width:0;position:relative}
-.na-lanes canvas{position:absolute;left:0;top:0}
-.na-hs{flex:none;display:flex;align-items:center;gap:6px;padding:2px 8px 2px ${HEAD_W + 8}px;background:#1f2229}
-.na-hs input{flex:1;margin:0;height:12px;accent-color:#6b7080}
-.na-selp{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 8px;background:#20232a;min-height:32px;
+.nf-hl{display:flex;align-items:center;gap:4px;min-width:0}
+.nf-hl b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
+.nf-hl input[type=range]{flex:1;min-width:30px;height:12px;margin:0;accent-color:var(--c,#4dabf7);cursor:pointer}
+.nf-hl span{font-size:9px;color:#8b90a0;flex:none}
+.nf-ms{width:20px;height:18px;padding:0;border:none;border-radius:4px;background:#363a44;color:#9aa0ae;font-size:10px;font-weight:700;cursor:pointer;flex:none}
+.nf-ms.on-m{background:#b3414a;color:#fff}
+.nf-ms.on-s{background:#d9a72b;color:#1b1d23}
+.nf-dot{width:9px;height:9px;border-radius:50%;flex:none}
+.nf-lanes{flex:1;min-width:0;position:relative}
+.nf-lanes canvas{position:absolute;left:0;top:0}
+.nf-hs{flex:none;display:flex;align-items:center;gap:6px;padding:2px 8px 2px ${HEAD_W + 8}px;background:#1f2229}
+.nf-hs input{flex:1;margin:0;height:12px;accent-color:#6b7080}
+.nf-selp{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 8px;background:#20232a;min-height:32px;
   box-sizing:border-box;font-size:11px;border-top:1px solid #2f323b}
-.na-selp b{color:#e6e8ee}
-.na-hint{color:#8b90a0;font-size:10px;line-height:1.5}
-.na-f{display:flex;align-items:center;gap:4px;font-size:10px;color:#9aa0ae;white-space:nowrap}
-.na-f input[type=range]{width:110px;height:12px;margin:0;cursor:pointer;accent-color:#ffd166}
-.na-num{width:70px;height:20px;box-sizing:border-box;background:#23252b;color:#e6e8ee;border:1px solid #33363e;border-radius:4px;font-size:11px;
+.nf-selp b{color:#e6e8ee}
+.nf-hint{color:#8b90a0;font-size:10px;line-height:1.5}
+.nf-f{display:flex;align-items:center;gap:4px;font-size:10px;color:#9aa0ae;white-space:nowrap}
+.nf-f input[type=range]{width:110px;height:12px;margin:0;cursor:pointer;accent-color:#ffd166}
+.nf-num{width:70px;height:20px;box-sizing:border-box;background:#23252b;color:#e6e8ee;border:1px solid #33363e;border-radius:4px;font-size:11px;
   text-align:center;outline:none;padding:0}
-.na-num:focus{border-color:#6b4fb3}
-.na-sel{height:20px;box-sizing:border-box;background:#23252b;color:#cfd2d8;border:1px solid #33363e;border-radius:4px;font-size:10px;outline:none}
-.na-exp{flex:none;display:none;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:6px 8px;background:#262119;border-top:2px solid #d9a72b}
-.na-grip{position:absolute;right:0;bottom:0;width:18px;height:18px;cursor:nwse-resize;background:linear-gradient(135deg,transparent 55%,#6b7080 55%,#6b7080 62%,transparent 62%,transparent 72%,#6b7080 72%,#6b7080 79%,transparent 79%)}
-.na-menu{position:fixed;z-index:9200;background:#23262e;border:1px solid #3a3e48;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.6);
+.nf-num:focus{border-color:#6b4fb3}
+.nf-sel{height:20px;box-sizing:border-box;background:#23252b;color:#cfd2d8;border:1px solid #33363e;border-radius:4px;font-size:10px;outline:none}
+.nf-exp{flex:none;display:none;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:6px 8px;background:#262119;border-top:2px solid #d9a72b}
+.nf-grip{position:absolute;right:0;bottom:0;width:18px;height:18px;cursor:nwse-resize;background:linear-gradient(135deg,transparent 55%,#6b7080 55%,#6b7080 62%,transparent 62%,transparent 72%,#6b7080 72%,#6b7080 79%,transparent 79%)}
+.nf-menu{position:fixed;z-index:9200;background:#23262e;border:1px solid #3a3e48;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.6);
   min-width:260px;max-width:440px;max-height:60vh;display:flex;flex-direction:column;font-family:"Segoe UI",Arial,sans-serif;color:#cfd2d8;font-size:11px}
-.na-menu input{margin:6px;height:22px;box-sizing:border-box;background:#1b1d23;color:#e6e8ee;border:1px solid #3a3e48;border-radius:4px;padding:0 6px;outline:none}
-.na-mlist{overflow-y:auto;padding:2px 0 6px}
-.na-mh{padding:6px 10px 2px;font-size:10px;font-weight:700;color:#8b90a0;letter-spacing:.5px}
-.na-mi{padding:5px 10px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.na-mi:hover{background:#2f333d}
-.na-mi.dis{color:#6b7080;cursor:default;background:none}
-.na-drop{position:absolute;inset:0;background:rgba(77,171,247,.12);border:2px dashed #4dabf7;border-radius:10px;display:none;align-items:center;
+.nf-menu input{margin:6px;height:22px;box-sizing:border-box;background:#1b1d23;color:#e6e8ee;border:1px solid #3a3e48;border-radius:4px;padding:0 6px;outline:none}
+.nf-mlist{overflow-y:auto;padding:2px 0 6px}
+.nf-mh{padding:6px 10px 2px;font-size:10px;font-weight:700;color:#8b90a0;letter-spacing:.5px}
+.nf-mi{padding:5px 10px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nf-mi:hover{background:#2f333d}
+.nf-mi.dis{color:#6b7080;cursor:default;background:none}
+.nf-drop{position:absolute;inset:0;background:rgba(77,171,247,.12);border:2px dashed #4dabf7;border-radius:10px;display:none;align-items:center;
   justify-content:center;font-size:16px;font-weight:700;color:#4dabf7;pointer-events:none;z-index:5}
 `;
     document.head.appendChild(s);
@@ -444,11 +444,11 @@ function closeMenu() { if (openMenuEl) { openMenuEl.remove(); openMenuEl = null;
 
 function showMenu(anchor, sections, withSearch) {
     closeMenu();
-    const m = el("div", "na-menu");
+    const m = el("div", "nf-menu");
     m.tabIndex = -1;
     const search = withSearch ? el("input") : null;
     if (search) { search.placeholder = T("поиск...", "search..."); m.appendChild(search); }
-    const list = el("div", "na-mlist");
+    const list = el("div", "nf-mlist");
     m.appendChild(list);
     function fill() {
         list.innerHTML = "";
@@ -456,10 +456,10 @@ function showMenu(anchor, sections, withSearch) {
         for (const sec of sections) {
             const items = sec.items.filter((it) => !q || it.label.toLowerCase().includes(q));
             if (!items.length && !sec.always) continue;
-            if (sec.title) list.appendChild(el("div", "na-mh", sec.title));
-            if (!items.length) { list.appendChild(el("div", "na-mi dis", sec.empty || "—")); continue; }
+            if (sec.title) list.appendChild(el("div", "nf-mh", sec.title));
+            if (!items.length) { list.appendChild(el("div", "nf-mi dis", sec.empty || "—")); continue; }
             for (const it of items.slice(0, 300)) {
-                const d = el("div", "na-mi" + (it.disabled ? " dis" : ""), it.label);
+                const d = el("div", "nf-mi" + (it.disabled ? " dis" : ""), it.label);
                 d.title = it.title || it.label;
                 if (!it.disabled) d.addEventListener("click", () => { closeMenu(); it.action(); });
                 list.appendChild(d);
@@ -751,43 +751,43 @@ function setupFieldUI(node) {
     //  КАРТОЧКА на холсте
     // ======================================================================
 
-    const card = el("div", "na-card");
-    const bar = el("div", "na-bar");
+    const card = el("div", "nf-card");
+    const bar = el("div", "nf-bar");
     const mk = (text, color, title, cls) => {
-        const b = el("button", "na-btn" + (cls ? " " + cls : ""), text);
+        const b = el("button", "nf-btn" + (cls ? " " + cls : ""), text);
         if (color) b.style.background = color;
         if (title) b.title = title;
         return b;
     };
     const cPlay = mk("▶", "#3fa34d", T("Играть (пауза — ещё раз)", "Play (again — pause)"));
     const cStop = mk("■", "#b3414a", T("Пауза", "Pause"));
-    const cTime = el("span", "na-time", "0:00.00");
+    const cTime = el("span", "nf-time", "0:00.00");
     const cOpen = mk("🎬 " + T("ОТКРЫТЬ ПОЛЕ", "OPEN FIELD"), "#6b4fb3", T("Открыть большое окно поля", "Open the big field window"));
     const cHelp = mk("📖", null, T("Справка", "Help"), "sm");
     [cPlay, cStop, cTime, cOpen, cHelp].forEach((b) => bar.appendChild(b));
     card.appendChild(bar);
-    const status = el("div", "na-status", "");
+    const status = el("div", "nf-status", "");
     card.appendChild(status);
-    const stageHost = el("div", "na-stagehost");
+    const stageHost = el("div", "nf-stagehost");
     card.appendChild(stageHost);
-    const ov = el("canvas", "na-ov");
+    const ov = el("canvas", "nf-ov");
     card.appendChild(ov);
 
     let statusTimer = null;
     function setStatus(text, isError) {
         status.textContent = text || "";
         status.title = text || "";
-        status.className = "na-status" + (isError ? " err" : "");
-        if (win) { wStatus.textContent = text || ""; wStatus.title = text || ""; wStatus.className = "na-status" + (isError ? " err" : ""); }
+        status.className = "nf-status" + (isError ? " err" : "");
+        if (win) { wStatus.textContent = text || ""; wStatus.title = text || ""; wStatus.className = "nf-status" + (isError ? " err" : ""); }
         if (statusTimer) clearTimeout(statusTimer);
     }
 
     // ---------- сцена: 3 видео-элемента, переезжают между карточкой и окном ----------
 
-    const stage = el("div", "na-stage");
+    const stage = el("div", "nf-stage");
     const vids = new Map();          // id клипа -> <video>
-    const miss = el("div", "na-miss", T("нет кадров — чёрный экран", "no frames — black screen"));
-    const novid = el("div", "na-novid", T("Видео нет. Добавьте ролик в окне поля (🎬 ОТКРЫТЬ ПОЛЕ → + ВИДЕО).",
+    const miss = el("div", "nf-miss", T("нет кадров — чёрный экран", "no frames — black screen"));
+    const novid = el("div", "nf-novid", T("Видео нет. Добавьте ролик в окне поля (🎬 ОТКРЫТЬ ПОЛЕ → + ВИДЕО).",
         "No video. Add a clip in the field window (🎬 OPEN FIELD → + VIDEO)."));
     stage.appendChild(novid);
     stage.appendChild(miss);
@@ -1184,15 +1184,15 @@ function setupFieldUI(node) {
     }
 
     function buildWindow() {
-        win = el("div", "na-win");
+        win = el("div", "nf-win");
         win.tabIndex = 0;
         // ---- заголовок ----
-        const title = el("div", "na-title");
+        const title = el("div", "nf-title");
         title.appendChild(el("b", "", "🎬 NERON " + T("ПОЛЕ", "FIELD")));
         wPlay = mk("▶", "#3fa34d", T("Играть (Пробел)", "Play (Space)"));
         const wStop = mk("■", "#b3414a", T("Пауза (Пробел)", "Pause (Space)"));
         const wHome = mk("⏮", null, T("В начало (Home)", "To start (Home)"), "sm");
-        wTime = el("span", "na-time", "0:00.00");
+        wTime = el("span", "nf-time", "0:00.00");
         wTime.style.minWidth = "170px";
         const addV = mk("+ " + T("ВИДЕО", "VIDEO"), "#2f6f9f", T("Добавить ролик (до 3)", "Add a clip (up to 3)"));
         const addA = mk("+ " + T("ЗВУК", "SOUND"), "#2f7d4a", T("Добавить звук на курсор", "Add sound at the cursor"));
@@ -1206,31 +1206,31 @@ function setupFieldUI(node) {
         const build = mk("💾 " + T("СОБРАТЬ", "BUILD"), "#8e44ad", T("Сохранить звук (WAV) и видео (mp4)", "Save the sound (WAV) and the video (mp4)"));
         const full = mk("⛶", null, T("На весь экран", "Full screen"), "sm");
         const close = mk("✕", "#7a3b3b", T("Закрыть окно (Esc)", "Close the window (Esc)"), "sm");
-        const sep = () => el("span", "na-sep");
-        [wPlay, wStop, wHome, wTime, sep(), addV, addA, addT, sep(), magnet, zoomOut, zoomIn, zoomFit, el("span", "na-sp"), expBtn, help, build, full, close]
+        const sep = () => el("span", "nf-sep");
+        [wPlay, wStop, wHome, wTime, sep(), addV, addA, addT, sep(), magnet, zoomOut, zoomIn, zoomFit, el("span", "nf-sp"), expBtn, help, build, full, close]
             .forEach((b) => title.appendChild(b));
         win.appendChild(title);
-        wStatus = el("div", "na-status", "");
+        wStatus = el("div", "nf-status", "");
         wStatus.style.padding = "2px 8px";
         wStatus.style.background = "#1f2229";
         win.appendChild(wStatus);
 
         // ---- тело ----
-        const body = el("div", "na-body");
-        const wstage = el("div", "na-wstage");
-        const split = el("div", "na-split");
+        const body = el("div", "nf-body");
+        const wstage = el("div", "nf-wstage");
+        const split = el("div", "nf-split");
         split.title = T("Потяните, чтобы поменять высоту картинки", "Drag to change the picture height");
-        const rrow = el("div", "na-rrow");
-        const rhead = el("div", "na-rhead", T("время", "time"));
-        const rcv = el("div", "na-rcv");
+        const rrow = el("div", "nf-rrow");
+        const rhead = el("div", "nf-rhead", T("время", "time"));
+        const rcv = el("div", "nf-rcv");
         const ruler = el("canvas");
         rcv.appendChild(ruler);
         rrow.appendChild(rhead);
         rrow.appendChild(rcv);
-        const tl = el("div", "na-tl");
-        const tlin = el("div", "na-tlin");
-        const heads = el("div", "na-heads");
-        const lanesBox = el("div", "na-lanes");
+        const tl = el("div", "nf-tl");
+        const tlin = el("div", "nf-tlin");
+        const heads = el("div", "nf-heads");
+        const lanesBox = el("div", "nf-lanes");
         const lanes = el("canvas");
         const over = el("canvas");
         over.style.pointerEvents = "none";
@@ -1239,7 +1239,7 @@ function setupFieldUI(node) {
         tlin.appendChild(heads);
         tlin.appendChild(lanesBox);
         tl.appendChild(tlin);
-        const hs = el("div", "na-hs");
+        const hs = el("div", "nf-hs");
         const hsr = el("input");
         hsr.type = "range"; hsr.min = "0"; hsr.max = "1000"; hsr.value = "0";
         hsr.title = T("Прокрутка по времени", "Scroll in time");
@@ -1247,14 +1247,14 @@ function setupFieldUI(node) {
         [wstage, split, rrow, tl, hs].forEach((x) => body.appendChild(x));
         win.appendChild(body);
 
-        const selp = el("div", "na-selp");
+        const selp = el("div", "nf-selp");
         win.appendChild(selp);
-        const exp = el("div", "na-exp");
+        const exp = el("div", "nf-exp");
         win.appendChild(exp);
-        const grip = el("div", "na-grip");
+        const grip = el("div", "nf-grip");
         grip.title = T("Потяните, чтобы изменить размер", "Drag to resize");
         win.appendChild(grip);
-        const drop = el("div", "na-drop", T("Отпустите файл: звук или видео", "Drop the file: audio or video"));
+        const drop = el("div", "nf-drop", T("Отпустите файл: звук или видео", "Drop the file: audio or video"));
         win.appendChild(drop);
         const fileIn = el("input");
         fileIn.type = "file"; fileIn.multiple = true; fileIn.style.display = "none";
@@ -1494,28 +1494,28 @@ function setupFieldUI(node) {
         box.innerHTML = "";
         W.tlin.style.height = H + "px";
         for (const r of rows) {
-            const h = el("div", "na-head");
+            const h = el("div", "nf-head");
             h.style.height = r.h + "px";
             if (r.type === "video") {
                 const c = F.video.clips[r.k];
-                const l1 = el("div", "na-hl");
-                const dot = el("span", "na-dot"); dot.style.background = VCOLORS[r.k % VCOLORS.length];
+                const l1 = el("div", "nf-hl");
+                const dot = el("span", "nf-dot"); dot.style.background = VCOLORS[r.k % VCOLORS.length];
                 const nm = el("b", "", `🎬 ${r.k + 1}. ${c.src.name}`);
                 nm.title = c.src.name;
-                const rm = el("button", "na-ms", "✕");
+                const rm = el("button", "nf-ms", "✕");
                 rm.title = T("Убрать ролик", "Remove the clip");
                 rm.addEventListener("click", () => removeVideo(c.id));
                 [dot, nm, rm].forEach((x) => l1.appendChild(x));
-                const l2 = el("div", "na-hl");
+                const l2 = el("div", "nf-hl");
                 const info = el("span", "", c.dur > 0 ? `${fmtT(c.dur)} · ${Math.round((c.fps || 0) * 100) / 100} fps · ${c.w}×${c.h}` : T("загрузка...", "loading..."));
                 l2.appendChild(info);
                 h.appendChild(l1); h.appendChild(l2);
             } else if (r.type === "result") {
-                const l1 = el("div", "na-hl");
+                const l1 = el("div", "nf-hl");
                 const b = el("b", "", T("ИТОГ", "RESULT"));
                 b.style.color = "#ffd166";
-                const l2 = el("div", "na-hl");
-                const ts = el("select", "na-sel");
+                const l2 = el("div", "nf-hl");
+                const ts = el("select", "nf-sel");
                 [["cut", "✂ " + T("склейка", "cut")], ["fade", "🌫 " + T("наплыв", "dissolve")]].forEach(([v, t]) => { const o = el("option", "", t); o.value = v; ts.appendChild(o); });
                 ts.value = F.video.trans;
                 ts.title = T("Как один ролик сменяет другой", "How one clip turns into the next");
@@ -1525,13 +1525,13 @@ function setupFieldUI(node) {
                 h.appendChild(l1); h.appendChild(l2);
             } else if (r.type === "vaudio") {
                 const a = F.video.audio;
-                const l0 = el("div", "na-hl");
+                const l0 = el("div", "nf-hl");
                 l0.appendChild(el("b", "", "🔊 " + T("ЗВУК ВИДЕО", "VIDEO SOUND")));
                 h.appendChild(l0);
-                const l1 = el("div", "na-hl");
-                const m = el("button", "na-ms" + (a.mute ? " on-m" : ""), "M");
+                const l1 = el("div", "nf-hl");
+                const m = el("button", "nf-ms" + (a.mute ? " on-m" : ""), "M");
                 m.title = T("Выключить родной звук роликов", "Mute the clips' own sound");
-                const s = el("button", "na-ms" + (a.solo ? " on-s" : ""), "S");
+                const s = el("button", "nf-ms" + (a.solo ? " on-s" : ""), "S");
                 s.title = T("Только этот звук", "Solo");
                 m.addEventListener("click", () => { a.mute = !a.mute; m.classList.toggle("on-m", a.mute); mixChanged(); });
                 s.addEventListener("click", () => { a.solo = !a.solo; s.classList.toggle("on-s", a.solo); mixChanged(); });
@@ -1541,26 +1541,26 @@ function setupFieldUI(node) {
                 l1.appendChild(vol);
                 h.appendChild(l1);
             } else if (r.type === "vempty") {
-                const l1 = el("div", "na-hl");
+                const l1 = el("div", "nf-hl");
                 const b = mk("+ " + T("ВИДЕО", "VIDEO"), "#2f6f9f", T("Добавить ролик", "Add a clip"), "sm");
                 b.addEventListener("click", () => menuVideo(b));
                 l1.appendChild(b);
                 h.appendChild(l1);
-                h.appendChild(el("div", "na-hint", T("до 3 роликов", "up to 3 clips")));
+                h.appendChild(el("div", "nf-hint", T("до 3 роликов", "up to 3 clips")));
             } else if (r.type === "track") {
                 const t = F.tracks[r.i];
                 h.style.setProperty("--c", t.color);
-                const l1 = el("div", "na-hl");
-                const dot = el("span", "na-dot"); dot.style.background = t.color;
+                const l1 = el("div", "nf-hl");
+                const dot = el("span", "nf-dot"); dot.style.background = t.color;
                 const nm = el("b", "", t.name);
                 nm.style.color = t.color;
                 nm.title = T("Двойной клик — переименовать", "Double click — rename");
                 nm.addEventListener("dblclick", () => renameTrack(t, nm));
-                const m = el("button", "na-ms" + (t.mute ? " on-m" : ""), "M");
+                const m = el("button", "nf-ms" + (t.mute ? " on-m" : ""), "M");
                 m.title = T("Выключить дорожку", "Mute the track");
-                const s = el("button", "na-ms" + (t.solo ? " on-s" : ""), "S");
+                const s = el("button", "nf-ms" + (t.solo ? " on-s" : ""), "S");
                 s.title = T("Только эта дорожка", "Solo");
-                const rm = el("button", "na-ms", "✕");
+                const rm = el("button", "nf-ms", "✕");
                 rm.title = T("Удалить дорожку (дважды)", "Delete the track (twice)");
                 m.addEventListener("click", () => { t.mute = !t.mute; m.classList.toggle("on-m", t.mute); mixChanged(); });
                 s.addEventListener("click", () => { t.solo = !t.solo; s.classList.toggle("on-s", t.solo); mixChanged(); });
@@ -1571,14 +1571,14 @@ function setupFieldUI(node) {
                     removeTrack(t.id);
                 });
                 [dot, nm, m, s, rm].forEach((x) => l1.appendChild(x));
-                const l2 = el("div", "na-hl");
+                const l2 = el("div", "nf-hl");
                 l2.appendChild(el("span", "", "VOL"));
                 l2.appendChild(slider(0, 1.2, 0.01, t.vol, t.color, T("Громкость дорожки (двойной клик — сброс)", "Track volume (double click — reset)"), (v) => { t.vol = v; mixChanged(); }, 0.8));
                 l2.appendChild(el("span", "", "PAN"));
                 l2.appendChild(slider(-1, 1, 0.05, t.pan, t.color, T("Баланс лево-право (двойной клик — центр)", "Pan left-right (double click — center)"), (v) => { t.pan = v; mixChanged(); }, 0));
                 h.appendChild(l1); h.appendChild(l2);
             } else if (r.type === "add") {
-                const l1 = el("div", "na-hl");
+                const l1 = el("div", "nf-hl");
                 const b = mk("+ " + T("ДОРОЖКА", "TRACK"), null, T("Новая дорожка", "New track"), "sm");
                 b.disabled = F.tracks.length >= MAX_TRACKS;
                 b.addEventListener("click", () => addTrack(true));
@@ -1601,7 +1601,7 @@ function setupFieldUI(node) {
     }
 
     function renameTrack(t, nm) {
-        const inp = el("input", "na-num");
+        const inp = el("input", "nf-num");
         inp.style.width = "110px";
         inp.value = t.name;
         nm.replaceWith(inp);
@@ -2368,9 +2368,9 @@ function setupFieldUI(node) {
     // ---------- панель выделенного (внизу) ----------
 
     function numField(label, value, onSet, title) {
-        const f = el("label", "na-f");
+        const f = el("label", "nf-f");
         f.appendChild(document.createTextNode(label));
-        const n = el("input", "na-num");
+        const n = el("input", "nf-num");
         n.type = "text";
         n.value = String(Math.round(value * 1000) / 1000);
         n.title = title || "";
@@ -2381,7 +2381,7 @@ function setupFieldUI(node) {
         return f;
     }
     function rangeField(label, min, max, step, value, fmt, onInput, title) {
-        const f = el("label", "na-f");
+        const f = el("label", "nf-f");
         f.appendChild(document.createTextNode(label));
         const s = el("input");
         s.type = "range"; s.min = String(min); s.max = String(max); s.step = String(step); s.value = String(value);
@@ -2441,7 +2441,7 @@ function setupFieldUI(node) {
             const nm = el("b", "", `🎬 ${k + 1}. ${c.src.name}`);
             nm.style.color = VCOLORS[k % VCOLORS.length];
             p.appendChild(nm);
-            const info = el("span", "na-hint", `${T("сдвиг", "shift")}: ${c.offset >= 0 ? "+" : ""}${c.offset.toFixed(3)} ${T("с", "s")} · ${Math.round(c.offset / fr)} ${T("кадров", "frames")}`);
+            const info = el("span", "nf-hint", `${T("сдвиг", "shift")}: ${c.offset >= 0 ? "+" : ""}${c.offset.toFixed(3)} ${T("с", "s")} · ${Math.round(c.offset / fr)} ${T("кадров", "frames")}`);
             const b = (txt, n, title) => { const x = mk(txt, null, title, "sm"); x.addEventListener("click", () => { nudgeSel(Math.sign(n), Math.abs(n) > 1); }); return x; };
             p.appendChild(b("◀◀", -10, T("На 10 кадров раньше (Shift+←)", "10 frames earlier (Shift+←)")));
             p.appendChild(b("◀", -1, T("На 1 кадр раньше (←)", "1 frame earlier (←)")));
@@ -2455,7 +2455,7 @@ function setupFieldUI(node) {
             bx.addEventListener("click", () => removeVideo(c.id));
             p.appendChild(bx);
         } else {
-            p.appendChild(el("span", "na-hint", T(
+            p.appendChild(el("span", "nf-hint", T(
                 "Тяните ролики и куски мышкой · жёлтые ромбики — разделители роликов · перетащите файл прямо на окно · Пробел — играть · S — разрезать · Delete — удалить · двойной клик по пустой дорожке — добавить звук",
                 "Drag clips and pieces · yellow diamonds are clip dividers · drop a file onto the window · Space — play · S — split · Delete — delete · double click an empty track — add sound")));
         }
@@ -2482,7 +2482,7 @@ function setupFieldUI(node) {
             projBar.root.querySelectorAll("input,select").forEach((x) => x.addEventListener("keydown", (e) => e.stopPropagation()));
         }
         W.exp.appendChild(projBar.root);
-        const m = el("label", "na-f");
+        const m = el("label", "nf-f");
         m.appendChild(document.createTextNode("MASTER"));
         m.appendChild(slider(0, 1.2, 0.01, F.master, "#ffd166", T("Общая громкость (двойной клик — сброс)", "Master volume (double click — reset)"), (v) => { F.master = v; mixChanged(); }, 0.9));
         W.exp.appendChild(m);
@@ -2490,10 +2490,10 @@ function setupFieldUI(node) {
             W.exp.appendChild(rangeField(T("Наплыв", "Dissolve"), 0.04, 3, 0.02, F.video.trans_dur, (x) => x.toFixed(2) + " с/s",
                 (x) => { F.video.trans_dur = x; requestDraw(); }, T("Длина наплыва между роликами", "Length of the dissolve between clips")));
         }
-        const sn = el("label", "na-f");
+        const sn = el("label", "nf-f");
         const name = getWidget("save_name");
         sn.appendChild(document.createTextNode(T("Имя файла", "File name")));
-        const ni = el("input", "na-num");
+        const ni = el("input", "nf-num");
         ni.style.width = "140px";
         ni.value = name ? String(name.value) : "neron_field";
         ni.addEventListener("keydown", (e) => e.stopPropagation());

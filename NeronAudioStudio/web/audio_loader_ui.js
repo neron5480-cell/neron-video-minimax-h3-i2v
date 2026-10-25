@@ -1,5 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
+import { makeUserSized } from "./neron_common.js";
 
 // ============================================================================
 //  Neron Audio Loader
@@ -35,7 +36,7 @@ function injectStyles() {
 .na-btn{height:24px;padding:0 10px;border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;
   flex:none;line-height:24px;background:#4a4e5a;white-space:nowrap}
 .na-btn:hover{filter:brightness(1.18)}
-.na-wave{position:relative;flex:none;height:${H}px;background:#15171c;border-radius:6px;overflow:hidden;cursor:ew-resize;touch-action:none}
+.na-wave{position:relative;flex:1;min-height:${H}px;background:#15171c;border-radius:6px;overflow:hidden;cursor:ew-resize;touch-action:none}
 .na-wave canvas{position:absolute;left:0;top:0;width:100%;height:100%}
 .na-note{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;
   font-size:11px;color:#8b90a0;text-align:center;padding:0 10px;pointer-events:none}
@@ -450,10 +451,9 @@ function setupLoaderUI(node) {
     const domWidget = node.addDOMWidget("neron_audio_loader", "neron_audio_loader", root, {
         serialize: false,
         hideOnZoom: false,
-        getMinHeight: () => PANEL_H,
-        getMaxHeight: () => PANEL_H,
     });
-    domWidget.computeSize = (width) => [width, PANEL_H];
+    // размер задаёт пользователь; волна растягивается вместе с нодой
+    makeUserSized(node, domWidget, root, { minH: 170, autoH: () => PANEL_H, onLayout: () => requestAnimationFrame(() => { try { drawWave(); } catch (e) { /* ок */ } }) });
 
     const wanted = node.computeSize ? node.computeSize() : [520, 400];
     node.setSize([Math.max(wanted[0], 520), Math.max(wanted[1], PANEL_H + 150)]);

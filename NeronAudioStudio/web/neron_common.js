@@ -1,3 +1,4 @@
+import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
 // ============================================================================
@@ -164,4 +165,78 @@ function createProjectBar(opts) {
     return { root, refresh, nameInput: nameIn };
 }
 
-export { el, createProjectBar };
+
+// ============================================================================
+//  Размер ноды задаёт пользователь (как в Пульте Perception Relay)
+//  RU: Пока ноду не трогали, она подстраивает высоту под содержимое (autoH).
+//      Как только её растянули мышью, размер запоминается в схеме и нода больше
+//      сама его не меняет: содержимое подстраивается, лишнее прокручивается.
+//      Правый клик по ноде → «Авто-размер» возвращает подгонку.
+//  EN: Until touched, the node fits its content (autoH). Once resized by mouse,
+//      the size is saved in the workflow and the node never changes it again:
+//      the content adapts and scrolls. Right click → "Auto size" undoes it.
+// ============================================================================
+function makeUserSized(node, domWidget, root, opts) {
+    const minH = opts.minH || 120;
+    const autoH = opts.autoH;
+    const margin = opts.margin ?? 8;
+    node.properties = node.properties || {};
+    const manual = () => node.properties.neron_manual_size === true;
+    const curH = () => {
+        if (!manual()) return autoH();
+        const h = Number(node.properties.neron_panel_h);
+        return h > 0 ? Math.max(minH, h) : autoH();
+    };
+    const o = domWidget.options || (domWidget.options = {});
+    o.getMinHeight = () => (manual() ? minH : curH());
+    o.getHeight = () => curH();
+    o.getMaxHeight = () => curH();
+    // пока ноду тянут мышью — просим минимум, чтобы её можно было и уменьшить
+    domWidget.computeSize = (width) => [width, manual() && app.canvas?.resizing_node === node ? minH : curH()];
+    let fitting = false;
+    const apply = () => {
+        root.style.height = curH() + "px";
+        if (opts.onLayout) { try { opts.onLayout(curH()); } catch (e) { /* ок */ } }
+    };
+    // высота ноды под содержимое — только пока размер не трогали руками
+    const fit = () => {
+        apply();
+        const top = domWidget.last_y;
+        if (fitting || top == null || !node.size) return;
+        const need = Math.round(top + curH() + margin);
+        if (manual() ? node.size[1] < need : Math.abs(node.size[1] - need) > 2) {
+            fitting = true;
+            node.setSize([node.size[0], need]);
+            fitting = false;
+        }
+        if (typeof node.setDirtyCanvas === "function") node.setDirtyCanvas(true, true);
+    };
+    const onResize0 = node.onResize;
+    node.onResize = function () {
+        const r = onResize0 ? onResize0.apply(this, arguments) : undefined;
+        if (!fitting && app.canvas?.resizing_node === node) {
+            node.properties.neron_manual_size = true;
+            const top = domWidget.last_y;
+            if (top != null) node.properties.neron_panel_h = Math.max(minH, Math.round(node.size[1] - top - margin));
+        }
+        requestAnimationFrame(apply);
+        return r;
+    };
+    const menu0 = node.getExtraMenuOptions;
+    node.getExtraMenuOptions = function (canvas, options) {
+        const r = menu0 ? menu0.apply(this, arguments) : undefined;
+        if (manual() && Array.isArray(options)) {
+            options.push(null, {
+                content: "↕ Авто-размер / Auto size",
+                callback: () => { node.properties.neron_manual_size = false; fit(); },
+            });
+        }
+        return r;
+    };
+    root.style.overflow = "auto";
+    apply();
+    setTimeout(fit, 60);
+    return { curH, manual, fit, apply };
+}
+
+export { el, createProjectBar, makeUserSized };

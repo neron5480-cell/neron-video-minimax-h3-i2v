@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { createProjectBar } from "./neron_common.js";
+import { createProjectBar, makeUserSized } from "./neron_common.js";
 
 // ============================================================================
 //  Neron Mixer
@@ -92,6 +92,8 @@ function injectStyles() {
 .nm-wave .nm-note{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;
   font-size:10px;color:#8b90a0;text-align:center;padding:0 6px}
 .nm-ph{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.85;display:none;pointer-events:none}
+.nm-meter{width:14px;height:36px;flex:none;background:#101216;border-radius:3px}
+.nm-mmeter{width:140px;height:16px;flex:none;background:#101216;border-radius:3px}
 .nm-empty{padding:14px 10px;font-size:11px;color:#8b90a0;line-height:1.55;background:#20232a;border-radius:7px}
 `;
     document.head.appendChild(s);
@@ -132,7 +134,72 @@ function buildTrackChain(ctx, master) {
     gr.connect(merge, 0, 1);
     merge.connect(vol);
     vol.connect(master);
-    return { input, gl, gr, vol };
+    // отвод на индикатор уровня: звук не меняет, только «подслушивает»
+    const tap = ctx.createChannelSplitter(2);
+    const aL = ctx.createAnalyser(), aR = ctx.createAnalyser();
+    aL.fftSize = 512; aR.fftSize = 512;
+    vol.connect(tap);
+    tap.connect(aL, 0);
+    tap.connect(aR, 1);
+    return { input, gl, gr, vol, aL, aR };
+}
+
+// ----------------------------------------------------------------------------
+//  Индикаторы уровня (прыгающие столбики)
+// ----------------------------------------------------------------------------
+
+const meterBuf = new Float32Array(512);
+function peakOf(an) {
+    if (!an) return 0;
+    an.getFloatTimeDomainData(meterBuf);
+    let p = 0;
+    for (let i = 0; i < meterBuf.length; i++) { const v = Math.abs(meterBuf[i]); if (v > p) p = v; }
+    return p;
+}
+// 0..1 по шкале -48..0 дБ
+const toLevel = (p) => (p > 0.00001 ? Math.max(0, Math.min(1, (20 * Math.log10(p) + 48) / 48)) : 0);
+// сглаживание: подскакивает сразу, опускается плавно; пиковая метка держится 1 с
+function meterStep(m, peak, now) {
+    const v = toLevel(peak);
+    m.v = Math.max(v, (m.v || 0) - 0.025);
+    if (v >= (m.hold || 0) || now - (m.holdT || 0) > 1000) { m.hold = v; m.holdT = now; }
+    return m;
+}
+const ledColor = (f) => (f > 0.9 ? "#e5484d" : f > 0.72 ? "#e0b030" : "#3fbf5a");
+// vertical=true: два столбика снизу вверх (L, R); иначе две полосы слева направо
+function drawMeter(cv, mL, mR, vertical) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth || 14, h = cv.clientHeight || 36;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    const g = cv.getContext("2d");
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, w, h);
+    const bars = [mL, mR];
+    const seg = 3, gap = 1;
+    for (let b = 0; b < 2; b++) {
+        const m = bars[b] || {};
+        if (vertical) {
+            const bw = (w - 3) / 2, x = 1 + b * (bw + 1);
+            const n = Math.floor((h - 2) / (seg + gap));
+            const on = Math.round((m.v || 0) * n);
+            for (let i = 0; i < n; i++) {
+                const f = (i + 1) / n;
+                g.fillStyle = i < on ? ledColor(f) : "#23262e";
+                g.fillRect(x, h - 1 - (i + 1) * (seg + gap) + gap, bw, seg);
+            }
+            if (m.hold > 0.02) { const i = Math.min(n - 1, Math.round(m.hold * n) - 1); g.fillStyle = ledColor((i + 1) / n); g.fillRect(x, h - 1 - (i + 1) * (seg + gap) + gap, bw, seg); }
+        } else {
+            const bh = (h - 3) / 2, y = 1 + b * (bh + 1);
+            const n = Math.floor((w - 2) / (seg + gap));
+            const on = Math.round((m.v || 0) * n);
+            for (let i = 0; i < n; i++) {
+                const f = (i + 1) / n;
+                g.fillStyle = i < on ? ledColor(f) : "#23262e";
+                g.fillRect(1 + i * (seg + gap), y, seg, bh);
+            }
+            if (m.hold > 0.02) { const i = Math.min(n - 1, Math.round(m.hold * n) - 1); g.fillStyle = ledColor((i + 1) / n); g.fillRect(1 + i * (seg + gap), y, seg, bh); }
+        }
+    }
 }
 
 function viewUrl(v) {
@@ -478,6 +545,9 @@ function setupMixerUI(node) {
     masterSlider.style.width = "100px";
     masterSlider.title = "Общая громкость (двойной клик - сбросить)";
     gM.appendChild(masterSlider);
+    const mMeter = el("canvas", "nm-mmeter");
+    mMeter.title = "Общий уровень: левый и правый канал. Красное - слишком громко / Master level: left and right. Red - too loud";
+    gM.appendChild(mMeter);
     top.appendChild(gM);
 
     const status = el("div", "nm-status", "");
@@ -547,7 +617,13 @@ function setupMixerUI(node) {
             lim.release.value = 0.12;
             master.connect(lim);
             lim.connect(ctx.destination);
-            audio = { ctx, master };
+            const tap = ctx.createChannelSplitter(2);
+            const aL = ctx.createAnalyser(), aR = ctx.createAnalyser();
+            aL.fftSize = 512; aR.fftSize = 512;
+            lim.connect(tap);
+            tap.connect(aL, 0);
+            tap.connect(aR, 1);
+            audio = { ctx, master, aL, aR };
         }
         return audio;
     }
@@ -785,6 +861,7 @@ function setupMixerUI(node) {
             if (p && p.catch) p.catch(() => {});
         }
         if (!play.raf) play.raf = requestAnimationFrame(drawLoop);
+        startMeters();
         const only = play.only ? chs.find((c) => c.slot === play.only) : null;
         setStatus(only ? `Играет только: ${only.label}` : (play.D ? `Играет под видео (${videoDur.toFixed(2)} с)` : "Играет по кругу"), false);
         refreshRowButtons();
@@ -820,6 +897,7 @@ function setupMixerUI(node) {
         try { video.pause(); } catch (e) { /* ок */ }
         showPos(pos.t);
         refreshRowButtons();
+        startMeters();          // столбики плавно опустятся и цикл остановится
     }
 
     function restartIfPlaying() {
@@ -873,6 +951,28 @@ function setupMixerUI(node) {
             try { video.currentTime = target; } catch (e) { /* ок */ }
         }
     }
+
+    const mm = { L: {}, R: {}, raf: null };
+    function meterLoop() {
+        mm.raf = null;
+        if (!audio) return;
+        const now = performance.now();
+        let alive = play.on;
+        for (const [slot, u] of ui.entries()) {
+            if (!u.meter) continue;
+            const ch = chains.get(slot);
+            meterStep(u.mL, play.on && ch ? peakOf(ch.aL) : 0, now);
+            meterStep(u.mR, play.on && ch ? peakOf(ch.aR) : 0, now);
+            drawMeter(u.meter, u.mL, u.mR, true);
+            if (u.mL.v > 0.001 || u.mR.v > 0.001 || u.mL.hold > 0.02) alive = true;
+        }
+        meterStep(mm.L, play.on ? peakOf(audio.aL) : 0, now);
+        meterStep(mm.R, play.on ? peakOf(audio.aR) : 0, now);
+        drawMeter(mMeter, mm.L, mm.R, false);
+        if (mm.L.v > 0.001 || mm.R.v > 0.001 || mm.L.hold > 0.02) alive = true;
+        if (alive && !document.hidden) mm.raf = requestAnimationFrame(meterLoop);
+    }
+    const startMeters = () => { if (!mm.raf) mm.raf = requestAnimationFrame(meterLoop); };
 
     function drawLoop() {
         if (!play.on || !audio) { play.raf = null; return; }
@@ -1127,6 +1227,9 @@ function setupMixerUI(node) {
             name.appendChild(el("b", "", c.label));
             name.appendChild(el("span", "", c.isVideo ? `свой звук видео · ${c.sub}` : `вход ${c.slot}` + (c.sub && c.sub !== c.label ? " · " + c.sub : "")));
             row.appendChild(name);
+            const meter = el("canvas", "nm-meter");
+            meter.title = "Уровень канала / Channel level";
+            row.appendChild(meter);
 
             const rowPlay = el("button", "nm-ms", "▶");
             rowPlay.title = "Слушать только этот трек (с текущего места)";
@@ -1169,7 +1272,7 @@ function setupMixerUI(node) {
             wave.appendChild(ph);
             row.appendChild(wave);
 
-            ui.set(c.slot, { ph, canvas, note, rowPlay });
+            ui.set(c.slot, { ph, canvas, note, rowPlay, meter, mL: {}, mR: {} });
             rowPlay.addEventListener("click", () => {
                 if (play.on || play.starting) stopPlayback();
                 play.only = c.slot;
@@ -1203,6 +1306,7 @@ function setupMixerUI(node) {
     }
 
     let lastW = 0;
+    let sizer = null;
     function relayout() {
         panelH = panelHeightFor(chs.length, videoShown);
         // реальная высота содержимого (верхняя строка может переноситься)
@@ -1210,6 +1314,7 @@ function setupMixerUI(node) {
         const natural = root.offsetHeight;
         if (natural > 80) panelH = natural + 2;
         lastW = root.clientWidth;
+        if (sizer) { sizer.fit(); return; }    // размер задаёт пользователь (см. makeUserSized)
         root.style.height = panelH + "px";
         if (node.size) {
             const need = BASE_NODE_H + INPUT_H * Math.max(1, (node.inputs || []).length) + panelH;
@@ -1369,10 +1474,8 @@ function setupMixerUI(node) {
     const domWidget = node.addDOMWidget("neron_mixer", "neron_mixer", root, {
         serialize: false,
         hideOnZoom: false,
-        getMinHeight: () => panelH,
-        getMaxHeight: () => panelH,
     });
-    domWidget.computeSize = (width) => [width, panelH];
+    sizer = makeUserSized(node, domWidget, root, { minH: 160, autoH: () => panelH });
     buildList();
 
     const wanted = node.computeSize ? node.computeSize() : [900, 400];

@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { createProjectBar } from "./neron_common.js";
+import { createProjectBar, makeUserSized } from "./neron_common.js";
 
 // ============================================================================
 //  Neron Drum Machine - интерфейс
@@ -903,7 +903,9 @@ function setupNeronUI(node) {
         rowsBox.appendChild(row);
     }
 
+    let sizer = null;
     function relayout(shrinkBy) {
+        if (sizer) { sizer.fit(); return; }     // размер задаёт пользователь (см. makeUserSized)
         root.style.height = panelH + "px";
         if (node.size) {
             const need = BASE_NODE_HEIGHT + panelH;
@@ -1225,11 +1227,8 @@ function setupNeronUI(node) {
     const domWidget = node.addDOMWidget("neron_sequencer", "neron_sequencer", root, {
         serialize: false,
         hideOnZoom: false,
-        getMinHeight: () => panelH,
-        getMaxHeight: () => panelH,
     });
-    domWidget.computeSize = (width) => [width, panelH];
-    root.style.height = panelH + "px";
+    sizer = makeUserSized(node, domWidget, root, { minH: 150, autoH: () => panelH });
 
     const wanted = node.computeSize ? node.computeSize() : [900, 260];
     node.setSize([Math.max(wanted[0], 900), Math.max(wanted[1], BASE_NODE_HEIGHT + panelH)]);
