@@ -1,5 +1,23 @@
 # Changelog / История изменений
 
+## 2026-10-25 — Neron Audio Studio: кубики и Пульт / cubes and the Pult
+
+**RU:**
+- **Neron Video ×3 / Видео ×3** — одна нода, в ней до трёх загрузчиков видео. Загрузили ролик — открылся следующий слот. Каждый ролик виден прямо в ноде. Файлы можно перетащить на слот.
+- **Neron Sound ×8 / Звук ×8** — одна нода, до восьми загрузчиков звука. Пустые строки скрыты, у каждого звука ▶ и волна.
+- **Пульт (Neron Mixer) понимает кубики:** «Видео ×3» — во вход `video`, «Звук ×8» — в любой `audio_N` (каждый звук становится своим каналом с громкостью, балансом, M/S и индикатором уровня).
+- **Сводка вверху Пульта:** сколько роликов, сколько звуковых каналов, общая длина.
+- **Ролики в Пульте:** все рядом; клик по ролику — он на весь экран и звук переходит к его началу; во время игры экран сам переключается на следующий ролик; «◀ ВСЕ РОЛИКИ» — снова рядом. В сохранённом клипе ролики идут друг за другом (1 → 2 → 3), склейка точна до кадра; звук роликов склеивается так же.
+- Пульт стал выходной нодой: Queue работает и без нод после него.
+
+**EN:**
+- **Neron Video ×3** — one node with up to three video loaders; the next slot opens when a clip is loaded; each clip is visible in the node; files can be dropped onto a slot.
+- **Neron Sound ×8** — one node with up to eight audio loaders; empty rows stay hidden; each sound has ▶ and a waveform.
+- **The Pult (Neron Mixer) understands cubes:** Video ×3 → the `video` input, Sound ×8 → any `audio_N` (every sound becomes its own channel with volume, pan, M/S and a level meter).
+- **Summary at the top of the Pult:** number of clips, sound channels, total length.
+- **Clips in the Pult:** side by side; click one — it fills the screen and playback jumps to its start; during playback the screen follows the playing clip; "◀ ALL CLIPS" — side by side again. In the saved clip they play one after another (1 → 2 → 3), frame-accurate, with their sound joined the same way.
+- The Pult is now an output node: Queue works without nodes after it.
+
 ## 2026-10-25 — Neron Audio Studio: размер нод и индикаторы уровня / node size and level meters
 
 **RU:**
