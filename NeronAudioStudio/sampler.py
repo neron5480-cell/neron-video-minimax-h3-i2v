@@ -164,9 +164,8 @@ class NeronSampler:
         items = list((sounds or {}).get("sounds") or []) if isinstance(sounds, dict) else []
         sp = parse_sampler(sampler_json)
         if sp["bypass"]:
-            if not items:
-                raise RuntimeError("[Neron] Сэмплер: подключите «Звук ×8» ко входу sounds / wire Sound ×8 into sounds")
-            waves = [sound_wave(s) for s in items]
+            # звуков нет — тишина, Queue не падает (Пульт просто не покажет каналов)
+            waves = [sound_wave(s) for s in items] or [np.zeros((SAMPLE_RATE, 2), dtype=np.float32)]
             n = max(len(w) for w in waves)
             mix = np.zeros((n, 2), dtype=np.float32)
             for w in waves:

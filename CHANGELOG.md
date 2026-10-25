@@ -1,5 +1,19 @@
 # Changelog / История изменений
 
+## dev — Neron Audio Studio: эквалайзер и эхо в Пульте, модуль «Музыка», готовый рабочий стол (на проверке / in testing)
+
+**RU:**
+- **Пульт:** у каждого канала (и у звука видео) — эквалайзер из трёх ручек **НИЗ / СЕР / ВЕРХ** (±12 дБ: 200 Гц, 1 кГц, 4 кГц) и **ЭХО** (одна ручка «сколько» + кнопка помещения **КОМН → ЗАЛ → СОБОР**). Ручки крутятся мышкой вверх-вниз или колёсиком, Shift — точнее, двойной клик — сброс; ↺ — сбросить все эффекты канала. Слышно сразу при прослушивании, и ровно так же сводится в файл после Queue / SAVE.
+- **Neron Music / Музыка 🥁🎹** — барабаны и пианино в одной ноде: вкладки 🥁 / 🎹, общий темп, **▶ ВСЁ ВМЕСТЕ** играет обе части, на вкладке мигает точка, если часть играет. Выход **sounds** → Пульт: **два канала** (барабаны и пианино отдельно). Выход **audio** — всё одним звуком. Размер ноды меняется, как у всех.
+- Пустые «Видео ×3», «Звук ×8» и сэмплер без звуков больше не роняют Queue.
+- Готовый рабочий стол: `NeronAudioStudio/workflow/Neron_Studio_Pult_v2_dev.json` — группы ВИДЕО, МУЗЫКА, ЗВУК, СЭМПЛЕР и ПУЛЬТ, всё уже соединено.
+
+**EN:**
+- **Pult:** every channel (and the video sound) gets a 3-knob EQ **LOW / MID / HIGH** (±12 dB at 200 Hz, 1 kHz, 4 kHz) and **REVERB** (one amount knob + a **ROOM → HALL → CATHEDRAL** button). Drag knobs up/down or use the wheel, Shift for fine steps, double-click resets; ↺ resets the channel's effects. Heard live and rendered the same into the file after Queue / SAVE.
+- **Neron Music / Музыка 🥁🎹** — drums and piano in one node: 🥁 / 🎹 tabs, one tempo, **▶ ALL** plays both, a blinking dot shows which part is playing. **sounds** → Pult gives **two channels**; **audio** is everything as one sound. Resizable like every node.
+- Empty Video ×3, Sound ×8 and a sampler without sounds no longer break Queue.
+- Ready desk: `NeronAudioStudio/workflow/Neron_Studio_Pult_v2_dev.json` — groups VIDEO, MUSIC, SOUND, SAMPLER and PULT, all wired.
+
 ## dev — Neron Audio Studio: Сэмплер, вторая версия / Sampler v2 (на проверке / in testing)
 
 **RU:**

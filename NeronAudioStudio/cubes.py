@@ -77,8 +77,7 @@ class NeronVideoCube:
         for c in clips:
             if not media_path(c, VIDEO_EXTS):
                 raise RuntimeError(f"[Neron] Видео ×3: файл не найден / file not found: {c['name']}")
-        if not clips:
-            raise RuntimeError("[Neron] Видео ×3: не выбран ни один ролик / no clip selected")
+        # пустой кубик не ломает Queue: Пульт просто работает без видео
         return ({"neron": "videos", "clips": clips},)
 
 
@@ -100,8 +99,7 @@ class NeronSoundCube:
         for c in sounds:
             if not media_path(c, AUDIO_EXTS):
                 raise RuntimeError(f"[Neron] Звук ×8: файл не найден / file not found: {c['name']}")
-        if not sounds:
-            raise RuntimeError("[Neron] Звук ×8: не выбран ни один звук / no sound selected")
+        # пустой кубик не ломает Queue: в Пульте просто нет этих каналов
         return ({"neron": "sounds", "sounds": sounds},)
 
 

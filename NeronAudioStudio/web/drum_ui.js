@@ -236,7 +236,7 @@ function buildTrackChain(ctx, master) {
 //  Интерфейс ноды
 // ----------------------------------------------------------------------------
 
-function setupNeronUI(node) {
+function setupNeronUI(node, host) {
     injectStyles();
 
     const getWidget = (name) => (node.widgets || []).find((x) => x.name === name);
@@ -1224,14 +1224,20 @@ function setupNeronUI(node) {
     autoChk.checked = state.auto;
     paintTabs();
 
-    const domWidget = node.addDOMWidget("neron_sequencer", "neron_sequencer", root, {
-        serialize: false,
-        hideOnZoom: false,
-    });
-    sizer = makeUserSized(node, domWidget, root, { minH: 150, autoH: () => panelH });
-
-    const wanted = node.computeSize ? node.computeSize() : [900, 260];
-    node.setSize([Math.max(wanted[0], 900), Math.max(wanted[1], BASE_NODE_HEIGHT + panelH)]);
+    let domWidget = null;
+    if (host) {
+        host.mount(root, () => panelH);
+        sizer = host;
+    } else {
+        domWidget = node.addDOMWidget("neron_sequencer", "neron_sequencer", root, {
+            serialize: false,
+            hideOnZoom: false,
+        });
+        sizer = makeUserSized(node, domWidget, root, { minH: 150, autoH: () => panelH });
+    
+        const wanted = node.computeSize ? node.computeSize() : [900, 260];
+        node.setSize([Math.max(wanted[0], 900), Math.max(wanted[1], BASE_NODE_HEIGHT + panelH)]);
+    }
 
     node.neronReload = () => {
         loadState(patternWidget ? patternWidget.value : "");
@@ -1286,3 +1292,5 @@ app.registerExtension({
         };
     },
 });
+
+export { setupNeronUI };

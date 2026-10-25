@@ -243,7 +243,7 @@ function buildTrackChain(ctx, master) {
 //  Интерфейс ноды
 // ----------------------------------------------------------------------------
 
-function setupPianoUI(node) {
+function setupPianoUI(node, host) {
     injectStyles();
 
     const getWidget = (name) => (node.widgets || []).find((x) => x.name === name);
@@ -1410,15 +1410,20 @@ function setupPianoUI(node) {
     loadState(projectWidget ? projectWidget.value : "");
     syncAll();
 
-    const domWidget = node.addDOMWidget("neron_piano", "neron_piano", root, {
-        serialize: false,
-        hideOnZoom: false,
-    });
-    // размер задаёт пользователь: сетка нот подстраивается и прокручивается
-    makeUserSized(node, domWidget, root, { minH: 260, autoH: () => PANEL_H });
-
-    const wanted = node.computeSize ? node.computeSize() : [1080, 400];
-    node.setSize([Math.max(wanted[0], 1080), Math.max(wanted[1], BASE_NODE_H + PANEL_H)]);
+    let domWidget = null;
+    if (host) {
+        host.mount(root, () => PANEL_H);
+    } else {
+        domWidget = node.addDOMWidget("neron_piano", "neron_piano", root, {
+            serialize: false,
+            hideOnZoom: false,
+        });
+        // размер задаёт пользователь: сетка нот подстраивается и прокручивается
+        makeUserSized(node, domWidget, root, { minH: 260, autoH: () => PANEL_H });
+    
+        const wanted = node.computeSize ? node.computeSize() : [1080, 400];
+        node.setSize([Math.max(wanted[0], 1080), Math.max(wanted[1], BASE_NODE_H + PANEL_H)]);
+    }
     setTimeout(centerView, 80);
 
     node.neronReload = () => {
@@ -1478,3 +1483,5 @@ app.registerExtension({
         };
     },
 });
+
+export { setupPianoUI };

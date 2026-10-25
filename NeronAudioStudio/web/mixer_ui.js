@@ -106,6 +106,14 @@ function injectStyles() {
 .nm-wave .nm-note{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;
   font-size:10px;color:#8b90a0;text-align:center;padding:0 6px}
 .nm-ph{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.85;display:none;pointer-events:none}
+.nm-fx{display:flex;align-items:center;gap:2px;flex:none;padding:0 4px;border-left:1px solid #33363e;border-right:1px solid #33363e}
+.nm-knob{display:flex;flex-direction:column;align-items:center;width:30px;flex:none;cursor:ns-resize}
+.nm-knob canvas{width:26px;height:26px;display:block;touch-action:none}
+.nm-knob span{font-size:8px;font-weight:700;color:#8b90a0;line-height:9px;letter-spacing:.3px;white-space:nowrap}
+.nm-room{width:40px;height:20px;padding:0;border:none;border-radius:4px;background:#363a44;color:#9aa0ae;font-size:9px;font-weight:700;cursor:pointer;flex:none}
+.nm-room.on{background:#6b4fb3;color:#fff}
+.nm-fxreset{width:16px;height:16px;padding:0;border:none;border-radius:3px;background:transparent;color:#6c7180;font-size:11px;cursor:pointer;flex:none;visibility:hidden}
+.nm-fxreset:hover{color:#fff}
 .nm-meter{width:14px;height:36px;flex:none;background:#101216;border-radius:3px}
 .nm-mmeter{width:140px;height:16px;flex:none;background:#101216;border-radius:3px}
 .nm-empty{padding:14px 10px;font-size:11px;color:#8b90a0;line-height:1.55;background:#20232a;border-radius:7px}
@@ -141,7 +149,19 @@ function buildTrackChain(ctx, master) {
     const gr = ctx.createGain();
     const merge = ctx.createChannelMerger(2);
     const vol = ctx.createGain();
-    input.connect(split);
+    // эквалайзер: низ / середина / верх (как в fx.py)
+    const lo = ctx.createBiquadFilter(); lo.type = "lowshelf"; lo.frequency.value = 200; lo.gain.value = 0;
+    const mi = ctx.createBiquadFilter(); mi.type = "peaking"; mi.frequency.value = 1000; mi.Q.value = 0.9; mi.gain.value = 0;
+    const hi = ctx.createBiquadFilter(); hi.type = "highshelf"; hi.frequency.value = 4000; hi.gain.value = 0;
+    // эхо: сухой звук + «помещение» (свёртка)
+    const dry = ctx.createGain();
+    const conv = ctx.createConvolver(); conv.normalize = false;
+    const wet = ctx.createGain(); wet.gain.value = 0;
+    const fxOut = ctx.createGain();
+    input.connect(lo); lo.connect(mi); mi.connect(hi);
+    hi.connect(dry); dry.connect(fxOut);
+    hi.connect(conv); conv.connect(wet); wet.connect(fxOut);
+    fxOut.connect(split);
     split.connect(gl, 0);
     split.connect(gr, 1);
     gl.connect(merge, 0, 0);
@@ -155,7 +175,108 @@ function buildTrackChain(ctx, master) {
     vol.connect(tap);
     tap.connect(aL, 0);
     tap.connect(aR, 1);
-    return { input, gl, gr, vol, aL, aR };
+    return { input, gl, gr, vol, aL, aR, lo, mi, hi, dry, conv, wet, room: null };
+}
+
+// ---------- эхо: отклик помещения (тот же шум, что в fx.py) ----------
+const ROOMS = { room: [0.9, 0.008], hall: [2.2, 0.02], cathedral: [4.5, 0.035] };
+const ROOM_ORDER = ["room", "hall", "cathedral"];
+const ROOM_NAME = { room: ["КОМН", "ROOM"], hall: ["ЗАЛ", "HALL"], cathedral: ["СОБОР", "CHURCH"] };
+function mulberry32(a) {
+    return function () {
+        a |= 0; a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+function roomImpulse(ctx, room) {
+    window.__neronIR = window.__neronIR || {};
+    const key = room + "@" + ctx.sampleRate;
+    if (window.__neronIR[key]) return window.__neronIR[key];
+    const [dur, preS] = ROOMS[room] || ROOMS.hall;
+    const sr = ctx.sampleRate, n = Math.floor(dur * sr), pre = Math.floor(preS * sr);
+    const buf = ctx.createBuffer(2, pre + n, sr);
+    [1234, 5678].forEach((seed, ch) => {
+        const rnd = mulberry32(seed + room.length);
+        const d = buf.getChannelData(ch);
+        let e2 = 0;
+        for (let i = 0; i < n; i++) {
+            const t = i / sr;
+            const env = Math.exp(-6.9 * t / dur) * Math.min(1, t / 0.004 + 0.05);
+            const v = (rnd() * 2 - 1) * env;
+            d[pre + i] = v; e2 += v * v;
+        }
+        const k = 1 / (Math.sqrt(e2) + 1e-9);
+        for (let i = 0; i < d.length; i++) d[i] *= k;
+    });
+    window.__neronIR[key] = buf;
+    return buf;
+}
+
+// ---------- ручка (крутилка) ----------
+function makeKnob(o) {
+    const box = el("div", "nm-knob");
+    const cv = el("canvas");
+    cv.width = 52; cv.height = 52;
+    const lab = el("span", "", o.label);
+    box.appendChild(cv); box.appendChild(lab);
+    let v = o.value;
+    const span = o.max - o.min;
+    const draw = () => {
+        const g = cv.getContext("2d");
+        g.clearRect(0, 0, 52, 52);
+        const cx = 26, cy = 26, r = 19;
+        const a0 = Math.PI * 0.75, a1 = Math.PI * 2.25;
+        const frac = (v - o.min) / span;
+        const av = a0 + (a1 - a0) * frac;
+        const az = o.bipolar ? a0 + (a1 - a0) * ((0 - o.min) / span) : a0;
+        g.lineCap = "round";
+        g.lineWidth = 5; g.strokeStyle = "#363a44";
+        g.beginPath(); g.arc(cx, cy, r, a0, a1); g.stroke();
+        const active = Math.abs(v - o.def) > 1e-3;
+        if (active) {
+            g.strokeStyle = o.color;
+            g.beginPath(); g.arc(cx, cy, r, Math.min(az, av), Math.max(az, av)); g.stroke();
+        }
+        g.fillStyle = active ? "#2b2f3a" : "#22252d";
+        g.beginPath(); g.arc(cx, cy, 13, 0, Math.PI * 2); g.fill();
+        g.strokeStyle = active ? "#fff" : "#8b90a0"; g.lineWidth = 3.5;
+        g.beginPath(); g.moveTo(cx + Math.cos(av) * 4, cy + Math.sin(av) * 4); g.lineTo(cx + Math.cos(av) * 12, cy + Math.sin(av) * 12); g.stroke();
+        box.title = o.title + "\n" + o.fmt(v) + "\n" + T("тянуть вверх/вниз или колесо · двойной клик — сброс", "drag up/down or wheel · double-click — reset");
+        lab.style.color = active ? o.color : "";
+    };
+    const setV = (nv, fire) => {
+        nv = Math.max(o.min, Math.min(o.max, nv));
+        if (o.step) nv = Math.round(nv / o.step) * o.step;
+        if (Math.abs(nv - o.def) < (o.step || 0.01) * 0.5) nv = o.def;   // притягивается к середине
+        if (nv === v) return;
+        v = nv; draw();
+        if (fire) o.onChange(v);
+    };
+    let drag = null;
+    cv.addEventListener("pointerdown", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        cv.setPointerCapture(e.pointerId);
+        drag = { y: e.clientY, v };
+    });
+    cv.addEventListener("pointermove", (e) => {
+        if (!drag) return;
+        const k = e.shiftKey ? 600 : 150;
+        setV(drag.v + (drag.y - e.clientY) * span / k, true);
+    });
+    const end = () => { if (drag) { drag = null; if (o.onEnd) o.onEnd(v); } };
+    cv.addEventListener("pointerup", end);
+    cv.addEventListener("pointercancel", end);
+    cv.addEventListener("dblclick", (e) => { e.stopPropagation(); setV(o.def, true); if (o.onEnd) o.onEnd(v); });
+    cv.addEventListener("wheel", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        setV(v + (e.deltaY < 0 ? 1 : -1) * (o.wheel || span / 24), true);
+        if (o.onEnd) o.onEnd(v);
+    }, { passive: false });
+    draw();
+    box.setValue = (nv) => { v = nv; draw(); };
+    return box;
 }
 
 
@@ -234,11 +355,12 @@ function setupMixerUI(node) {
         if (!S.ch[slot]) {
             const m = SUB_RE.exec(slot);
             const color = m ? COLORS[(parseInt(m[1], 10) - 1 + (m[2] ? parseInt(m[2], 10) - 1 : 0)) % COLORS.length] : "#c9ccd6";
-            S.ch[slot] = { vol: DEFAULT_VOL, pan: 0, mute: false, solo: false, color };
+            S.ch[slot] = { vol: DEFAULT_VOL, pan: 0, mute: false, solo: false, color, low: 0, mid: 0, high: 0, rev: 0, room: "hall" };
         }
         return S.ch[slot];
     }
 
+    const fxOf = (st) => ({ low: st.low || 0, mid: st.mid || 0, high: st.high || 0, rev: st.rev || 0, room: st.room || "hall" });
     const fitActive = () => S.fit && videoDur > 0 && videoShown;
 
     function serialize() {
@@ -248,7 +370,7 @@ function setupMixerUI(node) {
             fit: S.fit, fit_sec: fitActive() ? Math.round(videoDur * 1000) / 1000 : 0,
             video: curVideos[0] || null, videos: curVideos, video_manual: S.video,
             tracks: Object.keys(S.ch).map((slot) => ({
-                slot, vol: S.ch[slot].vol, pan: S.ch[slot].pan, mute: S.ch[slot].mute, solo: S.ch[slot].solo,
+                slot, vol: S.ch[slot].vol, pan: S.ch[slot].pan, mute: S.ch[slot].mute, solo: S.ch[slot].solo, ...fxOf(S.ch[slot]),
             })),
         });
     }
@@ -274,6 +396,9 @@ function setupMixerUI(node) {
                 if (typeof t.pan === "number") s.pan = clamp(t.pan, -1, 1);
                 s.mute = !!t.mute;
                 s.solo = !!t.solo;
+                for (const k of ["low", "mid", "high"]) if (typeof t[k] === "number") s[k] = clamp(t[k], -12, 12);
+                if (typeof t.rev === "number") s.rev = clamp(t.rev, 0, 1);
+                if (ROOMS[t.room]) s.room = t.room;
             }
         }
     }
@@ -343,6 +468,17 @@ function setupMixerUI(node) {
         }
         if (cls === "NeronPianoRoll") {
             return { originId: o.id, node: o, kind: "piano", label: "PIANO ROLL", sub: title, spec: { type: "piano", kit_name: kit, bpm, json: String(widgetValue(o, "project_json") || "{}") } };
+        }
+        if (cls === "NeronMusic") {
+            // модуль «Музыка»: барабаны и пианино — два отдельных канала
+            return {
+                originId: o.id, node: o, kind: "cube", multi: [
+                    { originId: o.id + "/0", node: o, kind: "drum", label: "🥁 " + T("БАРАБАНЫ", "DRUMS"), sub: title,
+                      spec: { type: "drum", kit_name: kit, bpm, json: String(widgetValue(o, "pattern_json") || "{}") } },
+                    { originId: o.id + "/1", node: o, kind: "piano", label: "🎹 " + T("ПИАНИНО", "PIANO"), sub: title,
+                      spec: { type: "piano", kit_name: kit, bpm, json: String(widgetValue(o, "project_json") || "{}") } },
+                ],
+            };
         }
         if (cls === "NeronAudioLoader" || cls === "LoadAudio") {
             const f = parseFileValue(widgetValue(o, cls === "LoadAudio" ? "audio" : "audio_file"));
@@ -755,6 +891,28 @@ function setupMixerUI(node) {
             ch.gl.gain.setTargetAtTime(l, now, 0.01);
             ch.gr.gain.setTargetAtTime(r, now, 0.01);
         }
+        applyFx(slot, immediate);
+    }
+
+    function applyFx(slot, immediate) {
+        if (!audio) return;
+        const ch = chains.get(slot);
+        if (!ch) return;
+        const s = settingFor(slot);
+        const set = (param, val) => {
+            if (immediate) param.value = val;
+            else param.setTargetAtTime(val, audio.ctx.currentTime, 0.02);
+        };
+        set(ch.lo.gain, s.low || 0);
+        set(ch.mi.gain, s.mid || 0);
+        set(ch.hi.gain, s.high || 0);
+        const rev = s.rev || 0;
+        if (rev > 0.005 && ch.room !== s.room) {
+            ch.conv.buffer = roomImpulse(audio.ctx, s.room || "hall");
+            ch.room = s.room;
+        }
+        set(ch.wet.gain, rev > 0.005 ? 0.9 * rev : 0);
+        set(ch.dry.gain, 1 - 0.35 * rev);
     }
     const applyMixAll = () => chs.forEach((c) => applyMix(c.slot, false));
 
@@ -1326,6 +1484,54 @@ function setupMixerUI(node) {
             pb.appendChild(pan);
             row.appendChild(pb);
 
+            // ---------- эквалайзер + эхо ----------
+            const fx = el("div", "nm-fx");
+            const fxReset = el("button", "nm-fxreset", "↺");
+            fxReset.title = T("Сбросить эквалайзер и эхо", "Reset EQ and reverb");
+            const showReset = () => { fxReset.style.visibility = (st.low || st.mid || st.high || st.rev) ? "visible" : "hidden"; };
+            const dB = (x) => (x > 0 ? "+" : "") + x.toFixed(1) + " dB";
+            const knobs = {};
+            const band = (key, label, title) => {
+                knobs[key] = makeKnob({
+                    label, title, min: -12, max: 12, def: 0, step: 0.5, wheel: 1, bipolar: true, color: st.color, value: st[key] || 0, fmt: dB,
+                    onChange: (x) => { st[key] = x; applyFx(c.slot, false); showReset(); },
+                    onEnd: () => saveState(),
+                });
+                fx.appendChild(knobs[key]);
+            };
+            band("low", "НИЗ", T("НИЗ — бас, 200 Гц", "LOW — bass, 200 Hz"));
+            band("mid", "СЕР", T("СЕРЕДИНА — голос, 1 кГц", "MID — voice, 1 kHz"));
+            band("high", "ВЕРХ", T("ВЕРХ — блеск, 4 кГц", "HIGH — brightness, 4 kHz"));
+            const roomBtn = el("button", "nm-room");
+            const showRoom = () => {
+                roomBtn.textContent = ROOM_NAME[st.room || "hall"][0];
+                roomBtn.classList.toggle("on", (st.rev || 0) > 0.005);
+                roomBtn.title = T("Где звучит эхо: комната → зал → собор (клик — сменить)", "Where the echo sounds: room → hall → cathedral (click to change)")
+                    + "\n" + ROOM_NAME[st.room || "hall"].join(" / ");
+            };
+            knobs.rev = makeKnob({
+                label: "ЭХО", title: T("ЭХО — сколько", "REVERB — amount"), min: 0, max: 1, def: 0, step: 0.01, wheel: 0.05, color: "#b197fc", value: st.rev || 0,
+                fmt: (x) => Math.round(x * 100) + "%",
+                onChange: (x) => { st.rev = x; applyFx(c.slot, false); showRoom(); showReset(); },
+                onEnd: () => saveState(),
+            });
+            fx.appendChild(knobs.rev);
+            roomBtn.addEventListener("click", () => {
+                const i = ROOM_ORDER.indexOf(st.room || "hall");
+                st.room = ROOM_ORDER[(i + 1) % ROOM_ORDER.length];
+                if (!(st.rev > 0.005)) { st.rev = 0.3; knobs.rev.setValue(0.3); }   // выбрал помещение — сразу слышно
+                applyFx(c.slot, false); showRoom(); showReset(); saveState();
+            });
+            fx.appendChild(roomBtn);
+            fxReset.addEventListener("click", () => {
+                st.low = st.mid = st.high = st.rev = 0;
+                for (const k of ["low", "mid", "high", "rev"]) knobs[k].setValue(0);
+                applyFx(c.slot, false); showRoom(); showReset(); saveState();
+            });
+            fx.appendChild(fxReset);
+            showRoom(); showReset();
+            row.appendChild(fx);
+
             const wave = el("div", "nm-wave");
             const canvas = el("canvas");
             const ph = el("div", "nm-ph");
@@ -1490,14 +1696,14 @@ function setupMixerUI(node) {
                 body: JSON.stringify({
                     channels: live.map((c) => {
                         const st = settingFor(c.slot);
-                        return { src: c.spec, vol: st.vol, pan: st.pan, mute: st.mute, solo: st.solo };
+                        return { src: c.spec, vol: st.vol, pan: st.pan, mute: st.mute, solo: st.solo, ...fxOf(st) };
                     }),
                     repeats: S.repeats,
                     master: S.master,
                     fit_sec: fitActive() ? videoDur : 0,
                     video: curVideos[0] || null,
                     videos: curVideos,
-                    video_audio: curVideos.length ? settingFor(VIDEO_SLOT) : null,
+                    video_audio: curVideos.length ? { ...settingFor(VIDEO_SLOT), ...fxOf(settingFor(VIDEO_SLOT)) } : null,
                     with_video: !!withVideo,
                     save_name: getWidget("save_name")?.value || "neron_mix",
                 }),
