@@ -113,7 +113,7 @@ function applyCss(th, on) {
 :root{${v}}
 ${ROOTS}{box-shadow:0 0 0 1px color-mix(in srgb, var(--nt-acc,#888) ${Math.round(18 + 30 * g)}%, transparent),
   0 0 calc(${(3 + 6 * g).toFixed(1)}px + var(--nt-pulse,0) * ${Math.round(8 + 22 * g)}px) color-mix(in srgb, var(--nt-acc,#888) ${Math.round(20 + 35 * g)}%, transparent) !important;
-  transition:box-shadow .08s linear}
+  transition:box-shadow .35s ease-out}
 ${th === THEMES.neon ? `${ROOTS}{text-shadow:0 0 6px rgba(150,120,255,.25)}` : ""}
 `;
 }
@@ -182,7 +182,7 @@ function refresh(force) {
 // ---------------------------------------------------------------------------
 //  Живость: огоньки по рамкам, искры по проводам, вспышки на ударах
 // ---------------------------------------------------------------------------
-const FX = { raf: null, last: 0, t: 0, lvl: 0, slow: 0, flash: 0, lastHit: 0, playing: 0, hits: 0, kick: 0, prevBass: 0, hist: [], bassSeen: 0 };
+const FX = { raf: null, last: 0, t: 0, lvl: 0, slow: 0, flash: 0, flashT: 0, lastHit: 0, playing: 0, hits: 0, kick: 0, kickT: 0, prevBass: 0, hist: [], bassSeen: 0 };
 window.__neronFX = FX;   // для проверки
 const buf = new Float32Array(1024);
 let fbuf = null;
@@ -221,12 +221,15 @@ function listen(dt) {
     FX.lvl = lvl;
     FX.slow = FX.slow * 0.95 + lvl * 0.05;
     if (beat) {
-        FX.flash = Math.max(FX.flash, beat);
-        FX.kick += (STATE.life === 2 ? 1100 : 520) * beat;     // рывок огня вперёд
+        FX.flashT = Math.max(FX.flashT, beat);
+        FX.kickT += (STATE.life === 2 ? 620 : 300) * beat;     // рывок огня вперёд
         FX.lastHit = now; FX.hits++;
     }
-    FX.flash *= Math.pow(0.004, dt);          // вспышка гаснет за ~0,3 с
-    FX.kick *= Math.exp(-7 * dt);             // рывок гаснет — до следующего удара
+    // плавно: вспышка разгорается за ~0,06 с и тает ~0,9 с; рывок набирается мягко и сходит на нет
+    FX.flash += (FX.flashT - FX.flash) * Math.min(1, dt * (FX.flashT > FX.flash ? 16 : 5));
+    FX.flashT *= Math.pow(0.05, dt);
+    FX.kick += (FX.kickT - FX.kick) * Math.min(1, dt * 10);
+    FX.kickT *= Math.exp(-3.2 * dt);
     FX.playing = FX.playing * 0.9 + (lvl > 0.004 ? 1 : 0) * 0.1;
 }
 
