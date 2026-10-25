@@ -66,6 +66,8 @@ function fitCanvas(cv) {
     return { g, w, h };
 }
 const parseJ = (v) => { try { const o = JSON.parse(v); return o && typeof o === "object" ? o : {}; } catch (e) { return {}; } };
+// 1 такт, 2 такта, 5 тактов
+const ruBars = (n) => { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? "такт" : a >= 2 && a <= 4 && (b < 12 || b > 14) ? "такта" : "тактов"; };
 const fLabel = (f) => (f >= 1000 ? (f / 1000) + "k" : String(f));
 
 // ключ канала — имя дорожки; одинаковые имена: «#2», «#3» (так же на сервере)
@@ -149,6 +151,7 @@ function injectStyles() {
 .nst-eqhead b{font-size:11px;font-weight:800;color:#e6e8ee;letter-spacing:.5px}
 .nst-sel{height:22px;box-sizing:border-box;background:#23252b;color:#cfd2d8;border:1px solid #33363e;border-radius:4px;font-size:11px;outline:none}
 .nst-sel option{background:#23252b}
+.nst-fcv{width:100%;display:block;border-radius:7px;background:#121318;touch-action:none;flex:none}
 .nst-eq{width:100%;height:${EQ_H}px;display:block;border-radius:7px;background:#121318;touch-action:none;cursor:ns-resize;flex:none}
 .nm-knob{display:flex;flex-direction:column;align-items:center;width:30px;flex:none;cursor:ns-resize}
 .nm-knob canvas{width:26px;height:26px;display:block;touch-action:none}
@@ -172,7 +175,14 @@ function setupStudio(node) {
             version: 1, bypass: o.bypass === true, master: typeof o.master === "number" ? clamp(o.master, 0, 1.5) : 1,
             eq_on: o.eq_on !== false, eq: EQF.map((_, i) => clamp(Number((o.eq || [])[i]) || 0, -12, 12)),
             preset: typeof o.preset === "string" ? o.preset : "flat", ch: {},
+            // 🧲 поле сборки: блоки дорожек по тактам (пусто — всё играет по кругу)
+            arr: [], bpm: clamp(Number(o.bpm) || 90, 40, 300), fz: Number(o.fz) > 0 ? Number(o.fz) : 0, fx0: Math.max(0, Number(o.fx0) || 0),
+            fcur: Math.max(0, Number(o.fcur) || 0),
         };
+        for (const b of Array.isArray(o.arr) ? o.arr.slice(0, 400) : []) {
+            if (!b || typeof b.ch !== "string") continue;
+            S.arr.push({ id: b.id || Math.random().toString(36).slice(2), ch: b.ch, bar: Math.max(0, Math.round(Number(b.bar) || 0)), len: Math.max(1, Math.round(Number(b.len) || 1)) });
+        }
         if (o.ch && typeof o.ch === "object") {
             for (const [k, v] of Object.entries(o.ch)) {
                 if (!v || typeof v !== "object") continue;
@@ -240,13 +250,43 @@ function setupStudio(node) {
         + "<b>НИЗ / СЕР / ВЕРХ</b>, <b>ЭХО</b> + помещение (клик — комната / зал / собор), ↺ — сброс. "
         + "Внизу <b>ОБЩИЙ ЭКВАЛАЙЗЕР</b> на 10 полос: тяните точки вверх-вниз (колёсико — точнее, двойной клик — в ноль), справа готовые настройки; "
         + "<b>ВКЛ / ВЫКЛ</b> — сравнить «с ним / без него». Цветная заливка — живой спектр звука. "
+        + "<b>🧱 ПОЛЕ</b>: клик по полосе дорожки — блок (тянуть — двигать, край — длина, двойной клик / Delete — убрать, Ctrl+D — копия следом, Ctrl+Z — отменить); "
+        + "клик по линейке — откуда играть; колёсико — масштаб. Пустое поле — всё по кругу; есть блоки — Пульт слышит собранный трек. ⊞ — все дорожки разом. "
         + "<b>⏭ ПРОПУСТИТЬ</b> — всё идёт в Пульт как было; отжата — Пульт слышит Студию одним каналом.<br>"
         + "<b>EN:</b> The Studio sits between Music (or Sound ×8, the sampler) and the Pult. Every track is its own channel: ▶ (listen alone), M, S, volume, pan, "
         + "<b>LOW / MID / HIGH</b>, <b>REVERB</b> + room, ↺ resets. Below — a 10-band <b>MASTER EQ</b>: drag the points up/down (wheel — fine, double-click — zero), "
-        + "presets on the right, <b>ON / OFF</b> to compare. The colour fill is the live spectrum. <b>⏭ BYPASS</b> — everything goes to the Pult as it was.";
+        + "presets on the right, <b>ON / OFF</b> to compare. The colour fill is the live spectrum. "
+        + "<b>🧱 ARRANGE</b>: click a track lane to put a block (drag to move, edge — length, double-click / Delete — remove, Ctrl+D — copy after, Ctrl+Z — undo); "
+        + "click the ruler to set where to play from. An empty field loops everything; with blocks the Pult hears the arranged track. <b>⏭ BYPASS</b> — everything goes to the Pult as it was.";
     root.appendChild(help);
     const list = el("div", "nst-list");
     root.appendChild(list);
+
+    // ---------- 🧱 поле сборки ----------
+    const FR = 18, LANE = 34, FHEAD = 120;
+    const fhead = el("div", "nst-eqhead");
+    fhead.appendChild(el("b", "", "🧱 ПОЛЕ / ARRANGE"));
+    const fFill = el("button", "nst-btn sm", "⊞ " + T("ВСЕ ДОРОЖКИ", "ALL TRACKS"));
+    fFill.title = T("Поставить каждую дорожку блоком с 1-го такта", "Put every track as a block from bar 1");
+    const fDup = el("button", "nst-btn sm", "⧉");
+    fDup.title = T("Копия блока следом (Ctrl+D)", "Copy the block right after it (Ctrl+D)");
+    const fDel = el("button", "nst-btn sm", "✕ " + T("БЛОК", "BLOCK"));
+    fDel.title = T("Убрать выделенный блок (Delete)", "Remove the selected block (Delete)");
+    const fUndo = el("button", "nst-btn sm", "↶");
+    fUndo.title = T("Отменить (Ctrl+Z)", "Undo (Ctrl+Z)");
+    const fClear = el("button", "nst-btn sm", "🗑 " + T("ОЧИСТИТЬ", "CLEAR"));
+    fClear.title = T("Убрать все блоки — дорожки снова играют по кругу", "Remove all blocks — tracks loop again");
+    const fInfo = el("span", "nst-lbl", "");
+    fInfo.style.cssText = "flex:1;text-align:right;font-weight:400";
+    [fFill, fDup, fDel, fUndo, fClear, fInfo].forEach((x) => fhead.appendChild(x));
+    root.appendChild(fhead);
+    const fcv = el("canvas", "nst-fcv");
+    root.appendChild(fcv);
+    const fkeys = el("textarea");
+    fkeys.readOnly = true; fkeys.tabIndex = -1;
+    fkeys.style.cssText = "position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";
+    root.appendChild(fkeys);
+    const frefocus = () => setTimeout(() => { if (!disposed) fkeys.focus({ preventScroll: true }); }, 0);
 
     const eqHead = el("div", "nst-eqhead");
     eqHead.appendChild(el("b", "", "🎚 ОБЩИЙ ЭКВАЛАЙЗЕР / MASTER EQ"));
@@ -376,7 +416,28 @@ function setupStudio(node) {
         await Promise.all(chans.map(load));
         if (tok !== P.token) return;
         stopSources();
+        if (P.timer) { clearInterval(P.timer); P.timer = null; }
         const ctx = getCtx();
+        if (arrOn()) {
+            // собранный трек: каждая дорожка звучит только в своих блоках; трек играет по кругу
+            P.arr = true;
+            P.bs = barSec();
+            P.L = Math.max(1, songBars()) * P.bs;
+            let off = Math.min(S.fcur || 0, songBars()) * P.bs;
+            if (off >= P.L - 0.01) off = 0;
+            P.tReal = ctx.currentTime + 0.06;
+            P.t0 = P.tReal - off;
+            P.k = 0;
+            P.on = true;
+            pumpArr();
+            P.timer = setInterval(pumpArr, 100);
+            applyAll();
+            setStatus(P.only ? T("Играет только: ", "Playing only: ") + P.only : T("Играет собранный трек", "Playing the arranged track"));
+            paintRows();
+            if (!P.raf) P.raf = requestAnimationFrame(loop);
+            return;
+        }
+        P.arr = false;
         P.t0 = ctx.currentTime + 0.06;
         for (const c of chans) {
             const b = bufs.get(c.specKey);
@@ -393,11 +454,37 @@ function setupStudio(node) {
         paintRows();
         if (!P.raf) P.raf = requestAnimationFrame(loop);
     }
+    P.fpos = () => { const t = getCtx().currentTime - P.t0; return (((t % P.L) + P.L) % P.L) / P.bs; };
+    function pumpArr() {
+        if (!P.on || !P.arr) return;
+        const ctx = getCtx(), now = ctx.currentTime;
+        while (P.t0 + P.k * P.L < now + 0.6) {
+            const base = P.t0 + P.k * P.L;
+            for (const bl of liveArr()) {
+                const c = chans.find((x) => x.key === bl.ch);
+                const buf = c && bufs.get(c.specKey);
+                if (!buf) continue;
+                const bs = base + bl.bar * P.bs, be = bs + bl.len * P.bs;
+                if (be <= P.tReal + 0.01) continue;
+                const at = Math.max(bs, P.tReal);
+                const src = ctx.createBufferSource();
+                src.buffer = buf; src.loop = true;
+                src.connect(chain(c.key).input);
+                src.start(at, (at - bs) % buf.duration);
+                src.stop(be);
+                src.onended = () => { const i = P.items.indexOf(src); if (i >= 0) P.items.splice(i, 1); };
+                P.items.push(src);
+            }
+            P.k++;
+        }
+    }
     function stopSources() { for (const s of P.items) { try { s.stop(); } catch (e) { /* ок */ } } P.items = []; }
     function stop() {
         P.token++;
-        P.on = false; P.only = null;
+        P.on = false; P.only = null; P.arr = false;
+        if (P.timer) { clearInterval(P.timer); P.timer = null; }
         stopSources();
+        drawField();
         applyAll(); paintRows();
         setStatus("");
     }
@@ -524,6 +611,214 @@ function setupStudio(node) {
         eqOn.style.background = S.eq_on ? "#2e8b3d" : "#4a4e5a";
         master.value = String(S.master);
     }
+
+    // ---------- 🧱 поле: такты, блоки ----------
+    function bpmNow() {
+        const up = upstreamNode();
+        const w = up && (up.widgets || []).find((x) => x.name === "bpm");
+        return clamp(Number(w ? w.value : S.bpm) || 90, 40, 300);
+    }
+    const barSec = () => 240 / bpmNow();
+    // волна дорожки для блоков: 256 пиков на один луп
+    const peaksCache = new Map();
+    function peaksOf(c) {
+        const b = c && bufs.get(c.specKey);
+        if (!b) return null;
+        if (peaksCache.has(c.specKey)) return peaksCache.get(c.specKey);
+        const N = 256, L = b.getChannelData(0), R = b.getChannelData(1), per = Math.max(1, Math.floor(b.length / N));
+        const pk = new Float32Array(N);
+        for (let x = 0; x < N; x++) { let m = 0; for (let i = x * per, e = Math.min(b.length, i + per); i < e; i += 4) m = Math.max(m, Math.abs(L[i]), Math.abs(R[i])); pk[x] = m; }
+        peaksCache.set(c.specKey, pk);
+        return pk;
+    }
+    const loopBars = (c) => { const b = c && bufs.get(c.specKey); return b ? Math.max(1, Math.round(b.duration / barSec())) : 1; };
+    const liveArr = () => S.arr.filter((b) => chans.some((c) => c.key === b.ch));
+    const arrOn = () => liveArr().length > 0;
+    const songBars = () => liveArr().reduce((m, b) => Math.max(m, b.bar + b.len), 0);
+    let fsel = null, fdrag = null;
+    const fUndoS = [];
+    const fPush = () => { fUndoS.push(JSON.stringify(S.arr)); if (fUndoS.length > 80) fUndoS.shift(); };
+    const ppb = () => (S.fz > 0 ? S.fz : Math.max(8, (fcv.clientWidth - FHEAD - 10) / Math.max(8, songBars() + 2)));
+    const fX = (bar) => FHEAD + (bar - S.fx0) * ppb();
+    const fBar = (x) => S.fx0 + (x - FHEAD) / ppb();
+    function fieldChanged() {
+        S.bpm = bpmNow();
+        save();
+        drawField();
+        if (P.on) start();
+    }
+    function drawField() {
+        const n = Math.max(1, chans.length);
+        const hh = FR + n * LANE;
+        if (fcv.style.height !== hh + "px") fcv.style.height = hh + "px";
+        const { g, w, h } = fitCanvas(fcv);
+        g.clearRect(0, 0, w, h);
+        const k = ppb();
+        // полосы дорожек
+        chans.forEach((c, i) => {
+            const y = FR + i * LANE;
+            g.fillStyle = i % 2 ? "#17191f" : "#1a1c23"; g.fillRect(FHEAD, y, w - FHEAD, LANE);
+            g.fillStyle = "#20232a"; g.fillRect(0, y, FHEAD - 2, LANE - 1);
+            const col = rows.get(c.key)?.color || COLORS[i % COLORS.length];
+            g.fillStyle = col; g.fillRect(4, y + 7, 10, 10);
+            g.fillStyle = "#cfd2d8"; g.font = "bold 10px Segoe UI"; g.textBaseline = "middle";
+            g.save(); g.beginPath(); g.rect(18, y, FHEAD - 22, LANE); g.clip(); g.fillText(c.key, 19, y + LANE / 2); g.restore();
+        });
+        // линейка и такты
+        g.fillStyle = "#1e2027"; g.fillRect(FHEAD, 0, w - FHEAD, FR);
+        const step = k < 14 ? 4 : k < 26 ? 2 : 1;
+        for (let b = Math.floor(S.fx0); fX(b) < w; b++) {
+            const x = Math.round(fX(b)) + 0.5;
+            if (x < FHEAD) continue;
+            g.fillStyle = b % 4 === 0 ? "#3a3e4a" : "#262931"; g.fillRect(x, FR, 1, h - FR);
+            if (b % step === 0) { g.fillStyle = "#8b90a0"; g.font = "9px Segoe UI"; g.textBaseline = "middle"; g.fillText(String(b + 1), x + 3, FR / 2); }
+        }
+        // блоки
+        g.save(); g.beginPath(); g.rect(FHEAD, 0, w - FHEAD, h); g.clip();
+        for (const bl of liveArr()) {
+            const i = chans.findIndex((c) => c.key === bl.ch);
+            const c = chans[i];
+            const col = rows.get(c.key)?.color || COLORS[i % COLORS.length];
+            const x0 = fX(bl.bar), x1 = fX(bl.bar + bl.len), y = FR + i * LANE + 3, hb = LANE - 6;
+            if (x1 < FHEAD || x0 > w) continue;
+            g.globalAlpha = 0.85; g.fillStyle = col; g.fillRect(x0 + 1, y, x1 - x0 - 2, hb); g.globalAlpha = 1;
+            // волна дорожки внутри блока (луп повторяется)
+            const pk = peaksOf(c);
+            if (pk) {
+                const lb0 = loopBars(c), dur = bufs.get(c.specKey).duration, bs = barSec();
+                g.fillStyle = "rgba(10,11,14,.55)";
+                const xa = Math.max(x0 + 2, FHEAD), xb = Math.min(x1 - 2, w);
+                for (let x = xa; x < xb; x += 1) {
+                    const tSec = ((x - x0) / k) * bs;
+                    const v = pk[Math.min(pk.length - 1, Math.floor(((tSec % dur) / dur) * pk.length))];
+                    const hh2 = Math.max(1, v * (hb - 6));
+                    g.fillRect(x, y + hb / 2 - hh2 / 2, 1, hh2);
+                }
+                void lb0;
+            }
+            // где луп начинается заново
+            const lb = loopBars(c);
+            g.fillStyle = "rgba(0,0,0,.35)";
+            for (let r = lb; r < bl.len; r += lb) g.fillRect(fX(bl.bar + r) - 1, y + 2, 2, hb - 4);
+            g.strokeStyle = bl.id === fsel ? "#fff" : "rgba(0,0,0,.6)"; g.lineWidth = bl.id === fsel ? 2 : 1;
+            g.strokeRect(x0 + 1.5, y + 0.5, x1 - x0 - 3, hb - 1);
+            g.fillStyle = "rgba(0,0,0,.55)"; g.fillRect(x1 - 7, y + 4, 3, hb - 8);
+            if (x1 - x0 > 40) { g.fillStyle = "#111"; g.font = "bold 9px Segoe UI"; g.textBaseline = "middle"; g.fillText(`${bl.len} ${T("т.", "b.")}`.split(" / ")[0], x0 + 6, y + hb / 2); }
+        }
+        g.restore();
+        if (!arrOn()) {
+            g.fillStyle = "rgba(18,19,24,.6)"; g.fillRect(FHEAD, FR, w - FHEAD, h - FR);
+            g.fillStyle = "#ffd166"; g.font = "bold 11px Segoe UI"; g.textAlign = "center"; g.textBaseline = "middle";
+            g.fillText(chans.length ? T("Поле пустое — все дорожки играют по кругу. Кликните по полосе дорожки — встанет блок", "Empty field — all tracks loop. Click a track lane to put a block")
+                : T("Подключите «Музыку» — здесь появятся её дорожки", "Wire Music — its tracks appear here"), FHEAD + (w - FHEAD) / 2, FR + (h - FR) / 2);
+            g.textAlign = "left";
+        }
+        // курсор / бегунок
+        const pos = P.on && P.arr ? P.fpos() : S.fcur;
+        const cx = fX(pos);
+        if (cx >= FHEAD - 1) {
+            g.fillStyle = P.on && P.arr ? "#ffd166" : "#fff";
+            g.fillRect(cx - 1, 0, 2, h);
+            g.beginPath(); g.moveTo(cx - 6, 0); g.lineTo(cx + 6, 0); g.lineTo(cx, 8); g.fill();
+        }
+        const sb = songBars();
+        fInfo.textContent = arrOn() ? T(`${sb} ${ruBars(sb)} · ${(sb * barSec()).toFixed(1)} с · ${bpmNow()} BPM`, `${sb} bars · ${(sb * barSec()).toFixed(1)} s · ${bpmNow()} BPM`)
+            : T("всё по кругу", "everything loops");
+        fDel.disabled = fDup.disabled = !fsel;
+        fUndo.disabled = !fUndoS.length;
+    }
+    function fHit(p) {
+        if (p.y < FR || p.x < FHEAD) return null;
+        const i = Math.floor((p.y - FR) / LANE);
+        const c = chans[i];
+        if (!c) return null;
+        const bar = fBar(p.x);
+        const bl = liveArr().find((b) => b.ch === c.key && bar >= b.bar && bar < b.bar + b.len);
+        return { i, c, bar, bl, edge: bl && fX(bl.bar + bl.len) - p.x < 9 };
+    }
+    fcv.addEventListener("pointerdown", (e) => {
+        if (e.button !== 0) return;
+        e.preventDefault(); e.stopPropagation();
+        fcv.setPointerCapture(e.pointerId);
+        const p = pt(e, fcv);
+        frefocus();
+        if (p.y < FR && p.x >= FHEAD) {           // линейка: откуда играть
+            S.fcur = Math.max(0, Math.round(fBar(p.x)));
+            save(); drawField();
+            if (P.on && P.arr) start();
+            return;
+        }
+        const h = fHit(p);
+        if (!h) return;
+        if (h.bl) {
+            fsel = h.bl.id;
+            fdrag = { bl: h.bl, mode: h.edge ? "len" : "move", x: p.x, bar0: h.bl.bar, len0: h.bl.len, moved: false };
+        } else {
+            fPush();
+            const bl = { id: Math.random().toString(36).slice(2), ch: h.c.key, bar: Math.max(0, Math.floor(h.bar)), len: loopBars(h.c) };
+            S.arr.push(bl);
+            fsel = bl.id;
+            fdrag = { bl, mode: "len", x: p.x, bar0: bl.bar, len0: bl.len, moved: true, fresh: true };
+            fieldChanged();
+        }
+        drawField();
+    });
+    fcv.addEventListener("pointermove", (e) => {
+        const p = pt(e, fcv);
+        if (!fdrag) {
+            const h = fHit(p);
+            fcv.style.cursor = p.y < FR ? "pointer" : h && h.bl ? (h.edge ? "ew-resize" : "grab") : (h ? "copy" : "default");
+            return;
+        }
+        const d = Math.round((p.x - fdrag.x) / ppb());
+        if (!fdrag.moved && d === 0) return;
+        if (!fdrag.moved) { fPush(); fdrag.moved = true; }
+        if (fdrag.mode === "move") fdrag.bl.bar = Math.max(0, fdrag.bar0 + d);
+        else fdrag.bl.len = Math.max(1, fdrag.len0 + d);
+        drawField();
+    });
+    const fUp = () => { if (!fdrag) return; const m = fdrag.moved; fdrag = null; if (m) fieldChanged(); else drawField(); };
+    fcv.addEventListener("pointerup", fUp);
+    fcv.addEventListener("pointercancel", fUp);
+    fcv.addEventListener("wheel", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        const k = ppb();
+        if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) { if (!(S.fz > 0)) S.fz = k; S.fx0 = Math.max(0, S.fx0 + (e.shiftKey ? e.deltaY : e.deltaX) / k); }
+        else { const p = pt(e, fcv), bm = fBar(p.x); S.fz = clamp(k * (e.deltaY < 0 ? 1.25 : 0.8), 6, 300); S.fx0 = Math.max(0, bm - (p.x - FHEAD) / S.fz); }
+        save(); drawField();
+    }, { passive: false });
+    fcv.addEventListener("dblclick", (e) => { const h = fHit(pt(e, fcv)); if (h && h.bl) { fPush(); S.arr = S.arr.filter((b) => b.id !== h.bl.id); fsel = null; fieldChanged(); } });
+    const delSel = () => { if (!fsel) return; fPush(); S.arr = S.arr.filter((b) => b.id !== fsel); fsel = null; fieldChanged(); };
+    const dupSel = () => {
+        const bl = S.arr.find((b) => b.id === fsel);
+        if (!bl) return;
+        fPush();
+        const c = { ...bl, id: Math.random().toString(36).slice(2), bar: bl.bar + bl.len };
+        S.arr.push(c); fsel = c.id; fieldChanged();
+    };
+    const undoF = () => { if (!fUndoS.length) return; S.arr = JSON.parse(fUndoS.pop()); fsel = null; fieldChanged(); };
+    fDel.addEventListener("click", () => { delSel(); frefocus(); });
+    fDup.addEventListener("click", () => { dupSel(); frefocus(); });
+    fUndo.addEventListener("click", () => { undoF(); frefocus(); });
+    fClear.addEventListener("click", () => { if (!S.arr.length) return; fPush(); S.arr = []; fsel = null; fieldChanged(); setStatus(T("Поле очищено — всё снова по кругу (↶ — вернуть)", "Field cleared — everything loops again (↶ to undo)")); });
+    fFill.addEventListener("click", () => {
+        if (!chans.length) return;
+        fPush();
+        const len = Math.max(4, ...chans.map(loopBars));
+        S.arr = S.arr.filter((b) => !chans.some((c) => c.key === b.ch));
+        for (const c of chans) S.arr.push({ id: Math.random().toString(36).slice(2), ch: c.key, bar: 0, len });
+        fieldChanged();
+    });
+    fkeys.addEventListener("keydown", (e) => {
+        const ctrl = e.ctrlKey || e.metaKey;
+        let used = true;
+        if (e.key === "Delete" || e.key === "Backspace") delSel();
+        else if (ctrl && e.code === "KeyD") dupSel();
+        else if (ctrl && e.code === "KeyZ") undoF();
+        else if (e.key === " ") { if (P.on) stop(); else { P.only = null; start(); } }
+        else used = false;
+        if (used) { e.preventDefault(); e.stopPropagation(); }
+    });
 
     // ---------- общий эквалайзер: рисунок ----------
     const FMIN = 20, FMAX = 20000, DBR = 15;
@@ -675,7 +970,7 @@ function setupStudio(node) {
             drawMeter(r.meter, r.mL, r.mR, true);
             if (r.mL.v > 0.001 || r.mR.v > 0.001) alive = true;
             const b = bufs.get(c.specKey);
-            if (P.on && b) { r.head.style.display = "block"; r.head.style.left = ((((ctx.currentTime - P.t0) % b.duration) + b.duration) % b.duration) / b.duration * 100 + "%"; }
+            if (P.on && !P.arr && b) { r.head.style.display = "block"; r.head.style.left = ((((ctx.currentTime - P.t0) % b.duration) + b.duration) % b.duration) / b.duration * 100 + "%"; }
             else r.head.style.display = "none";
         }
         if (A.mtap) {
@@ -684,6 +979,7 @@ function setupStudio(node) {
             drawMeter(mm, A.mL, A.mR, false);
         }
         drawEq();
+        if (P.on && P.arr) drawField();
         if (alive && !document.hidden) P.raf = requestAnimationFrame(loop);
     }
     const kick = () => { if (!P.raf) P.raf = requestAnimationFrame(loop); };
@@ -697,6 +993,8 @@ function setupStudio(node) {
         const keys = channelKeys(src.map((x) => x.name));
         const next = src.map((x, i) => ({ ...x, key: keys[i], specKey: JSON.stringify(x.spec) }));
         const s2 = next.map((c) => c.key + "|" + c.specKey).join("||");
+        const bn = bpmNow();
+        if (bn !== S.bpm) { S.bpm = bn; save(); drawField(); }
         if (s2 === sig) return;
         const namesChanged = next.map((c) => c.key).join("|") !== chans.map((c) => c.key).join("|");
         sig = s2;
@@ -705,6 +1003,8 @@ function setupStudio(node) {
         if (namesChanged || rows.size !== chans.length) buildRows();
         else chans.forEach((c) => load(c).then((b) => { if (b) drawWave(c.key, b); }));
         sizer.fit();
+        drawField();
+        chans.forEach((c) => load(c).then(() => drawField()));
         if (P.on) start();
         setStatus(chans.length ? T(`Дорожек: ${chans.length}`, `Tracks: ${chans.length}`) : "");
     }
@@ -713,10 +1013,10 @@ function setupStudio(node) {
     // ---------- нода ----------
     const dom = node.addDOMWidget("neron_studio", "neron_studio", outer, { serialize: false, hideOnZoom: false });
     const helpH = () => (help.style.display === "block" ? help.offsetHeight + 6 : 0);
-    const autoH = () => 34 + helpH() + Math.max(60, chans.length * (ROW_H + 4)) + 6 + 28 + EQ_H + 26;
-    const sizer = makeUserSized(node, dom, outer, { minH: 300, autoH, margin: 4, onLayout: () => drawEq() });
+    const autoH = () => 34 + helpH() + Math.max(60, chans.length * (ROW_H + 4)) + 6 + 28 + FR + Math.max(1, chans.length) * LANE + 6 + 28 + EQ_H + 26;
+    const sizer = makeUserSized(node, dom, outer, { minH: 300, autoH, margin: 4, onLayout: () => { drawEq(); drawField(); } });
     outer.style.overflow = "hidden";
-    new ResizeObserver(() => drawEq()).observe(root);
+    new ResizeObserver(() => { drawEq(); drawField(); }).observe(root);
     const wanted = node.computeSize ? node.computeSize() : [1100, 500];
     node.setSize([Math.max(wanted[0], 1100), Math.max(wanted[1], 200)]);
 
@@ -725,6 +1025,7 @@ function setupStudio(node) {
     paintRows();
     buildRows();
     drawEq();
+    drawField();
     setTimeout(poll, 60);
 
     node.neronReload = () => {

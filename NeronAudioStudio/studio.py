@@ -41,7 +41,13 @@ def parse_studio(js):
             "solo": bool(v.get("solo", False)),
             "fx": parse_fx(v),
         }
+    arr = []
+    for b in (raw.get("arr") or [])[:400] if isinstance(raw.get("arr"), list) else []:
+        if isinstance(b, dict) and isinstance(b.get("ch"), str):
+            arr.append({"ch": b["ch"], "bar": int(_num(b.get("bar", 0), 0, 0, 4096)), "len": int(_num(b.get("len", 1), 1, 1, 4096))})
     return {
+        "arr": arr,
+        "bpm": _num(raw.get("bpm", 90), 90, 40, 300),
         "bypass": bool(raw.get("bypass", False)),
         "master": _num(raw.get("master", 1.0), 1.0, 0.0, 1.5),
         "eq_on": raw.get("eq_on", True) is not False,
@@ -65,14 +71,39 @@ def render_studio(waves, names, sp):
     live = [(w, sp["ch"].get(k)) for w, k in zip(waves, keys) if w is not None and len(w)]
     if not live:
         return np.zeros((SAMPLE_RATE, 2), dtype=np.float32)
-    n = max(len(w) for w, _ in live)
+    # 🧱 поле: блоки дорожек по тактам (если есть хоть один блок существующей дорожки)
+    live_keys = [k for w, k in zip(waves, keys) if w is not None and len(w)]
+    arr = [b for b in sp.get("arr") or [] if b["ch"] in live_keys]
+    bar_n = 240.0 / float(sp.get("bpm") or 90) * SAMPLE_RATE
+    if arr:
+        n = max(1, int(round(max(b["bar"] + b["len"] for b in arr) * bar_n)))
+    else:
+        n = max(len(w) for w, _ in live)
     solo = any(st and st["solo"] for _, st in live)
     mix = np.zeros((n, 2), dtype=np.float32)
-    for w, st in live:
+    lk = [k for w, k in zip(waves, keys) if w is not None and len(w)]
+    for (w, st), key in zip(live, lk):
         st = st or {"vol": 0.8, "pan": 0.0, "mute": False, "solo": False, "fx": None}
         if st["mute"] or (solo and not st["solo"]):
             continue
-        tiled = w[np.arange(n) % len(w)]          # короткие лупы повторяются до самого длинного
+        if arr:
+            tiled = np.zeros((n, 2), dtype=np.float32)
+            blocks = [b for b in arr if b["ch"] == key]
+            if not blocks:
+                continue
+            for b in blocks:
+                s0 = int(round(b["bar"] * bar_n))
+                m = min(int(round(b["len"] * bar_n)), n - s0)
+                if m <= 0:
+                    continue
+                seg = w[np.arange(m) % len(w)].copy()      # блок: луп дорожки с начала блока
+                r = min(96, m // 2)
+                if r > 0:
+                    ramp = np.linspace(0.0, 1.0, r, dtype=np.float32)[:, None]
+                    seg[-r:] *= ramp[::-1]
+                tiled[s0:s0 + m] += seg
+        else:
+            tiled = w[np.arange(n) % len(w)]          # короткие лупы повторяются до самого длинного
         if st["fx"]:
             tiled = apply_fx(tiled, st["fx"])
         g = np.array([st["vol"] * min(1.0, 1.0 - st["pan"]), st["vol"] * min(1.0, 1.0 + st["pan"])], dtype=np.float32)

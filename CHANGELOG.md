@@ -8,12 +8,14 @@
 - ⏭ ПРОПУСТИТЬ — Пульт видит всё, как будто Студии нет (у «Музыки» — барабаны и пианино). Отжата — Пульт слышит Студию одним каналом «🎛 СТУДИЯ» (и заранее, без Queue).
 - «Музыка» теперь отдаёт каждую дорожку отдельно (для Студии); Пульт по-прежнему видит два канала.
 - Ручки и эхо вынесены в общий файл — в Пульте и Студии они одинаковые. Рабочий стол: Музыка → Студия → Пульт.
+- **🧱 ПОЛЕ сборки в Студии** (как плейлист FL Studio): по горизонтали такты, у каждой дорожки своя полоса. Клик по полосе — блок (длина = луп дорожки), тянуть — двигать, край — длина, двойной клик / Delete — убрать, Ctrl+D — копия следом, Ctrl+Z — отменить, клик по линейке — откуда играть, колёсико — масштаб. Внутри блоков видна волна дорожки, тёмные черточки — где луп начинается заново. ⊞ ВСЕ ДОРОЖКИ — каждая дорожка блоком с 1-го такта. Пустое поле — всё по кругу, как раньше; есть блоки — Студия (и Пульт, и файл) играет собранный трек ровно по тактам.
 
 **EN:**
 - **Neron Studio 🎛** — between Music (or Sound ×8, the sampler) and the Pult. **Every studio track** is its own channel: ▶ (solo listen), M, S, volume, pan, **LOW / MID / HIGH**, **REVERB** + room, ↺, a level meter and a wave with a playhead.
 - **10-band master EQ** (31 Hz … 16 kHz, ±12 dB): drag the points, wheel for fine steps, double-click resets. A **live spectrum** under the curve. Presets: Flat, More bass, Brighter, Warm, Voice up front, Smile, Club, Old radio. **ON / OFF** to compare.
 - ⏭ BYPASS — the Pult sees everything as if the Studio weren't there. Off — the Pult hears the Studio as one "🎛 STUDIO" channel (also before Queue).
 - Music now also outputs every track separately (for the Studio); the Pult still sees two channels. Knobs and reverb live in a shared file. Ready desk: Music → Studio → Pult.
+- **🧱 ARRANGE field in the Studio** (like the FL Studio playlist): bars across, one lane per track. Click a lane to put a block (track loop length), drag to move, edge — length, double-click / Delete — remove, Ctrl+D — copy after, Ctrl+Z — undo, click the ruler to set the start, wheel zooms. Blocks show the track wave. ⊞ ALL TRACKS puts every track from bar 1. An empty field loops everything as before; with blocks the Studio (the Pult and the file too) plays the arranged track bar-exact.
 
 ## dev — Neron Audio Studio: музыка под ролик / music to the clip (на проверке / in testing)
 
