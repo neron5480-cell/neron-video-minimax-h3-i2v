@@ -1,59 +1,5 @@
 # Changelog / История изменений
 
-## 2026-10-25 — Neron Audio Studio: кубики и Пульт / cubes and the Pult
-
-**RU:**
-- **Neron Video ×3 / Видео ×3** — одна нода, в ней до трёх загрузчиков видео. Загрузили ролик — открылся следующий слот. Каждый ролик виден прямо в ноде. Файлы можно перетащить на слот.
-- **Neron Sound ×8 / Звук ×8** — одна нода, до восьми загрузчиков звука. Пустые строки скрыты, у каждого звука ▶ и волна.
-- **Пульт (Neron Mixer) понимает кубики:** «Видео ×3» — во вход `video`, «Звук ×8» — в любой `audio_N` (каждый звук становится своим каналом с громкостью, балансом, M/S и индикатором уровня).
-- **Сводка вверху Пульта:** сколько роликов, сколько звуковых каналов, общая длина.
-- **Ролики в Пульте:** все рядом; клик по ролику — он на весь экран и звук переходит к его началу; во время игры экран сам переключается на следующий ролик; «◀ ВСЕ РОЛИКИ» — снова рядом. В сохранённом клипе ролики идут друг за другом (1 → 2 → 3), склейка точна до кадра; звук роликов склеивается так же.
-- Пульт стал выходной нодой: Queue работает и без нод после него.
-- Кубики аккуратнее: панель не упирается в край ноды, высота считается по содержимому (и при смене ширины), в списках только имя файла (папка — во всплывающей подсказке).
-
-**EN:**
-- **Neron Video ×3** — one node with up to three video loaders; the next slot opens when a clip is loaded; each clip is visible in the node; files can be dropped onto a slot.
-- **Neron Sound ×8** — one node with up to eight audio loaders; empty rows stay hidden; each sound has ▶ and a waveform.
-- **The Pult (Neron Mixer) understands cubes:** Video ×3 → the `video` input, Sound ×8 → any `audio_N` (every sound becomes its own channel with volume, pan, M/S and a level meter).
-- **Summary at the top of the Pult:** number of clips, sound channels, total length.
-- **Clips in the Pult:** side by side; click one — it fills the screen and playback jumps to its start; during playback the screen follows the playing clip; "◀ ALL CLIPS" — side by side again. In the saved clip they play one after another (1 → 2 → 3), frame-accurate, with their sound joined the same way.
-- The Pult is now an output node: Queue works without nodes after it.
-- Tidier cubes: the panel no longer touches the node edge, the height follows the content (also when the width changes), lists show just the file name (folder in the tooltip).
-
-## 2026-10-25 — Neron Audio Studio: размер нод и индикаторы уровня / node size and level meters
-
-**RU:**
-- **Размер задаёт пользователь** у Piano Roll, Drum Machine, Микшера, Audio Loader и Video Combine. Раньше высота была жёсткой (Piano Roll был огромным и не уменьшался). Теперь ноду можно растянуть или сжать: содержимое подстраивается, лишнее прокручивается, размер запоминается в схеме. Пока ноду не трогали, она, как раньше, подстраивается сама. Правый клик → «↕ Авто-размер» возвращает подгонку.
-- **Индикаторы уровня в Микшере:** прыгающие столбики у каждого канала (левый и правый) и общий L/R рядом с MASTER. Зелёный — нормально, жёлтый — громко, красный — перегруз; пиковая метка держится секунду. Пока звук не играет, индикаторы ничего не нагружают.
-- Исправлено: «Поле» и Audio Loader использовали одинаковые имена стилей и могли портить вид друг другу на одной схеме.
-
-**EN:**
-- **The user sets the size** of Piano Roll, Drum Machine, Mixer, Audio Loader and Video Combine. The height used to be fixed (Piano Roll was huge and could not shrink). Now the content adapts and scrolls, the size is saved in the workflow; an untouched node still fits itself. Right click → "↕ Auto size" restores fitting.
-- **Level meters in the Mixer:** bouncing bars per channel (left and right) and a master L/R meter next to MASTER. Green — fine, yellow — loud, red — clipping; the peak mark holds for a second. No load while nothing plays.
-- Fixed: the Field and the Audio Loader shared style names and could spoil each other's look on one canvas.
-
-## 2026-10-25 — Neron Audio Studio: новая нода «Поле» / new node "Field"
-
-**RU:**
-- **Neron Field / Поле** — общее поле в духе Playlist из FL Studio. На холсте — маленькая карточка (картинка, обзор, ▶ / ■, «Открыть»), которую можно растягивать как угодно. Большое окно открывается поверх всего, двигается, тянется, разворачивается на весь экран и помнит своё место.
-- **Видео:** до 3 роликов. Ролик сдвигается мышкой или по кадру (◀ / ▶, стрелки), два разделителя решают, где какой ролик идёт. Склейка или наплыв. Где у ролика нет кадров — красная штриховка (в итоге чёрный экран). Родной звук роликов режется по тем же разделителям и выключается кнопкой M.
-- **Звук:** куски из файлов и из нод студии (входы `audio_N`). Двигать, переносить между дорожками, обрезать, резать (S), копия (Ctrl+D), появление и затухание, громкость куска; у дорожки M, S, громкость, баланс. Прилипание к краям и разделителям. Отмена и повтор.
-- Файлы можно просто перетащить на окно. Слушать и смотреть — сразу, без Queue.
-- **💾 СОБРАТЬ** сохраняет WAV и mp4 (H.264 CRF 17) без Queue; Queue отдаёт `audio`, `video`, `fps`, `seconds`. Итог точен до кадра и ровно по длине видео.
-- Микшер слышит Поле сразу, без Queue.
-- Пока окно Поля активно, клавиши не уходят в ComfyUI: Ctrl+Z не откатывает граф, Delete не удаляет ноду.
-- **Оптимизация:** все ноды студии теперь используют один общий звуковой движок на страницу (раньше у каждой был свой). Окно Поля ничего не рисует, пока закрыто; во время игры двигается только курсор.
-
-**EN:**
-- **Neron Field** — a shared field in the spirit of the FL Studio Playlist. On the canvas: a small, freely resizable card (picture, overview, ▶ / ■, "Open"). The big window opens above everything; it can be moved, resized, made full screen and remembers its place.
-- **Video:** up to 3 clips, shifted by mouse or frame by frame; two dividers decide which clip plays where; cut or dissolve. Missing frames are shown with red stripes (black in the result). The clips' own sound follows the same dividers and can be muted.
-- **Sound:** pieces from files and from studio nodes (`audio_N` inputs): move, move between tracks, trim, split, copy, fades, piece volume; tracks have M, S, volume, pan. Snapping, undo / redo.
-- Drop files onto the window. Watch and listen at once, no Queue.
-- **💾 BUILD** saves WAV and mp4 without Queue; Queue outputs `audio`, `video`, `fps`, `seconds`. Frame-accurate, exactly as long as the video.
-- The Mixer hears the Field without Queue.
-- While the Field window is focused, keys stay in it: Ctrl+Z does not undo the graph, Delete does not delete the node.
-- **Performance:** all studio nodes now share one audio engine per page. The Field window draws nothing while closed; during playback only the cursor moves.
-
 ## 2026-10-23 — Perception Relay: защита от нехватки памяти / out-of-memory guard
 
 **RU:** Если выход «кадры» (`frames_out`) не влезает в оперативку (нужно больше половины свободной), Пульт его пропускает вместо вылета; готовый ролик сохраняется в файл, в отчёте — пояснение.

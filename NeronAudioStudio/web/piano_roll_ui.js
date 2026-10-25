@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { createProjectBar, makeUserSized } from "./neron_common.js";
+import { createProjectBar } from "./neron_common.js";
 
 // ============================================================================
 //  Neron Piano Roll - интерфейс в духе FL Studio
@@ -155,14 +155,10 @@ const bufCache = new Map();   // ключ -> { promise, buf }
 let activeFetches = 0;
 const fetchWaiters = [];
 
-// один звуковой движок на всю страницу (общий для всех нод Neron)
 function getCtx() {
     if (!sharedCtx) {
-        if (!window.__neronAudioCtx) {
-            const AC = window.AudioContext || window.webkitAudioContext;
-            window.__neronAudioCtx = new AC();
-        }
-        sharedCtx = window.__neronAudioCtx;
+        const AC = window.AudioContext || window.webkitAudioContext;
+        sharedCtx = new AC();
     }
     return sharedCtx;
 }
@@ -1413,9 +1409,11 @@ function setupPianoUI(node) {
     const domWidget = node.addDOMWidget("neron_piano", "neron_piano", root, {
         serialize: false,
         hideOnZoom: false,
+        getMinHeight: () => PANEL_H,
+        getMaxHeight: () => PANEL_H,
     });
-    // размер задаёт пользователь: сетка нот подстраивается и прокручивается
-    makeUserSized(node, domWidget, root, { minH: 260, autoH: () => PANEL_H });
+    domWidget.computeSize = (width) => [width, PANEL_H];
+    root.style.height = PANEL_H + "px";
 
     const wanted = node.computeSize ? node.computeSize() : [1080, 400];
     node.setSize([Math.max(wanted[0], 1080), Math.max(wanted[1], BASE_NODE_H + PANEL_H)]);

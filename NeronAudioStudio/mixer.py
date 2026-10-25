@@ -20,8 +20,7 @@ MAX_REPEATS = 8
 MAX_FIT_SECONDS = 3600.0
 VIDEO_EXTS = (".mp4", ".webm", ".mov", ".m4v", ".ogv")
 AUDIO_EXTS = (".wav", ".mp3", ".flac", ".ogg", ".opus", ".m4a", ".aac", ".wma", ".aif", ".aiff")
-# audio_3 — провод; audio_3/2 — 2-й звук кубика «Звук ×8», подключённого к audio_3
-SLOT_RE = re.compile(r"^audio_(\d+)(?:/(\d+))?$")
+SLOT_RE = re.compile(r"^audio_(\d+)$")
 VIDEO_SLOT = "video_audio"   # канал со звуком самого видео
 PREVIEW_SR = 22050
 
@@ -57,17 +56,13 @@ def parse_mixer(mixer_json):
             "mute": bool(t.get("mute", False)),
             "solo": bool(t.get("solo", False)),
         }
-    def vref(v):
-        if isinstance(v, dict) and isinstance(v.get("name"), str):
-            return {"name": v["name"], "subfolder": str(v.get("subfolder") or ""), "type": str(v.get("type") or "input")}
-        return None
-    video = vref(raw.get("video"))
-    videos = [x for x in (vref(v) for v in (raw.get("videos") or [])[:3]) if x]
-    if not videos and video:
-        videos = [video]
+    video = raw.get("video")
+    if isinstance(video, dict) and isinstance(video.get("name"), str):
+        video = {"name": video["name"], "subfolder": str(video.get("subfolder") or ""), "type": str(video.get("type") or "input")}
+    else:
+        video = None
     return {
         "video": video,
-        "videos": videos,
         "repeats": int(_num(raw.get("repeats", 1), 1, 1, MAX_REPEATS)),
         "master": _num(raw.get("master", 0.9), 0.9, 0.0, 1.5),
         "bpm": int(_num(raw.get("bpm", 90), 90, 40, 300)),
@@ -336,9 +331,6 @@ def render_source(src):
         return render_project(kit, bpm, src.get("json", "{}"))
     if kind == "file":
         return render_file(src)
-    if kind == "arrange":
-        from .arrange import render_arrange_spec   # поздний импорт: arrange сам опирается на mixer
-        return render_arrange_spec(src)
     raise RuntimeError("Неизвестный источник: " + str(kind))
 
 
@@ -408,97 +400,6 @@ def _video_channel(video, st):
     }
 
 
-def _clip_len(path):
-    from .arrange import probe_video          # поздний импорт: arrange сам опирается на mixer
-    info = probe_video(path)
-    return float(info["duration"]) if info else 0.0
-
-
-def videos_wave(videos):
-    """Звук нескольких роликов подряд (1 -> 2 -> 3). Где у ролика нет звука — тишина его длины."""
-    parts = []
-    for v in videos:
-        path = video_path(v)
-        if not path:
-            continue
-        n = int(round(_clip_len(path) * SAMPLE_RATE))
-        w = decode_video_audio(path)
-        if n <= 0:
-            n = len(w) if w is not None else 0
-        piece = np.zeros((n, 2), dtype=np.float32)
-        if w is not None and len(w):
-            k = min(len(w), len(piece))
-            piece[:k] = w[:k]
-        parts.append(piece)
-    if not parts:
-        return None
-    return np.ascontiguousarray(np.concatenate(parts, axis=0))
-
-
-def _videos_channel(videos, st):
-    if not videos:
-        return None
-    wave = decode_video_audio(video_path(videos[0])) if len(videos) == 1 and video_path(videos[0]) else videos_wave(videos)
-    if wave is None or len(wave) == 0:
-        return None
-    st = st if isinstance(st, dict) else {}
-    return {
-        "wave": wave,
-        "vol": _num(st.get("vol", 0.8), 0.8, 0.0, 1.5),
-        "pan": _num(st.get("pan", 0.0), 0.0, -1.0, 1.0),
-        "mute": bool(st.get("mute", False)),
-        "solo": bool(st.get("solo", False)),
-    }
-
-
-def videos_length(videos):
-    total = 0.0
-    for v in videos:
-        p = video_path(v)
-        if p:
-            total += _clip_len(p)
-    return total
-
-
-def make_videos_file(videos, wav_path, clean):
-    """1 ролик — как раньше (картинка без перекодирования). 2-3 ролика — подряд, точно по кадрам."""
-    videos = [v for v in videos if video_path(v)]
-    if not videos:
-        return None
-    if len(videos) == 1:
-        return make_video_file(videos[0], wav_path, clean)
-    from .arrange import video_plan, build_video
-    field = {"video": {"clips": [{"src": v, "offset": 0.0} for v in videos], "cuts": [], "trans": "cut", "trans_dur": 0.5}}
-    off = 0.0
-    for c in field["video"]["clips"]:
-        c["offset"] = off
-        off += _clip_len(video_path(c["src"]))
-    plan = video_plan(field)
-    out = os.path.join(folder_paths.get_output_directory(), "Neron_Videos", clean + ".mp4")
-    try:
-        return build_video(plan, wav_path, out)
-    except Exception as e:
-        print("[Neron] Пульт: не удалось склеить ролики / could not join the clips:", e)
-        return None
-
-
-@routes.post("/neron/videos_audio")
-async def neron_videos_audio(request):
-    """Звук нескольких роликов подряд — для прослушивания в Пульте."""
-    try:
-        data = await request.json()
-        vids = [v for v in (data.get("videos") or [])[:3] if isinstance(v, dict)]
-        loop = asyncio.get_running_loop()
-        wave = await loop.run_in_executor(None, videos_wave, vids)
-        if wave is None or len(wave) == 0:
-            return web.Response(status=404, text="в роликах нет звука / the clips have no sound")
-        light = _resample(wave, SAMPLE_RATE, PREVIEW_SR)
-        body = await loop.run_in_executor(None, lambda: _wav_bytes_sr(light, PREVIEW_SR))
-        return web.Response(body=body, content_type="audio/wav", headers={"Cache-Control": "no-store"})
-    except Exception as e:
-        return web.Response(status=500, text=str(e))
-
-
 def _render_from_request(data):
     channels = []
     for c in (data.get("channels") or [])[:MAX_CHANNELS]:
@@ -512,8 +413,7 @@ def _render_from_request(data):
             "mute": bool(c.get("mute", False)),
             "solo": bool(c.get("solo", False)),
         })
-    vids = [v for v in (data.get("videos") or []) if isinstance(v, dict)][:3] or ([data["video"]] if isinstance(data.get("video"), dict) else [])
-    vch = _videos_channel(vids, data.get("video_audio"))
+    vch = _video_channel(data.get("video"), data.get("video_audio"))
     if vch:
         channels.append(vch)
     repeats = int(_num(data.get("repeats", 1), 1, 1, MAX_REPEATS))
@@ -531,8 +431,7 @@ async def neron_mixer_render(request):
         path, clean = save_mix_wav(mix, data.get("save_name", "neron_mix"))
         resp = {"ok": True, "path": path}
         if data.get("with_video"):
-            vids = [v for v in (data.get("videos") or []) if isinstance(v, dict)][:3] or ([data["video"]] if isinstance(data.get("video"), dict) else [])
-            vout = await loop.run_in_executor(None, make_videos_file, vids, path, clean)
+            vout = await loop.run_in_executor(None, make_video_file, data.get("video"), path, clean)
             if vout:
                 resp["video_path"] = vout
             else:
@@ -587,8 +486,7 @@ class NeronMixer:
     def INPUT_TYPES(s):
         # video: сюда можно подключить любой загрузчик видео - в микшере появится плеер для сверки звука с картинкой
         optional = {"video": ("*",), "bpm": ("INT", {"forceInput": True})}
-        # audio_N принимает обычный звук или кубик «Звук ×8» (каждый его звук — свой канал)
-        optional.update({f"audio_{i}": ("AUDIO,NERON_SOUNDS",) for i in range(1, MAX_CHANNELS + 1)})
+        optional.update({f"audio_{i}": ("AUDIO",) for i in range(1, MAX_CHANNELS + 1)})
         return {
             "required": {
                 "mixer_json": ("STRING", {"default": _default_mixer_json()}),
@@ -603,7 +501,6 @@ class NeronMixer:
     RETURN_NAMES = ("audio", "saved_path", "bpm", "video", "fps")
     FUNCTION = "generate"
     CATEGORY = "NeronAudio"
-    OUTPUT_NODE = True     # Пульт сам сохраняет звук и клип: Queue работает и без нод после него
 
     def generate(self, mixer_json, save_name, **audios):
         proj = parse_mixer(mixer_json)
@@ -611,39 +508,25 @@ class NeronMixer:
         for slot in sorted(audios, key=lambda k: int(SLOT_RE.match(k).group(1)) if SLOT_RE.match(k) else 0):
             if not SLOT_RE.match(slot) or audios[slot] is None:
                 continue
-            val = audios[slot]
-            if isinstance(val, dict) and val.get("neron") == "sounds":
-                # кубик «Звук ×8»: каждый звук — отдельный канал audio_N/1, audio_N/2, ...
-                for k, snd in enumerate(val.get("sounds") or []):
-                    st = proj["settings"].get(f"{slot}/{k + 1}", _default_setting())
-                    channels.append({"wave": render_file({"name": snd["name"], "subfolder": snd.get("subfolder", ""), "kind": snd.get("type", "input"),
-                                                          "start": snd.get("start", 0), "end": snd.get("end", 0)}),
-                                     "vol": st["vol"], "pan": st["pan"], "mute": st["mute"], "solo": st["solo"]})
-                continue
             st = proj["settings"].get(slot, _default_setting())
             channels.append({
-                "wave": audio_to_stereo(val),
+                "wave": audio_to_stereo(audios[slot]),
                 "vol": st["vol"], "pan": st["pan"], "mute": st["mute"], "solo": st["solo"],
             })
-        # видео: кубик «Видео ×3» по проводу, иначе то, что выбрано в Пульте
-        vin = audios.get("video")
-        videos = vin["clips"] if isinstance(vin, dict) and vin.get("neron") == "videos" else proj["videos"]
         vst = proj["settings"].get(VIDEO_SLOT, _default_setting())
-        vch = _videos_channel(videos, vst)
+        vch = _video_channel(proj["video"], vst) if proj["video"] else None
         if vch:
             channels.append(vch)
-        if videos and proj["fit_sec"] > 0:
-            proj["fit_sec"] = videos_length(videos) or proj["fit_sec"]
         mix = mix_channels(channels, proj["repeats"], proj["master"], proj["fit_sec"])
         out_path, clean = save_mix_wav(mix, save_name)
         bpm_in = audios.get("bpm")
         out_bpm = int(_num(bpm_in, proj["bpm"], 40, 300)) if bpm_in is not None else proj["bpm"]
         waveform = torch.from_numpy(np.ascontiguousarray(mix.T)).float().unsqueeze(0)
-        vp = video_path(videos[0]) if videos else None
+        vp = video_path(proj["video"]) if proj["video"] else None
         fps = video_fps(vp) if vp else 24.0
         video_out = None
         if vp:
-            vout = make_videos_file(videos, out_path, clean)
+            vout = make_video_file(proj["video"], out_path, clean)
             if vout:
                 video_out = VideoFromFile(vout) if VideoFromFile is not None else vout
             else:

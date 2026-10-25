@@ -9,10 +9,10 @@ from server import PromptServer
 # ----------------------------------------------------------------------------
 #  Проекты: сохранить / открыть (как проект во FL Studio).
 #  Файлы лежат в  output/Neron_Projects/<тип>/<название>.json
-#  Тип: drum (драм-машина), piano (пианино), mixer (микшер), arrange (поле).
+#  Тип: drum (драм-машина), piano (пианино), mixer (микшер).
 # ----------------------------------------------------------------------------
 
-KINDS = ("drum", "piano", "mixer", "arrange")
+KINDS = ("drum", "piano", "mixer")
 
 routes = PromptServer.instance.routes
 

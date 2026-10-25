@@ -1,6 +1,5 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { makeUserSized } from "./neron_common.js";
 
 // ============================================================================
 //  Neron Video Combine
@@ -53,9 +52,10 @@ function setupVideoCombine(node) {
     const dom = node.addDOMWidget("neron_video_player", "neron_video_player", root, {
         serialize: false,
         hideOnZoom: false,
+        getMinHeight: () => PANEL_H,
+        getMaxHeight: () => PANEL_H,
     });
-    // размер задаёт пользователь: плеер растёт вместе с нодой
-    makeUserSized(node, dom, root, { minH: 140, autoH: () => PANEL_H });
+    dom.computeSize = (width) => [width, PANEL_H];
 
     node.neronShowVideo = (f) => {
         const q = `/view?filename=${encodeURIComponent(f.filename)}&subfolder=${encodeURIComponent(f.subfolder || "")}&type=${encodeURIComponent(f.type || "output")}&t=${Date.now()}`;

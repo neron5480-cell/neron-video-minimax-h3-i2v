@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { createProjectBar, makeUserSized } from "./neron_common.js";
+import { createProjectBar } from "./neron_common.js";
 
 // ============================================================================
 //  Neron Mixer
@@ -22,20 +22,15 @@ const DEFAULT_VOL = 0.8;
 const ROW_H = 48;
 const BASE_NODE_H = 120;
 const INPUT_H = 22;
-const VIDEO_BOX_H = 230;
+const VIDEO_BOX_H = 190;
 const panelHeightFor = (rows, videoOpen) => 178 + (ROW_H + 6) * Math.max(1, rows) + (videoOpen ? VIDEO_BOX_H : 0);
 const COLORS = ["#ff9f43", "#54a0ff", "#1dd1a1", "#ff6b81", "#feca57", "#a29bfe", "#48dbfb", "#ee5253"];
 const SLOT_RE = /^audio_(\d+)$/;
-// audio_3/2 — 2-й звук кубика «Звук ×8», подключённого к audio_3
-const SUB_RE = /^audio_(\d+)(?:\/(\d+))?$/;
-const AUDIO_IN_TYPE = "AUDIO,NERON_SOUNDS";
-const VCOLORS = ["#4dabf7", "#f783ac", "#69db7c"];
 const VIDEO_SLOT = "video_audio";
-const SLOT_OK = (k) => SUB_RE.test(k) || k === VIDEO_SLOT;
+const SLOT_OK = (k) => SLOT_RE.test(k) || k === VIDEO_SLOT;
 const VIDEO_RE = /\.(mp4|webm|mov|m4v|ogv)(\s*\[\w+\])?$/i;
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-const T = (ru, en) => `${ru} / ${en}`;
 
 function el(tag, className, text) {
     const e = document.createElement(tag);
@@ -76,17 +71,8 @@ function injectStyles() {
 .nm-sel option{background:#23252b;color:#cfd2d8}
 .nm-vrow{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;flex:none;min-height:24px}
 .nm-vinfo{font-size:10px;color:#8b90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:80px}
-.nm-vbox{flex:none;height:${VIDEO_BOX_H - 10}px;display:none;align-items:stretch;justify-content:center;gap:6px;position:relative}
-.nm-tile{position:relative;flex:1;min-width:0;max-width:100%;background:#000;border-radius:6px;overflow:hidden;cursor:pointer;border:2px solid transparent;box-sizing:border-box}
-.nm-tile.on{border-color:#ffd166}
-.nm-tile video{width:100%;height:100%;object-fit:contain;display:block}
-.nm-tile b{position:absolute;left:6px;top:4px;font-size:12px;text-shadow:0 1px 3px #000;pointer-events:none}
-.nm-tile span{position:absolute;left:6px;bottom:4px;right:6px;font-size:9px;color:#cfd2d8;text-shadow:0 1px 3px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
-.nm-back{position:absolute;right:6px;top:6px;z-index:3;display:none}
-.nm-sum{flex:none;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;font-size:11px;font-weight:700;color:#e6e8ee;
-  background:#20232a;border-radius:6px;padding:5px 8px}
-.nm-sum span{white-space:nowrap}
-.nm-sum i{font-style:normal;color:#8b90a0;font-weight:400}
+.nm-vbox{flex:none;height:${VIDEO_BOX_H - 10}px;display:none;align-items:center;justify-content:center}
+.nm-vbox video{height:${VIDEO_BOX_H - 10}px;width:320px;background:#000;border-radius:6px;object-fit:contain}
 .nm-trow{display:flex;align-items:center;gap:8px;flex:none;height:22px}
 .nm-trow input[type=range]{flex:1;min-width:80px;width:auto;height:16px;--c:#4dabf7}
 .nm-trow .nm-lbl{min-width:112px;text-align:right;font-variant-numeric:tabular-nums}
@@ -106,20 +92,18 @@ function injectStyles() {
 .nm-wave .nm-note{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;
   font-size:10px;color:#8b90a0;text-align:center;padding:0 6px}
 .nm-ph{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.85;display:none;pointer-events:none}
-.nm-meter{width:14px;height:36px;flex:none;background:#101216;border-radius:3px}
-.nm-mmeter{width:140px;height:16px;flex:none;background:#101216;border-radius:3px}
 .nm-empty{padding:14px 10px;font-size:11px;color:#8b90a0;line-height:1.55;background:#20232a;border-radius:7px}
 `;
     document.head.appendChild(s);
 }
 
-// один звуковой движок на всю страницу (общий с «Полем»): меньше нагрузки
+let sharedCtx = null;
 function getCtx() {
-    if (!window.__neronAudioCtx) {
+    if (!sharedCtx) {
         const AC = window.AudioContext || window.webkitAudioContext;
-        window.__neronAudioCtx = new AC();
+        sharedCtx = new AC();
     }
-    return window.__neronAudioCtx;
+    return sharedCtx;
 }
 
 function toStereo(ctx, buf) {
@@ -148,72 +132,7 @@ function buildTrackChain(ctx, master) {
     gr.connect(merge, 0, 1);
     merge.connect(vol);
     vol.connect(master);
-    // отвод на индикатор уровня: звук не меняет, только «подслушивает»
-    const tap = ctx.createChannelSplitter(2);
-    const aL = ctx.createAnalyser(), aR = ctx.createAnalyser();
-    aL.fftSize = 512; aR.fftSize = 512;
-    vol.connect(tap);
-    tap.connect(aL, 0);
-    tap.connect(aR, 1);
-    return { input, gl, gr, vol, aL, aR };
-}
-
-// ----------------------------------------------------------------------------
-//  Индикаторы уровня (прыгающие столбики)
-// ----------------------------------------------------------------------------
-
-const meterBuf = new Float32Array(512);
-function peakOf(an) {
-    if (!an) return 0;
-    an.getFloatTimeDomainData(meterBuf);
-    let p = 0;
-    for (let i = 0; i < meterBuf.length; i++) { const v = Math.abs(meterBuf[i]); if (v > p) p = v; }
-    return p;
-}
-// 0..1 по шкале -48..0 дБ
-const toLevel = (p) => (p > 0.00001 ? Math.max(0, Math.min(1, (20 * Math.log10(p) + 48) / 48)) : 0);
-// сглаживание: подскакивает сразу, опускается плавно; пиковая метка держится 1 с
-function meterStep(m, peak, now) {
-    const v = toLevel(peak);
-    m.v = Math.max(v, (m.v || 0) - 0.025);
-    if (v >= (m.hold || 0) || now - (m.holdT || 0) > 1000) { m.hold = v; m.holdT = now; }
-    return m;
-}
-const ledColor = (f) => (f > 0.9 ? "#e5484d" : f > 0.72 ? "#e0b030" : "#3fbf5a");
-// vertical=true: два столбика снизу вверх (L, R); иначе две полосы слева направо
-function drawMeter(cv, mL, mR, vertical) {
-    const dpr = window.devicePixelRatio || 1;
-    const w = cv.clientWidth || 14, h = cv.clientHeight || 36;
-    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
-    const g = cv.getContext("2d");
-    g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    g.clearRect(0, 0, w, h);
-    const bars = [mL, mR];
-    const seg = 3, gap = 1;
-    for (let b = 0; b < 2; b++) {
-        const m = bars[b] || {};
-        if (vertical) {
-            const bw = (w - 3) / 2, x = 1 + b * (bw + 1);
-            const n = Math.floor((h - 2) / (seg + gap));
-            const on = Math.round((m.v || 0) * n);
-            for (let i = 0; i < n; i++) {
-                const f = (i + 1) / n;
-                g.fillStyle = i < on ? ledColor(f) : "#23262e";
-                g.fillRect(x, h - 1 - (i + 1) * (seg + gap) + gap, bw, seg);
-            }
-            if (m.hold > 0.02) { const i = Math.min(n - 1, Math.round(m.hold * n) - 1); g.fillStyle = ledColor((i + 1) / n); g.fillRect(x, h - 1 - (i + 1) * (seg + gap) + gap, bw, seg); }
-        } else {
-            const bh = (h - 3) / 2, y = 1 + b * (bh + 1);
-            const n = Math.floor((w - 2) / (seg + gap));
-            const on = Math.round((m.v || 0) * n);
-            for (let i = 0; i < n; i++) {
-                const f = (i + 1) / n;
-                g.fillStyle = i < on ? ledColor(f) : "#23262e";
-                g.fillRect(1 + i * (seg + gap), y, seg, bh);
-            }
-            if (m.hold > 0.02) { const i = Math.min(n - 1, Math.round(m.hold * n) - 1); g.fillStyle = ledColor((i + 1) / n); g.fillRect(1 + i * (seg + gap), y, seg, bh); }
-        }
-    }
+    return { input, gl, gr, vol };
 }
 
 function viewUrl(v) {
@@ -277,7 +196,7 @@ function setupMixerUI(node) {
     let videoDur = 0;
     let videoShown = false;
     let videoCur = "";            // ключ видео, загруженного в плеер
-    let curVideos = [];           // ролики, которые сейчас используются (с провода или выбранный вручную), до 3
+    let curVideo = null;          // видео, которое сейчас используется (с провода или выбранное вручную)
     let videoList = [];
     let panelH = panelHeightFor(0, false);
     let pollTimer = null;
@@ -289,8 +208,8 @@ function setupMixerUI(node) {
 
     function settingFor(slot) {
         if (!S.ch[slot]) {
-            const m = SUB_RE.exec(slot);
-            const color = m ? COLORS[(parseInt(m[1], 10) - 1 + (m[2] ? parseInt(m[2], 10) - 1 : 0)) % COLORS.length] : "#c9ccd6";
+            const m = SLOT_RE.exec(slot);
+            const color = m ? COLORS[(parseInt(m[1], 10) - 1) % COLORS.length] : "#c9ccd6";
             S.ch[slot] = { vol: DEFAULT_VOL, pan: 0, mute: false, solo: false, color };
         }
         return S.ch[slot];
@@ -303,7 +222,7 @@ function setupMixerUI(node) {
             version: 3, repeats: S.repeats, master: S.master,
             bpm: Math.round(S.bpm == null ? 90 : S.bpm), bpm_set: S.bpm != null, sync_bpm: S.syncBpm,
             fit: S.fit, fit_sec: fitActive() ? Math.round(videoDur * 1000) / 1000 : 0,
-            video: curVideos[0] || null, videos: curVideos, video_manual: S.video,
+            video: curVideo, video_manual: S.video,
             tracks: Object.keys(S.ch).map((slot) => ({
                 slot, vol: S.ch[slot].vol, pan: S.ch[slot].pan, mute: S.ch[slot].mute, solo: S.ch[slot].solo,
             })),
@@ -370,7 +289,7 @@ function setupMixerUI(node) {
             let maxN = Math.max(0, ...slots.map((s) => s.n));
             while (slots.length < want) {
                 maxN += 1;
-                node.addInput("audio_" + maxN, AUDIO_IN_TYPE);
+                node.addInput("audio_" + maxN, "AUDIO");
                 slots = audioSlots();
             }
             relayout();
@@ -411,21 +330,6 @@ function setupMixerUI(node) {
                 spec: f ? { type: "file", name: f.name, subfolder: f.subfolder, kind: f.kind, start, end } : null,
             };
         }
-        if (cls === "NeronSoundCube") {
-            // кубик «Звук ×8»: каждый звук — свой канал
-            const items = typeof o.neronCube === "function" ? o.neronCube().items : [];
-            return {
-                originId: o.id, node: o, kind: "cube", multi: items.map((f, k) => ({
-                    originId: o.id + "/" + k, node: o, kind: "file", label: `🎵 ${k + 1}. ${f.name}`, sub: T("Звук ×8", "Sound ×8"),
-                    spec: { type: "file", name: f.name, subfolder: f.subfolder || "", kind: f.type || "input", start: f.start || 0, end: f.end || 0 },
-                })),
-            };
-        }
-        if (cls === "NeronArrange") {
-            // поле слышно заранее: сервер сводит его целиком (вместе с его входами)
-            const inputs = typeof o.neronArrangeInputs === "function" ? o.neronArrangeInputs() : {};
-            return { originId: o.id, node: o, kind: "arrange", label: "FIELD / ПОЛЕ", sub: title, spec: { type: "arrange", json: String(widgetValue(o, "field_json") || "{}"), inputs } };
-        }
         return { originId: o.id, node: o, kind: "other", label: String(title).toUpperCase(), sub: cls, spec: null };
     }
 
@@ -460,13 +364,6 @@ function setupMixerUI(node) {
             if (s.inp.link === null || s.inp.link === undefined) continue;
             const src = resolveSource(s.inp.link);
             if (!src) continue;
-            if (src.multi) {
-                src.multi.forEach((m, k) => {
-                    const specKey = m.spec ? hashString(JSON.stringify(m.spec)) : "";
-                    out.push({ slot: `${s.inp.name}/${k + 1}`, n: s.n + (k + 1) / 100, ...m, specKey });
-                });
-                continue;
-            }
             const specKey = src.spec ? hashString(JSON.stringify(src.spec)) : "";
             out.push({ slot: s.inp.name, n: s.n, ...src, specKey });
         }
@@ -474,20 +371,17 @@ function setupMixerUI(node) {
         return out;
     }
 
-    // видео, подключённое проводом: кубик «Видео ×3» (до 3 роликов) или обычный загрузчик видео
-    function wiredVideos() {
+    // видео, подключённое проводом: ищем в загрузчике поле с именем файла
+    function wiredVideo() {
         const inp = (node.inputs || []).find((x) => x.name === "video");
-        if (!inp || inp.link === null || inp.link === undefined) return { wired: false, videos: [] };
+        if (!inp || inp.link === null || inp.link === undefined) return { wired: false, video: null };
         const r = resolveNode(inp.link);
-        if (!r || r.empty) return { wired: true, videos: [] };
-        if ((r.node.comfyClass || r.node.type) === "NeronVideoCube" && typeof r.node.neronCube === "function") {
-            return { wired: true, cube: true, videos: r.node.neronCube().items.slice(0, 3) };
-        }
+        if (!r || r.empty) return { wired: true, video: null };
         for (const w of r.node.widgets || []) {
             const v = parseVideoValue(w.value);
-            if (v) return { wired: true, videos: [v] };
+            if (v) return { wired: true, video: v };
         }
-        return { wired: true, videos: [] };
+        return { wired: true, video: null };
     }
 
     // BPM, подключённый проводом к входу bpm: берём число из ноды-источника
@@ -529,22 +423,6 @@ function setupMixerUI(node) {
 
     const top = el("div", "nm-top");
     root.appendChild(top);
-    // сводка: что подключено и сколько (Пульт видит всех)
-    const sumRow = el("div", "nm-sum");
-    root.appendChild(sumRow);
-    function showSummary() {
-        const nV = curVideos.length;
-        const audioCh = chs.filter((c) => !c.isVideo);
-        const fmt = (t) => { const m = Math.floor(t / 60); return `${m}:${(t - m * 60).toFixed(1).padStart(4, "0")}`; };
-        let len = videoDur > 0 ? videoDur : 0;
-        if (!len) for (const c of audioCh) { const b = readyBuf(c.slot, c.specKey); if (b && b.duration > len) len = b.duration; }
-        const parts = [
-            `🎬 ${T("Видео", "Video")}: ${nV}${nV ? ` <i>(${nV > 1 ? T("подряд", "in a row") : T("ролик", "clip")})</i>` : ""}`,
-            `🎵 ${T("Звук", "Sound")}: ${audioCh.length} <i>${T("каналов", "channels")}</i>`,
-            `⏱ ${T("Длина", "Length")}: ${len > 0 ? fmt(len) : "—"}`,
-        ];
-        sumRow.innerHTML = parts.map((x) => `<span>${x}</span>`).join("");
-    }
     function mkBtn(text, color, title, cls) {
         const b = el("button", "nm-btn" + (cls ? " " + cls : ""), text);
         if (color) b.style.background = color;
@@ -595,9 +473,6 @@ function setupMixerUI(node) {
     masterSlider.style.width = "100px";
     masterSlider.title = "Общая громкость (двойной клик - сбросить)";
     gM.appendChild(masterSlider);
-    const mMeter = el("canvas", "nm-mmeter");
-    mMeter.title = "Общий уровень: левый и правый канал. Красное - слишком громко / Master level: left and right. Red - too loud";
-    gM.appendChild(mMeter);
     top.appendChild(gM);
 
     const status = el("div", "nm-status", "");
@@ -628,103 +503,15 @@ function setupMixerUI(node) {
     root.appendChild(vrow);
 
     const vbox = el("div", "nm-vbox");
-    const backBtn = mkBtn("◀ " + T("ВСЕ РОЛИКИ", "ALL CLIPS"), "#4a4e5a", T("Снова показать все ролики рядом", "Show all clips side by side again"), "sm nm-back");
-    vbox.appendChild(backBtn);
+    const video = document.createElement("video");
+    video.muted = true;
+    video.defaultMuted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.preload = "auto";
+    video.controls = false;
+    vbox.appendChild(video);
     root.appendChild(vbox);
-
-    // RU: До 3 роликов. Рядом — все сразу (играющий в жёлтой рамке); клик по ролику —
-    //     он на весь экран и звук переходит к его началу; «ВСЕ РОЛИКИ» — снова рядом.
-    //     В итоговом клипе ролики идут друг за другом: 1 -> 2 -> 3.
-    // EN: Up to 3 clips side by side (the playing one has a yellow frame). Click a clip —
-    //     it fills the screen and playback jumps to its start. In the saved clip they
-    //     play one after another: 1 -> 2 -> 3.
-    const VS = { tiles: [], focus: -1, lastSeek: 0 };
-    function vsStarts() {
-        const st = [];
-        let a = 0;
-        for (const t of VS.tiles) { st.push(a); a += t.dur || 0; }
-        return st;
-    }
-    function vsBuild(list) {
-        for (const t of VS.tiles) { try { t.v.pause(); t.v.removeAttribute("src"); t.v.load(); } catch (e) { /* ок */ } t.wrap.remove(); }
-        VS.tiles = [];
-        VS.focus = -1;
-        list.forEach((ref, k) => {
-            const wrap = el("div", "nm-tile");
-            const v = document.createElement("video");
-            v.muted = true; v.defaultMuted = true; v.playsInline = true; v.preload = "auto"; v.controls = false;
-            v.src = viewUrl(ref);
-            const n = el("b", "", String(k + 1));
-            n.style.color = VCOLORS[k % VCOLORS.length];
-            const info = el("span", "", ref.name);
-            wrap.appendChild(v); wrap.appendChild(n); wrap.appendChild(info);
-            wrap.title = list.length > 1 ? T("Клик — этот ролик на весь экран", "Click — this clip full screen") : ref.name;
-            const t = { ref, v, wrap, info, dur: 0 };
-            v.addEventListener("loadedmetadata", () => {
-                const wasFit = fitActive();
-                t.dur = Number.isFinite(v.duration) && v.duration > 0 ? v.duration : 0;
-                info.textContent = `${ref.name} · ${t.dur.toFixed(2)} ${T("с", "s")}`;
-                vsTotal();
-                if (wasFit !== fitActive() || fitActive()) restartIfPlaying();
-            });
-            v.addEventListener("error", () => setStatus(T("Не удалось загрузить видео в плеер: ", "Cannot load the video: ") + ref.name, true));
-            wrap.addEventListener("click", () => {
-                if (VS.tiles.length < 2) return;
-                VS.focus = k;
-                seekTo(vsStarts()[k] + 0.001, true);
-                vsLayout(k);
-            });
-            vbox.appendChild(wrap);
-            VS.tiles.push(t);
-        });
-        vsLayout(0);
-        vsTotal();
-    }
-    function vsTotal() {
-        const all = VS.tiles.length && VS.tiles.every((t) => t.dur > 0);
-        videoDur = all ? VS.tiles.reduce((a, t) => a + t.dur, 0) : 0;
-        updateVideoInfo(effectiveVideo());
-        saveState();
-        showSummary();
-    }
-    function vsLayout(active) {
-        VS.tiles.forEach((t, i) => {
-            t.wrap.style.display = VS.focus < 0 || i === active ? "" : "none";
-            t.wrap.classList.toggle("on", VS.tiles.length > 1 && i === active);
-        });
-        backBtn.style.display = VS.focus >= 0 && VS.tiles.length > 1 ? "block" : "none";
-    }
-    function vsAt(t) {
-        const st = vsStarts();
-        const tt = videoDur > 0 ? ((t % videoDur) + videoDur) % videoDur : 0;
-        let k = 0;
-        for (let i = 0; i < st.length; i++) if (tt >= st[i]) k = i;
-        return { k, local: tt - (st[k] || 0) };
-    }
-    // играет: активный ролик идёт в такт звуку, остальные стоят
-    function vsSync(t, playing) {
-        if (!VS.tiles.length || !(videoDur > 0)) return;
-        const { k, local } = vsAt(t);
-        if (VS.focus >= 0) VS.focus = k;      // на весь экран — тот, что сейчас играет
-        vsLayout(k);
-        const nowMs = performance.now();
-        VS.tiles.forEach((tl, i) => {
-            const v = tl.v;
-            if (i !== k) { if (!v.paused) { try { v.pause(); } catch (e) { /* ок */ } } return; }
-            if (playing) {
-                if (v.paused) { const p = v.play(); if (p && p.catch) p.catch(() => {}); }
-                if (Math.abs(v.currentTime - local) > 0.12 && nowMs - VS.lastSeek > 400) {
-                    VS.lastSeek = nowMs;
-                    try { v.currentTime = local; } catch (e) { /* ок */ }
-                }
-            } else {
-                if (!v.paused) { try { v.pause(); } catch (e) { /* ок */ } }
-                try { v.currentTime = local; } catch (e) { /* ок */ }
-            }
-        });
-    }
-    function vsPause() { for (const t of VS.tiles) { try { t.v.pause(); } catch (e) { /* ок */ } } }
-    backBtn.addEventListener("click", (e) => { e.stopPropagation(); VS.focus = -1; vsLayout(vsAt(play.on ? currentPos() : pos.t).k); });
 
     // перемотка: бегунок по времени (работает и на паузе, и во время игры)
     const trow = el("div", "nm-trow");
@@ -755,13 +542,7 @@ function setupMixerUI(node) {
             lim.release.value = 0.12;
             master.connect(lim);
             lim.connect(ctx.destination);
-            const tap = ctx.createChannelSplitter(2);
-            const aL = ctx.createAnalyser(), aR = ctx.createAnalyser();
-            aL.fftSize = 512; aR.fftSize = 512;
-            lim.connect(tap);
-            tap.connect(aL, 0);
-            tap.connect(aR, 1);
-            audio = { ctx, master, aL, aR };
+            audio = { ctx, master };
         }
         return audio;
     }
@@ -812,9 +593,7 @@ function setupMixerUI(node) {
         if (c.failedKey === key) return;
         try {
             const res = c.isVideo
-                ? (c.vsrc.length > 1
-                    ? await api.fetchApi("/neron/videos_audio", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ videos: c.vsrc }), cache: "no-store" })
-                    : await api.fetchApi(`/neron/video_audio?filename=${encodeURIComponent(c.vsrc[0].name)}&subfolder=${encodeURIComponent(c.vsrc[0].subfolder || "")}&type=${encodeURIComponent(c.vsrc[0].type || "input")}&t=${Date.now()}`))
+                ? await api.fetchApi(`/neron/video_audio?filename=${encodeURIComponent(c.vsrc.name)}&subfolder=${encodeURIComponent(c.vsrc.subfolder || "")}&type=${encodeURIComponent(c.vsrc.type || "input")}&t=${Date.now()}`)
                 : await api.fetchApi("/neron/preview_wav", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -829,7 +608,6 @@ function setupMixerUI(node) {
             c.error = "";
             c.failedKey = null;
             drawWave(c);
-            showSummary();
         } catch (e) {
             c.error = String(e && e.message ? e.message : e);
             c.failedKey = key;
@@ -996,9 +774,12 @@ function setupMixerUI(node) {
             }
             play.on = true;
         }
-        if (videoShown && videoDur > 0) vsSync(offset, true);
+        if (videoShown && videoDur > 0) {
+            try { video.currentTime = offset % videoDur; } catch (e) { /* ещё не готово */ }
+            const p = video.play();
+            if (p && p.catch) p.catch(() => {});
+        }
         if (!play.raf) play.raf = requestAnimationFrame(drawLoop);
-        startMeters();
         const only = play.only ? chs.find((c) => c.slot === play.only) : null;
         setStatus(only ? `Играет только: ${only.label}` : (play.D ? `Играет под видео (${videoDur.toFixed(2)} с)` : "Играет по кругу"), false);
         refreshRowButtons();
@@ -1031,10 +812,9 @@ function setupMixerUI(node) {
         if (play.raf) { cancelAnimationFrame(play.raf); play.raf = null; }
         if (play.timer) { clearInterval(play.timer); play.timer = null; }
         stopSources();
-        vsPause();
+        try { video.pause(); } catch (e) { /* ок */ }
         showPos(pos.t);
         refreshRowButtons();
-        startMeters();          // столбики плавно опустятся и цикл остановится
     }
 
     function restartIfPlaying() {
@@ -1058,7 +838,7 @@ function setupMixerUI(node) {
         const T = timelineLen();
         pos.t = Math.max(0, Math.min(T > 0 ? T - 0.001 : 0, t));
         showPos(pos.t);
-        if (videoShown && videoDur > 0) vsSync(pos.t, false);
+        if (videoShown && videoDur > 0) { try { video.currentTime = pos.t % videoDur; } catch (e) { /* ок */ } }
         if (play.on) {
             const go = () => {
                 scrub.timer = null;
@@ -1075,30 +855,19 @@ function setupMixerUI(node) {
 
     function syncVideoToAudio(t) {
         if (!videoShown || !(videoDur > 0)) return;
-        vsSync(t, true);
-    }
-
-    const mm = { L: {}, R: {}, raf: null };
-    function meterLoop() {
-        mm.raf = null;
-        if (!audio) return;
-        const now = performance.now();
-        let alive = play.on;
-        for (const [slot, u] of ui.entries()) {
-            if (!u.meter) continue;
-            const ch = chains.get(slot);
-            meterStep(u.mL, play.on && ch ? peakOf(ch.aL) : 0, now);
-            meterStep(u.mR, play.on && ch ? peakOf(ch.aR) : 0, now);
-            drawMeter(u.meter, u.mL, u.mR, true);
-            if (u.mL.v > 0.001 || u.mR.v > 0.001 || u.mL.hold > 0.02) alive = true;
+        if (video.paused) {
+            const p = video.play();
+            if (p && p.catch) p.catch(() => {});
         }
-        meterStep(mm.L, play.on ? peakOf(audio.aL) : 0, now);
-        meterStep(mm.R, play.on ? peakOf(audio.aR) : 0, now);
-        drawMeter(mMeter, mm.L, mm.R, false);
-        if (mm.L.v > 0.001 || mm.R.v > 0.001 || mm.L.hold > 0.02) alive = true;
-        if (alive && !document.hidden) mm.raf = requestAnimationFrame(meterLoop);
+        const target = t % videoDur;
+        let diff = Math.abs(video.currentTime - target);
+        if (diff > videoDur / 2) diff = videoDur - diff;
+        const nowMs = performance.now();
+        if (diff > 0.12 && nowMs - play.lastSeek > 400) {
+            play.lastSeek = nowMs;
+            try { video.currentTime = target; } catch (e) { /* ок */ }
+        }
     }
-    const startMeters = () => { if (!mm.raf) mm.raf = requestAnimationFrame(meterLoop); };
 
     function drawLoop() {
         if (!play.on || !audio) { play.raf = null; return; }
@@ -1120,9 +889,8 @@ function setupMixerUI(node) {
     // ---------- видео ----------
 
     function effectiveVideo() {
-        const w = wiredVideos();
-        const videos = S.video ? [S.video] : w.videos;
-        return { videos, video: videos[0] || null, wired: w.wired, cube: !!w.cube, fromWire: !S.video && w.videos.length > 0 };
+        const w = wiredVideo();
+        return { video: S.video || w.video, wired: w.wired, fromWire: !S.video && !!w.video };
     }
 
     function fillVideoSelect() {
@@ -1155,27 +923,32 @@ function setupMixerUI(node) {
 
     function updateVideoInfo(ev) {
         let t;
-        const n = ev.videos.length;
-        const what = n > 1 ? T(`${n} ролика подряд`, `${n} clips in a row`) : (ev.video ? ev.video.name : "");
-        if (!n) t = ev.wired ? T("провод подключён, но ролик не выбран", "wired, but no clip chosen") : T("подключите «Видео ×3» или загрузчик видео к входу video", "wire \"Video ×3\" or a video loader into the video input");
-        else if (videoDur > 0) t = `${what} · ${videoDur.toFixed(2)} ${T("с", "s")}` + (ev.fromWire ? " · " + T("с провода", "wired") : " · " + T("выбрано вручную", "chosen by hand"));
-        else t = `${what} · ${T("загружаю...", "loading...")}`;
+        if (!ev.video) t = ev.wired ? "провод подключён, но файл видео не найден - выберите его в списке" : "подключите загрузчик видео к входу video или выберите файл";
+        else if (videoDur > 0) t = `${ev.video.name} · ${videoDur.toFixed(2)} с` + (ev.fromWire ? " · с провода" : " · выбрано вручную");
+        else t = `${ev.video.name} · загружаю...`;
         vInfo.textContent = t;
         vInfo.title = t;
     }
 
     function applyVideo() {
         const ev = effectiveVideo();
-        const key = ev.videos.map(videoKey).join("||");
+        const key = videoKey(ev.video);
         const wasFit = fitActive();
-        curVideos = ev.videos.slice(0, 3);
+        curVideo = ev.video;
         if (key !== videoCur) {
             videoCur = key;
-            videoDur = 0;
-            vsBuild(curVideos);
             saveState();
+            videoDur = 0;
+            if (ev.video) {
+                video.src = viewUrl(ev.video);
+                video.load();
+            } else {
+                try { video.pause(); } catch (e) { /* ок */ }
+                video.removeAttribute("src");
+                video.load();
+            }
         }
-        const shown = curVideos.length > 0;
+        const shown = !!ev.video;
         saveVidBtn.style.display = shown ? "" : "none";
         if (shown !== videoShown) {
             videoShown = shown;
@@ -1185,6 +958,20 @@ function setupMixerUI(node) {
         updateVideoInfo(ev);
         if (wasFit !== fitActive()) { saveState(); restartIfPlaying(); }
     }
+
+    video.addEventListener("loadedmetadata", () => {
+        const d = video.duration;
+        const wasFit = fitActive();
+        videoDur = Number.isFinite(d) && d > 0 ? d : 0;
+        updateVideoInfo(effectiveVideo());
+        saveState();
+        if (wasFit !== fitActive() || fitActive()) restartIfPlaying();
+    });
+    video.addEventListener("error", () => {
+        videoDur = 0;
+        setStatus("Не удалось загрузить видео в плеер (формат не поддерживается браузером?)", true);
+        updateVideoInfo(effectiveVideo());
+    });
 
     vSel.addEventListener("change", () => {
         const v = vSel.value;
@@ -1335,9 +1122,6 @@ function setupMixerUI(node) {
             name.appendChild(el("b", "", c.label));
             name.appendChild(el("span", "", c.isVideo ? `свой звук видео · ${c.sub}` : `вход ${c.slot}` + (c.sub && c.sub !== c.label ? " · " + c.sub : "")));
             row.appendChild(name);
-            const meter = el("canvas", "nm-meter");
-            meter.title = "Уровень канала / Channel level";
-            row.appendChild(meter);
 
             const rowPlay = el("button", "nm-ms", "▶");
             rowPlay.title = "Слушать только этот трек (с текущего места)";
@@ -1380,7 +1164,7 @@ function setupMixerUI(node) {
             wave.appendChild(ph);
             row.appendChild(wave);
 
-            ui.set(c.slot, { ph, canvas, note, rowPlay, meter, mL: {}, mR: {} });
+            ui.set(c.slot, { ph, canvas, note, rowPlay });
             rowPlay.addEventListener("click", () => {
                 if (play.on || play.starting) stopPlayback();
                 play.only = c.slot;
@@ -1414,7 +1198,6 @@ function setupMixerUI(node) {
     }
 
     let lastW = 0;
-    let sizer = null;
     function relayout() {
         panelH = panelHeightFor(chs.length, videoShown);
         // реальная высота содержимого (верхняя строка может переноситься)
@@ -1422,7 +1205,6 @@ function setupMixerUI(node) {
         const natural = root.offsetHeight;
         if (natural > 80) panelH = natural + 2;
         lastW = root.clientWidth;
-        if (sizer) { sizer.fit(); return; }    // размер задаёт пользователь (см. makeUserSized)
         root.style.height = panelH + "px";
         if (node.size) {
             const need = BASE_NODE_H + INPUT_H * Math.max(1, (node.inputs || []).length) + panelH;
@@ -1437,11 +1219,10 @@ function setupMixerUI(node) {
         if (document.hidden) return;
         const cur = readChannels();
         const ev0 = effectiveVideo();
-        if (ev0.videos.length) {
+        if (ev0.video) {
             cur.unshift({
                 slot: VIDEO_SLOT, n: 0, originId: "video", node: null, kind: "video", isVideo: true,
-                label: "ЗВУК ВИДЕО", sub: ev0.videos.map((v) => v.name).join(" → "), spec: null, vsrc: ev0.videos.slice(0, 3),
-                specKey: ev0.videos.map(videoKey).join("||"),
+                label: "ЗВУК ВИДЕО", sub: ev0.video.name, spec: null, vsrc: ev0.video, specKey: videoKey(ev0.video),
             });
         }
         const sig = cur.map((c) => `${c.slot}:${c.originId}:${c.kind}:${c.isVideo ? c.specKey : ""}`).join("|");
@@ -1454,7 +1235,6 @@ function setupMixerUI(node) {
                 if (!chs.some((c) => c.slot === slot)) { try { ch.vol.disconnect(); } catch (e) { /* ок */ } chains.delete(slot); }
             }
             buildList();
-            showSummary();
             if (play.on || play.starting) restartIfPlaying();
             setStatus(chs.length ? `Подключено нод: ${chs.length}` : "Подключите ноды проводами к входам audio_N", false);
         } else {
@@ -1522,7 +1302,7 @@ function setupMixerUI(node) {
 
     async function doSave(withVideo) {
         const live = chs.filter((c) => c.spec);
-        if (!live.length && !(curVideos.length && !chs.find((c) => c.isVideo && c.error))) {
+        if (!live.length && !(curVideo && !chs.find((c) => c.isVideo && c.error))) {
             setStatus("Нечего сводить: подключите Drum Machine или Piano Roll (другие ноды сводятся через Queue)", true);
             return;
         }
@@ -1539,9 +1319,8 @@ function setupMixerUI(node) {
                     repeats: S.repeats,
                     master: S.master,
                     fit_sec: fitActive() ? videoDur : 0,
-                    video: curVideos[0] || null,
-                    videos: curVideos,
-                    video_audio: curVideos.length ? settingFor(VIDEO_SLOT) : null,
+                    video: curVideo,
+                    video_audio: curVideo ? settingFor(VIDEO_SLOT) : null,
                     with_video: !!withVideo,
                     save_name: getWidget("save_name")?.value || "neron_mix",
                 }),
@@ -1557,7 +1336,7 @@ function setupMixerUI(node) {
     }
     saveBtn.addEventListener("click", () => doSave(false));
     saveVidBtn.addEventListener("click", () => {
-        if (!curVideos.length) { setStatus(T("Сначала подключите видео к входу video", "Wire a video into the video input first"), true); return; }
+        if (!curVideo) { setStatus("Сначала подключите видео к входу video", true); return; }
         doSave(true);
     });
 
@@ -1585,8 +1364,10 @@ function setupMixerUI(node) {
     const domWidget = node.addDOMWidget("neron_mixer", "neron_mixer", root, {
         serialize: false,
         hideOnZoom: false,
+        getMinHeight: () => panelH,
+        getMaxHeight: () => panelH,
     });
-    sizer = makeUserSized(node, domWidget, root, { minH: 160, autoH: () => panelH });
+    domWidget.computeSize = (width) => [width, panelH];
     buildList();
 
     const wanted = node.computeSize ? node.computeSize() : [900, 400];
@@ -1608,7 +1389,7 @@ function setupMixerUI(node) {
     node.neronDispose = () => {
         stopPlayback();
         if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-        vsBuild([]);
+        try { video.removeAttribute("src"); video.load(); } catch (e) { /* ок */ }
     };
 
     syncInputs();
