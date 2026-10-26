@@ -1,5 +1,19 @@
 # Changelog / История изменений
 
+## dev · Neron DJ Пульт / DJ Controller 🎧 (в работе, ветка dev / in progress, dev branch)
+
+**RU:**
+- Новая нода **Neron DJ Пульт** (меню NeronAudio): две деки с джогами и волнами, ▶ / CUE / SYNC, ползунки темпа, 8 пэдов на деку в трёх режимах (точки, звуки, петли), фильтр, громкость, кроссфейдер, индикаторы.
+- Треки — проводами `deck_a`, `deck_b`; свои звуки для пэдов — `pad_sounds` (Звук ×8). Без провода пэды играют 8 встроенных звуков (без файлов).
+- **⏺ ЗАПИСЬ** сета: по Queue запись идёт на выход `audio` и сохраняется в `output/Neron_DJ`. Без записи — авто-переход A → B.
+- Темп и удары находятся сами; SYNC подгоняет и темп, и удары.
+
+**EN:**
+- New **Neron DJ Controller** node (NeronAudio menu): two decks with jog wheels and waves, ▶ / CUE / SYNC, tempo sliders, 8 pads per deck in three modes (cues, samples, loops), filter, volume, crossfader, meters.
+- Tracks by wire `deck_a`, `deck_b`; your own pad sounds — `pad_sounds` (Sound ×8). Without it the pads play 8 built-in sounds (no files).
+- **⏺ REC** a set: on Queue it goes out on `audio` and is saved in `output/Neron_DJ`. No recording — an auto transition A → B.
+- Tempo and beats are detected automatically; SYNC matches both tempo and beats.
+
 ## v2.0 — Neron Audio Studio 2 (25.10.2026)
 
 **RU:** Модульная студия: кубики (Видео ×3, Звук ×8, Музыка) → посредники (Видео-сэмплер, Сэмплер, Студия) → Пульт-сердце. Эквалайзер и эхо, музыка под ролик, монтаж по кадрам, поле сборки, общий эквалайзер со спектром, темы с живыми огнями. Новая схема: `NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json`; прежняя `Neron_Audio_Studio_v1.0_Beta.json` оставлена. Подробности — в записях ниже.

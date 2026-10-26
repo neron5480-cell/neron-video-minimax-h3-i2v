@@ -24,6 +24,7 @@
 | **Neron Theme / Тема 🎨** | Ни к чему не подключается: тема нод Neron (Графит / Neron Brown / Неон), цвета кубиков и проводов, ✨ живые огни в такт музыке / Theme for Neron nodes with live lights on the beat |
 | **Neron Field / Поле** | Общее поле, как Playlist в FL Studio: склейка до 3 роликов по кадрам и дорожки со звуком (двигать, обрезать, резать, появление и затухание) |
 | **Neron Dancer** | Для настроения: маленькая героиня, которая танцует под звук Neron-нод |
+| **Neron DJ Пульт / DJ Controller 🎧** | Диджейский пульт: две деки с джогами, SYNC, пэды (точки / звуки / петли), фильтр, кроссфейдер, ⏺ запись сета / Two decks, SYNC, pads, filter, crossfader, set recording |
 
 Все ноды лежат в меню **NeronAudio**.
 
@@ -413,6 +414,38 @@ Neron-нод (драм-машины, пианоролла, микшера, за�
 - `palette` - цвет волос и наряда (розовая, голубая, сиреневая, рыжая, серебро).
 - `energy` - насколько активно она двигается.
 - Слышит только звук, который играет эта страница (то, что вы запустили кнопкой PLAY). Ничего не записывает и не отправляет.
+
+---
+
+## Neron DJ Пульт / DJ Controller 🎧
+
+**RU:** Диджейский пульт прямо в ComfyUI. Играть можно сразу в ноде, Queue не нужен.
+
+```
+Load Audio / Neron Audio Loader / Drum Machine / Музыка ──> deck_a ┐
+Load Audio / любой трек ─────────────────────────────────> deck_b ├──> Neron DJ Пульт ──> audio
+Звук ×8 (свои звуки для пэдов, необязательно) ──────────> pad_sounds ┘
+```
+
+- **Деки A и B**: трек появляется сразу (волна, время, темп). Необычный источник (например, AI-музыка) — нажмите Queue один раз, трек подтянется.
+- **▶** — играть / пауза. **CUE** — на паузе ставит точку старта, во время игры возвращает к ней. **SYNC** — подгоняет темп и удары этой деки под другую.
+- **Ползунок темпа** у джога: вверх — быстрее (меняет и высоту, как винил). **Джог**: на паузе — поиск места, во время игры — подгонка быстрее/медленнее.
+- **Пэды**, 3 режима: **ТОЧКИ** (запомнить место и прыгать туда, правый клик — стереть), **ЗВУКИ** (бочка, снейр, хлопок, хэты, гудок, лазер, сирена; свои — проводом в `pad_sounds`), **ПЕТЛЯ** (1/4 … 32 удара, ещё раз — выход).
+- **Микшер**: фильтр каждой деки (влево — глуше, вправо — тоньше), громкость каналов, общая громкость, индикаторы, **кроссфейдер** A ↔ B.
+- **⏺ ЗАПИСЬ** пишет всё, что слышно. По Queue запись выходит на `audio` и лежит в `output/Neron_DJ`. Без записи на выход идёт **авто-переход**: трек A, а в конце плавно перетекает в B.
+- **⚙ ДЛЯ СПЕЦОВ**: громкость входа и эквалайзер ВЕРХ / СЕР / НИЗ (влево — до нуля), кривая кроссфейдера (плавно / резко), диапазон темпа ±8 / 16 / 50 %, громкость пэдов, длина авто-перехода.
+- Темп находится сам (на тестовых битах 87,5 … 128 BPM — точно; быстрые треки вроде 174 показываются половиной, 87, SYNC это учитывает). У Drum Machine и «Музыки» темп берётся точно из ноды.
+
+**EN:** A DJ controller right inside ComfyUI. You play in the node, no Queue needed.
+
+- **Decks A and B**: the track appears right away (wave, time, tempo). Unusual source (e.g. AI music) — press Queue once and it loads.
+- **▶** play / pause. **CUE** — paused: sets the start point, playing: jumps back to it. **SYNC** — matches this deck's tempo and beats to the other deck.
+- **Tempo slider** by the jog: up = faster (changes pitch too, like vinyl). **Jog**: paused — find a spot, playing — nudge faster/slower.
+- **Pads**, 3 modes: **CUES** (remember a spot and jump there, right-click clears), **SAMPLES** (kick, snare, clap, hats, horn, laser, siren; your own via `pad_sounds`), **LOOP** (1/4 … 32 beats, press again to exit).
+- **Mixer**: per-deck filter (left — muffled, right — thin), channel volume, master, meters, **crossfader** A ↔ B.
+- **⏺ REC** records everything you hear. On Queue the recording goes out on `audio` and is saved in `output/Neron_DJ`. With no recording the output is an **auto transition**: track A blending into B at its end.
+- **⚙ EXPERT**: input gain and HI / MID / LOW EQ (left kills), crossfader curve (smooth / sharp), tempo range ±8 / 16 / 50 %, pad volume, auto transition length.
+- Tempo is detected automatically (exact on test beats 87.5 … 128 BPM; fast tracks like 174 show as half, 87, SYNC handles that). Drum Machine and Music give their exact tempo.
 
 ---
 
