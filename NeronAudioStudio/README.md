@@ -21,7 +21,7 @@
 | **Neron Music / Музыка 🥁🎹** | Барабаны + пианино в одной ноде (вкладки), общий темп; в Пульт — 2 канала / Drums + piano in one node, 2 channels to the Pult |
 | **Neron Video Sampler / Видео-сэмплер 🎬** | Между «Видео ×3» и Пультом: куски роликов → монтаж (резать, переставлять, обрезать), экран, ⏭, 🔇 / Video edit between Video ×3 and the Pult |
 | **Neron Studio / Студия 🎛** | Между «Музыкой» и Пультом: каждая дорожка — канал с НИЗ/СЕР/ВЕРХ/ЭХО, общий эквалайзер на 10 полос со спектром / Every track a channel with EQ and reverb, 10-band master EQ |
-| **Neron Theme / Тема 🎨** | Ни к чему не подключается: тема нод Neron (Графит / Neron Brown / Неон), цвета кубиков и проводов, ✨ живые огни в такт музыке / Theme for Neron nodes with live lights on the beat |
+| **Neron Theme / Тема 🎨** (устаревшая / legacy) | Оставлена, чтобы открывались старые схемы. Вместо неё — новая **[Neron Theme 🎨](../NeronTheme/)**: тема для всего ComfyUI, красит и ноды студии, и DJ Пульт / Kept so old workflows open. Use the new **[Neron Theme 🎨](../NeronTheme/)** instead: themes the whole ComfyUI, including studio nodes and the DJ Controller |
 | **Neron Field / Поле** | Общее поле, как Playlist в FL Studio: склейка до 3 роликов по кадрам и дорожки со звуком (двигать, обрезать, резать, появление и затухание) |
 | **Neron Dancer** | Для настроения: маленькая героиня, которая танцует под звук Neron-нод |
 | **Neron DJ Пульт / DJ Controller 🎧** | Диджейский пульт: две деки с джогами, SYNC, пэды (точки / звуки / петли), фильтр, кроссфейдер, ⏺ запись сета / Two decks, SYNC, pads, filter, crossfader, set recording |

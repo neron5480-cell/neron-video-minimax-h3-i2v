@@ -104,6 +104,7 @@ function applyWires(th, on) {
 }
 
 function applyCss(th, on) {
+    setTimeout(() => { try { window.dispatchEvent(new Event("neron-theme")); } catch (e) { /* ок */ } }, 0);
     let st = document.getElementById("neron-theme-vars");
     if (!on || !th.vars) { if (st) st.remove(); return; }
     if (!st) { st = document.createElement("style"); st.id = "neron-theme-vars"; document.head.appendChild(st); }

@@ -73,11 +73,27 @@ function linkTypes() {
     return [...set];
 }
 
+// цвета панелей нод Neron (Audio Studio, DJ Пульт и др.): они берут их из переменных --nt-*
+export function neronNodeVars(t) {
+    const c = t.c, light = isLight(t);
+    return {
+        "nt-panel": mix(c.body, c.bg, 0.35), "nt-card": mix(c.body, c.text, 0.04), "nt-card2": mix(c.body, c.bg, 0.15),
+        "nt-row": mix(c.body, c.text, 0.06), "nt-row2": mix(c.body, c.text, 0.09), "nt-input": c.widget,
+        "nt-deep": mix(c.bg, c.body, 0.3), "nt-well": light ? mix(c.bg, c.text, 0.06) : mix(c.bg, "#000000", 0.25),
+        "nt-btn": mix(c.title, c.text, 0.14), "nt-btn2": mix(c.title, c.body, 0.5), "nt-line": c.line, "nt-line2": mix(c.line, c.text, 0.15),
+        "nt-text": c.text, "nt-muted": mix(c.text, c.body, 0.45), "nt-muted2": mix(c.text, c.body, 0.3),
+        "nt-bright": light ? "#000000" : "#ffffff", "nt-acc": c.accent,
+    };
+}
 function themeCss(t) {
-    if (!t.ui) return "";
-    const vars = { ...comfyBase(t), ...uiTokens(t) };
-    const body = Object.entries(vars).map(([k, v]) => `--${k}:${v} !important;`).join("");
-    return `:root:root{${body}color-scheme:${isLight(t) ? "light" : "dark"}}`;
+    const nt = Object.entries(neronNodeVars(t)).map(([k, v]) => `--${k}:${v};`).join("");
+    let css = `:root:root{${nt}}`;
+    if (t.ui) {
+        const vars = { ...comfyBase(t), ...uiTokens(t) };
+        const body = Object.entries(vars).map(([k, v]) => `--${k}:${v} !important;`).join("");
+        css += `:root:root{${body}color-scheme:${isLight(t) ? "light" : "dark"}}`;
+    }
+    return css;
 }
 
 function applyTheme(t) {
@@ -171,6 +187,8 @@ function refresh() {
     else if (applyTheme(want)) E.applied = want;
     else { E.sig = ""; return; }    // холст ещё не готов — попробуем позже
     startFx();
+    // ноды Neron (Audio Studio и др.) перерисовывают ручки и индикаторы в цветах темы
+    try { window.dispatchEvent(new Event("neron-theme")); } catch (e) { /* ок */ }
     if (E.onChange) try { E.onChange(E.applied); } catch (e) { /* ок */ }
 }
 

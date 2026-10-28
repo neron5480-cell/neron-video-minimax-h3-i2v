@@ -66,12 +66,12 @@ function injectStyles() {
   font-family:"Segoe UI",Arial,sans-serif;color:var(--nt-text,#cfd2d8);user-select:none}
 .ndj-wrap{display:flex;flex-direction:column;gap:8px}
 .ndj-head{display:flex;align-items:center;gap:8px;min-width:0}
-.ndj-head b{font-size:14px;letter-spacing:1px;color:#fff;white-space:nowrap}
+.ndj-head b{font-size:14px;letter-spacing:1px;color:var(--nt-bright,#fff);white-space:nowrap}
 .ndj-head .ndj-sub{flex:1;min-width:0;font-size:10px;color:var(--nt-muted,#8b90a0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ndj-btn{height:24px;padding:0 10px;border:none;border-radius:6px;background:var(--nt-btn,#4a4e5a);color:#fff;font-size:11px;font-weight:800;
   cursor:pointer;white-space:nowrap;flex:none;letter-spacing:.4px}
 .ndj-btn:hover{filter:brightness(1.18)}
-.ndj-btn.on{background:#6b4fb3}
+.ndj-btn.on{background:var(--nt-acc,#6b4fb3)}
 .ndj-help{display:none;font-size:11px;line-height:1.55;background:var(--nt-card,#20232a);border-radius:7px;padding:8px 10px}
 .ndj-help b{color:#ffd166}
 .ndj-waves{display:flex;flex-direction:column;gap:4px}
@@ -97,13 +97,13 @@ function injectStyles() {
   cursor:pointer;white-space:nowrap;padding:0 4px}
 .ndj-modes button.on{background:var(--c);color:#111}
 .ndj-pads{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
-.ndj-pad{height:38px;border-radius:7px;border:1px solid #2c2f37;background:#191b21;color:var(--nt-muted,#8b90a0);font-size:9px;font-weight:800;
+.ndj-pad{height:38px;border-radius:7px;border:1px solid var(--nt-line,#2c2f37);background:var(--nt-input,#191b21);color:var(--nt-muted,#8b90a0);font-size:9px;font-weight:800;
   display:flex;align-items:center;justify-content:center;text-align:center;line-height:10px;cursor:pointer;padding:2px;box-sizing:border-box;
   overflow:hidden;transition:background .06s,box-shadow .06s;touch-action:none}
-.ndj-pad.lit{background:color-mix(in srgb, var(--p) 32%, #191b21);border-color:var(--p);color:#fff}
+.ndj-pad.lit{background:color-mix(in srgb, var(--p) 32%, var(--nt-input,#191b21));border-color:var(--p);color:var(--nt-bright,#fff)}
 .ndj-pad.hit{background:var(--p);color:#111;box-shadow:0 0 14px var(--p)}
 .ndj-mix{flex:0 0 236px;background:var(--nt-card,#20232a);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:8px;
-  border-top:3px solid ${COL.acc}}
+  border-top:3px solid var(--nt-acc,${COL.acc})}
 .ndj-lbl{font-size:9px;font-weight:800;color:var(--nt-muted,#8b90a0);letter-spacing:.5px;text-align:center;white-space:nowrap}
 .ndj-row{display:flex;align-items:center;justify-content:space-between;gap:6px}
 .ndj-krow{display:flex;justify-content:space-around;align-items:flex-start}
@@ -111,13 +111,13 @@ function injectStyles() {
 .ndj-faders{display:flex;align-items:stretch;justify-content:space-between;gap:6px;height:150px}
 .ndj-fcol{display:flex;flex-direction:column;align-items:center;gap:3px}
 .ndj-meter{width:12px;flex:none;align-self:stretch;background:var(--nt-well,#101216);border-radius:3px}
-.ndj-fader{position:relative;background:#0e1014;border-radius:5px;border:1px solid #2c2f37;touch-action:none;cursor:pointer;flex:none}
+.ndj-fader{position:relative;background:var(--nt-well,#0e1014);border-radius:5px;border:1px solid var(--nt-line,#2c2f37);touch-action:none;cursor:pointer;flex:none}
 .ndj-fader.v{width:22px}
 .ndj-fader.h{height:22px}
-.ndj-fader .ndj-slot{position:absolute;background:#2a2d35;border-radius:2px}
+.ndj-fader .ndj-slot{position:absolute;background:var(--nt-line,#2a2d35);border-radius:2px}
 .ndj-fader.v .ndj-slot{left:9px;width:3px;top:7px;bottom:7px}
 .ndj-fader.h .ndj-slot{top:9px;height:3px;left:7px;right:7px}
-.ndj-fader .ndj-mid{position:absolute;background:#5a5f6b}
+.ndj-fader .ndj-mid{position:absolute;background:var(--nt-muted,#5a5f6b)}
 .ndj-fader.v .ndj-mid{left:3px;right:3px;height:1px;top:50%}
 .ndj-fader.h .ndj-mid{top:3px;bottom:3px;width:1px;left:50%}
 .ndj-thumb{position:absolute;border-radius:3px;background:linear-gradient(#e8e9ee,#9ea2ad);box-shadow:0 1px 3px #000}
@@ -897,7 +897,7 @@ function setupDJ(node) {
         // транспорт
         const tr = el("div", "ndj-trans");
         const syncB = el("button", "ndj-btn", "SYNC");
-        syncB.style.background = "#6b4fb3";
+        syncB.style.background = "var(--nt-acc,#6b4fb3)"; syncB.style.color = "#111";
         syncB.title = T("Подогнать темп и удары под другую деку", "Match tempo and beats to the other deck");
         const cueB = el("button", "ndj-btn", "CUE");
         cueB.style.background = "#8a6a1f";
@@ -1171,7 +1171,7 @@ function setupDJ(node) {
     const mm = el("canvas", "ndj-meter");
     mm.style.width = "18px"; mm.style.flex = "1";
     const masterK = makeKnob({
-        label: T("ОБЩАЯ", "MASTER"), value: S.master, min: 0, max: 1.5, def: 0.9, step: 0.01, color: "#fff",
+        label: T("ОБЩАЯ", "MASTER"), value: S.master, min: 0, max: 1.5, def: 0.9, step: 0.01, color: "#b9bdc6",
         title: T("Общая громкость (и в записи тоже)", "Master volume (also in the recording)"), fmt: (v) => Math.round(v * 100) + "%",
         onChange: (v) => { S.master = v; master.gain.setTargetAtTime(v, ctx.currentTime, 0.01); }, onEnd: () => saveState(),
     });
@@ -1231,7 +1231,7 @@ function setupDJ(node) {
             outTxt.innerHTML = "";
             outTxt.appendChild(document.createTextNode(T("Выход: запись ", "Output: recording ")));
             const b = el("b", "", `${S.rec.name} (${fmtTime(S.rec.seconds || 0)})`);
-            b.style.color = "#fff";
+            b.style.color = "var(--nt-bright,#fff)";
             outTxt.appendChild(b);
             outClr.style.display = "";
         } else {
@@ -1515,6 +1515,34 @@ function setupDJ(node) {
     // ======================================================================
     //  Рисование / Drawing
     // ======================================================================
+    // цвета для рисования (джоги, волны) — из темы: переменные --nt-* (их задаёт Neron Theme)
+    const PAL = { t: 0 };
+    const toRgb = (str, fb) => {
+        str = String(str || "").trim();
+        let m = /^#([0-9a-f]{6})$/i.exec(str);
+        if (m) { const n = parseInt(m[1], 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+        m = /^#([0-9a-f]{3})$/i.exec(str);
+        if (m) return m[1].split("").map((x) => parseInt(x + x, 16));
+        m = /rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/i.exec(str);
+        if (m) return [+m[1], +m[2], +m[3]];
+        return fb;
+    };
+    function pal() {
+        const now = performance.now();
+        if (now - PAL.t < 500) return PAL;
+        PAL.t = now;
+        const cs = getComputedStyle(root);
+        const v = (k, fb) => toRgb(cs.getPropertyValue("--nt-" + k), fb);
+        PAL.well = v("well", [11, 12, 16]); PAL.card = v("card", [34, 37, 45]); PAL.line = v("line", [44, 47, 55]);
+        PAL.input = v("input", [21, 23, 28]); PAL.muted = v("muted", [139, 144, 160]); PAL.text = v("text", [207, 210, 216]);
+        PAL.bright = v("bright", [255, 255, 255]);
+        return PAL;
+    }
+    const css = (rgb, a = 1) => `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`;
+    const shade = (rgb, k) => rgb.map((x) => Math.max(0, Math.min(255, Math.round(x * k))));
+    // глубже фона: на тёмной теме — темнее, на светлой — чуть-чуть
+    const deep = (rgb) => shade(rgb, (rgb[0] * 0.3 + rgb[1] * 0.59 + rgb[2] * 0.11) > 140 ? 0.96 : 0.8);
+
     function fitCanvas(cv) {
         const dpr = window.devicePixelRatio || 1;
         const w = cv.clientWidth, h = cv.clientHeight;
@@ -1534,13 +1562,14 @@ function setupDJ(node) {
         const cx = w / 2, cy = w / 2, r = w / 2 - 3;
         g.clearRect(0, 0, w, w);
         // корпус
-        g.fillStyle = "#121419";
+        const P = pal();
+        g.fillStyle = css(P.well);
         g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.fill();
-        g.strokeStyle = "#2c2f37"; g.lineWidth = 2; g.stroke();
+        g.strokeStyle = css(P.line); g.lineWidth = 2; g.stroke();
         // прогресс трека
         const dur = D.dur(), pos = D.pos();
         g.lineWidth = 4; g.lineCap = "round";
-        g.strokeStyle = "#262931";
+        g.strokeStyle = css(P.input);
         g.beginPath(); g.arc(cx, cy, r - 6, 0, Math.PI * 2); g.stroke();
         if (dur > 0) {
             g.strokeStyle = c;
@@ -1557,21 +1586,21 @@ function setupDJ(node) {
         const ang = (pos / SEC_PER_REV) * Math.PI * 2;
         const pr = r * 0.82;
         const grad = g.createRadialGradient(cx, cy, pr * 0.2, cx, cy, pr);
-        grad.addColorStop(0, "#22252d"); grad.addColorStop(1, "#16181e");
+        grad.addColorStop(0, css(P.card)); grad.addColorStop(1, css(shade(P.card, 0.7)));
         g.fillStyle = grad;
         g.beginPath(); g.arc(cx, cy, pr, 0, Math.PI * 2); g.fill();
-        g.strokeStyle = "rgba(255,255,255,.04)"; g.lineWidth = 1;
+        g.strokeStyle = css(P.text, 0.05); g.lineWidth = 1;
         for (let k = 1; k <= 5; k++) { g.beginPath(); g.arc(cx, cy, pr * (0.55 + k * 0.08), 0, Math.PI * 2); g.stroke(); }
         for (let k = 0; k < 16; k++) {
             const a = ang + k * Math.PI / 8;
-            g.fillStyle = D.playing ? (k === 0 ? "#fff" : "rgba(255,255,255,.22)") : (k === 0 ? "#cfd2d8" : "rgba(255,255,255,.12)");
+            g.fillStyle = D.playing ? (k === 0 ? css(P.bright) : css(P.text, 0.22)) : (k === 0 ? css(P.text) : css(P.text, 0.12));
             g.beginPath(); g.arc(cx + Math.cos(a) * pr * 0.9, cy + Math.sin(a) * pr * 0.9, k === 0 ? 3.2 : 1.6, 0, Math.PI * 2); g.fill();
         }
-        g.strokeStyle = D.playing ? "#fff" : "#9aa0ae"; g.lineWidth = 3;
+        g.strokeStyle = D.playing ? css(P.bright) : css(P.muted); g.lineWidth = 3;
         g.beginPath(); g.moveTo(cx + Math.cos(ang) * pr * 0.52, cy + Math.sin(ang) * pr * 0.52); g.lineTo(cx + Math.cos(ang) * pr * 0.84, cy + Math.sin(ang) * pr * 0.84); g.stroke();
         // экран в центре
         const ir = r * 0.48;
-        g.fillStyle = "#0b0c10";
+        g.fillStyle = css(deep(P.well));
         g.beginPath(); g.arc(cx, cy, ir, 0, Math.PI * 2); g.fill();
         g.strokeStyle = D.loop ? COL.loop : c; g.lineWidth = D.playing ? 2.5 : 1.5;
         if (D.playing) { g.shadowColor = D.loop ? COL.loop : c; g.shadowBlur = 10; }
@@ -1581,17 +1610,17 @@ function setupDJ(node) {
         const fs = Math.max(9, ir * 0.36);
         if (D.buf) {
             const bpm = D.ana && D.ana.bpm ? D.ana.bpm * D.rate : 0;
-            g.fillStyle = "#fff";
+            g.fillStyle = css(P.bright);
             g.font = `800 ${fs}px "Segoe UI",Arial,sans-serif`;
             g.fillText(bpm ? bpm.toFixed(1) : "—", cx, cy - fs * 0.35);
-            g.fillStyle = "#8b90a0";
+            g.fillStyle = css(P.muted);
             g.font = `700 ${fs * 0.42}px "Segoe UI",Arial,sans-serif`;
             g.fillText("BPM", cx, cy + fs * 0.25);
             g.fillStyle = D.loop ? COL.loop : c;
             g.font = `800 ${fs * 0.5}px "Segoe UI",Arial,sans-serif`;
             g.fillText(D.loop ? `LOOP ${LOOP_NAMES[D.loopIdx]}` : `-${fmtTime(Math.max(0, dur - pos))}`, cx, cy + fs * 0.85);
         } else {
-            g.fillStyle = "#5a5f6b";
+            g.fillStyle = css(P.muted, 0.7);
             g.font = `800 ${fs * 0.9}px "Segoe UI",Arial,sans-serif`;
             g.fillText(id.toUpperCase(), cx, cy - fs * 0.2);
             g.font = `700 ${fs * 0.36}px "Segoe UI",Arial,sans-serif`;
@@ -1607,16 +1636,17 @@ function setupDJ(node) {
         const { g, w, h } = f;
         const c = COL[id];
         g.clearRect(0, 0, w, h);
+        const P = pal();
         const zh = h - 15;
-        g.fillStyle = "#0b0c10";
+        g.fillStyle = css(deep(P.well));
         g.fillRect(0, 0, w, zh);
         g.fillStyle = c;
         g.font = `900 11px "Segoe UI",Arial,sans-serif`;
         g.textAlign = "left"; g.textBaseline = "top";
         if (!D.buf || !D.ana) {
-            g.fillStyle = "#5a5f6b";
+            g.fillStyle = css(P.muted, 0.8);
             g.fillText(id.toUpperCase() + "  ·  " + (D.loading ? T("загружаю…", "loading…") : T(`подключите трек к deck_${id}`, `wire a track to deck_${id}`)), 8, 6);
-            g.fillStyle = "#15171c"; g.fillRect(0, zh + 2, w, 13);
+            g.fillStyle = css(P.input); g.fillRect(0, zh + 2, w, 13);
             return;
         }
         const a = D.ana, pos = D.pos(), dur = D.dur();
@@ -1633,7 +1663,7 @@ function setupDJ(node) {
             const k0 = Math.floor((t0 - a.offset) / bl), k1 = Math.ceil((t0 + ZOOM_SEC - a.offset) / bl);
             for (let k = k0; k <= k1; k++) {
                 const x = (a.offset + k * bl - t0) * pxs;
-                g.fillStyle = ((k % 4) + 4) % 4 === 0 ? "rgba(255,255,255,.28)" : "rgba(255,255,255,.08)";
+                g.fillStyle = ((k % 4) + 4) % 4 === 0 ? css(P.text, 0.28) : css(P.text, 0.08);
                 g.fillRect(Math.round(x), 0, 1, zh);
             }
         }
@@ -1646,7 +1676,7 @@ function setupDJ(node) {
             let p = 0;
             for (let i = i0; i < i1 && i < a.peaks.length; i++) if (a.peaks[i] > p) p = a.peaks[i];
             const hh = Math.max(1, Math.min(1, p) * (zh / 2 - 3));
-            g.fillStyle = t < pos ? "rgba(255,255,255,.35)" : c;
+            g.fillStyle = t < pos ? css(P.text, 0.35) : c;
             g.fillRect(x, mid - hh, 1, hh * 2);
         }
         // точки (cue)
@@ -1659,18 +1689,19 @@ function setupDJ(node) {
             g.beginPath(); g.moveTo(x - 4, 0); g.lineTo(x + 6, 0); g.lineTo(x + 1, 6); g.fill();
         });
         // центр (где играет)
-        g.fillStyle = "#fff";
+        g.fillStyle = css(P.bright);
         g.fillRect(Math.round(w / 2) - 1, 0, 2, zh);
         g.fillStyle = c;
         g.fillText(id.toUpperCase(), 6, 4);
         // весь трек
         const oy = zh + 2, oh = 13;
         let ov = overviewCache[id];
-        if (!ov || ov.w !== w || ov.ana !== a) {
+        const ovKey = P.input.join(",");
+        if (!ov || ov.w !== w || ov.ana !== a || ov.key !== ovKey) {
             const oc = document.createElement("canvas");
             oc.width = w; oc.height = oh;
             const og = oc.getContext("2d");
-            og.fillStyle = "#15171c"; og.fillRect(0, 0, w, oh);
+            og.fillStyle = css(P.input); og.fillRect(0, 0, w, oh);
             og.fillStyle = c;
             const per = a.peaks.length / w;
             for (let x = 0; x < w; x++) {
@@ -1679,13 +1710,13 @@ function setupDJ(node) {
                 const hh = Math.max(0.5, Math.min(1, p) * (oh / 2 - 1));
                 og.fillRect(x, oh / 2 - hh, 1, hh * 2);
             }
-            ov = overviewCache[id] = { w, ana: a, cv: oc };
+            ov = overviewCache[id] = { w, ana: a, cv: oc, key: ovKey };
         }
         g.drawImage(ov.cv, 0, oy, w, oh);
         const px = dur > 0 ? (pos / dur) * w : 0;
         g.fillStyle = "rgba(0,0,0,.45)";
         g.fillRect(0, oy, px, oh);
-        g.fillStyle = "#fff";
+        g.fillStyle = css(P.bright);
         g.fillRect(Math.round(px), oy, 2, oh);
     }
 

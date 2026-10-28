@@ -137,7 +137,7 @@
 *   **Сэмплер:** собираем звук из кусков дорожек на сетке по тактам, 4 слоя, у каждого слоя свой ▶.
 *   **Музыка:** барабаны и пианино в одной ноде, общий темп, ▶ всё вместе.
 *   **Студия:** каждая дорожка — свой канал с эквалайзером и эхом, поле сборки как в FL Studio, общий эквалайзер на 10 полос с живым спектром.
-*   **Тема 🎨:** Графит / Neron Brown / Неон; у каждого кубика свой цвет, огни по рамкам и искры по проводам в такт бочке.
+*   **Тема 🎨:** в готовой схеме теперь стоит новая **Neron Theme** (Проект 5) — она красит и ноды студии, и DJ Пульт; огни по рамкам и искры по проводам в такт бочке. Старая «Тема» оставлена для старых схем.
 
 Готовые схемы: `NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json` (новая) и `Neron_Audio_Studio_v1.0_Beta.json` (прежняя).
 
@@ -318,7 +318,7 @@ This is a separate project that turns ComfyUI into a small digital audio worksta
 *   **Sampler:** build sound from track pieces on a bar grid, 4 layers, ▶ per layer.
 *   **Music:** drums and piano in one node, one tempo, ▶ play all.
 *   **Studio:** every track is a channel with EQ and reverb, an FL-Studio-like arrange field, a 10-band master EQ with a live spectrum.
-*   **Theme 🎨:** Graphite / Neron Brown / Neon; every cube has its colour, lights on the frames and sparks on the wires follow the kick.
+*   **Theme 🎨:** the ready workflow now uses the new **Neron Theme** (Project 5) — it themes the studio nodes and the DJ Controller too; lights on the frames and sparks on the wires follow the kick. The old "Theme" node is kept for old workflows.
 
 Ready workflows: `NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json` (new) and `Neron_Audio_Studio_v1.0_Beta.json` (previous).
 
