@@ -1,0 +1,42 @@
+{
+  "_about": "Neron Stage poses. Angles in degrees. One file for the node (Python) and the stage (JS). tp/ty/tr = torso pitch(forward+)/yaw/roll, hp/hy = head pitch(down+)/yaw, lsp/lsr/le = left shoulder pitch(forward+)/raise-out/elbow bend, rsp/rsr/re = right arm, lhp/lhr/lk = left hip pitch(forward+)/out/knee bend, rhp/rhr/rk = right leg.",
+  "order": ["stand", "walk", "run", "sit", "crouch", "pick", "kneel", "wave", "point", "arms_up", "look_back", "dance", "idle"],
+  "poses": {
+    "stand":     {"ru": "Стоит",            "en": "Stand",         "verb": "stands still",
+                  "a": {"lsr": 8, "rsr": 8, "le": 10, "re": 10}},
+    "walk":      {"ru": "Идёт",             "en": "Walk",          "verb": "walks", "move": true,
+                  "a": {"lhp": 26, "rhp": -20, "lk": 6, "rk": 28, "lsp": -22, "rsp": 24, "le": 14, "re": 18, "lsr": 6, "rsr": 6, "tp": 3},
+                  "b": {"lhp": -20, "rhp": 26, "lk": 28, "rk": 6, "lsp": 24, "rsp": -22, "le": 18, "re": 14, "lsr": 6, "rsr": 6, "tp": 3}},
+    "run":       {"ru": "Бежит",            "en": "Run",           "verb": "runs", "move": true,
+                  "a": {"lhp": 50, "rhp": -30, "lk": 30, "rk": 75, "lsp": -45, "rsp": 55, "le": 85, "re": 85, "lsr": 8, "rsr": 8, "tp": 12},
+                  "b": {"lhp": -30, "rhp": 50, "lk": 75, "rk": 30, "lsp": 55, "rsp": -45, "le": 85, "re": 85, "lsr": 8, "rsr": 8, "tp": 12}},
+    "sit":       {"ru": "Сидит",            "en": "Sit",           "verb": "sits down",
+                  "a": {"lhp": 88, "rhp": 88, "lk": 88, "rk": 88, "lhr": 6, "rhr": 6, "tp": 4, "lsp": 35, "rsp": 35, "le": 45, "re": 45, "lsr": 6, "rsr": 6}},
+    "crouch":    {"ru": "Присела",          "en": "Crouch",        "verb": "crouches down",
+                  "a": {"lhp": 105, "rhp": 105, "lk": 140, "rk": 140, "lhr": 12, "rhr": 12, "tp": 30, "lsp": 45, "rsp": 45, "le": 30, "re": 30, "hp": -15}},
+    "pick":      {"ru": "Наклон, взять",    "en": "Bend & pick",   "verb": "bends down and picks something up",
+                  "a": {"tp": 65, "lhp": 12, "rhp": 18, "lk": 22, "rk": 28, "rsp": 85, "re": 5, "lsp": 40, "le": 30, "hp": 10}},
+    "kneel":     {"ru": "На колене",        "en": "Kneel",         "verb": "kneels on one knee",
+                  "a": {"lhp": 85, "lk": 85, "rhp": -5, "rk": 95, "tp": 5, "lsp": 30, "rsp": 20, "le": 40, "re": 20}},
+    "wave":      {"ru": "Машет рукой",      "en": "Wave",          "verb": "waves a hand", "cycle": 0.8,
+                  "a": {"rsr": 145, "re": 35, "lsr": 8, "le": 10},
+                  "b": {"rsr": 145, "re": 80, "lsr": 8, "le": 10}},
+    "point":     {"ru": "Указывает",        "en": "Point",         "verb": "points forward",
+                  "a": {"rsp": 85, "re": 5, "lsr": 8, "le": 10, "ty": -10}},
+    "arms_up":   {"ru": "Руки вверх",       "en": "Arms up",       "verb": "raises both arms",
+                  "a": {"lsr": 165, "rsr": 165, "le": 10, "re": 10, "hp": -15}},
+    "look_back": {"ru": "Оглядывается",     "en": "Look back",     "verb": "looks back over the shoulder",
+                  "a": {"ty": 35, "hy": 60, "lsr": 8, "rsr": 8, "le": 10, "re": 10}},
+    "dance":     {"ru": "Танцует",          "en": "Dance",         "verb": "dances", "cycle": 1.0,
+                  "a": {"lsr": 120, "rsr": 40, "le": 60, "re": 70, "lhp": 15, "lk": 30, "tr": 8, "hy": 10},
+                  "b": {"lsr": 40, "rsr": 120, "le": 70, "re": 60, "rhp": 15, "rk": 30, "tr": -8, "hy": -10}},
+    "idle":      {"ru": "Своя поза",        "en": "Custom",        "verb": "holds a pose",
+                  "a": {"lsr": 8, "rsr": 8, "le": 10, "re": 10}}
+  },
+  "body": {
+    "height": 1.7,
+    "pelvis_to_neck": 0.52, "shoulder_half": 0.17, "hip_half": 0.09,
+    "upper_arm": 0.29, "forearm": 0.27, "thigh": 0.44, "shin": 0.43,
+    "neck_to_head": 0.13, "ankle_h": 0.07
+  }
+}

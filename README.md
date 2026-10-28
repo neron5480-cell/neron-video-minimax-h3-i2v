@@ -166,6 +166,19 @@
 
 ---
 
+## 🎬 Проект 6: NERON STAGE — Площадка режиссёра (v0.1, тест)
+
+👋 Нода лежит в папке **[`NeronStage`](NeronStage/)**.
+
+*   Фото места становится **объёмной сценой**, по ней ходит **скелет-дублёр** от точки к точке.
+*   В каждой точке — **поза** и **подсказка словами**; позу можно гнуть мышкой.
+*   **Камера** — готовым ракурсом или мышкой в виде «🎥 Камера». **▶** — репетиция на холсте.
+*   На выходе: **видео скелета позы** (для H3 Fun ControlNet) и **раскадровка по секундам** (для автопромтера).
+
+Подробно — в **[README внутри NeronStage](NeronStage/README.md)**.
+
+---
+
 ## 📦 Самостоятельные ноды (в корне)
 
 Эти ноды остаются в корне для обратной совместимости. Они самодостаточны и работают: если у вас настроены старые воркфлоу, всё продолжит работать.
@@ -344,6 +357,19 @@ One node — and the **whole ComfyUI is themed**: window, canvas, nodes and wire
 ⚠️ **Bro, don't chase the animation.** The browser draws it; big canvases may stutter — then set Life to Calm or Off.
 
 Details in the **[README inside NeronTheme](NeronTheme/README.md)**.
+
+---
+
+## 🎬 Project 6: NERON STAGE — Director's Stage (v0.1, test)
+
+👋 The node lives in the **[`NeronStage`](NeronStage/)** folder.
+
+*   The place photo becomes a **3D scene**; a **stand-in skeleton** walks from point to point.
+*   Each point has a **pose** and a **text hint**; bend poses with the mouse.
+*   **Camera** by preset or by mouse in the “🎥 Camera” view. **▶** rehearses on the canvas.
+*   Outputs: a **pose skeleton video** (for H3 Fun ControlNet) and a **per-second storyboard** (for the autoprompter).
+
+Details in the **[README inside NeronStage](NeronStage/README.md)**.
 
 ---
 

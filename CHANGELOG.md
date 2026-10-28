@@ -1,5 +1,21 @@
 # Changelog / История изменений
 
+## Neron Stage 🎬 v0.1 — Площадка режиссёра / Director's Stage (28.10.2026, ветка dev)
+
+**RU:**
+- Новая нода **🎬 Neron Stage / Площадка** (меню Neron/Stage): фото места → объёмная сцена (Depth Anything V2 Small, метрическая; «Комната» / «Улица»; пол находится сам), скелет-дублёр ходит по точкам маршрута.
+- Точки: клик по полу — новая, тащить мышкой; в каждой поза (13 готовых) и подсказка словами; позу можно гнуть мышкой за кисти, локти, колени, стопы, голову.
+- Камера: «как на фото», спереди, слева, справа, сзади, сверху, снизу; планы общий / средний / крупный; вид «🎥 Камера» — мышь двигает саму камеру, кадр с полями ровно в пропорциях ролика.
+- ▶ Репетиция и шкала времени; длина 5–15 с (сетка H3 17·n+5); форматы 16:9, 9:16, 1:1, 4:3, 3:4 (размеры кратны 32).
+- Выходы: `pose_video` (OpenPose глазами камеры), `storyboard` (раскадровка по секундам), `frames`, `fps`, `width`, `height`, `scene`, `actor`.
+
+**EN:**
+- New **🎬 Neron Stage** node (Neron/Stage menu): place photo → 3D scene (Depth Anything V2 Small, metric; Room / Outdoor; floor found automatically), a stand-in skeleton walks along route points.
+- Points: click the floor to add, drag to move; each has a pose (13 presets) and a text hint; bend poses by dragging hands, elbows, knees, feet, head.
+- Camera presets, shot sizes and a “🎥 Camera” view where the mouse moves the camera, letterboxed to the clip aspect.
+- ▶ rehearsal and a timeline; 5–15 s (H3 grid 17·n+5); 16:9, 9:16, 1:1, 4:3, 3:4 (sizes are multiples of 32).
+- Outputs: `pose_video` (OpenPose from the camera), `storyboard`, `frames`, `fps`, `width`, `height`, `scene`, `actor`.
+
 ## Neron DJ Пульт / DJ Controller 🎧 v1.0 + Neron Theme для Audio Studio (28.10.2026)
 
 **RU:**
