@@ -251,6 +251,24 @@ function makeUserSized(node, domWidget, root, opts) {
 //  Индикаторы уровня (прыгающие столбики) — общие для Пульта и Сэмплера
 // ----------------------------------------------------------------------------
 
+// цвета ручек и индикаторов — из темы (переменные --nt-*), обновляются, когда тема меняется
+const NT = { line: "#363a44", knob: "#22252d", knobOn: "#2b2f3a", muted: "#8b90a0", bright: "#ffffff", led: "#23262e" };
+function readNT() {
+    try {
+        const cs = getComputedStyle(document.documentElement);
+        const v = (k) => cs.getPropertyValue("--nt-" + k).trim();
+        NT.line = v("line2") || v("line") || "#363a44";
+        NT.knob = v("input") || "#22252d";
+        NT.knobOn = v("btn2") || v("card") || "#2b2f3a";
+        NT.muted = v("muted") || "#8b90a0";
+        NT.bright = v("bright") || "#ffffff";
+        NT.led = v("well") || "#23262e";
+    } catch (e) { /* ок */ }
+}
+readNT();
+window.addEventListener("neron-theme", () => { readNT(); for (const f of KNOBS) f(); });
+const KNOBS = new Set();
+
 const meterBuf = new Float32Array(512);
 function peakOf(an) {
     if (!an) return 0;
@@ -287,7 +305,7 @@ function drawMeter(cv, mL, mR, vertical) {
             const on = Math.round((m.v || 0) * n);
             for (let i = 0; i < n; i++) {
                 const f = (i + 1) / n;
-                g.fillStyle = i < on ? ledColor(f) : "#23262e";
+                g.fillStyle = i < on ? ledColor(f) : NT.led;
                 g.fillRect(x, h - 1 - (i + 1) * (seg + gap) + gap, bw, seg);
             }
             if (m.hold > 0.02) { const i = Math.min(n - 1, Math.round(m.hold * n) - 1); g.fillStyle = ledColor((i + 1) / n); g.fillRect(x, h - 1 - (i + 1) * (seg + gap) + gap, bw, seg); }
@@ -297,7 +315,7 @@ function drawMeter(cv, mL, mR, vertical) {
             const on = Math.round((m.v || 0) * n);
             for (let i = 0; i < n; i++) {
                 const f = (i + 1) / n;
-                g.fillStyle = i < on ? ledColor(f) : "#23262e";
+                g.fillStyle = i < on ? ledColor(f) : NT.led;
                 g.fillRect(1 + i * (seg + gap), y, seg, bh);
             }
             if (m.hold > 0.02) { const i = Math.min(n - 1, Math.round(m.hold * n) - 1); g.fillStyle = ledColor((i + 1) / n); g.fillRect(1 + i * (seg + gap), y, seg, bh); }
@@ -375,16 +393,16 @@ function makeKnob(o) {
         const av = a0 + (a1 - a0) * frac;
         const az = o.bipolar ? a0 + (a1 - a0) * ((0 - o.min) / span) : a0;
         g.lineCap = "round";
-        g.lineWidth = 5; g.strokeStyle = "#363a44";
+        g.lineWidth = 5; g.strokeStyle = NT.line;
         g.beginPath(); g.arc(cx, cy, r, a0, a1); g.stroke();
         const active = Math.abs(v - o.def) > 1e-3;
         if (active) {
             g.strokeStyle = o.color;
             g.beginPath(); g.arc(cx, cy, r, Math.min(az, av), Math.max(az, av)); g.stroke();
         }
-        g.fillStyle = active ? "#2b2f3a" : "#22252d";
+        g.fillStyle = active ? NT.knobOn : NT.knob;
         g.beginPath(); g.arc(cx, cy, 13, 0, Math.PI * 2); g.fill();
-        g.strokeStyle = active ? "#fff" : "#8b90a0"; g.lineWidth = 3.5;
+        g.strokeStyle = active ? NT.bright : NT.muted; g.lineWidth = 3.5;
         g.beginPath(); g.moveTo(cx + Math.cos(av) * 4, cy + Math.sin(av) * 4); g.lineTo(cx + Math.cos(av) * 12, cy + Math.sin(av) * 12); g.stroke();
         box.title = o.title + "\n" + o.fmt(v) + "\n" + T("тянуть вверх/вниз или колесо · двойной клик — сброс", "drag up/down or wheel · double-click — reset");
         lab.style.color = active ? o.color : "";
@@ -418,6 +436,8 @@ function makeKnob(o) {
         if (o.onEnd) o.onEnd(v);
     }, { passive: false });
     draw();
+    const redraw = () => { if (!box.isConnected && box.__seen) { KNOBS.delete(redraw); return; } if (box.isConnected) box.__seen = true; draw(); };
+    KNOBS.add(redraw);
     box.setValue = (nv) => { v = nv; draw(); };
     return box;
 }

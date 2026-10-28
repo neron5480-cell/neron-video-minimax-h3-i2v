@@ -1,5 +1,21 @@
 # Changelog / История изменений
 
+## Neron DJ Пульт / DJ Controller 🎧 v1.0 + Neron Theme для Audio Studio (28.10.2026)
+
+**RU:**
+- Новая нода **Neron DJ Пульт** (меню NeronAudio): две деки с джогами и волнами, ▶ / CUE / SYNC, ползунки темпа, 8 пэдов на деку в трёх режимах (точки, звуки, петли), фильтр, громкость, кроссфейдер, индикаторы.
+- Треки — проводами `deck_a`, `deck_b`; свои звуки для пэдов — `pad_sounds` (Звук ×8). Без провода пэды играют 8 встроенных звуков (без файлов).
+- **⏺ ЗАПИСЬ** сета: по Queue запись идёт на выход `audio` и сохраняется в `output/Neron_DJ`. Без записи — авто-переход A → B.
+- Темп и удары находятся сами; SYNC подгоняет и темп, и удары.
+- Пульт и все ноды студии красятся **новой Neron Theme**: панели, ручки, индикаторы, джоги и волны — в цветах темы, в том числе светлой. В готовой схеме Audio Studio v2.0 устаревшая «Тема» заменена на Neron Theme (старая нода оставлена, чтобы открывались старые схемы; её цвета, записанные в ноды схемы, убраны).
+
+**EN:**
+- New **Neron DJ Controller** node (NeronAudio menu): two decks with jog wheels and waves, ▶ / CUE / SYNC, tempo sliders, 8 pads per deck in three modes (cues, samples, loops), filter, volume, crossfader, meters.
+- Tracks by wire `deck_a`, `deck_b`; your own pad sounds — `pad_sounds` (Sound ×8). Without it the pads play 8 built-in sounds (no files).
+- **⏺ REC** a set: on Queue it goes out on `audio` and is saved in `output/Neron_DJ`. No recording — an auto transition A → B.
+- Tempo and beats are detected automatically; SYNC matches both tempo and beats.
+- The controller and all studio nodes follow the **new Neron Theme**: panels, knobs, meters, jogs and waves take the theme colors, light themes included. The ready Audio Studio v2.0 workflow now uses Neron Theme instead of the legacy "Theme" (the old node is kept so old workflows open; the colors it had written into the workflow's nodes are removed).
+
 ## Neron Theme 🎨 v1.0 — темы для всего ComfyUI / themes for the whole ComfyUI (28.10.2026)
 
 **RU:**

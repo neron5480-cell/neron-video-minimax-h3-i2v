@@ -30,8 +30,7 @@
       ],
       "title": "🎬 Видео ×3 / Video ×3",
       "properties": {
-        "Node name for S&R": "NeronVideoCube",
-        "neron_themed": true
+        "Node name for S&R": "NeronVideoCube"
       },
       "widgets_values": [
         "{\"clips\": []}",
@@ -40,9 +39,7 @@
       "widgets_values_named": {
         "cube_json": "{\"clips\": []}",
         "neron_video_cube": ""
-      },
-      "color": "#115b7a",
-      "bgcolor": "#0c0820"
+      }
     },
     {
       "id": 2,
@@ -77,8 +74,7 @@
       ],
       "title": "✂ Видео-сэмплер / Video Sampler",
       "properties": {
-        "Node name for S&R": "NeronVideoSampler",
-        "neron_themed": true
+        "Node name for S&R": "NeronVideoSampler"
       },
       "widgets_values": [
         "{\"version\": 1, \"bypass\": true, \"mute\": false, \"pieces\": []}",
@@ -87,9 +83,7 @@
       "widgets_values_named": {
         "vsampler_json": "{\"version\": 1, \"bypass\": true, \"mute\": false, \"pieces\": []}",
         "neron_vsampler": ""
-      },
-      "color": "#115b7a",
-      "bgcolor": "#0c0820"
+      }
     },
     {
       "id": 3,
@@ -117,8 +111,7 @@
       ],
       "title": "🎵 Звук ×8 / Sound ×8",
       "properties": {
-        "Node name for S&R": "NeronSoundCube",
-        "neron_themed": true
+        "Node name for S&R": "NeronSoundCube"
       },
       "widgets_values": [
         "{\"sounds\": []}",
@@ -127,9 +120,7 @@
       "widgets_values_named": {
         "cube_json": "{\"sounds\": []}",
         "neron_sound_cube": ""
-      },
-      "color": "#256451",
-      "bgcolor": "#0c0820"
+      }
     },
     {
       "id": 4,
@@ -169,8 +160,7 @@
       ],
       "title": "🎛 Сэмплер / Sampler",
       "properties": {
-        "Node name for S&R": "NeronSampler",
-        "neron_themed": true
+        "Node name for S&R": "NeronSampler"
       },
       "widgets_values": [
         "{\"version\":2,\"bypass\":true,\"snap\":\"1/4\",\"master\":1,\"zoom\":142,\"cur\":0,\"layers\":[{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false}],\"bricks\":[],\"sel\":{}}",
@@ -181,9 +171,7 @@
         "sampler_json": "{\"version\":2,\"bypass\":true,\"snap\":\"1/4\",\"master\":1,\"zoom\":142,\"cur\":0,\"layers\":[{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false}],\"bricks\":[],\"sel\":{}}",
         "bpm": 90,
         "neron_sampler": ""
-      },
-      "color": "#256451",
-      "bgcolor": "#0c0820"
+      }
     },
     {
       "id": 5,
@@ -222,8 +210,7 @@
       "title": "🥁🎹 Музыка / Music",
       "properties": {
         "Node name for S&R": "NeronMusic",
-        "neron_music_tab": "drums",
-        "neron_themed": true
+        "neron_music_tab": "drums"
       },
       "widgets_values": [
         "default",
@@ -240,9 +227,7 @@
         "project_json": "{\"version\": 1, \"bars\": 2, \"tracks\": []}",
         "save_name": "neron_music",
         "neron_music": ""
-      },
-      "color": "#6a422b",
-      "bgcolor": "#0c0820"
+      }
     },
     {
       "id": 6,
@@ -282,8 +267,7 @@
       ],
       "title": "🎛 Студия / Studio",
       "properties": {
-        "Node name for S&R": "NeronStudio",
-        "neron_themed": true
+        "Node name for S&R": "NeronStudio"
       },
       "widgets_values": [
         "{\"version\": 1, \"bypass\": false, \"master\": 1.0, \"eq_on\": true, \"eq\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"ch\": {}}",
@@ -292,40 +276,37 @@
       "widgets_values_named": {
         "studio_json": "{\"version\": 1, \"bypass\": false, \"master\": 1.0, \"eq_on\": true, \"eq\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"ch\": {}}",
         "neron_studio": ""
-      },
-      "color": "#6a422b",
-      "bgcolor": "#0c0820"
+      }
     },
     {
       "id": 7,
-      "type": "NeronTheme",
+      "type": "NeronThemeStudio",
       "pos": [
-        2038.803272163002,
-        -239.2008727177476
+        -840,
+        380
       ],
       "size": [
-        460,
-        262
+        560,
+        640
       ],
       "flags": {},
       "order": 3,
       "mode": 0,
-      "inputs": [],
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        }
+      ],
       "outputs": [],
       "properties": {
-        "Node name for S&R": "NeronTheme",
-        "neron_themed": true
+        "Node name for S&R": "NeronThemeStudio"
       },
       "widgets_values": [
-        "{\"theme\":\"neon\",\"life\":2}",
-        ""
-      ],
-      "widgets_values_named": {
-        "theme_json": "{\"theme\":\"neon\",\"life\":2}",
-        "neron_theme": ""
-      },
-      "color": "#6a5b21",
-      "bgcolor": "#0c0820"
+        "{\"v\":1,\"theme\":{\"v\":1,\"id\":\"neon\",\"name\":\"Неон / Neon\",\"author\":\"Neron\",\"c\":{\"bg\":\"#06040f\",\"grid\":\"#0f0a22\",\"title\":\"#1a1033\",\"body\":\"#0c0820\",\"text\":\"#ece7ff\",\"widget\":\"#0d0822\",\"line\":\"#4f39a8\",\"link\":\"#00e5ff\",\"menu\":\"#0b0718\",\"accent\":\"#ff2bd6\"},\"roles\":{\"model\":\"#ff2bd6\",\"input\":\"#00e5ff\",\"text\":\"#ffe600\",\"gen\":\"#ff3b6b\",\"latent\":\"#b26bff\",\"image\":\"#39ff88\",\"audio\":\"#39ff88\",\"output\":\"#ff9f1c\",\"util\":\"#8f88cc\"},\"tint\":0.35,\"btint\":0.06,\"glow\":1,\"ui\":true,\"opacity\":1,\"halo\":0,\"wires\":{\"mode\":\"type\",\"custom\":{}},\"life\":{\"level\":2,\"frame\":true,\"wires\":true,\"bgfx\":\"stars\",\"work\":true,\"beat\":true,\"speed\":1,\"fps\":0,\"quietRun\":false}},\"tab\":\"install\"}"
+      ]
     },
     {
       "id": 8,
@@ -406,8 +387,7 @@
       ],
       "title": "🎚 ПУЛЬТ / PULT",
       "properties": {
-        "Node name for S&R": "NeronMixer",
-        "neron_themed": true
+        "Node name for S&R": "NeronMixer"
       },
       "widgets_values": [
         "{\"version\": 3, \"repeats\": 1, \"master\": 0.9, \"bpm\": 90, \"bpm_set\": true, \"sync_bpm\": true, \"fit\": true, \"fade\": 1.5, \"fit_sec\": 0, \"video\": null, \"videos\": [], \"video_manual\": null, \"tracks\": []}",
@@ -418,9 +398,7 @@
         "mixer_json": "{\"version\": 3, \"repeats\": 1, \"master\": 0.9, \"bpm\": 90, \"bpm_set\": true, \"sync_bpm\": true, \"fit\": true, \"fade\": 1.5, \"fit_sec\": 0, \"video\": null, \"videos\": [], \"video_manual\": null, \"tracks\": []}",
         "save_name": "neron_mix",
         "neron_mixer": ""
-      },
-      "color": "#6a196c",
-      "bgcolor": "#0c0820"
+      }
     },
     {
       "id": 9,
@@ -439,8 +417,7 @@
       "inputs": [],
       "outputs": [],
       "properties": {
-        "Node name for S&R": "NeronDancerClip",
-        "neron_themed": true
+        "Node name for S&R": "NeronDancerClip"
       },
       "widgets_values": [
         "",
@@ -461,9 +438,7 @@
         "background": "полосы",
         "bg_color": "сиреневая",
         "neron_dancer_clip": ""
-      },
-      "color": "#6a2b59",
-      "bgcolor": "#0c0820"
+      }
     },
     {
       "id": 10,
@@ -515,8 +490,7 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "NeronVideoCombine",
-        "neron_themed": true
+        "Node name for S&R": "NeronVideoCombine"
       },
       "widgets_values": [
         "Neron_Video",
@@ -531,9 +505,7 @@
         "quality_crf": 18,
         "fps": 24,
         "neron_video_player": ""
-      },
-      "color": "#115b7a",
-      "bgcolor": "#0c0820"
+      }
     },
     {
       "id": 11,
@@ -602,7 +574,7 @@
       "title": "РУССКИЙ",
       "properties": {},
       "widgets_values": [
-        "=== NERON AUDIO STUDIO 2.0 ===\n\nНабор нод для ComfyUI, который превращает его в маленькую студию: режете и склеиваете видео, собираете звук из кусков, пишете бит и мелодию, сводите всё в Пульте с эквалайзером и эхом и сохраняете готовый клип со звуком. Слушать можно сразу на нодах, без Queue.\n\n--------------------------------------------------\n\nКАК УСТРОЕНО: КУБИКИ → ПОСРЕДНИКИ → ПУЛЬТ\n\nКубики (откуда берётся материал):\n🎬 Видео ×3 — до 3 роликов в одной ноде.\n🎵 Звук ×8 — до 8 звуков (mp3, wav и др.).\n🥁🎹 Музыка — барабаны и пианино в одной ноде.\n\nПосредники (что с материалом делают). У каждого есть ⏭ ПРОПУСТИТЬ — материал идёт в Пульт как есть:\n✂ Видео-сэмплер — режете куски роликов и собираете монтаж точно по кадрам.\n🎛 Сэмплер — собираете звук из кусков на сетке по тактам.\n🎛 Студия — каждая дорожка музыки отдельным каналом, поле сборки трека, общий эквалайзер на 10 полос.\n\n🎚 Пульт — сердце: сюда приходит всё. Видео, каналы звука, громкость, эквалайзер, эхо, SAVE WAV / SAVE VIDEO.\n🎨 Тема — ни к чему не подключается: оформление и живые огни в такт музыке.\nVideo Combine — сохраняет готовый ролик и показывает его.\nТанцовщица — просто для настроения (см. заметку рядом с ней).\n\nВсе ноды — в меню NeronAudio. У каждой ноды есть кнопка 📖 с подробной помощью.\n\n--------------------------------------------------\n\nУСТАНОВКА\n\n1. Скопируйте папку NeronAudioStudio в ComfyUI/custom_nodes/.\n2. Полностью перезапустите ComfyUI.\n3. Обновите страницу с очисткой кэша: Ctrl+F5.\n4. Откройте эту схему (Neron_Audio_Studio_v2.0.json) или двойной клик по пустому месту — поиск — Neron.\n\nСкачать: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n\nТребования: современный ComfyUI (Desktop подходит), ffmpeg для видео (уже есть, если стоит VideoHelperSuite или imageio-ffmpeg), браузер Chrome / Edge / ComfyUI Desktop.\n\n--------------------------------------------------\n\nС ЧЕГО НАЧАТЬ\n\n1. 🎬 Видео ×3: выберите ролик в списке или перетащите файл прямо на ноду.\n2. 🎵 Звук ×8: выберите трек. Или напишите бит в 🥁 Музыке.\n3. 🎚 Пульт: ▶ PLAY — музыка сама подстроится под длину ролика и мягко затихнет в конце.\n4. Хотите свой монтаж — отожмите ⏭ в Видео-сэмплере и положите куски роликов вниз.\n5. SAVE VIDEO в Пульте (или Queue) — готовый клип.\n\n--------------------------------------------------\n\nГДЕ ЧТО ЛЕЖИТ\n\nРолики: input/Neron_Video          Звуки: input/Neron_Audio\nСэмплы для барабанов и пианино: input/Neron_Drums/<набор>/<папки со звуками>\nПроекты (СОХРАНИТЬ/ОТКРЫТЬ): output/Neron_Projects\nСвёденный звук: output/Neron_Mixes     Готовые видео: output/Neron_Videos\nСборки монтажа Видео-сэмплера: output/Neron_Videos/_edits (старые удаляются сами)\nРолики танцовщицы: input/Neron_Dancers\n\n--------------------------------------------------\n\nПУЛЬТ — ГЛАВНОЕ\n\nКаждый канал: ▶ ■ M S, громкость, баланс, НИЗ / СЕР / ВЕРХ, ЭХО + помещение (комната / зал / собор), индикатор уровня.\nПО ДЛИНЕ ВИДЕО — музыка ровно под ролик; длинный трек затихает в конце.\nЖёлтая рамка на волне трека — тяните её, чтобы выбрать, какой кусок трека звучит под роликом.\n⚙ ДЛЯ СПЕЦОВ — длина затухания, 🎯 темп под видео.\n\n--------------------------------------------------\n\nЧАСТЫЕ ПРОБЛЕМЫ\n\nНода выглядит странно / нет новых кнопок: Ctrl+F5, при необходимости удалите ноду и добавьте заново.\nПульт молчит: нажмите PLAY, проверьте M, S, MASTER и ⏭ у посредников.\nВ Пульте «Монтаж пуст»: Видео-сэмплер включён, но кусков нет — положите куски или нажмите ⏭.\nSAVE VIDEO не склеивает: нужен ffmpeg.\nОгни темы тормозят: в ноде 🎨 Тема выберите ЖИВОСТЬ — СПОКОЙНО или ВЫКЛ.\n\n--------------------------------------------------\n\nОГРАНИЧЕНИЯ\n\nДо 3 роликов, до 8 звуков, до 8 входов в Пульте, до 16 дорожек в Студии.\nСхема версии 1 (Neron_Audio_Studio_v1.0_Beta.json) по-прежнему работает."
+        "=== NERON AUDIO STUDIO 2.0 ===\n\nНабор нод для ComfyUI, который превращает его в маленькую студию: режете и склеиваете видео, собираете звук из кусков, пишете бит и мелодию, сводите всё в Пульте с эквалайзером и эхом и сохраняете готовый клип со звуком. Слушать можно сразу на нодах, без Queue.\n\n--------------------------------------------------\n\nКАК УСТРОЕНО: КУБИКИ → ПОСРЕДНИКИ → ПУЛЬТ\n\nКубики (откуда берётся материал):\n🎬 Видео ×3 — до 3 роликов в одной ноде.\n🎵 Звук ×8 — до 8 звуков (mp3, wav и др.).\n🥁🎹 Музыка — барабаны и пианино в одной ноде.\n\nПосредники (что с материалом делают). У каждого есть ⏭ ПРОПУСТИТЬ — материал идёт в Пульт как есть:\n✂ Видео-сэмплер — режете куски роликов и собираете монтаж точно по кадрам.\n🎛 Сэмплер — собираете звук из кусков на сетке по тактам.\n🎛 Студия — каждая дорожка музыки отдельным каналом, поле сборки трека, общий эквалайзер на 10 полос.\n\n🎚 Пульт — сердце: сюда приходит всё. Видео, каналы звука, громкость, эквалайзер, эхо, SAVE WAV / SAVE VIDEO.\n🎨 Neron Theme — ни к чему не подключается: тема для всего ComfyUI (ноды по ролям, провода, подсветка) и живые огни в такт музыке. Наведите на карточку — примерить, клик — поставить.\nVideo Combine — сохраняет готовый ролик и показывает его.\nТанцовщица — просто для настроения (см. заметку рядом с ней).\n\nВсе ноды — в меню NeronAudio. У каждой ноды есть кнопка 📖 с подробной помощью.\n\n--------------------------------------------------\n\nУСТАНОВКА\n\n1. Скопируйте папку NeronAudioStudio в ComfyUI/custom_nodes/.\n2. Полностью перезапустите ComfyUI.\n3. Обновите страницу с очисткой кэша: Ctrl+F5.\n4. Откройте эту схему (Neron_Audio_Studio_v2.0.json) или двойной клик по пустому месту — поиск — Neron.\n\nСкачать: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n\nТребования: современный ComfyUI (Desktop подходит), ffmpeg для видео (уже есть, если стоит VideoHelperSuite или imageio-ffmpeg), браузер Chrome / Edge / ComfyUI Desktop.\n\n--------------------------------------------------\n\nС ЧЕГО НАЧАТЬ\n\n1. 🎬 Видео ×3: выберите ролик в списке или перетащите файл прямо на ноду.\n2. 🎵 Звук ×8: выберите трек. Или напишите бит в 🥁 Музыке.\n3. 🎚 Пульт: ▶ PLAY — музыка сама подстроится под длину ролика и мягко затихнет в конце.\n4. Хотите свой монтаж — отожмите ⏭ в Видео-сэмплере и положите куски роликов вниз.\n5. SAVE VIDEO в Пульте (или Queue) — готовый клип.\n\n--------------------------------------------------\n\nГДЕ ЧТО ЛЕЖИТ\n\nРолики: input/Neron_Video          Звуки: input/Neron_Audio\nСэмплы для барабанов и пианино: input/Neron_Drums/<набор>/<папки со звуками>\nПроекты (СОХРАНИТЬ/ОТКРЫТЬ): output/Neron_Projects\nСвёденный звук: output/Neron_Mixes     Готовые видео: output/Neron_Videos\nСборки монтажа Видео-сэмплера: output/Neron_Videos/_edits (старые удаляются сами)\nРолики танцовщицы: input/Neron_Dancers\n\n--------------------------------------------------\n\nПУЛЬТ — ГЛАВНОЕ\n\nКаждый канал: ▶ ■ M S, громкость, баланс, НИЗ / СЕР / ВЕРХ, ЭХО + помещение (комната / зал / собор), индикатор уровня.\nПО ДЛИНЕ ВИДЕО — музыка ровно под ролик; длинный трек затихает в конце.\nЖёлтая рамка на волне трека — тяните её, чтобы выбрать, какой кусок трека звучит под роликом.\n⚙ ДЛЯ СПЕЦОВ — длина затухания, 🎯 темп под видео.\n\n--------------------------------------------------\n\nЧАСТЫЕ ПРОБЛЕМЫ\n\nНода выглядит странно / нет новых кнопок: Ctrl+F5, при необходимости удалите ноду и добавьте заново.\nПульт молчит: нажмите PLAY, проверьте M, S, MASTER и ⏭ у посредников.\nВ Пульте «Монтаж пуст»: Видео-сэмплер включён, но кусков нет — положите куски или нажмите ⏭.\nSAVE VIDEO не склеивает: нужен ffmpeg.\nОгни темы тормозят: в ноде 🎨 Neron Theme → СОЗДАТЬ выберите ЖИВОСТЬ — СПОКОЙНО или ВЫКЛ.\n\n--------------------------------------------------\n\nОГРАНИЧЕНИЯ\n\nДо 3 роликов, до 8 звуков, до 8 входов в Пульте, до 16 дорожек в Студии.\nСхема версии 1 (Neron_Audio_Studio_v1.0_Beta.json) по-прежнему работает."
       ],
       "color": "#432",
       "bgcolor": "#653"
@@ -626,7 +598,7 @@
       "title": "English",
       "properties": {},
       "widgets_values": [
-        "=== NERON AUDIO STUDIO 2.0 ===\n\nA set of nodes that turns ComfyUI into a small studio: cut and join video, build sound from pieces, write beats and melodies, mix everything in the Pult with EQ and reverb, and save a finished clip with sound. You hear everything right on the nodes, no Queue needed.\n\n--------------------------------------------------\n\nHOW IT WORKS: CUBES → MIDDLE NODES → PULT\n\nCubes (where the material comes from):\n🎬 Video ×3 — up to 3 clips in one node.\n🎵 Sound ×8 — up to 8 sounds (mp3, wav, …).\n🥁🎹 Music — drums and piano in one node.\n\nMiddle nodes (what you do with it). Each has ⏭ BYPASS — the material goes to the Pult as it is:\n✂ Video Sampler — cut clip pieces into a frame-accurate edit.\n🎛 Sampler — build sound from pieces on a bar grid.\n🎛 Studio — every music track as its own channel, an arrange field, a 10-band master EQ.\n\n🎚 Pult — the heart: everything comes here. Video, sound channels, volume, EQ, reverb, SAVE WAV / SAVE VIDEO.\n🎨 Theme — not wired to anything: the look and live lights on the beat.\nVideo Combine — saves and shows the finished clip.\nDancer — just for fun (see the note next to her).\n\nAll nodes are in the NeronAudio menu. Every node has a 📖 button with detailed help.\n\n--------------------------------------------------\n\nINSTALLATION\n\n1. Copy the NeronAudioStudio folder into ComfyUI/custom_nodes/.\n2. Restart ComfyUI completely.\n3. Refresh the page with cache clear: Ctrl+F5.\n4. Open this workflow (Neron_Audio_Studio_v2.0.json) or double-click the canvas — search — Neron.\n\nDownload: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n\nRequirements: a modern ComfyUI (Desktop works), ffmpeg for video (already there with VideoHelperSuite or imageio-ffmpeg), Chrome / Edge / ComfyUI Desktop.\n\n--------------------------------------------------\n\nQUICK START\n\n1. 🎬 Video ×3: pick a clip in the list or drop a file onto the node.\n2. 🎵 Sound ×8: pick a track. Or write a beat in 🥁 Music.\n3. 🎚 Pult: ▶ PLAY — the music fits the clip length and fades out at the end.\n4. Want your own edit — release ⏭ in the Video Sampler and drop clip pieces down.\n5. SAVE VIDEO in the Pult (or Queue) — the finished clip.\n\n--------------------------------------------------\n\nWHERE THINGS ARE\n\nClips: input/Neron_Video          Sounds: input/Neron_Audio\nSamples for drums and piano: input/Neron_Drums/<kit>/<sound folders>\nProjects (SAVE/OPEN): output/Neron_Projects\nMixed sound: output/Neron_Mixes     Finished videos: output/Neron_Videos\nVideo Sampler edit builds: output/Neron_Videos/_edits (old ones are removed automatically)\nDancer clips: input/Neron_Dancers\n\n--------------------------------------------------\n\nPULT — THE ESSENTIALS\n\nEvery channel: ▶ ■ M S, volume, pan, LOW / MID / HIGH, REVERB + room (room / hall / cathedral), level meter.\nFIT TO VIDEO — the music matches the clip; long tracks fade out at the end.\nThe yellow frame on a track wave — drag it to choose which part plays under the clip.\n⚙ EXPERT — fade length, 🎯 tempo to video.\n\n--------------------------------------------------\n\nTROUBLESHOOTING\n\nA node looks odd / new buttons missing: Ctrl+F5; if needed delete the node and add it again.\nThe Pult is silent: press PLAY, check M, S, MASTER and ⏭ on the middle nodes.\n\"The edit is empty\" in the Pult: the Video Sampler is on but has no pieces — add pieces or press ⏭.\nSAVE VIDEO does not join: ffmpeg is required.\nTheme lights are slow: in the 🎨 Theme node set LIFE to CALM or OFF.\n\n--------------------------------------------------\n\nLIMITATIONS\n\nUp to 3 clips, up to 8 sounds, up to 8 inputs in the Pult, up to 16 tracks in the Studio.\nThe version 1 workflow (Neron_Audio_Studio_v1.0_Beta.json) still works."
+        "=== NERON AUDIO STUDIO 2.0 ===\n\nA set of nodes that turns ComfyUI into a small studio: cut and join video, build sound from pieces, write beats and melodies, mix everything in the Pult with EQ and reverb, and save a finished clip with sound. You hear everything right on the nodes, no Queue needed.\n\n--------------------------------------------------\n\nHOW IT WORKS: CUBES → MIDDLE NODES → PULT\n\nCubes (where the material comes from):\n🎬 Video ×3 — up to 3 clips in one node.\n🎵 Sound ×8 — up to 8 sounds (mp3, wav, …).\n🥁🎹 Music — drums and piano in one node.\n\nMiddle nodes (what you do with it). Each has ⏭ BYPASS — the material goes to the Pult as it is:\n✂ Video Sampler — cut clip pieces into a frame-accurate edit.\n🎛 Sampler — build sound from pieces on a bar grid.\n🎛 Studio — every music track as its own channel, an arrange field, a 10-band master EQ.\n\n🎚 Pult — the heart: everything comes here. Video, sound channels, volume, EQ, reverb, SAVE WAV / SAVE VIDEO.\n🎨 Neron Theme — not wired to anything: a theme for the whole ComfyUI (nodes by role, wires, backlight) and live lights on the beat. Hover a card to try it, click to apply.\nVideo Combine — saves and shows the finished clip.\nDancer — just for fun (see the note next to her).\n\nAll nodes are in the NeronAudio menu. Every node has a 📖 button with detailed help.\n\n--------------------------------------------------\n\nINSTALLATION\n\n1. Copy the NeronAudioStudio folder into ComfyUI/custom_nodes/.\n2. Restart ComfyUI completely.\n3. Refresh the page with cache clear: Ctrl+F5.\n4. Open this workflow (Neron_Audio_Studio_v2.0.json) or double-click the canvas — search — Neron.\n\nDownload: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n\nRequirements: a modern ComfyUI (Desktop works), ffmpeg for video (already there with VideoHelperSuite or imageio-ffmpeg), Chrome / Edge / ComfyUI Desktop.\n\n--------------------------------------------------\n\nQUICK START\n\n1. 🎬 Video ×3: pick a clip in the list or drop a file onto the node.\n2. 🎵 Sound ×8: pick a track. Or write a beat in 🥁 Music.\n3. 🎚 Pult: ▶ PLAY — the music fits the clip length and fades out at the end.\n4. Want your own edit — release ⏭ in the Video Sampler and drop clip pieces down.\n5. SAVE VIDEO in the Pult (or Queue) — the finished clip.\n\n--------------------------------------------------\n\nWHERE THINGS ARE\n\nClips: input/Neron_Video          Sounds: input/Neron_Audio\nSamples for drums and piano: input/Neron_Drums/<kit>/<sound folders>\nProjects (SAVE/OPEN): output/Neron_Projects\nMixed sound: output/Neron_Mixes     Finished videos: output/Neron_Videos\nVideo Sampler edit builds: output/Neron_Videos/_edits (old ones are removed automatically)\nDancer clips: input/Neron_Dancers\n\n--------------------------------------------------\n\nPULT — THE ESSENTIALS\n\nEvery channel: ▶ ■ M S, volume, pan, LOW / MID / HIGH, REVERB + room (room / hall / cathedral), level meter.\nFIT TO VIDEO — the music matches the clip; long tracks fade out at the end.\nThe yellow frame on a track wave — drag it to choose which part plays under the clip.\n⚙ EXPERT — fade length, 🎯 tempo to video.\n\n--------------------------------------------------\n\nTROUBLESHOOTING\n\nA node looks odd / new buttons missing: Ctrl+F5; if needed delete the node and add it again.\nThe Pult is silent: press PLAY, check M, S, MASTER and ⏭ on the middle nodes.\n\"The edit is empty\" in the Pult: the Video Sampler is on but has no pieces — add pieces or press ⏭.\nSAVE VIDEO does not join: ffmpeg is required.\nTheme lights are slow: in the 🎨 Neron Theme node → CREATE set LIFE to CALM or OFF.\n\n--------------------------------------------------\n\nLIMITATIONS\n\nUp to 3 clips, up to 8 sounds, up to 8 inputs in the Pult, up to 16 tracks in the Studio.\nThe version 1 workflow (Neron_Audio_Studio_v1.0_Beta.json) still works."
       ],
       "color": "#432",
       "bgcolor": "#653"

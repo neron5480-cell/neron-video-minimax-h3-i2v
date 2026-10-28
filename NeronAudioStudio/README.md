@@ -21,9 +21,10 @@
 | **Neron Music / Музыка 🥁🎹** | Барабаны + пианино в одной ноде (вкладки), общий темп; в Пульт — 2 канала / Drums + piano in one node, 2 channels to the Pult |
 | **Neron Video Sampler / Видео-сэмплер 🎬** | Между «Видео ×3» и Пультом: куски роликов → монтаж (резать, переставлять, обрезать), экран, ⏭, 🔇 / Video edit between Video ×3 and the Pult |
 | **Neron Studio / Студия 🎛** | Между «Музыкой» и Пультом: каждая дорожка — канал с НИЗ/СЕР/ВЕРХ/ЭХО, общий эквалайзер на 10 полос со спектром / Every track a channel with EQ and reverb, 10-band master EQ |
-| **Neron Theme / Тема 🎨** | Ни к чему не подключается: тема нод Neron (Графит / Neron Brown / Неон), цвета кубиков и проводов, ✨ живые огни в такт музыке / Theme for Neron nodes with live lights on the beat |
+| **Neron Theme / Тема 🎨** (устаревшая / legacy) | Оставлена, чтобы открывались старые схемы. Вместо неё — новая **[Neron Theme 🎨](../NeronTheme/)**: тема для всего ComfyUI, красит и ноды студии, и DJ Пульт / Kept so old workflows open. Use the new **[Neron Theme 🎨](../NeronTheme/)** instead: themes the whole ComfyUI, including studio nodes and the DJ Controller |
 | **Neron Field / Поле** | Общее поле, как Playlist в FL Studio: склейка до 3 роликов по кадрам и дорожки со звуком (двигать, обрезать, резать, появление и затухание) |
 | **Neron Dancer** | Для настроения: маленькая героиня, которая танцует под звук Neron-нод |
+| **Neron DJ Пульт / DJ Controller 🎧** | Диджейский пульт: две деки с джогами, SYNC, пэды (точки / звуки / петли), фильтр, кроссфейдер, ⏺ запись сета / Two decks, SYNC, pads, filter, crossfader, set recording |
 
 Все ноды лежат в меню **NeronAudio**.
 
@@ -413,6 +414,208 @@ Neron-нод (драм-машины, пианоролла, микшера, за�
 - `palette` - цвет волос и наряда (розовая, голубая, сиреневая, рыжая, серебро).
 - `energy` - насколько активно она двигается.
 - Слышит только звук, который играет эта страница (то, что вы запустили кнопкой PLAY). Ничего не записывает и не отправляет.
+
+---
+
+## Neron DJ Пульт / DJ Controller 🎧
+
+Диджейский пульт прямо в ComfyUI: две деки, кроссфейдер, пэды, запись сета.
+**Играть можно сразу в ноде — Queue не нужен.** Queue нужен только чтобы отдать результат дальше по схеме.
+
+### 🇷🇺 Русский
+
+#### Что куда подключать
+
+| Вход | Что подключить | Обязательно? |
+|---|---|---|
+| `deck_a` | Трек для левой деки: **Load Audio**, **Neron Audio Loader**, **Drum Machine**, **Музыка** и т. п. | Хотя бы одна дека |
+| `deck_b` | Трек для правой деки — так же | Хотя бы одна дека |
+| `pad_sounds` | **Свои звуки для пэдов**: «Звук ×8» (до 8 звуков) или один Load Audio | Нет — без провода играют 8 встроенных звуков |
+
+```
+Load Audio (трек 1) ───────> deck_a ┐
+Load Audio (трек 2) ───────> deck_b ├──> Neron DJ Пульт ──> audio ──> (Save Audio, Пульт, видео…)
+Звук ×8 (ваши сэмплы) ─────> pad_sounds ┘   (необязательно)
+```
+
+Трек появляется на деке **сразу**: волна, длина, темп (BPM).
+Если источник необычный (например, нода AI-музыки), на деке будет надпись «нажмите Queue один раз» — после первого Queue трек подтянется.
+
+#### Первые 2 минуты (самое простое)
+
+1. Подключите два трека к `deck_a` и `deck_b`.
+2. Кроссфейдер (горизонтальный ползунок внизу посередине) — **до упора влево**: слышно только A.
+3. На деке A нажмите **▶**.
+4. На деке B нажмите **SYNC** (темп и удары B подстроятся под A), потом **▶**.
+5. Медленно ведите кроссфейдер **вправо** — музыка плавно перетекает из A в B. Это и есть сведение.
+
+#### Дека (левая и правая одинаковые)
+
+- **▶ / ❚❚** — играть / пауза.
+- **CUE** — «точка старта». На паузе: запоминает место. Во время игры: возвращает к этому месту и останавливает.
+- **SYNC** — подгоняет темп **и удары** этой деки под другую деку (другая дека должна играть, чтобы совпали удары).
+- **Ползунок темпа** (вертикальный, рядом с джогом): вверх — быстрее, вниз — медленнее. Как у винила, меняется и высота звука. Двойной клик — сброс в 0.
+- **Джог** (большой круг): на паузе — крутите мышкой, чтобы найти место; во время игры — чуть подтолкнуть вперёд или притормозить (если удары разъехались). Колёсико мыши тоже работает.
+- В центре джога: **темп**, сколько осталось до конца, а в петле — надпись LOOP.
+- **Волны сверху**: верхняя полоса — крупно (белая линия — где играет сейчас, светлые черточки — удары), нижняя тонкая — весь трек. Клик по волне — перейти туда.
+
+#### Пэды — 8 квадратиков под каждой декой, 3 режима
+
+Режим переключается тремя кнопками над пэдами.
+
+**ТОЧКИ / CUES — закладки в треке.**
+Цифры 1–8 на пэдах значат: ячейки **пустые**. Звуков в этом режиме нет — это закладки.
+1. Включите трек.
+2. В нужный момент (например, начался припев) нажмите пустой пэд — он загорится и покажет время, например `0:42.5`.
+3. Теперь нажатие на этот пэд — **прыжок** в это место.
+4. **Правый клик** по пэду — стереть закладку.
+Закладки видны цветными метками на волне и на кольце джога и сохраняются вместе со схемой.
+
+**ЗВУКИ / SAMPLES — звуки поверх музыки.**
+Нажали — звук сыграл (бочка, снейр, хлопок, хэт, открытый хэт, гудок, лазер, сирена). Эти 8 звуков встроены и не требуют файлов.
+**Свои звуки:**
+1. Поставьте ноду **Звук ×8 / Sound ×8** (меню NeronAudio).
+2. Загрузите в неё до 8 своих файлов (wav, mp3, flac, ogg…): бочки, вокальные фразы, «эй!», что угодно.
+3. Проведите провод с её выхода в **`pad_sounds`** пульта.
+4. Звук 1 встаёт на пэд 1, звук 2 — на пэд 2 и т. д. На пэдах видны названия файлов. Если звуков меньше 8 — на остальных пэдах остаются встроенные.
+- Один звук: обычный **Load Audio** → `pad_sounds` — он займёт пэд 1.
+- Сразу (без Queue) пэды подхватывают звуки от «Звук ×8», Load Audio и Neron Audio Loader. От других нод — после одного Queue.
+- Пэд берёт первые **30 секунд** звука (для коротких сэмплов — с запасом).
+- Пэды-звуки одни на обе деки: звук не зависит от того, под какой декой нажат.
+
+**ПЕТЛЯ / LOOP — повтор куска.**
+Пэды подписаны 1/4, 1/2, 1, 2, 4, 8, 16, 32 — это длина петли **в ударах**. Нажали — кусок с текущего места зациклился ровно по ударам (на волне подсвечен зелёным). Нажали тот же пэд ещё раз — выход из петли.
+Нужен найденный темп: если на деке «BPM ?», петля не включится.
+
+#### Микшер (середина)
+
+- **ФИЛЬТР** (две ручки сверху, A и B): влево — звук глуше (остаётся только низ), вправо — тоньше (только верх), посередине — выключен. Красиво уводить трек при переходе.
+- **Вертикальные ползунки A и B** — громкость деки, рядом — прыгающие индикаторы.
+- **ОБЩАЯ / MASTER** — общая громкость (и в записи тоже).
+- **Кроссфейдер**: влево — слышно A, вправо — B, посередине — обе. Двойной клик — в середину.
+
+Ручки: тянуть мышкой вверх/вниз или колёсиком, двойной клик — сброс.
+
+#### Запись сета и выход `audio`
+
+1. Нажмите **⏺ ЗАПИСЬ** — пишется **всё, что вы слышите** (обе деки, пэды, фильтры, кроссфейдер).
+2. Играйте. На кнопке идёт время записи.
+3. Нажмите **⏹ СТОП** — запись сохраняется в `output/Neron_DJ` (имя — из поля `save_name` + дата и время).
+4. Нажмите **Queue** — запись выходит на выход **`audio`** (дальше: Save Audio, Пульт, видео).
+
+Под кнопкой написано, что сейчас идёт на выход:
+- **запись …** — ваш записанный сет. **✖** — забыть её (файл в `output/Neron_DJ` останется).
+- **авто-переход** — если записи нет: трек A целиком, а в конце он плавно перетекает в трек B (длина перехода — в ⚙, по умолчанию 8 с). Сохраняется как `output/Neron_DJ/<save_name>_auto.wav`.
+
+Каждая новая запись — новый файл, старые не затираются.
+
+#### ⚙ ДЛЯ СПЕЦОВ
+
+- **ВХОД / GAIN** — громкость входа каждой деки (±12 дБ), чтобы тихий и громкий треки звучали ровно.
+- **ВЕРХ / СЕР / НИЗ** — эквалайзер каждой деки: влево — до нуля (например, убрать бас у одного трека, пока играет другой), вправо — до +6 дБ.
+- **Кривая кроссфейдера**: плавно (для сведения) или резко (для скретча).
+- **Диапазон темпа**: ±8 / 16 / 50 % (SYNC расширяет его сам, если надо).
+- **ПЭДЫ** — громкость звуков пэдов.
+- **АВТО, с** — длина авто-перехода A → B для выхода без записи (0–60 с).
+
+#### Темп (BPM)
+
+- Темп находится сам. Знак **≈** значит «найден по звуку». У Drum Machine и «Музыки» темп берётся точно из ноды.
+- На тестовых битах 87,5 … 128 BPM темп находился точно. Быстрые треки (например, 174) показываются половиной — 87; SYNC это учитывает.
+- На живых треках с плавающим ритмом автоматика может ошибиться — тогда SYNC и петли будут неточными, сводите на слух ползунком темпа и джогом.
+
+#### Если что-то не так
+
+| Что видно | Что сделать |
+|---|---|
+| «подключите трек к deck_a» | Нет провода к этой деке |
+| «в загрузчике не выбран файл» | Выберите файл в ноде загрузки |
+| «нажмите Queue один раз» | Источник необычный — нажмите Queue, трек подтянется |
+| «не загрузился: …» | Файл не читается — проверьте формат, попробуйте wav |
+| Пэды в режиме ТОЧКИ серые, с цифрами | Это нормально: закладок ещё нет. Нажмите пэд во время игры |
+| Петля не включается | Темп не найден («BPM ?») |
+| «Запись не сохранилась» | Слишком короткая (меньше 0,5 с) или нет места на диске |
+| Звука нет вообще | Проверьте кроссфейдер (не увели ли в другую сторону), громкость A/B и ОБЩАЯ |
+
+### 🇬🇧 English
+
+#### What to wire
+
+| Input | What to connect | Required? |
+|---|---|---|
+| `deck_a` | Track for the left deck: **Load Audio**, **Neron Audio Loader**, **Drum Machine**, **Music**, etc. | At least one deck |
+| `deck_b` | Track for the right deck — the same | At least one deck |
+| `pad_sounds` | **Your own pad sounds**: Sound ×8 (up to 8 sounds) or one Load Audio | No — without it 8 built-in sounds play |
+
+The track shows up on the deck **right away**: wave, length, tempo (BPM). For unusual sources (e.g. an AI music node) the deck says "press Queue once" — after one Queue the track loads.
+
+#### First 2 minutes
+
+1. Wire two tracks to `deck_a` and `deck_b`.
+2. Crossfader (horizontal slider, bottom center) — **all the way left**: only A is heard.
+3. Press **▶** on deck A.
+4. Press **SYNC** on deck B (B's tempo and beats match A), then **▶**.
+5. Slowly move the crossfader **right** — the music blends from A into B. That is mixing.
+
+#### Deck (left and right are the same)
+
+- **▶ / ❚❚** — play / pause.
+- **CUE** — start point. Paused: remembers the spot. Playing: jumps back to it and stops.
+- **SYNC** — matches this deck's tempo **and beats** to the other deck (the other deck must be playing for the beats to line up).
+- **Tempo slider** (vertical, by the jog): up — faster, down — slower; pitch changes too, like vinyl. Double-click — back to 0.
+- **Jog** (the big wheel): paused — spin it with the mouse to find a spot; playing — nudge forward or slow down if the beats drift. The mouse wheel works too.
+- Jog center: **tempo**, time left, LOOP when looping.
+- **Waves on top**: the big strip is a close-up (white line — playing now, light ticks — beats), the thin strip — the whole track. Click a wave to jump there.
+
+#### Pads — 8 squares under each deck, 3 modes
+
+**CUES — bookmarks in the track.** Numbers 1–8 mean the slots are **empty**; there are no sounds in this mode. Play the track, press an empty pad at the right moment — it lights up and shows the time (e.g. `0:42.5`). Pressing it again **jumps** there. **Right-click** clears it. Cues show as colored marks on the wave and the jog ring and are saved with the workflow.
+
+**SAMPLES — sounds over the music.** Kick, snare, clap, hat, open hat, horn, laser, siren — built in, no files needed.
+**Your own sounds:** add a **Sound ×8** node, load up to 8 files (wav, mp3, flac, ogg…), wire its output to **`pad_sounds`**. Sound 1 goes to pad 1, sound 2 to pad 2 and so on; pads show the file names; missing ones stay built-in. One **Load Audio** → `pad_sounds` fills pad 1. Sound ×8, Load Audio and Neron Audio Loader are picked up instantly; other nodes after one Queue. A pad uses the first **30 seconds** of a sound. Sample pads are shared by both decks.
+
+**LOOP — repeat a piece.** Pads read 1/4 … 32 — the loop length **in beats**. Press — the piece from the current spot loops exactly on the beat (green on the wave). Press the same pad again — exit. Needs a detected tempo ("BPM ?" means no loop).
+
+#### Mixer (center)
+
+- **FILTER** (A and B knobs): left — muffled (lows only), right — thin (highs only), middle — off.
+- **A and B vertical faders** — deck volume, with meters.
+- **MASTER** — overall volume (also in the recording).
+- **Crossfader**: left — A, right — B, middle — both. Double-click — center.
+
+Knobs: drag up/down or use the wheel, double-click resets.
+
+#### Recording a set and the `audio` output
+
+1. Press **⏺ REC** — **everything you hear** is recorded (both decks, pads, filters, crossfader).
+2. Play. The button shows the recording time.
+3. Press **⏹ STOP** — saved to `output/Neron_DJ` (name from `save_name` + date and time).
+4. Press **Queue** — the recording goes out on **`audio`**.
+
+The box under the button shows what goes out: **recording …** (✖ forgets it; the file stays) or **auto transition** — with no recording, track A in full blending into B at its end (length in ⚙, 8 s by default), saved as `output/Neron_DJ/<save_name>_auto.wav`. Every recording is a new file; old ones are never overwritten.
+
+#### ⚙ EXPERT
+
+- **GAIN** — per-deck input gain (±12 dB). **HI / MID / LOW** — per-deck EQ: left kills the band, right up to +6 dB.
+- **Crossfader curve**: smooth (mixing) or sharp (scratching). **Tempo range**: ±8 / 16 / 50 % (SYNC widens it if needed).
+- **PADS** — pad volume. **AUTO, s** — auto transition length (0–60 s).
+
+#### Tempo (BPM)
+
+Detected automatically; **≈** means "found by ear". Drum Machine and Music give their exact tempo. On test beats 87.5 … 128 BPM it was exact; fast tracks like 174 show as half (87), SYNC handles that. On live tracks with drifting rhythm it may be wrong — then mix by ear with the tempo slider and the jog.
+
+#### Troubleshooting
+
+| You see | Do this |
+|---|---|
+| "wire a track to deck_a" | No wire on that deck |
+| "no file chosen in the loader" | Pick a file in the loader node |
+| "press Queue once" | Unusual source — press Queue |
+| "failed to load: …" | The file can't be read — try wav |
+| CUES pads are grey with numbers | Normal: no cues yet. Press a pad while playing |
+| Loop does not start | Tempo not found ("BPM ?") |
+| "Recording not saved" | Too short (under 0.5 s) or no disk space |
+| No sound at all | Check the crossfader side, A/B volume and MASTER |
 
 ---
 
