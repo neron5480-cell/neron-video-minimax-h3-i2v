@@ -110,6 +110,11 @@ def build(image_path, env="outdoor", fov=60.0):
     with _lock:
         depth = _run_depth(img, env)
 
+    # Небо и самое дальнее — на одну «стену-задник»: иначе облака рвутся на дырки.
+    # Sky and the farthest parts go onto one backdrop wall, otherwise clouds tear into holes.
+    cap = float(np.clip(2.5 * np.median(depth), 15.0, 80.0))
+    depth = np.where(depth > 0.6 * cap, cap, depth)
+
     W, H = img.width, img.height
     gw = min(GRID_W, W)
     gh = max(2, round(gw * H / W))
@@ -147,6 +152,8 @@ def build(image_path, env="outdoor", fov=60.0):
 
     out = {
         "ok": True, "gw": int(gw), "gh": int(gh), "ground_ok": ground_ok, "env": env, "fov": fov,
+        "far": 0.4 * cap,                     # дальше этого — гладкий задник, без разрывов
+
         "photo_cam": {"pos": [float(v) for v in cam], "dir": [float(v) for v in look]},
         "pos": base64.b64encode(P.astype("<f4").tobytes()).decode("ascii"),
     }

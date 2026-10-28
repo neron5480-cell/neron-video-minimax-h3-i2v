@@ -940,7 +940,8 @@ async function setupStage(node) {
         const camP = new THREE.Vector3(...res.photo_cam.pos);
         const dist = (k) => Math.hypot(pos[k * 3] - camP.x, pos[k * 3 + 1] - camP.y, pos[k * 3 + 2] - camP.z);
         const idx = [];
-        const ok = (a, b) => { const da = dist(a), db = dist(b); return Math.max(da, db) / Math.max(0.01, Math.min(da, db)) < 1.12; };
+        const far = Number(res.far) || 1e9;   // дальний план (небо, лес вдали) не рвём — это задник
+        const ok = (a, b) => { const da = dist(a), db = dist(b); return Math.min(da, db) > far || Math.max(da, db) / Math.max(0.01, Math.min(da, db)) < 1.12; };
         for (let y = 0; y < gh - 1; y++) for (let x = 0; x < gw - 1; x++) {
             const a = y * gw + x, b = a + 1, c = a + gw, d = c + 1;
             if (ok(a, b) && ok(a, c) && ok(b, c)) idx.push(a, c, b);       // рвём «плёнку» на краях предметов
