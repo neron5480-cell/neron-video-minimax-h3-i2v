@@ -1,6 +1,20 @@
 # Changelog / История изменений
 
-## dev · Neron Theme 🎨 — темы для всего ComfyUI / themes for the whole ComfyUI (в работе, ветка dev / in progress, dev branch)
+## dev · Neron DJ Пульт / DJ Controller 🎧 (в работе, ветка dev / in progress, dev branch)
+
+**RU:**
+- Новая нода **Neron DJ Пульт** (меню NeronAudio): две деки с джогами и волнами, ▶ / CUE / SYNC, ползунки темпа, 8 пэдов на деку в трёх режимах (точки, звуки, петли), фильтр, громкость, кроссфейдер, индикаторы.
+- Треки — проводами `deck_a`, `deck_b`; свои звуки для пэдов — `pad_sounds` (Звук ×8). Без провода пэды играют 8 встроенных звуков (без файлов).
+- **⏺ ЗАПИСЬ** сета: по Queue запись идёт на выход `audio` и сохраняется в `output/Neron_DJ`. Без записи — авто-переход A → B.
+- Темп и удары находятся сами; SYNC подгоняет и темп, и удары.
+
+**EN:**
+- New **Neron DJ Controller** node (NeronAudio menu): two decks with jog wheels and waves, ▶ / CUE / SYNC, tempo sliders, 8 pads per deck in three modes (cues, samples, loops), filter, volume, crossfader, meters.
+- Tracks by wire `deck_a`, `deck_b`; your own pad sounds — `pad_sounds` (Sound ×8). Without it the pads play 8 built-in sounds (no files).
+- **⏺ REC** a set: on Queue it goes out on `audio` and is saved in `output/Neron_DJ`. No recording — an auto transition A → B.
+- Tempo and beats are detected automatically; SYNC matches both tempo and beats.
+
+## Neron Theme 🎨 v1.0 — темы для всего ComfyUI / themes for the whole ComfyUI (28.10.2026)
 
 **RU:**
 - Новая папка **NeronTheme**, нода **Neron Theme 🎨** (меню Neron). Пока нода на столе — весь ComfyUI в теме: окно, стол, ноды по 9 ролям, провода. Удалили — всё возвращается как было (проверено сравнением настроек до и после).
@@ -19,20 +33,6 @@
 - **Life:** frame lights, wire sparks, background (flow / particles / stars), workflow run highlights (running / done / error + progress), beat flashes from Neron Audio Studio sound, "quieter while generating", FPS limit.
 - Hand-set node colors and nodes with their own signature color are not repainted; the workflow itself is not changed.
 - **Node opacity**, **node backlight** (a glow under each node in its role color), **wire colors**: by type / one color / your own per type. New built-in theme **"Backlight"**.
-
-## dev · Neron DJ Пульт / DJ Controller 🎧 (в работе, ветка dev / in progress, dev branch)
-
-**RU:**
-- Новая нода **Neron DJ Пульт** (меню NeronAudio): две деки с джогами и волнами, ▶ / CUE / SYNC, ползунки темпа, 8 пэдов на деку в трёх режимах (точки, звуки, петли), фильтр, громкость, кроссфейдер, индикаторы.
-- Треки — проводами `deck_a`, `deck_b`; свои звуки для пэдов — `pad_sounds` (Звук ×8). Без провода пэды играют 8 встроенных звуков (без файлов).
-- **⏺ ЗАПИСЬ** сета: по Queue запись идёт на выход `audio` и сохраняется в `output/Neron_DJ`. Без записи — авто-переход A → B.
-- Темп и удары находятся сами; SYNC подгоняет и темп, и удары.
-
-**EN:**
-- New **Neron DJ Controller** node (NeronAudio menu): two decks with jog wheels and waves, ▶ / CUE / SYNC, tempo sliders, 8 pads per deck in three modes (cues, samples, loops), filter, volume, crossfader, meters.
-- Tracks by wire `deck_a`, `deck_b`; your own pad sounds — `pad_sounds` (Sound ×8). Without it the pads play 8 built-in sounds (no files).
-- **⏺ REC** a set: on Queue it goes out on `audio` and is saved in `output/Neron_DJ`. No recording — an auto transition A → B.
-- Tempo and beats are detected automatically; SYNC matches both tempo and beats.
 
 ## v2.0 — Neron Audio Studio 2 (25.10.2026)
 
