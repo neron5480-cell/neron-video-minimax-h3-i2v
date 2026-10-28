@@ -53,6 +53,9 @@ Delete the node — everything is back.
 **Для всех:**
 - **Главный цвет** — выберите цвет, и нода соберёт из него всю тему: фон, шапки, роли, провода. Рядом три вида раскладки цветов по ролям: **СОСЕДНИЕ** (соседние оттенки — спокойно), **РАДУГА** (вся радуга — ноды легко различать), **ОДИН ТОН**. Галочка **светлая** — светлый фон и тёмный текст.
 - **🖼 Из картинки** — подключите **Load Image** к входу `image` и нажмите кнопку: тема соберётся из цветов картинки (постер, кадр из фильма, ваша генерация). С Load Image работает сразу; с любой другой нодой-картинкой — после одного Queue.
+  - В ноде появится превью картинки. **Тяните рамку** по нужному месту (например, только по неоновой вывеске) — тема возьмёт цвета только с этого участка. **Двойной клик** по превью — снова вся картинка.
+  - Под превью — **полоска найденных цветов**. Клик по цвету — он станет главным цветом темы (ещё раз — отменить).
+  - Рамка и выбранный цвет сохраняются вместе со схемой; подключили другую картинку — они сбрасываются.
 - **Название** и **Автор** — ваш ник будет виден всем, с кем вы поделитесь темой.
 - **Живость:** ВЫКЛ · СПОКОЙНО · ЖИВО · НА ПОЛНУЮ.
 - **💾 Сохранить в Мои** — тема появится на вкладке УСТАНОВИТЬ.
@@ -138,6 +141,9 @@ The workflow itself is not changed: role colors are not written into nodes, so w
 **For everyone:**
 - **Main color** — pick a color and the node builds the whole theme from it. Three ways to spread colors over roles: **HARMONY** (neighbouring shades), **RAINBOW** (the whole rainbow — nodes are easy to tell apart), **MONO**. **light** — a light background with dark text.
 - **🖼 From picture** — wire **Load Image** to the `image` input and press the button: the theme is built from the picture's colors. Works instantly with Load Image; with any other image node — after one Queue.
+  - A preview of the picture appears in the node. **Drag a frame** over the spot you want (e.g. just a neon sign) — the theme takes colors only from that area. **Double-click** the preview — the whole picture again.
+  - Under the preview there is a **strip of found colors**. Click a color — it becomes the main theme color (click again to undo).
+  - The frame and the chosen color are saved with the workflow; a different picture resets them.
 - **Name** and **Author** — your nickname is visible to everyone you share the theme with.
 - **Life:** OFF · CALM · LIVELY · FULL.
 - **💾 Save to Mine** — the theme shows up under INSTALL.

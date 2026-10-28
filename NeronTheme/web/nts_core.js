@@ -211,14 +211,19 @@ export function generateFromColor(main, opts = {}) {
 //  Тема из картинки / A theme from a picture
 //  img — HTMLImageElement / ImageBitmap / canvas. Возвращает тему.
 // ---------------------------------------------------------------------------
-export function paletteFromImage(img, k = 8) {
+export function paletteFromImage(img, k = 8, sel = null) {
     const W = 64;
-    const ratio = (img.height || img.naturalHeight || 1) / (img.width || img.naturalWidth || 1);
-    const w = W, h = Math.max(8, Math.round(W * ratio));
+    const iw = img.naturalWidth || img.width || 1, ih = img.naturalHeight || img.height || 1;
+    // участок картинки (рамка): доли 0..1; без рамки — вся картинка
+    const r = sel && sel.w > 0.005 && sel.h > 0.005 ? sel : { x: 0, y: 0, w: 1, h: 1 };
+    const sx = clamp(r.x, 0, 1) * iw, sy = clamp(r.y, 0, 1) * ih;
+    const sw = Math.max(1, Math.min(iw - sx, r.w * iw)), sh = Math.max(1, Math.min(ih - sy, r.h * ih));
+    const ratio = sh / sw;
+    const w = W, h = clamp(Math.round(W * ratio), 8, 256);
     const cv = document.createElement("canvas");
     cv.width = w; cv.height = h;
     const g = cv.getContext("2d", { willReadFrequently: true });
-    g.drawImage(img, 0, 0, w, h);
+    g.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
     const d = g.getImageData(0, 0, w, h).data;
     const px = [];
     for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 128) px.push([d[i], d[i + 1], d[i + 2]]);
@@ -253,7 +258,12 @@ export function themeFromPalette(pal, opts = {}) {
     if (!pal || !pal.length) return generateFromColor("#b388ff", opts);
     // главный цвет — самый «яркий и заметный»: насыщенность × доля, без почти чёрных и белых
     const vivid = pal.filter((p) => p.l > 0.18 && p.l < 0.85);
-    const pick = (vivid.length ? vivid : pal).slice().sort((a, b) => (b.s * Math.sqrt(b.share)) - (a.s * Math.sqrt(a.share)))[0];
+    // opts.main — цвет, который пользователь сам выбрал главным (клик по полоске цветов)
+    let pick = (vivid.length ? vivid : pal).slice().sort((a, b) => (b.s * Math.sqrt(b.share)) - (a.s * Math.sqrt(a.share)))[0];
+    if (opts.main && hexOk(opts.main)) {
+        const [h, s, l] = toHsl(opts.main);
+        pick = { hex: opts.main, h, s: Math.max(s, 0.35), l, share: 1 };
+    }
     const t = generateFromColor(pick.hex, opts);
     // фон — из самого тёмного заметного цвета картинки
     const dark = pal.filter((p) => p.share > 0.03).sort((a, b) => a.l - b.l)[0];

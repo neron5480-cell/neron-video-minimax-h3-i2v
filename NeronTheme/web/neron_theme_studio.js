@@ -86,6 +86,11 @@ function injectStyles() {
 .nts-status.err{color:#ff8f93}
 .nts-drop{outline:2px dashed var(--nts-acc0);outline-offset:-4px}
 .nts-hint{font-size:10px;color:var(--nts-muted,#8b90a0);line-height:1.45}
+.nts-pic{display:none;flex-direction:column;gap:6px;background:var(--nts-card,#22252b);border-radius:8px;padding:7px}
+.nts-pic canvas{display:block;max-width:100%;border-radius:5px;cursor:crosshair;touch-action:none;align-self:flex-start}
+.nts-sw{display:flex;gap:5px;flex-wrap:wrap}
+.nts-sw button{width:26px;height:22px;border-radius:5px;border:2px solid transparent;cursor:pointer;padding:0}
+.nts-sw button.on{border-color:var(--nts-text,#fff);box-shadow:0 0 0 1px #000 inset}
 `;
     document.head.appendChild(s);
 }
@@ -295,9 +300,12 @@ function setupNode(node) {
         S.theme = o.theme && typeof o.theme === "object" ? normalizeTheme(o.theme) : null;
         S.tab = o.tab === "create" ? "create" : "install";
         S.lastImg = o.lastImg || null;
+        S.sel = o.sel && typeof o.sel === "object" ? o.sel : null;
+        S.pick = typeof o.pick === "string" ? o.pick : null;
+        S.picKey = typeof o.picKey === "string" ? o.picKey : null;
     }
     function save() {
-        if (stW) stW.value = JSON.stringify({ v: 1, theme: S.theme, tab: S.tab, lastImg: S.lastImg || null });
+        if (stW) stW.value = JSON.stringify({ v: 1, theme: S.theme, tab: S.tab, lastImg: S.lastImg || null, sel: S.sel || null, pick: S.pick || null, picKey: S.picKey || null });
         pollGraph();
     }
     load();
@@ -334,7 +342,7 @@ function setupNode(node) {
         "<b>RU:</b> Пока эта нода на столе — <b>весь ComfyUI в теме</b>: окно, стол, ноды и провода. Удалите ноду — всё как было. "
         + "Тема сохраняется вместе с workflow: кто скачает вашу схему, увидит её в вашем оформлении. Цвет, который вы задали ноде вручную (правый клик → Colors), всегда главнее темы.<br>"
         + "<b>УСТАНОВИТЬ</b> — наведите на карточку, чтобы примерить, кликните, чтобы поставить. «Мои» — ваши сохранённые темы. Чужую тему ставят кодом (поле внизу вкладки) или файлом — просто бросьте файл .json на эту ноду.<br>"
-        + "<b>СОЗДАТЬ</b> — выберите главный цвет, и нода соберёт тему сама. Или <b>🖼 Из картинки</b>: подключите Load Image ко входу <b>image</b>. "
+        + "<b>СОЗДАТЬ</b> — выберите главный цвет, и нода соберёт тему сама. Или <b>🖼 Из картинки</b>: подключите Load Image ко входу <b>image</b>; тяните рамку по превью, чтобы взять цвета с одного места, клик по цвету в полоске — сделать его главным. "
         + "<b>Живость</b>: огоньки по рамкам нод, искры по проводам, фон; нода, которая сейчас считается, светится, готовая — вспыхивает, ошибка — мигает красным. "
         + "<b>⚙ ДЛЯ СПЕЦОВ</b> — каждый цвет и каждая роль вручную. <b>💾 Сохранить в Мои</b> — тема появится на вкладке УСТАНОВИТЬ.<br>"
         + "<b>ПОДЕЛИТЬСЯ</b> — то, что стоит сейчас: <b>📋 Код</b> (строчка для чата), <b>💾 Файл</b>, <b>🎨 Для ComfyUI</b> (палитра для Настройки → Appearance → Color Palette, без нашей ноды, но без живости и ролей).<br>"
@@ -342,7 +350,7 @@ function setupNode(node) {
         + "<b>EN:</b> While this node is on the canvas the <b>whole ComfyUI is themed</b>: window, canvas, nodes and wires. Delete the node — everything is back. "
         + "The theme is saved with the workflow. A color you set on a node by hand (right-click → Colors) always wins over the theme.<br>"
         + "<b>INSTALL</b> — hover a card to try it on, click to apply. \"Mine\" — your saved themes. Someone else's theme: paste its code or drop its .json file on this node.<br>"
-        + "<b>CREATE</b> — pick a main color and the node builds the theme. Or <b>🖼 From picture</b>: wire Load Image to the <b>image</b> input. "
+        + "<b>CREATE</b> — pick a main color and the node builds the theme. Or <b>🖼 From picture</b>: wire Load Image to the <b>image</b> input; drag a frame on the preview to take colors from one spot, click a color in the strip to make it the main one. "
         + "<b>Life</b>: lights on node frames, sparks on wires, background; the running node glows, a finished one flashes, an error blinks red. "
         + "<b>⚙ EXPERT</b> — every color and role by hand. <b>💾 Save to Mine</b> — it shows up under INSTALL.<br>"
         + "<b>SHARE</b> — whatever is on now: <b>📋 Code</b>, <b>💾 File</b>, <b>🎨 For ComfyUI</b> (a palette for Settings → Appearance → Color Palette; works without our node, but without life and roles).<br>"
@@ -505,7 +513,72 @@ function setupNode(node) {
     const imgInfo = el("span", "nts-hint");
     r2.appendChild(imgBtn); r2.appendChild(imgInfo);
     paneC.appendChild(r2);
-    imgBtn.addEventListener("click", themeFromWiredImage);
+    imgBtn.addEventListener("click", () => themeFromWiredImage());
+
+    // превью картинки: тянуть рамку — цвета только с этого участка; двойной клик — вся картинка
+    const pic = el("div", "nts-pic");
+    const picCv = el("canvas");
+    const picHint = el("div", "nts-hint", T("Тяните рамку по картинке — тема возьмёт цвета только с этого места. Двойной клик — вся картинка. Клик по цвету ниже — он станет главным.",
+        "Drag a frame on the picture — the theme takes colors only from there. Double-click — the whole picture. Click a color below — it becomes the main one."));
+    const sw = el("div", "nts-sw");
+    pic.appendChild(picCv); pic.appendChild(sw); pic.appendChild(picHint);
+    paneC.insertBefore(pic, r2.nextSibling);
+    let picImg = null, picPal = [], drag = null;
+    function drawPic(live) {
+        if (!picImg) return;
+        const maxW = Math.max(160, Math.min(420, (root.clientWidth || 500) - 40)), maxH = 190;
+        const iw = picImg.naturalWidth || picImg.width, ih = picImg.naturalHeight || picImg.height;
+        const k = Math.min(maxW / iw, maxH / ih);
+        const w = Math.max(40, Math.round(iw * k)), h = Math.max(30, Math.round(ih * k));
+        if (picCv.width !== w || picCv.height !== h) { picCv.width = w; picCv.height = h; picCv.style.width = w + "px"; picCv.style.height = h + "px"; }
+        const g = picCv.getContext("2d");
+        g.drawImage(picImg, 0, 0, w, h);
+        const s = live || S.sel;
+        if (s && s.w > 0.005 && s.h > 0.005) {
+            const x = s.x * w, y = s.y * h, rw = s.w * w, rh = s.h * h;
+            g.fillStyle = "rgba(0,0,0,.55)";
+            g.fillRect(0, 0, w, y); g.fillRect(0, y + rh, w, h - y - rh); g.fillRect(0, y, x, rh); g.fillRect(x + rw, y, w - x - rw, rh);
+            g.strokeStyle = "#fff"; g.lineWidth = 2; g.setLineDash([5, 3]);
+            g.strokeRect(x + 1, y + 1, rw - 2, rh - 2); g.setLineDash([]);
+        }
+    }
+    function paintSwatches() {
+        sw.innerHTML = "";
+        for (const p of picPal.slice(0, 8)) {
+            const b = el("button");
+            b.style.background = p.hex;
+            b.title = T(`Сделать главным цветом: ${p.hex} (${Math.round(p.share * 100)}% участка)`, `Make it the main color: ${p.hex} (${Math.round(p.share * 100)}% of the area)`);
+            b.classList.toggle("on", S.pick === p.hex);
+            b.addEventListener("click", () => { S.pick = S.pick === p.hex ? null : p.hex; rebuildFromPicture(); });
+            sw.appendChild(b);
+        }
+    }
+    const relPos = (e) => {
+        const r = picCv.getBoundingClientRect();
+        return [clamp((e.clientX - r.left) / r.width, 0, 1), clamp((e.clientY - r.top) / r.height, 0, 1)];
+    };
+    picCv.addEventListener("pointerdown", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        picCv.setPointerCapture(e.pointerId);
+        const [x, y] = relPos(e);
+        drag = { x0: x, y0: y, sel: null };
+    });
+    picCv.addEventListener("pointermove", (e) => {
+        if (!drag) return;
+        const [x, y] = relPos(e);
+        drag.sel = { x: Math.min(drag.x0, x), y: Math.min(drag.y0, y), w: Math.abs(x - drag.x0), h: Math.abs(y - drag.y0) };
+        drawPic(drag.sel);
+    });
+    const endDrag = () => {
+        if (!drag) return;
+        const s = drag.sel;
+        drag = null;
+        if (s && s.w > 0.02 && s.h > 0.02) { S.sel = s; S.pick = null; rebuildFromPicture(); }
+        else drawPic();
+    };
+    picCv.addEventListener("pointerup", endDrag);
+    picCv.addEventListener("pointercancel", endDrag);
+    picCv.addEventListener("dblclick", (e) => { e.stopPropagation(); S.sel = null; S.pick = null; rebuildFromPicture(); });
 
     const r3 = el("div", "nts-row");
     r3.appendChild(el("span", "nts-lbl", T("НАЗВАНИЕ", "NAME")));
@@ -636,6 +709,19 @@ function setupNode(node) {
     r5.appendChild(el("span", "nts-hint", T("Всё, что вы меняете, сразу видно на столе.", "Everything you change shows on the canvas right away.")));
     paneC.appendChild(r5);
 
+    function rebuildFromPicture() {
+        if (!picImg) return;
+        picPal = paletteFromImage(picImg, 8, S.sel);
+        const t = themeFromPalette(picPal, { light: !!node.properties.nts_light, level: S.theme ? S.theme.life.level : 1, main: S.pick });
+        t.name = T("Из картинки", "From picture");
+        if (S.theme) { t.life = { ...S.theme.life }; t.ui = S.theme.ui; }
+        t.author = myAuthor();
+        setTheme(t);
+        pic.style.display = "flex";
+        drawPic(); paintSwatches(); relayout();
+        status(S.sel ? T("Тема из выбранного участка. Понравилась — 💾 Сохранить в Мои", "Theme from the selected area. Like it — 💾 Save to Mine")
+            : T("Тема собрана из картинки. Тяните рамку, чтобы взять цвета с одного места", "Theme built from the picture. Drag a frame to take colors from one spot"));
+    }
     async function themeFromWiredImage() {
         const o = upstreamImage(node);
         let url = null;
@@ -645,12 +731,11 @@ function setupNode(node) {
         if (!url) return status(T("Это не Load Image — нажмите Queue один раз, и картинка подтянется", "This is not Load Image — press Queue once and the picture will load"), true);
         try {
             const im = await loadImg(url);
-            const pal = paletteFromImage(im);
-            const t = themeFromPalette(pal, { light: !!node.properties.nts_light, level: S.theme ? S.theme.life.level : 1 });
-            t.name = T("Из картинки", "From picture");
-            if (S.theme) { t.life = { ...S.theme.life }; t.ui = S.theme.ui; }
-            t.author = myAuthor();
-            setTheme(t, T("Тема собрана из картинки. Понравилась — 💾 Сохранить в Мои", "Theme built from the picture. Like it — 💾 Save to Mine"));
+            // другая картинка — рамка и выбранный цвет сбрасываются; та же — остаются (и после перезапуска)
+            const key = url.replace(/[?&]t=\d+/, "");
+            if (S.picKey !== key) { S.sel = null; S.pick = null; S.picKey = key; }
+            picImg = im;
+            rebuildFromPicture();
             paintCreate();
         } catch (e) { status(T("Не получилось: ", "Failed: ") + (e.message || e), true); }
     }
