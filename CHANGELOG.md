@@ -9,6 +9,7 @@
 - **ПОДЕЛИТЬСЯ:** код `NERON-THEME1:…`, файл темы, палитра для Настройки → Appearance → Color Palette.
 - **Живость:** огни по рамкам, искры по проводам, фон (переливы / частицы / звёзды), подсветка работы схемы (идёт / готово / ошибка + прогресс), вспышки в такт звуку Neron Audio Studio, «тише во время генерации», ограничение кадров.
 - Ручной цвет ноды и ноды с фирменным цветом не перекрашиваются; сам workflow тема не меняет.
+- **Прозрачность нод**, **подсветка нод** (свечение из-под ноды цветом роли), **цвет проводов**: по типу / один цвет / свой цвет каждого типа. Новая встроенная тема **«Подсветка»**.
 
 **EN:**
 - New **NeronTheme** folder, **Neron Theme 🎨** node (Neron menu). While it is on the canvas the whole ComfyUI is themed: window, canvas, nodes by 9 roles, wires. Remove it and everything is restored (checked by comparing settings before and after).
@@ -17,6 +18,7 @@
 - **SHARE:** a `NERON-THEME1:…` code, a theme file, a palette for Settings → Appearance → Color Palette.
 - **Life:** frame lights, wire sparks, background (flow / particles / stars), workflow run highlights (running / done / error + progress), beat flashes from Neron Audio Studio sound, "quieter while generating", FPS limit.
 - Hand-set node colors and nodes with their own signature color are not repainted; the workflow itself is not changed.
+- **Node opacity**, **node backlight** (a glow under each node in its role color), **wire colors**: by type / one color / your own per type. New built-in theme **"Backlight"**.
 
 ## dev · Neron DJ Пульт / DJ Controller 🎧 (в работе, ветка dev / in progress, dev branch)
 

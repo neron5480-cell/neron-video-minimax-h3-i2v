@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { mix, rgba, clamp, toComfyPalette, comfyBase, uiTokens, gridImage, slotColor, SLOT_BASE, isLight, roleOf, hex2rgb } from "./nts_core.js";
+import { mix, rgba, clamp, toComfyPalette, comfyBase, uiTokens, gridImage, wireColor, SLOT_BASE, isLight, roleOf, hex2rgb } from "./nts_core.js";
 
 // ============================================================================
 //  Neron Theme — движок / engine
@@ -18,7 +18,7 @@ const LG_KEYS = [
     "NODE_TITLE_COLOR", "NODE_SELECTED_TITLE_COLOR", "NODE_TEXT_COLOR", "NODE_TEXT_HIGHLIGHT_COLOR", "NODE_DEFAULT_COLOR",
     "NODE_DEFAULT_BGCOLOR", "NODE_DEFAULT_BOXCOLOR", "NODE_BOX_OUTLINE_COLOR", "DEFAULT_SHADOW_COLOR", "WIDGET_BGCOLOR",
     "WIDGET_OUTLINE_COLOR", "WIDGET_TEXT_COLOR", "WIDGET_SECONDARY_TEXT_COLOR", "WIDGET_DISABLED_TEXT_COLOR", "LINK_COLOR",
-    "CONNECTING_LINK_COLOR", "BADGE_FG_COLOR", "BADGE_BG_COLOR",
+    "CONNECTING_LINK_COLOR", "BADGE_FG_COLOR", "BADGE_BG_COLOR", "nodeOpacity",
 ];
 const CANVAS_KEYS = ["node_title_color", "default_link_color", "clear_background_color", "background_image"];
 
@@ -87,15 +87,19 @@ function applyTheme(t) {
     const pal = toComfyPalette(t).colors.litegraph_base;
     const ours = { lg: {}, canvas: {}, links: {}, byType: {} };
     for (const k of LG_KEYS) if (pal[k] !== undefined) { lg[k] = pal[k]; ours.lg[k] = pal[k]; }
+    // полупрозрачные ноды: тело ноды (как настройка ComfyUI «Node opacity») и чуть-чуть поля
+    lg.nodeOpacity = t.opacity; ours.lg.nodeOpacity = t.opacity;
+    if (t.opacity < 1) { const wb = rgba(t.c.widget, Math.max(0.55, t.opacity)); lg.WIDGET_BGCOLOR = wb; ours.lg.WIDGET_BGCOLOR = wb; }
     const cvVals = { node_title_color: pal.NODE_TITLE_COLOR, default_link_color: t.c.link };
     if (!E.bk.userBg) { cvVals.clear_background_color = t.c.bg; cvVals.background_image = gridImage(t); }
     for (const [k, v] of Object.entries(cvVals)) { cv[k] = v; ours.canvas[k] = v; }
     cv._pattern = undefined;
-    // провода: у каждого типа свой цвет, но в гамме темы
+    // провода: по типу (в гамме темы), один цвет или свои цвета по типам
     for (const type of linkTypes()) {
-        const base = E.bk.links[type] || SLOT_BASE[type];
-        if (!base || !/^#[0-9a-f]{3,6}$/i.test(base)) continue;
-        const col = slotColor(t, base.length === 4 ? "#" + base.slice(1).split("").map((x) => x + x).join("") : base);
+        let base = E.bk.links[type] || SLOT_BASE[type];
+        if (base && /^#[0-9a-f]{3}$/i.test(base)) base = "#" + base.slice(1).split("").map((x) => x + x).join("");
+        if ((!base || !/^#[0-9a-f]{6}$/i.test(base)) && t.wires.mode === "type") continue;
+        const col = wireColor(t, type, base);
         if (L && L.link_type_colors) { L.link_type_colors[type] = col; ours.links[type] = col; }
         if (cv.default_connection_color_byType) { cv.default_connection_color_byType[type] = col; ours.byType[type] = col; }
     }
@@ -475,6 +479,29 @@ function drawBgFx(ctx, t, area) {
     ctx.restore();
 }
 
+// подсветка: мягкое свечение из-под каждой ноды цветом её роли (рисуется под нодами)
+function drawHalo(ctx, g, t, area) {
+    const nodes = (g && g._nodes) || [];
+    const vis = nodes.filter((n) => visible(nodeBox(n), [area[0] - 60, area[1] - 60, area[2] + 120, area[3] + 120]));
+    const cheap = vis.length > 200;
+    const sc = app.canvas.ds ? app.canvas.ds.scale : 1;
+    const beat = t.life.level > 0 && t.life.beat ? E.fx.flash : 0;
+    const k = t.halo * (1 + beat * 0.8);
+    ctx.save();
+    for (const n of vis) {
+        if (n.mode === 2 || n.mode === 4) continue;         // выключенные и пропущенные ноды не светятся
+        const col = t.roles[roleOfNode(n)] || t.c.accent;
+        const [x, y, w, h] = nodeBox(n);
+        ctx.strokeStyle = rgba(col, Math.min(1, 0.35 + 0.6 * k));
+        ctx.lineWidth = 3 + 5 * k;
+        if (!cheap) { ctx.shadowColor = col; ctx.shadowBlur = (12 + 38 * k) * Math.max(0.4, Math.min(1.6, sc)); }
+        roundRect(ctx, x + 2, y + 2, w - 4, h - 4, 10);
+        ctx.stroke();
+        if (!cheap) { ctx.stroke(); }                        // второй проход — свечение плотнее
+    }
+    ctx.restore();
+}
+
 function hookCanvas() {
     const cv = app.canvas;
     if (!cv || cv.__ntsHooked) return;
@@ -509,6 +536,7 @@ function hookCanvas() {
         const t = E.applied;
         try {
             if (t && t.life.level > 0 && t.life.bgfx !== "none" && area && !(t.life.quietRun && E.run.id)) drawBgFx(ctx, t, area);
+            if (t && t.halo > 0 && area) drawHalo(ctx, this.graph || app.graph, t, area);
         } catch (e) { /* ок */ }
         return r;
     };

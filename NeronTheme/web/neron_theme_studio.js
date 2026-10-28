@@ -2,7 +2,7 @@ import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 import {
     T, clamp, mix, ROLES, ROLE_IDS, C_KEYS, LIFE_LEVELS, BGFX, BUILTIN, normalizeTheme, generateFromColor, paletteFromImage,
-    themeFromPalette, fixReadable, encodeCode, decodeAny, themeFile, toComfyPalette, isLight, hexOk,
+    themeFromPalette, fixReadable, encodeCode, decodeAny, themeFile, toComfyPalette, isLight, hexOk, WIRE_TYPES, WIRE_MODES, wireColor,
 } from "./nts_core.js";
 import { registerType, setCurrent, setPreview, getApplied, engineState, themeVarsForNode } from "./nts_engine.js";
 
@@ -343,6 +343,7 @@ function setupNode(node) {
         + "Тема сохраняется вместе с workflow: кто скачает вашу схему, увидит её в вашем оформлении. Цвет, который вы задали ноде вручную (правый клик → Colors), всегда главнее темы.<br>"
         + "<b>УСТАНОВИТЬ</b> — наведите на карточку, чтобы примерить, кликните, чтобы поставить. «Мои» — ваши сохранённые темы. Чужую тему ставят кодом (поле внизу вкладки) или файлом — просто бросьте файл .json на эту ноду.<br>"
         + "<b>СОЗДАТЬ</b> — выберите главный цвет, и нода соберёт тему сама. Или <b>🖼 Из картинки</b>: подключите Load Image ко входу <b>image</b>; тяните рамку по превью, чтобы взять цвета с одного места, клик по цвету в полоске — сделать его главным. "
+        + "<b>Прозрачность нод</b> — сквозь ноды видно сетку и провода. <b>Подсветка нод</b> — свечение из-под каждой ноды её цветом. <b>Провода</b>: по типу, одним цветом или свои цвета по типам (в ⚙). "
         + "<b>Живость</b>: огоньки по рамкам нод, искры по проводам, фон; нода, которая сейчас считается, светится, готовая — вспыхивает, ошибка — мигает красным. "
         + "<b>⚙ ДЛЯ СПЕЦОВ</b> — каждый цвет и каждая роль вручную. <b>💾 Сохранить в Мои</b> — тема появится на вкладке УСТАНОВИТЬ.<br>"
         + "<b>ПОДЕЛИТЬСЯ</b> — то, что стоит сейчас: <b>📋 Код</b> (строчка для чата), <b>💾 Файл</b>, <b>🎨 Для ComfyUI</b> (палитра для Настройки → Appearance → Color Palette, без нашей ноды, но без живости и ролей).<br>"
@@ -351,6 +352,7 @@ function setupNode(node) {
         + "The theme is saved with the workflow. A color you set on a node by hand (right-click → Colors) always wins over the theme.<br>"
         + "<b>INSTALL</b> — hover a card to try it on, click to apply. \"Mine\" — your saved themes. Someone else's theme: paste its code or drop its .json file on this node.<br>"
         + "<b>CREATE</b> — pick a main color and the node builds the theme. Or <b>🖼 From picture</b>: wire Load Image to the <b>image</b> input; drag a frame on the preview to take colors from one spot, click a color in the strip to make it the main one. "
+        + "<b>Node opacity</b> — see the grid and wires through nodes. <b>Node backlight</b> — a glow under each node in its color. <b>Wires</b>: by type, one color, or your own per type (in ⚙). "
         + "<b>Life</b>: lights on node frames, sparks on wires, background; the running node glows, a finished one flashes, an error blinks red. "
         + "<b>⚙ EXPERT</b> — every color and role by hand. <b>💾 Save to Mine</b> — it shows up under INSTALL.<br>"
         + "<b>SHARE</b> — whatever is on now: <b>📋 Code</b>, <b>💾 File</b>, <b>🎨 For ComfyUI</b> (a palette for Settings → Appearance → Color Palette; works without our node, but without life and roles).<br>"
@@ -615,6 +617,53 @@ function setupNode(node) {
     r4.appendChild(lifeSeg);
     paneC.appendChild(r4);
 
+    const sliders = {};
+    function slider(label, tip, key, min, max, step, fmt, parent) {
+        const row = el("div", "nts-row");
+        row.title = tip;
+        row.appendChild(el("span", "nts-lbl", label));
+        const r = el("input", "nts-range"); r.type = "range"; r.min = min; r.max = max; r.step = step;
+        const v = el("span", "nts-lbl");
+        r.addEventListener("input", () => { if (!S.theme) return; setPath(S.theme, key, Number(r.value)); v.textContent = fmt(Number(r.value)); saveSoon(); });
+        row.appendChild(r); row.appendChild(v);
+        (parent || xp).appendChild(row);
+        r.addEventListener("pointerdown", (e) => e.stopPropagation());
+        sliders[key] = { r, v, fmt };
+    }
+    const getPath = (o, p) => p.split(".").reduce((a, k) => (a ? a[k] : undefined), o);
+    const setPath = (o, p, val) => { const ks = p.split("."); const last = ks.pop(); ks.reduce((a, k) => a[k], o)[last] = val; };
+    const pct = (v) => Math.round(v * 100) + "%";
+
+    // прозрачность нод, подсветка, провода — для всех (без ⚙)
+    const look = el("div", "nts-pane");
+    look.style.gap = "4px";
+    paneC.appendChild(look);
+    slider(T("ПРОЗРАЧНОСТЬ НОД", "NODE OPACITY"), T("Тело нод становится полупрозрачным — сквозь него видно сетку и провода. 100% — обычные ноды",
+        "Node bodies become see-through — the grid and wires show through. 100% — normal nodes"), "opacity", 0.2, 1, 0.01, (v) => (v >= 0.995 ? T("нет", "off") : Math.round(v * 100) + "%"), look);
+    slider(T("ПОДСВЕТКА НОД", "NODE BACKLIGHT"), T("Мягкое свечение из-под каждой ноды цветом её роли (без анимации)", "A soft glow under each node in its role color (no animation)"),
+        "halo", 0, 1, 0.01, (v) => (v <= 0.005 ? T("нет", "off") : Math.round(v * 100) + "%"), look);
+    const wRow = el("div", "nts-row");
+    wRow.appendChild(el("span", "nts-lbl", T("ПРОВОДА", "WIRES")));
+    const wSeg = el("div", "nts-seg");
+    const wBtns = {};
+    for (const [id, ru, en, tip] of WIRE_MODES) {
+        const b = el("button", "", T(ru, en)); b.title = tip;
+        b.addEventListener("click", () => {
+            if (!S.theme) return;
+            S.theme.wires.mode = id;
+            if (id === "custom") { node.properties.nts_expert = true; paintExpert(); }
+            save(); paintCreate();
+        });
+        wSeg.appendChild(b); wBtns[id] = b;
+    }
+    wRow.appendChild(wSeg);
+    const wOne = el("input", "nts-color");
+    wOne.type = "color";
+    wOne.title = T("Цвет всех проводов", "The color of all wires");
+    wOne.addEventListener("input", () => { if (!S.theme) return; S.theme.c.link = wOne.value; saveSoon(); });
+    wRow.appendChild(wOne);
+    look.appendChild(wRow);
+
     // ---------- для спецов ----------
     const xp = el("div", "nts-xp");
     paneC.appendChild(xp);
@@ -638,22 +687,14 @@ function setupNode(node) {
     const gridR = el("div", "nts-grid");
     xp.appendChild(gridR);
     for (const r of ROLES) colorIns["r." + r.id] = colorCell(gridR, T(r.ru, r.en), r.tip, () => S.theme.roles[r.id], (v) => { S.theme.roles[r.id] = v; });
-
-    const sliders = {};
-    function slider(label, tip, key, min, max, step, fmt) {
-        const row = el("div", "nts-row");
-        row.title = tip;
-        row.appendChild(el("span", "nts-lbl", label));
-        const r = el("input", "nts-range"); r.type = "range"; r.min = min; r.max = max; r.step = step;
-        const v = el("span", "nts-lbl");
-        r.addEventListener("input", () => { if (!S.theme) return; setPath(S.theme, key, Number(r.value)); v.textContent = fmt(Number(r.value)); saveSoon(); });
-        row.appendChild(r); row.appendChild(v);
-        xp.appendChild(row);
-        sliders[key] = { r, v, fmt };
+    xp.appendChild(el("div", "nts-sec", T("ЦВЕТ ПРОВОДОВ ПО ТИПАМ (РЕЖИМ «СВОИ»)", "WIRE COLOR BY TYPE (\"CUSTOM\" MODE)")));
+    const gridW = el("div", "nts-grid");
+    xp.appendChild(gridW);
+    for (const type of WIRE_TYPES) {
+        colorIns["w." + type] = colorCell(gridW, type, T(`Цвет проводов ${type}. Меняете — провода переходят в режим «Свои»`, `${type} wire color. Changing it switches wires to "Custom"`),
+            () => wireColor(S.theme, type), (v) => { S.theme.wires.custom[type] = v; if (S.theme.wires.mode !== "custom") { S.theme.wires.mode = "custom"; paintWires(); } });
     }
-    const getPath = (o, p) => p.split(".").reduce((a, k) => (a ? a[k] : undefined), o);
-    const setPath = (o, p, val) => { const ks = p.split("."); const last = ks.pop(); ks.reduce((a, k) => a[k], o)[last] = val; };
-    const pct = (v) => Math.round(v * 100) + "%";
+
     xp.appendChild(el("div", "nts-sec", T("СИЛА ЦВЕТА И СВЕЧЕНИЕ", "COLOR STRENGTH AND GLOW")));
     slider(T("ЦВЕТ РОЛИ В ШАПКЕ", "ROLE IN TITLE"), T("Насколько шапка ноды окрашена цветом её роли", "How much the node title takes its role color"), "tint", 0, 1, 0.01, pct);
     slider(T("ЦВЕТ РОЛИ В ТЕЛЕ", "ROLE IN BODY"), T("Насколько тело ноды окрашено цветом роли", "How much the node body takes its role color"), "btint", 0, 0.6, 0.01, pct);
@@ -849,6 +890,12 @@ function setupNode(node) {
         sub.textContent = t ? `${t.name}${t.author ? " · ✍ " + t.author : ""}` : T("обычный ComfyUI (тема выключена)", "plain ComfyUI (theme off)");
         shName.textContent = t ? `${T("сейчас", "now")}: ${t.name}${t.author ? " · ✍ " + t.author : ""}` : T("тема выключена", "theme off");
     }
+    function paintWires() {
+        const t = S.theme;
+        for (const [id, btn] of Object.entries(wBtns)) btn.classList.toggle("on", !!t && t.wires.mode === id);
+        wOne.style.display = t && t.wires.mode === "one" ? "" : "none";
+        if (t) wOne.value = t.c.link;
+    }
     function paintCreate() {
         const t = S.theme;
         const off = !t;
@@ -864,6 +911,7 @@ function setupNode(node) {
             for (const [k, s] of Object.entries(sliders)) { const v = getPath(t, k); s.r.value = String(v); s.v.textContent = s.fmt(v); }
             for (const [k, i] of Object.entries(checks)) i.checked = !!getPath(t, k);
             bgSel.value = t.life.bgfx; fpsSel.value = String(t.life.fps || 0);
+            paintWires();
         }
         // что подключено ко входу image
         const o = upstreamImage(node);

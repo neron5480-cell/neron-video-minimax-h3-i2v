@@ -91,6 +91,8 @@ export const ROLES = [
     { id: "util", ru: "Прочее", en: "Other", tip: T("утилиты, числа, заметки", "utilities, numbers, notes") },
 ];
 export const ROLE_IDS = ROLES.map((r) => r.id);
+// основные типы проводов для ручной настройки цвета
+export const WIRE_TYPES = ["MODEL", "CLIP", "VAE", "CONDITIONING", "LATENT", "IMAGE", "MASK", "CONTROL_NET", "AUDIO", "VIDEO"];
 
 const MODEL_T = ["MODEL", "CLIP", "VAE", "CONTROL_NET", "CLIP_VISION", "UPSCALE_MODEL", "STYLE_MODEL", "GLIGEN", "PHOTOMAKER", "LORA_MODEL", "IPADAPTER", "INSIGHTFACE", "AUDIO_ENCODER", "MODEL_PATCH", "LATENT_UPSCALE_MODEL"];
 const MEDIA_T = ["IMAGE", "MASK", "VIDEO"];
@@ -153,8 +155,14 @@ export function normalizeTheme(t) {
         btint: clamp(Number(t.btint ?? base.btint), 0, 0.6),
         glow: clamp(Number(t.glow ?? base.glow), 0, 1),
         ui: t.ui !== false,
+        opacity: clamp(Number(t.opacity ?? 1), 0.2, 1),            // прозрачность тела нод (1 — непрозрачные)
+        halo: clamp(Number(t.halo ?? 0), 0, 1),                    // подсветка из-под нод цветом роли
+        wires: { mode: "type", custom: {} },
         life: { ...defaultLife(1), ...(t.life && typeof t.life === "object" ? t.life : {}) },
     };
+    const W = t.wires && typeof t.wires === "object" ? t.wires : {};
+    out.wires.mode = ["type", "one", "custom"].includes(W.mode) ? W.mode : "type";
+    for (const k of WIRE_TYPES) if (W.custom && hexOk(W.custom[k])) out.wires.custom[k] = W.custom[k].toLowerCase();
     for (const [k] of C_KEYS) out.c[k] = hexOk(t.c?.[k]) ? t.c[k].toLowerCase() : base.c[k];
     for (const r of ROLE_IDS) out.roles[r] = hexOk(t.roles?.[r]) ? t.roles[r].toLowerCase() : base.roles[r];
     const L = out.life;
@@ -320,7 +328,7 @@ function make(main, name, opts, patch) {
     if (patch) {
         if (patch.c) Object.assign(t.c, patch.c);
         if (patch.roles) Object.assign(t.roles, patch.roles);
-        for (const k of ["tint", "btint", "glow", "ui"]) if (patch[k] !== undefined) t[k] = patch[k];
+        for (const k of ["tint", "btint", "glow", "ui", "opacity", "halo", "wires"]) if (patch[k] !== undefined) t[k] = patch[k];
         if (patch.life) Object.assign(t.life, patch.life);
     }
     t.author = "Neron";
@@ -342,6 +350,11 @@ export const BUILTIN = [
         roles: { model: "#ff2bd6", input: "#00e5ff", text: "#ffe600", gen: "#ff3b6b", latent: "#b26bff", image: "#39ff88", audio: "#39ff88", output: "#ff9f1c", util: "#8f88cc" },
         tint: 0.35, btint: 0.06, glow: 1, life: { level: 2, bgfx: "stars" },
     }), { id: "neon" }),
+    Object.assign(make("#7c5cff", T("Подсветка", "Backlight"), { scheme: "rainbow" }, {
+        c: { bg: "#060609", grid: "#0e0e14", title: "#16161f", body: "#101017", text: "#e9e9f2", widget: "#0b0b10", line: "#2c2c3a", link: "#9a8cff", menu: "#0b0b10", accent: "#7c5cff" },
+        roles: { model: "#b06bff", input: "#2fb8ff", text: "#ffc93c", gen: "#ff4f6d", latent: "#ff6bd5", image: "#3dffb0", audio: "#5cff6b", output: "#ff9a3c", util: "#8a8aa8" },
+        tint: 0.3, btint: 0.04, glow: 0.8, halo: 0.85, opacity: 0.94, life: { level: 1, bgfx: "none", frame: false, wires: true },
+    }), { id: "backlight" }),
     Object.assign(make("#ff7a45", T("Закат", "Sunset"), { scheme: "harmony" }, {
         c: { bg: "#140a10", menu: "#1b0e15", grid: "#22121b" }, glow: 0.5, life: { level: 1, bgfx: "flow" },
     }), { id: "sunset" }),
@@ -385,7 +398,8 @@ async function pipe(bytes, stream) {
 // компактный вид: только данные темы, без лишнего
 export function themeForShare(t) {
     const n = normalizeTheme(t);
-    return { v: 1, name: n.name, author: n.author, c: n.c, roles: n.roles, tint: n.tint, btint: n.btint, glow: n.glow, ui: n.ui, life: n.life };
+    return { v: 1, name: n.name, author: n.author, c: n.c, roles: n.roles, tint: n.tint, btint: n.btint, glow: n.glow, ui: n.ui,
+        opacity: n.opacity, halo: n.halo, wires: n.wires, life: n.life };
 }
 export async function encodeCode(t) {
     const json = new TextEncoder().encode(JSON.stringify(themeForShare(t)));
@@ -441,6 +455,19 @@ export const SLOT_BASE = {
     NOISE: "#B0B0B0", GUIDER: "#66FFFF", SAMPLER: "#ECB4B4", SIGMAS: "#CDFFCD", TAESD: "#DCC274",
     AUDIO: "#69db7c", VIDEO: "#4dabf7", NERON_SOUNDS: "#97d17f", NERON_VIDEOS: "#7fb2e0",
 };
+export const WIRE_MODES = [
+    ["type", "ПО ТИПУ", "BY TYPE", T("Как в ComfyUI: у каждого типа свой цвет, но в гамме темы", "Like ComfyUI: each type has its color, in the theme's palette")],
+    ["one", "ОДИН ЦВЕТ", "ONE COLOR", T("Все провода одного цвета (цвет «Провода»)", "All wires in one color (the \"Wires\" color)")],
+    ["custom", "СВОИ", "CUSTOM", T("Свой цвет для каждого типа — в ⚙ ДЛЯ СПЕЦОВ", "Your own color per type — in ⚙ EXPERT")],
+];
+// цвет провода данного типа в теме
+export function wireColor(t, type, base) {
+    const W = t.wires || { mode: "type" };
+    if (W.mode === "one") return t.c.link;
+    if (W.mode === "custom" && W.custom && hexOk(W.custom[type])) return W.custom[type];
+    const b = hexOk(base) ? base : (SLOT_BASE[type] || null);
+    return b ? slotColor(t, b) : t.c.link;
+}
 export function slotColor(t, base) {
     const [h, s, l] = toHsl(base);
     const [ah] = toHsl(t.c.accent);
@@ -455,7 +482,7 @@ export function toComfyPalette(t) {
     const c = n.c;
     const light = isLight(n);
     const node_slot = {};
-    for (const [k, v] of Object.entries(SLOT_BASE)) node_slot[k] = slotColor(n, v);
+    for (const [k, v] of Object.entries(SLOT_BASE)) node_slot[k] = wireColor(n, k, v);
     const sub = mix(c.text, c.body, 0.4);
     return {
         id: "neron_" + (n.name || "theme").toLowerCase().replace(/[^\w]+/g, "_").slice(0, 30),

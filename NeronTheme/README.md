@@ -41,7 +41,7 @@ Delete the node — everything is back.
 
 ### Вкладка УСТАНОВИТЬ
 
-- **Встроенные:** Обычный ComfyUI (тема выключена), Графит, Neron Brown, Неон, Закат, Океан, Лес, Сакура, Монохром, Бумага (светлая).
+- **Встроенные:** Обычный ComfyUI (тема выключена), Графит, Neron Brown, Неон, **Подсветка** (ноды светятся снизу каждая своим цветом, как LED-подсветка), Закат, Океан, Лес, Сакура, Монохром, Бумага (светлая).
 - **Мои:** темы, которые вы сохранили. Лежат файлами в `ComfyUI/user/neron_themes` — их можно копировать и пересылать. ✖ на карточке — удалить (нажать дважды).
 - **Чужая тема:**
   - **код** — вставьте строчку `NERON-THEME1:…` в поле и нажмите 📥 ПОСТАВИТЬ;
@@ -58,12 +58,16 @@ Delete the node — everything is back.
   - Рамка и выбранный цвет сохраняются вместе со схемой; подключили другую картинку — они сбрасываются.
 - **Название** и **Автор** — ваш ник будет виден всем, с кем вы поделитесь темой.
 - **Живость:** ВЫКЛ · СПОКОЙНО · ЖИВО · НА ПОЛНУЮ.
+- **Прозрачность нод** — тело нод становится полупрозрачным, сквозь него видно сетку и провода (100% — обычные ноды). Пока тема стоит, она главнее настройки ComfyUI «Node opacity»; уберёте ноду — вернётся ваша.
+- **Подсветка нод** — мягкое свечение из-под каждой ноды цветом её роли. Это не анимация: работает и при живости «ВЫКЛ». Выключенные и пропущенные (bypass) ноды не светятся.
+- **Провода:** **ПО ТИПУ** (как в ComfyUI — у каждого типа свой цвет, но в гамме темы), **ОДИН ЦВЕТ** (все провода одним цветом — выбирается рядом), **СВОИ** (свой цвет для каждого типа — MODEL, CLIP, VAE, CONDITIONING, LATENT, IMAGE, MASK, CONTROL_NET, AUDIO, VIDEO — в ⚙).
 - **💾 Сохранить в Мои** — тема появится на вкладке УСТАНОВИТЬ.
 
 Всё, что вы меняете, сразу видно на столе.
 
 **⚙ ДЛЯ СПЕЦОВ** — весь набор настроек:
 - **Цвета:** фон стола, сетка, шапка ноды, тело ноды, текст, поля, рамки полей, провода, панели окна, главный цвет.
+- **Цвет проводов по типам** (режим «Свои»): поменяли любой — провода сами переходят в этот режим.
 - **Роли нод:** свой цвет каждой из 9 ролей.
 - **Сила цвета:** сколько цвета роли в шапке и в теле ноды; **свечение**.
 - **Живость подробно:** огни по рамкам · искры по проводам · работа схемы · в такт музыке · тише во время генерации · красить окно ComfyUI; **фон** (нет / переливы / частицы / звёзды); **кадров в секунду** (авто / 30 / 45 / 60); **скорость**.
@@ -132,7 +136,7 @@ The workflow itself is not changed: role colors are not written into nodes, so w
 
 ### INSTALL tab
 
-- **Built-in:** Plain ComfyUI (theme off), Graphite, Neron Brown, Neon, Sunset, Ocean, Forest, Sakura, Mono, Paper (light).
+- **Built-in:** Plain ComfyUI (theme off), Graphite, Neron Brown, Neon, **Backlight** (each node glows from underneath in its own color, like LED lighting), Sunset, Ocean, Forest, Sakura, Mono, Paper (light).
 - **Mine:** themes you saved. Stored as files in `ComfyUI/user/neron_themes` — copy and send them around. ✖ on a card deletes it (press twice).
 - **Someone's theme:** paste a `NERON-THEME1:…` **code** and press 📥 APPLY, or drop a theme **file** (`.json`) right onto the node. It is saved to **Mine** at once. A ComfyUI palette (`.json` from Settings → Appearance → Export) works too.
 
@@ -146,11 +150,14 @@ The workflow itself is not changed: role colors are not written into nodes, so w
   - The frame and the chosen color are saved with the workflow; a different picture resets them.
 - **Name** and **Author** — your nickname is visible to everyone you share the theme with.
 - **Life:** OFF · CALM · LIVELY · FULL.
+- **Node opacity** — node bodies become see-through, the grid and wires show through (100% — normal nodes). While the theme is on it overrides ComfyUI's "Node opacity" setting; remove the node and yours comes back.
+- **Node backlight** — a soft glow under each node in its role color. Not an animation: it works with Life OFF too. Muted and bypassed nodes don't glow.
+- **Wires:** **BY TYPE** (like ComfyUI — each type its own color, in the theme's palette), **ONE COLOR** (all wires one color, picked right there), **CUSTOM** (your own color per type — MODEL, CLIP, VAE, CONDITIONING, LATENT, IMAGE, MASK, CONTROL_NET, AUDIO, VIDEO — in ⚙).
 - **💾 Save to Mine** — the theme shows up under INSTALL.
 
 Everything you change shows on the canvas right away.
 
-**⚙ EXPERT** — the full set: every color (canvas, grid, node title, node body, text, fields, field borders, wires, window panels, main color), each of the 9 role colors, role strength in title and body, glow, and life details: frame lights · wire sparks · workflow run · on the beat · quieter while generating · theme the ComfyUI window; background (none / flow / particles / stars); FPS limit (auto / 30 / 45 / 60); speed.
+**⚙ EXPERT** — the full set: every color (canvas, grid, node title, node body, text, fields, field borders, wires, window panels, main color), each of the 9 role colors, wire color per type ("Custom" mode — changing one switches to it), role strength in title and body, glow, and life details: frame lights · wire sparks · workflow run · on the beat · quieter while generating · theme the ComfyUI window; background (none / flow / particles / stars); FPS limit (auto / 30 / 45 / 60); speed.
 
 ### Life
 
