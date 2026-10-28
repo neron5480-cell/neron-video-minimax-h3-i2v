@@ -1,5 +1,23 @@
 # Changelog / История изменений
 
+## dev · Neron Theme 🎨 — темы для всего ComfyUI / themes for the whole ComfyUI (в работе, ветка dev / in progress, dev branch)
+
+**RU:**
+- Новая папка **NeronTheme**, нода **Neron Theme 🎨** (меню Neron). Пока нода на столе — весь ComfyUI в теме: окно, стол, ноды по 9 ролям, провода. Удалили — всё возвращается как было (проверено сравнением настроек до и после).
+- **УСТАНОВИТЬ:** 9 встроенных тем, «Мои» (файлы в `ComfyUI/user/neron_themes`), примерка наведением, чужая тема кодом или файлом (бросить на ноду).
+- **СОЗДАТЬ:** тема из одного цвета (соседние оттенки / радуга / один тон, светлая), тема из картинки (вход `image`), ⚙ — все цвета, роли, свечение, живость. Текст всегда читаемый — нода сама следит за контрастом.
+- **ПОДЕЛИТЬСЯ:** код `NERON-THEME1:…`, файл темы, палитра для Настройки → Appearance → Color Palette.
+- **Живость:** огни по рамкам, искры по проводам, фон (переливы / частицы / звёзды), подсветка работы схемы (идёт / готово / ошибка + прогресс), вспышки в такт звуку Neron Audio Studio, «тише во время генерации», ограничение кадров.
+- Ручной цвет ноды и ноды с фирменным цветом не перекрашиваются; сам workflow тема не меняет.
+
+**EN:**
+- New **NeronTheme** folder, **Neron Theme 🎨** node (Neron menu). While it is on the canvas the whole ComfyUI is themed: window, canvas, nodes by 9 roles, wires. Remove it and everything is restored (checked by comparing settings before and after).
+- **INSTALL:** 9 built-in themes, "Mine" (files in `ComfyUI/user/neron_themes`), hover to try on, someone's theme by code or file (drop onto the node).
+- **CREATE:** a theme from one color (harmony / rainbow / mono, light), a theme from a picture (`image` input), ⚙ — every color, role, glow, life. Text always stays readable.
+- **SHARE:** a `NERON-THEME1:…` code, a theme file, a palette for Settings → Appearance → Color Palette.
+- **Life:** frame lights, wire sparks, background (flow / particles / stars), workflow run highlights (running / done / error + progress), beat flashes from Neron Audio Studio sound, "quieter while generating", FPS limit.
+- Hand-set node colors and nodes with their own signature color are not repainted; the workflow itself is not changed.
+
 ## dev · Neron DJ Пульт / DJ Controller 🎧 (в работе, ветка dev / in progress, dev branch)
 
 **RU:**

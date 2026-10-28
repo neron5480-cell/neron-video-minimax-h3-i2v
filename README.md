@@ -147,6 +147,25 @@
 
 ---
 
+## 🎨 Проект 5: NERON THEME (Темы для всего ComfyUI)
+
+👋 Нода лежит в папке **[`NeronTheme`](NeronTheme/)**.
+
+Одна нода — и **весь ComfyUI в теме**: окно, стол, ноды и провода. Удалили ноду — всё как было.
+
+*   **Ноды по ролям:** модели, промпты, генерация, латент, обработка, звук, выход — у каждой роли свой цвет. Работает с любыми нодами, не только Neron. Ваш ручной цвет ноды всегда главнее.
+*   **УСТАНОВИТЬ:** 9 встроенных тем (Графит, Neron Brown, Неон, Закат, Океан, Лес, Сакура, Монохром, светлая Бумага) + ваши. Навели на карточку — примерили, кликнули — поставили.
+*   **СОЗДАТЬ:** тема из одного цвета, **тема из картинки** (Load Image → вход `image`), а в ⚙ — каждый цвет вручную.
+*   **ПОДЕЛИТЬСЯ:** 📋 код (строчка для чата), 💾 файл, 🎨 палитра для встроенных настроек ComfyUI.
+*   **Живость:** огни по рамкам, искры по проводам, фон; нода, которая считается, светится с полоской прогресса, готовая вспыхивает, ошибка мигает красным.
+*   Тема **сохраняется вместе с workflow**: кто скачал вашу схему, видит её в вашем оформлении.
+
+⚠️ **Братан, не гонись за анимацией.** Её рисует браузер; на больших столах может подтормаживать — тогда «Живость» на «Спокойно» или «Выкл».
+
+Подробно — в **[README внутри NeronTheme](NeronTheme/README.md)**.
+
+---
+
 ## 📦 Самостоятельные ноды (в корне)
 
 Эти ноды остаются в корне для обратной совместимости. Они самодостаточны и работают: если у вас настроены старые воркфлоу, всё продолжит работать.
@@ -306,6 +325,25 @@ Ready workflows: `NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json` (new) 
 Main feature: **audio plays directly on the node, no need to hit Queue just to listen!** Everything runs in the browser and doesn't load your GPU.
 
 ⚠️ **Important:** the project is in **Beta**. The interface is currently in Russian only (English will be added later), but it's highly intuitive. Bugs are possible. Detailed instructions for all buttons and folders are in the **[README inside NeronAudioStudio](NeronAudioStudio/README.md)**.
+
+---
+
+## 🎨 Project 5: NERON THEME (Themes for the whole ComfyUI)
+
+👋 The node lives in the **[`NeronTheme`](NeronTheme/)** folder.
+
+One node — and the **whole ComfyUI is themed**: window, canvas, nodes and wires. Delete the node — everything is back.
+
+*   **Nodes by role:** models, prompts, sampling, latent, processing, audio, output — each role has its own color. Works with any nodes, not only Neron. A color you set by hand always wins.
+*   **INSTALL:** 9 built-in themes (Graphite, Neron Brown, Neon, Sunset, Ocean, Forest, Sakura, Mono, light Paper) + your own. Hover a card to try it, click to apply.
+*   **CREATE:** a theme from one color, a **theme from a picture** (Load Image → the `image` input), and every color by hand in ⚙.
+*   **SHARE:** 📋 code (a line for a chat), 💾 file, 🎨 a palette for ComfyUI's own settings.
+*   **Life:** lights on frames, sparks on wires, background; the running node glows with a progress bar, a finished one flashes, an error blinks red.
+*   The theme is **saved with the workflow**: whoever downloads your workflow sees it the way you styled it.
+
+⚠️ **Bro, don't chase the animation.** The browser draws it; big canvases may stutter — then set Life to Calm or Off.
+
+Details in the **[README inside NeronTheme](NeronTheme/README.md)**.
 
 ---
 
