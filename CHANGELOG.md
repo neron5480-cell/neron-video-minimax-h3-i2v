@@ -1,6 +1,6 @@
 # Changelog / История изменений
 
-## dev · Neron DJ Пульт / DJ Controller 🎧 (в работе, ветка dev / in progress, dev branch)
+## Neron DJ Пульт / DJ Controller 🎧 v1.0 + Neron Theme для Audio Studio (28.10.2026)
 
 **RU:**
 - Новая нода **Neron DJ Пульт** (меню NeronAudio): две деки с джогами и волнами, ▶ / CUE / SYNC, ползунки темпа, 8 пэдов на деку в трёх режимах (точки, звуки, петли), фильтр, громкость, кроссфейдер, индикаторы.
