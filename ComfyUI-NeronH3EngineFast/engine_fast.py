@@ -344,8 +344,10 @@ def generate(prompt, width, height, length, seed, models, settings, first_frame=
     model = node("MiniMaxH3SigmaShift", model=model, shift_video=shift, shift_audio=SHIFT_AUDIO)[0]
     model = set_attention(model, settings["draft_fast_attention"], report, "Черновик")
     send("Черновик / Draft", 0, d_steps)
+    ts = time.time()
     out = sample(model, cond_draft, draft_latent, seed, d_steps, 1.0)
-    report.append(f"Черновик: {time.time() - t:.0f} с")
+    report.append(f"Черновик: {time.time() - t:.0f} с (из них генерация {time.time() - ts:.0f} с, "
+                  f"загрузка и подготовка {ts - t:.0f} с)")
     del model, draft_latent, cond_draft
     if not same_unet:
         free("модель черновика выгружена")
@@ -377,8 +379,10 @@ def generate(prompt, width, height, length, seed, models, settings, first_frame=
     model = set_attention(model, False, report, "Чистовик")
     report.append(f"Чистовик: {base(models['unet'])} + {base(rl)} ×{rl_strength:g}")
     send("Чистовик / Refine", 0, r_steps)
+    ts = time.time()
     out = sample(model, cond_full, out, int(seed) + 1, r_steps, r_strength)
-    report.append(f"Чистовик: {time.time() - t:.0f} с")
+    report.append(f"Чистовик: {time.time() - t:.0f} с (из них генерация {time.time() - ts:.0f} с, "
+                  f"загрузка и подготовка {ts - t:.0f} с)")
     del model, cond_full
     if settings["keep_draft_audio"] and draft_audio is not None:
         video_lat, _ = split(out)
