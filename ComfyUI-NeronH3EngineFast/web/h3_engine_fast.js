@@ -241,7 +241,9 @@ function setupClock(node) {
         // У Fast входов всего 6, места справа нет — часы стоят в своей полосе под входами
         // (её освобождает распорка CLOCK_BAND сверху виджетов).
         const slotH = (window.LiteGraph && window.LiteGraph.NODE_SLOT_HEIGHT) || 20;
-        const base = Math.max(this.inputs?.length || 0, this.outputs?.length || 0) * slotH + 6;
+        // новый интерфейс ComfyUI держит в inputs и поля-виджеты (у них есть .widget) — считаем только гнёзда
+        const sockets = (this.inputs || []).filter((i) => !i.widget).length;
+        const base = Math.max(sockets, this.outputs?.length || 0) * slotH + 6;
         const cx = this.size[0] * 0.5, maxW = this.size[0] * 0.9;
         const fit = (t) => {
             if (ctx.measureText(t).width <= maxW) return t;
