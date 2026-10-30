@@ -50,6 +50,15 @@ def _llm_roots():
                 roots.append(Path(p))
         except Exception:
             pass
+    # ComfyUI Desktop держит модели в нескольких местах (папка установки, общая папка, другой диск).
+    # Обычные загрузчики видят их все — и мы смотрим «LLM» рядом с каждой папкой моделей, которую знает ComfyUI.
+    # ComfyUI Desktop keeps models in several places; look for "LLM" next to every models folder ComfyUI knows.
+    for key in ("diffusion_models", "checkpoints", "text_encoders", "vae", "loras"):
+        try:
+            for p in folder_paths.get_folder_paths(key):
+                roots.append(Path(p).parent / "LLM")
+        except Exception:
+            pass
     out, seen = [], set()
     for r in roots:
         try:
