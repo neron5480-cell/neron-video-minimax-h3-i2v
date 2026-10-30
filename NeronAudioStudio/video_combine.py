@@ -4,7 +4,7 @@ import shutil
 import tempfile
 import subprocess
 import numpy as np
-import soundfile as sf
+from ._deps import sf
 import folder_paths
 
 from .drum_machine import SAMPLE_RATE, _num

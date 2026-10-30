@@ -4,7 +4,7 @@ import sys
 import json
 import subprocess
 import numpy as np
-import soundfile as sf
+from ._deps import sf
 import torch
 import folder_paths
 from server import PromptServer

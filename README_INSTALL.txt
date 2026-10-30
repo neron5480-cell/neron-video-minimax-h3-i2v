@@ -14,6 +14,16 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 Перезапустите ComfyUI и откройте workflow (шаг 5 ниже).
 Шаги 1-4 тогда не нужны.
 
+ЕСЛИ НОДЫ КРАСНЫЕ ПОСЛЕ УСТАНОВКИ (чистая система)
+
+Пакету нужны библиотеки soundfile и imageio-ffmpeg. Обычно их
+ставит Manager, а если нет — пакет ставит их сам при запуске
+(в консоли строка "[Neron pack] ставлю недостающие библиотеки").
+Если и это не вышло (нет интернета, запрет прав):
+Manager -> Install PIP packages -> soundfile imageio-ffmpeg
+или в терминале ComfyUI: pip install soundfile imageio-ffmpeg
+Затем перезапустите ComfyUI.
+
 РУЧНАЯ УСТАНОВКА
 
 1. Полностью закройте ComfyUI.
@@ -108,6 +118,16 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 
 Restart ComfyUI and open the workflow (step 5 below).
 Steps 1-4 are not needed then.
+
+IF NODES ARE RED AFTER INSTALL (fresh system)
+
+The pack needs the soundfile and imageio-ffmpeg libraries.
+Manager usually installs them; if not, the pack installs them
+itself at startup (console line "[Neron pack] installing missing
+libraries"). If that fails too (no internet, no permissions):
+Manager -> Install PIP packages -> soundfile imageio-ffmpeg
+or in the ComfyUI terminal: pip install soundfile imageio-ffmpeg
+Then restart ComfyUI.
 
 MANUAL INSTALL
 

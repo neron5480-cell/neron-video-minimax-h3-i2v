@@ -6,7 +6,7 @@ import asyncio
 from collections import OrderedDict
 
 import numpy as np
-import soundfile as sf
+from ._deps import sf
 import torch
 from aiohttp import web
 from server import PromptServer

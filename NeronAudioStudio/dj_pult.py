@@ -22,7 +22,7 @@ import json
 import time
 import asyncio
 import numpy as np
-import soundfile as sf
+from ._deps import sf
 import torch
 import folder_paths
 from aiohttp import web

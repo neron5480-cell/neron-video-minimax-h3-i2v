@@ -163,6 +163,52 @@ def _load(pkg_path):
     return len(classes)
 
 
+def _ensure_requirements():
+    """RU: Библиотеки из requirements.txt, которых нет, — ставим сами (один раз, тихо).
+    Бывает, что Manager или ComfyUI Desktop их не поставили, и тогда целые папки нод не грузятся.
+    Отключить: переменная окружения NERON_NO_AUTOINSTALL=1.
+    EN: Missing libraries from requirements.txt are installed automatically (once, quietly).
+    Disable with NERON_NO_AUTOINSTALL=1."""
+    if os.environ.get("NERON_NO_AUTOINSTALL"):
+        return
+    req = os.path.join(_ROOT, "requirements.txt")
+    if not os.path.isfile(req):
+        return
+    missing = []
+    with open(req, encoding="utf-8") as f:
+        for line in f:
+            pkg = line.split("#")[0].strip()
+            if not pkg:
+                continue
+            base = pkg
+            for sep in ("==", ">=", "<=", "~=", ">", "<", "["):
+                base = base.split(sep)[0]
+            mod = base.strip().replace("-", "_")
+            if importlib.util.find_spec(mod) is None:
+                missing.append(pkg)
+    if not missing:
+        return
+    print(f"{_TAG} installing missing libraries / ставлю недостающие библиотеки: {', '.join(missing)}")
+    try:
+        import subprocess
+        r = subprocess.run([sys.executable, "-m", "pip", "install", "--quiet", *missing],
+                           capture_output=True, text=True, timeout=600)
+        if r.returncode == 0:
+            importlib.invalidate_caches()
+            print(f"{_TAG} installed / установлено: {', '.join(missing)}")
+        else:
+            print(f"{_TAG} could not install / не удалось поставить: {', '.join(missing)} — "
+                  f"Manager → Install PIP packages. {(r.stderr or '').strip()[-300:]}")
+    except Exception as e:
+        print(f"{_TAG} could not install / не удалось поставить: {', '.join(missing)} ({e}) — "
+              f"Manager → Install PIP packages.")
+
+
+try:
+    _ensure_requirements()
+except Exception:
+    traceback.print_exc()
+
 # Пустой родительский модуль для имён вида neron_pack.<нода>
 # Empty parent module for neron_pack.<node> names.
 if "neron_pack" not in sys.modules:

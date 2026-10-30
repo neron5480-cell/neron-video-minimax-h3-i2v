@@ -1,5 +1,15 @@
 # Changelog / История изменений
 
+## Установка на чистую систему / Fresh install fix (30.10.2026)
+
+**RU:**
+- Если Manager или ComfyUI Desktop не поставили библиотеки из `requirements.txt` (soundfile, imageio-ffmpeg), пакет Neron теперь ставит их сам при запуске. В консоли — строка `[Neron pack] ставлю недостающие библиотеки`, затем `установлено`. Отключить: переменная окружения `NERON_NO_AUTOINSTALL=1`.
+- Audio Studio без soundfile больше не падает целиком (раньше все её ноды, включая Neron Video Combine, становились красными): WAV пишется и читается встроенным модулем Python. Если нужно что-то сверх этого — нода прямо пишет, что поставить.
+
+**EN:**
+- If Manager or ComfyUI Desktop did not install the `requirements.txt` libraries (soundfile, imageio-ffmpeg), the Neron pack now installs them at startup. Console: `[Neron pack] installing missing libraries`, then `installed`. Disable with `NERON_NO_AUTOINSTALL=1`.
+- Audio Studio no longer fails as a whole without soundfile (all its nodes, Neron Video Combine included, used to turn red): WAV goes through Python's built-in wave module; anything beyond that reports what to install.
+
 ## Neron DJ Пульт / DJ Controller 🎧 v1.0 + Neron Theme для Audio Studio (28.10.2026)
 
 **RU:**
