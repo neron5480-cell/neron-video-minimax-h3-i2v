@@ -9,6 +9,7 @@ const NODE_COLOR = "#4a2f1e";
 const NODE_BGCOLOR = "#2e1c10";
 const GROUP_GAP = 18;
 const LABEL_FONT = "bold 10px sans-serif";
+const CLOCK_BAND = 96;   // полоса под часы между входами и первой панелью
 
 const GROUPS = [
     { name: "⚙️ EXPERT MODE / ЭКСПЕРТ", widgets: ["expert"],
@@ -237,8 +238,11 @@ function setupClock(node) {
         if (this.flags?.collapsed) return r;
         const c = CLOCK;
         const mine = c.current != null && String(c.current) === String(this.id);
-        // место справа под выходами: входов 12, выходов 4 — там пусто
-        const cx = this.size[0] * 0.66, maxW = this.size[0] * 0.6;
+        // У Fast входов всего 6, места справа нет — часы стоят в своей полосе под входами
+        // (её освобождает распорка CLOCK_BAND сверху виджетов).
+        const slotH = (window.LiteGraph && window.LiteGraph.NODE_SLOT_HEIGHT) || 20;
+        const base = Math.max(this.inputs?.length || 0, this.outputs?.length || 0) * slotH + 6;
+        const cx = this.size[0] * 0.5, maxW = this.size[0] * 0.9;
         const fit = (t) => {
             if (ctx.measureText(t).width <= maxW) return t;
             while (t.length > 4 && ctx.measureText(t + "…").width > maxW) t = t.slice(0, -1);
@@ -265,11 +269,11 @@ function setupClock(node) {
         ctx.save();
         ctx.textAlign = "center";
         ctx.fillStyle = color; ctx.font = "bold 28px monospace";
-        ctx.fillText(big, cx, 128);
+        ctx.fillText(big, cx, base + 30);
         ctx.font = "13px sans-serif"; ctx.fillStyle = "#b0bec5";
-        if (l2) ctx.fillText(fit(l2), cx, 152);
+        if (l2) ctx.fillText(fit(l2), cx, base + 52);
         ctx.font = "12px sans-serif"; ctx.fillStyle = "#90a4ae";
-        if (l3) ctx.fillText(fit(l3), cx, 171);
+        if (l3) ctx.fillText(fit(l3), cx, base + 70);
         ctx.restore();
         return r;
     };
@@ -532,7 +536,7 @@ app.registerExtension({
             // невидимая распорка сверху — подпись первой панели не наезжает на входы
             const spacer = node.addWidget("text", "_spacer", "", () => {});
             spacer.draw = function () {};
-            spacer.computeSize = () => [0, 20];
+            spacer.computeSize = () => [0, CLOCK_BAND];
             node.widgets.splice(node.widgets.indexOf(spacer), 1);
             node.widgets.unshift(spacer);
             for (const w of node.widgets || []) {
