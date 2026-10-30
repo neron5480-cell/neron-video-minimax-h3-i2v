@@ -1,5 +1,11 @@
 # Changelog / История изменений
 
+## Автопромтеры: где искать модели / Autoprompters: model folders (dev, 30.10.2026)
+
+**RU:** AutoPrompter, Dialog Autoprompter и Multi-Image LLM видят GGUF-модели не только прямо в `models/LLM`, но и **в подпапках** (`models/LLM/Qwen/…`) и в папках `LLM` из `extra_model_paths` (модели на другом диске). Новые файлы появляются в списке после перезапуска ComfyUI.
+
+**EN:** AutoPrompter, Dialog Autoprompter and Multi-Image LLM find GGUF models in `models/LLM` **subfolders** and in `LLM` folders from `extra_model_paths` (models on another drive). Restart ComfyUI to see new files.
+
 ## 🧹 Порядок в пакете / Pack cleanup (dev, 30.10.2026)
 
 **RU:**

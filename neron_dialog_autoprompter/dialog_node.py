@@ -32,6 +32,61 @@ _PROMPTS_DIR = _NODE_DIR / "prompts"
 _SESSIONS_DIR = _NODE_DIR / "sessions"
 _SELECTION_FILE = _NODE_DIR / "last_selection.json"
 
+
+# ============================================================
+#  ГДЕ ЛЕЖАТ МОДЕЛИ LLM / WHERE LLM MODELS LIVE
+#  models/LLM (с подпапками) + любые папки «LLM» из extra_model_paths.
+#  models/LLM (subfolders too) + any "LLM" folders from extra_model_paths.
+# ============================================================
+def _llm_roots():
+    roots = []
+    try:
+        roots.append(Path(folder_paths.models_dir) / "LLM")
+    except Exception:
+        roots.append(_NODE_DIR / ".." / ".." / "models" / "LLM")
+    for key in ("LLM", "llm"):
+        try:
+            for p in folder_paths.get_folder_paths(key):
+                roots.append(Path(p))
+        except Exception:
+            pass
+    out, seen = [], set()
+    for r in roots:
+        try:
+            k = str(r.resolve()).lower()
+        except Exception:
+            k = str(r).lower()
+        if k not in seen:
+            seen.add(k)
+            out.append(r)
+    return out
+
+
+def _llm_list():
+    names = []
+    for root in _llm_roots():
+        if not root.is_dir():
+            continue
+        for dirpath, _dirs, files in os.walk(root):
+            rel = Path(dirpath).relative_to(root)
+            if "prompts" in rel.parts:
+                continue
+            for f in files:
+                if f.lower().endswith(".gguf"):
+                    n = f if str(rel) == "." else (rel / f).as_posix()
+                    if n not in names:
+                        names.append(n)
+    return sorted(names, key=str.lower)
+
+
+def _llm_find(name):
+    for root in _llm_roots():
+        p = root / name
+        if p.exists():
+            return p
+    return _llm_roots()[0] / name
+
+
 os.makedirs(_PROMPTS_DIR, exist_ok=True)
 
 # Системный промпт H3 лежит в ОДНОМ месте — в папке NeronStudio-AutoPrompter/prompts.
@@ -226,7 +281,7 @@ def _find_lighter_quants(models: list, current_model: str) -> list:
     def size_key(name):
         try:
             llm_dir = Path(folder_paths.models_dir) / "LLM"
-            return os.path.getsize(llm_dir / name)
+            return os.path.getsize(_llm_find(name))
         except Exception:
             return 999999999
 
@@ -876,7 +931,7 @@ def _check_memory_and_warn(session_key: str, model_name: str, models_list: list,
     except Exception:
         llm_dir = _NODE_DIR / ".." / ".." / "models" / "LLM"
 
-    model_path = llm_dir / model_name
+    model_path = _llm_find(model_name)
     if not model_path.exists():
         return
 
@@ -1116,7 +1171,7 @@ class NeronDialogAutoprompter:
             llm_dir = _NODE_DIR / ".." / ".." / "models" / "LLM"
         llm_dir.mkdir(parents=True, exist_ok=True)
 
-        all_gguf = [f for f in os.listdir(llm_dir) if f.endswith(".gguf")]
+        all_gguf = _llm_list()
         models = [m for m in all_gguf if "mmproj" not in m.lower()]
         if not models:
             models = ["No_GGUF_Models_Found"]
@@ -1236,10 +1291,10 @@ class NeronDialogAutoprompter:
         except Exception:
             llm_dir = _NODE_DIR / ".." / ".." / "models" / "LLM"
 
-        model_path = llm_dir / model
+        model_path = _llm_find(model)
         mmproj_path = ""
         if mmproj and mmproj != "No_mmproj_Found":
-            mmproj_path = str(llm_dir / mmproj)
+            mmproj_path = str(_llm_find(mmproj))
 
         sid = (session_id or "default").strip() or "default"
         session_key = f"{sid}|{model}|{mmproj}"
@@ -1267,7 +1322,7 @@ class NeronDialogAutoprompter:
         }
 
         try:
-            llm_dir_models = [f for f in os.listdir(llm_dir) if f.endswith(".gguf")]
+            llm_dir_models = _llm_list()
             llm_dir_models = [m for m in llm_dir_models if "mmproj" not in m.lower()]
             lang = _detect_language_from_prompt(director_prompt)
             _check_memory_and_warn(session_key, model, llm_dir_models, lang)
@@ -1320,8 +1375,8 @@ try:
             _save_last_selection(model, mmproj, director_prompt)
 
         _LAST_PARAMS[session_key] = {
-            "model_path": str(llm_dir / model) if model else "",
-            "mmproj_path": str(llm_dir / mmproj) if mmproj and mmproj != "No_mmproj_Found" else "",
+            "model_path": str(_llm_find(model)) if model else "",
+            "mmproj_path": str(_llm_find(mmproj)) if mmproj and mmproj != "No_mmproj_Found" else "",
             "n_gpu_layers": int(params.get("n_gpu_layers", -1)),
             "n_ctx": int(params.get("n_ctx", 8192)),
             "max_tokens": int(params.get("max_tokens", 4096)),
