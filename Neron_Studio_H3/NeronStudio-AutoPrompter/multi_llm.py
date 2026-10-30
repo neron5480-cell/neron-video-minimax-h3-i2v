@@ -268,7 +268,7 @@ class NeronMultiImageLLM:
 
         server_exe = _find_llama_server()
         if server_exe is None:
-            return ("Ошибка: llama-server.exe не найден.",)
+            return ("Ошибка: не найден llama-server (программа, которая запускает LLM). Нода пробует скачать его сама при первом запуске — причина неудачи в консоли ComfyUI (строки [Neron Dialog]). Проверь интернет и перезапусти ComfyUI. / Error: llama-server not found. The node tries to download it on first run — see the ComfyUI console ([Neron Dialog] lines); check the internet and restart ComfyUI.",)
 
         try:
             _ensure_server_running(server_exe, model_path, mmproj_path, n_gpu_layers, n_ctx)

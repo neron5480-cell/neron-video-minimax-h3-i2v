@@ -2,9 +2,9 @@
 
 ## Автопромтеры: где искать модели / Autoprompters: model folders (dev, 30.10.2026)
 
-**RU:** AutoPrompter, Dialog Autoprompter и Multi-Image LLM видят GGUF-модели не только прямо в `models/LLM`, но и **в подпапках** (`models/LLM/Qwen/…`) в папках `LLM` из `extra_model_paths` (модели на другом диске) и в папке `LLM` рядом с **каждой** папкой моделей, которую знает ComfyUI (Desktop держит модели в нескольких местах). Новые файлы появляются в списке после перезапуска ComfyUI.
+**RU:** AutoPrompter и Dialog Autoprompter **делят один llama-server**: если одна нода уже скачала его, вторая берёт тот же (раньше AutoPrompter мог не найти сервер, скачанный диалоговым). Ошибка «сервер не найден» теперь объясняет, что делать (RU/EN). AutoPrompter, Dialog Autoprompter и Multi-Image LLM видят GGUF-модели не только прямо в `models/LLM`, но и **в подпапках** (`models/LLM/Qwen/…`) в папках `LLM` из `extra_model_paths` (модели на другом диске) и в папке `LLM` рядом с **каждой** папкой моделей, которую знает ComfyUI (Desktop держит модели в нескольких местах). Новые файлы появляются в списке после перезапуска ComfyUI.
 
-**EN:** AutoPrompter, Dialog Autoprompter and Multi-Image LLM find GGUF models in `models/LLM` **subfolders** in `LLM` folders from `extra_model_paths` and in `LLM` next to **every** models folder ComfyUI knows (Desktop keeps models in several places). Restart ComfyUI to see new files.
+**EN:** AutoPrompter and Dialog Autoprompter **share one llama-server** (one downloads, the other reuses it); the "server not found" error explains what to do. AutoPrompter, Dialog Autoprompter and Multi-Image LLM find GGUF models in `models/LLM` **subfolders** in `LLM` folders from `extra_model_paths` and in `LLM` next to **every** models folder ComfyUI knows (Desktop keeps models in several places). Restart ComfyUI to see new files.
 
 ## 🧹 Порядок в пакете / Pack cleanup (dev, 30.10.2026)
 

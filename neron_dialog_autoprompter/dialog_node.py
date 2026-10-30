@@ -716,6 +716,24 @@ def _find_llama_server():
             return hits[0]
 
     # 3. Авто-скачивание в свою vendor
+    # Обе ноды-автопромтера Neron делят один llama-server: если одна уже скачала, вторая берёт его.
+    # Both Neron autoprompters share one llama-server: if one downloaded it, the other uses it.
+    try:
+        from ._neron_shared import find_folder
+        for name in ("neron_dialog_autoprompter", "NeronStudio-AutoPrompter"):
+            folder = find_folder(name)
+            if not folder:
+                continue
+            vendor = Path(folder) / "vendor"
+            if vendor.exists() and vendor.resolve() != _VENDOR_DIR.resolve():
+                hits = list(vendor.rglob("llama-server.exe")) + list(vendor.rglob("llama-server"))
+                hits = [h for h in hits if h.is_file()]
+                if hits:
+                    print(f"[Neron Dialog] llama-server найден у соседней ноды Neron: {hits[0]}")
+                    return hits[0]
+    except Exception as e:
+        print(f"[Neron Dialog] поиск llama-server у соседней ноды: {e}")
+
     return _download_llama_server(_VENDOR_DIR)
 
 
