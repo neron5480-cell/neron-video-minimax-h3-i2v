@@ -4,11 +4,15 @@ import traceback
 
 NODE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-PROMPT_PATH = os.path.join(
-    NODE_ROOT,
-    "prompts",
-    "H3_NSFW_Engine 1.txt",
-)
+# Системный промпт H3 — одна копия в NeronStudio-AutoPrompter/prompts (None, если папки нет).
+# The H3 system prompt — one copy in NeronStudio-AutoPrompter/prompts (None if missing).
+try:
+    from ._neron_shared import shared_prompts_dir as _spd
+
+    _PROMPTS = _spd()
+    PROMPT_PATH = os.path.join(_PROMPTS, "H3_NSFW_Engine 1.txt") if _PROMPTS else None
+except Exception:
+    PROMPT_PATH = None
 
 
 NODE_CLASS_MAPPINGS = {}

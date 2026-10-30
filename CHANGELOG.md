@@ -5,12 +5,14 @@
 **RU:**
 - **Один код картинки на четыре ноды**: Interactive Image Processor, 🖼 Neron Studio Image Processor, Smart Load & Resize Image и Manual Color & Upscale Panel. Раньше было три разные копии, и старые ноды из воркфлоу v1.0/v2.0 всё ещё растягивали картинку при «Отключено». Теперь у всех «Отключено» = как есть, резкость 0 = выкл. Поля нод не изменились — старые воркфлоу открываются как раньше. Студия по-прежнему подрезает пресеты по центру, простая нода — растягивает.
 - **Камера H3 — одна копия** (в `ComfyUI-H3-Static-Camera`); AutoPrompter берёт её оттуда.
+- **Системный промпт H3 — одна копия**, самая новая и полная (в `NeronStudio-AutoPrompter/prompts`). Две старые копии удалены; Dialog Autoprompter и Multi-Image LLM видят её в своём списке под тем же именем, так что старые воркфлоу работают. Свои файлы в `prompts` диалогового автопромтера по-прежнему видны.
 - Старые ноды подписаны в меню «(legacy → …)»: Smart Load, Color Panel, старая тема Audio Studio. Ничего не удалено.
 - В README — **карта**: какую ноду брать для какой задачи, и какие папки ставить вместе при ручной установке.
 
 **EN:**
 - **One image code for four nodes** (Interactive, Studio, Smart Load, Color Panel). Old v1.0/v2.0 nodes no longer stretch in Disabled. Node fields are unchanged; old workflows open as before.
 - **One copy of the H3 camera**; AutoPrompter uses it from `ComfyUI-H3-Static-Camera`.
+- **One copy of the H3 system prompt** — the newest, fullest one (in `NeronStudio-AutoPrompter/prompts`). The two old copies are removed; Dialog Autoprompter and Multi-Image LLM list it under the same name, so old workflows work.
 - Legacy nodes are labelled "(legacy → …)" in the menu; nothing removed.
 - README has a **map** of which node to use and which folders go together in a manual install.
 
