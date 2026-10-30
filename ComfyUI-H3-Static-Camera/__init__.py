@@ -4,11 +4,15 @@ import traceback
 
 NODE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-PROMPT_PATH = os.path.join(
-    NODE_ROOT,
-    "prompts",
-    "H3_NSFW_Engine 1.txt",
-)
+# Системный промпт H3 — одна копия в NeronStudio-AutoPrompter/prompts (None, если папки нет).
+# The H3 system prompt — one copy in NeronStudio-AutoPrompter/prompts (None if missing).
+try:
+    from ._neron_shared import shared_prompts_dir as _spd
+
+    _PROMPTS = _spd()
+    PROMPT_PATH = os.path.join(_PROMPTS, "H3_NSFW_Engine 1.txt") if _PROMPTS else None
+except Exception:
+    PROMPT_PATH = None
 
 
 NODE_CLASS_MAPPINGS = {}
@@ -18,12 +22,14 @@ NODE_DISPLAY_NAME_MAPPINGS = {}
 
 # Smart Load & Resize Image
 try:
-    from .my_smart_load_image import MySmartLoadImage
+    from ._neron_shared import load as _core
+
+    MySmartLoadImage = _core("loader").MySmartLoadImage
 
     NODE_CLASS_MAPPINGS["SmartLoadAndResizeImage"] = MySmartLoadImage
     NODE_DISPLAY_NAME_MAPPINGS[
         "SmartLoadAndResizeImage"
-    ] = "Smart Load & Resize Image"
+    ] = "Smart Load & Resize Image (legacy → Interactive Image Processor)"
 
     print("[H3 Nodes] Smart Load loaded successfully.")
 
@@ -51,12 +57,14 @@ except Exception:
 # Turbo Color Fix
 # Ошибка этой ноды больше не блокирует остальные ноды.
 try:
-    from .my_turbo_color_fix import MyTurboColorFix
+    from ._neron_shared import load as _core
+
+    MyTurboColorFix = _core("color").MyTurboColorFix
 
     NODE_CLASS_MAPPINGS["TurboColorFixAdaIN"] = MyTurboColorFix
     NODE_DISPLAY_NAME_MAPPINGS[
         "TurboColorFixAdaIN"
-    ] = "Manual Color & Upscale Panel"
+    ] = "Manual Color & Upscale Panel (legacy → Interactive Image Processor)"
 
     print("[H3 Nodes] Turbo Color Fix loaded successfully.")
 

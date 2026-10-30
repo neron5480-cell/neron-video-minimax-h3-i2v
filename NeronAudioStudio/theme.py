@@ -30,4 +30,4 @@ class NeronTheme:
 
 
 NODE_CLASS_MAPPINGS = {"NeronTheme": NeronTheme}
-NODE_DISPLAY_NAME_MAPPINGS = {"NeronTheme": "Neron Theme / Тема 🎨"}
+NODE_DISPLAY_NAME_MAPPINGS = {"NeronTheme": "Тема Audio Studio (legacy → Neron Theme 🎨) / Old theme"}

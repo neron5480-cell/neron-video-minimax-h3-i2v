@@ -33,6 +33,44 @@ _SESSIONS_DIR = _NODE_DIR / "sessions"
 _SELECTION_FILE = _NODE_DIR / "last_selection.json"
 
 os.makedirs(_PROMPTS_DIR, exist_ok=True)
+
+# Системный промпт H3 лежит в ОДНОМ месте — в папке NeronStudio-AutoPrompter/prompts.
+# Свои файлы в prompts этой ноды по-прежнему видны и главнее (при одинаковом имени).
+# The H3 system prompt lives in ONE place (NeronStudio-AutoPrompter/prompts);
+# files in this node's own prompts folder still show up and win on the same name.
+try:
+    from ._neron_shared import shared_prompts_dir as _shared_prompts_dir
+    _SHARED = _shared_prompts_dir()
+    _SHARED_PROMPTS_DIR = Path(_SHARED) if _SHARED else None
+except Exception:
+    _SHARED_PROMPTS_DIR = None
+
+
+def _prompt_dirs():
+    dirs = [_PROMPTS_DIR]
+    if _SHARED_PROMPTS_DIR is not None and _SHARED_PROMPTS_DIR.resolve() != _PROMPTS_DIR.resolve():
+        dirs.append(_SHARED_PROMPTS_DIR)
+    return dirs
+
+
+def _prompt_path(prompt_file):
+    for d in _prompt_dirs():
+        p = d / prompt_file
+        if p.exists():
+            return p
+    return _PROMPTS_DIR / prompt_file
+
+
+def _list_prompts():
+    out = []
+    for d in _prompt_dirs():
+        try:
+            for f in sorted(os.listdir(d)):
+                if f.endswith(".txt") and f not in out:
+                    out.append(f)
+        except Exception:
+            pass
+    return out
 os.makedirs(_SESSIONS_DIR, exist_ok=True)
 
 
@@ -76,7 +114,7 @@ def _detect_language_from_prompt(prompt_file: str) -> str:
         return "ru"
 
     try:
-        path = _PROMPTS_DIR / prompt_file
+        path = _prompt_path(prompt_file)
         if path.exists():
             with open(path, "r", encoding="utf-8") as f:
                 head = f.read(500)
@@ -806,7 +844,7 @@ def _comfy_image_to_data_uri(image_tensor, max_size: int = 768, quality: int = 8
 def _load_system_prompt(prompt_file: str) -> str:
     if not prompt_file or prompt_file == "No_prompt_Found":
         return "You are a helpful assistant." if _DIAG_LANG == "en" else "Ты — полезный ассистент."
-    path = _PROMPTS_DIR / prompt_file
+    path = _prompt_path(prompt_file)
     if not path.exists():
         print(f"[Neron Dialog] Системник не найден: {path}")
         return "You are a helpful assistant." if _DIAG_LANG == "en" else "Ты — полезный ассистент."
@@ -1084,7 +1122,7 @@ class NeronDialogAutoprompter:
             models = ["No_GGUF_Models_Found"]
 
         mmprojs = ["No_mmproj_Found"] + [m for m in all_gguf if "mmproj" in m.lower()]
-        prompts = [f for f in os.listdir(_PROMPTS_DIR) if f.endswith(".txt")]
+        prompts = _list_prompts()
         if not prompts:
             prompts = ["No_prompt_Found"]
 

@@ -59,8 +59,8 @@ class NeronMultiImageLLM:
 
         prompts = []
         try:
-            if _PROMPTS_DIR.exists():
-                prompts.extend([f for f in os.listdir(_PROMPTS_DIR) if f.endswith(".txt")])
+            from .dialog_node import _list_prompts
+            prompts.extend(_list_prompts())
         except Exception:
             pass
         try:

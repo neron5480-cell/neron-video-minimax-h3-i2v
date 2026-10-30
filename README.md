@@ -42,6 +42,12 @@
 ```
 Ноды из папки `Neron_Studio_H3` копируются **по отдельности** (папки внутри неё), а не вся папка целиком.
 
+**Общий код — одна копия.** Некоторые папки берут код у соседей, поэтому копируйте их вместе:
+- `ComfyUI-H3-Static-Camera` и `NeronStudio-Image-Processor` → нужна `ComfyUI-Interactive-Processor` (загрузка и цвет картинки);
+- `NeronStudio-AutoPrompter` → нужна `ComfyUI-H3-Static-Camera` (камера H3).
+
+Не хватит соседа — в консоли будет понятная ошибка с именем нужной папки.
+
 ### ⚠️ Не смешивайте способы
 
 Если раньше вы ставили ноды вручную, а теперь ставите по ссылке, **удалите старые ручные копии** из `custom_nodes`. Пакет сам пропускает ноды, которые уже стоят отдельно, и пишет об этом в консоли. Но если старая копия лежит под другим именем папки, две версии одной ноды будут мешать друг другу.
@@ -166,15 +172,28 @@
 
 ---
 
+## 🗺 Карта: какую ноду брать
+
+| Задача | Берите | Ещё есть (для старых воркфлоу) |
+|---|---|---|
+| Подготовить первый кадр | **🖼 Neron Studio Image Processor** — пресеты подрезаются по центру, Сброс и Справка | Interactive Image Processor (пресеты растягивают картинку); Smart Load & Resize Image и Manual Color & Upscale Panel — *legacy*, тот же код |
+| Сгенерировать видео H3 | **🎬 Neron H3 Engine** — качество; **⚡ Neron H3 Engine Fast** — скорость (тест, ветка dev) | 🎥 Neron MiniMax H3 Generator (Lite) — для воркфлоу Neron Studio H3 |
+| Написать промпт | **🎬 Neron AutoPrompter** — промпт под H3 по картинке и брифу | 🎬 Neron Dialog Autoprompter и 🧠 Multi-Image LLM — диалоговый режим |
+| Камера H3 | **⚡ Fixed Camera H3** | — |
+| Тема оформления | **Neron Theme 🎨 / Темы ComfyUI** | «Тема Audio Studio (legacy)» — чтобы открывались старые схемы студии |
+
+Код загрузки и цвета картинки — **один на все четыре ноды обработки**: исправление в нём сразу работает везде.
+В Image Processor режим «Отключено» = картинка как есть; **резкость 0 = выключено**.
+
 ## 📦 Самостоятельные ноды (в корне)
 
-Эти ноды остаются в корне для обратной совместимости. Они самодостаточны и работают: если у вас настроены старые воркфлоу, всё продолжит работать.
+Эти ноды остаются в корне для обратной совместимости: старые воркфлоу продолжают работать.
 
 | Папка | Что это | Воркфлоу |
 |---|---|---|
 | [`ComfyUI-H3-Lora-Selector`](ComfyUI-H3-Lora-Selector/) | H3 LoRA Selector — 5 слотов LoRA | `workflow/neronVideoMinimaxH3_v2.0.json`, `workflow/neronSmartMiniMaxH3_v1.0.json` |
-| [`ComfyUI-H3-Static-Camera`](ComfyUI-H3-Static-Camera/) | Fixed Camera H3 Presets, Smart Load & Resize Image, Manual Color & Upscale Panel | `workflow/neronVideoMinimaxH3_v2.0.json`, `workflow/neronSmartMiniMaxH3_v1.0.json` |
-| [`ComfyUI-Interactive-Processor`](ComfyUI-Interactive-Processor/) | Interactive Image Processor | `workflow/neronVideoMinimaxH3_v2.0.json`, `workflow/neronSmartMiniMaxH3_v1.0.json` |
+| [`ComfyUI-H3-Static-Camera`](ComfyUI-H3-Static-Camera/) | Fixed Camera H3 Presets; Smart Load & Resize Image и Manual Color & Upscale Panel (*legacy*, код берут из `ComfyUI-Interactive-Processor`) | `workflow/neronVideoMinimaxH3_v2.0.json`, `workflow/neronSmartMiniMaxH3_v1.0.json` |
+| [`ComfyUI-Interactive-Processor`](ComfyUI-Interactive-Processor/) | Interactive Image Processor + **общий код картинки** для всех нод обработки | `workflow/neronVideoMinimaxH3_v2.0.json`, `workflow/neronSmartMiniMaxH3_v1.0.json` |
 | [`neron_dialog_autoprompter`](neron_dialog_autoprompter/) | Neron Dialog Autoprompter, Neron Multi-Image LLM | `workflow/neronSmartMiniMaxH3_v1.0.json` |
 | [`restore_studio`](restore_studio/) | Restore Studio, Live Preview | `workflow/Neron_Restore_Studio_Photoshop.json` |
 
@@ -222,6 +241,12 @@ A node folder must sit **directly** in `custom_nodes`, with no extra level:
 ❌ custom_nodes/neron-video-minimax-h3-i2v-main/ComfyUI-NeronH3Engine/__init__.py
 ```
 Nodes from `Neron_Studio_H3` are copied **one by one** (the folders inside it), not the whole folder.
+
+**Shared code lives in one copy.** Some folders use code from their neighbours, so copy them together:
+- `ComfyUI-H3-Static-Camera` and `NeronStudio-Image-Processor` → need `ComfyUI-Interactive-Processor` (image loading and color);
+- `NeronStudio-AutoPrompter` → needs `ComfyUI-H3-Static-Camera` (the H3 camera).
+
+If a neighbour is missing, the console names the folder you need.
 
 ### ⚠️ Do not mix the two options
 
@@ -347,15 +372,28 @@ Details in the **[README inside NeronTheme](NeronTheme/README.md)**.
 
 ---
 
+## 🗺 Map: which node to use
+
+| Task | Use | Also there (for old workflows) |
+|---|---|---|
+| Prepare the first frame | **🖼 Neron Studio Image Processor** — presets are center-cropped, Reset and Help | Interactive Image Processor (presets stretch the picture); Smart Load & Resize Image and Manual Color & Upscale Panel — *legacy*, same code |
+| Generate H3 video | **🎬 Neron H3 Engine** — quality; **⚡ Neron H3 Engine Fast** — speed (test, dev branch) | 🎥 Neron MiniMax H3 Generator (Lite) — for the Neron Studio H3 workflows |
+| Write the prompt | **🎬 Neron AutoPrompter** — an H3 prompt from a picture and a brief | 🎬 Neron Dialog Autoprompter and 🧠 Multi-Image LLM — dialog mode |
+| H3 camera | **⚡ Fixed Camera H3** | — |
+| UI theme | **Neron Theme 🎨 / Темы ComfyUI** | "Old Audio Studio theme (legacy)" — so old studio workflows open |
+
+The image loading and color code is **one for all four image nodes**: a fix there works everywhere at once.
+In Image Processor, Disabled = the picture as is; **sharpness 0 = off**.
+
 ## 📦 Standalone nodes (in the root)
 
-These nodes stay in the root for backward compatibility. They are self-contained and work: if you have old workflows set up, they will keep working.
+These nodes stay in the root for backward compatibility: old workflows keep working.
 
 | Folder | What it is | Workflow |
 |---|---|---|
 | [`ComfyUI-H3-Lora-Selector`](ComfyUI-H3-Lora-Selector/) | H3 LoRA Selector — 5 LoRA slots | `workflow/neronVideoMinimaxH3_v2.0.json`, `workflow/neronSmartMiniMaxH3_v1.0.json` |
-| [`ComfyUI-H3-Static-Camera`](ComfyUI-H3-Static-Camera/) | Fixed Camera H3 Presets, Smart Load & Resize Image, Manual Color & Upscale Panel | `workflow/neronVideoMinimaxH3_v2.0.json`, `workflow/neronSmartMiniMaxH3_v1.0.json` |
-| [`ComfyUI-Interactive-Processor`](ComfyUI-Interactive-Processor/) | Interactive Image Processor | `workflow/neronVideoMinimaxH3_v2.0.json`, `workflow/neronSmartMiniMaxH3_v1.0.json` |
+| [`ComfyUI-H3-Static-Camera`](ComfyUI-H3-Static-Camera/) | Fixed Camera H3 Presets; Smart Load & Resize Image and Manual Color & Upscale Panel (*legacy*, code from `ComfyUI-Interactive-Processor`) | `workflow/neronVideoMinimaxH3_v2.0.json`, `workflow/neronSmartMiniMaxH3_v1.0.json` |
+| [`ComfyUI-Interactive-Processor`](ComfyUI-Interactive-Processor/) | Interactive Image Processor + **shared image code** for all image nodes | `workflow/neronVideoMinimaxH3_v2.0.json`, `workflow/neronSmartMiniMaxH3_v1.0.json` |
 | [`neron_dialog_autoprompter`](neron_dialog_autoprompter/) | Neron Dialog Autoprompter, Neron Multi-Image LLM | `workflow/neronSmartMiniMaxH3_v1.0.json` |
 | [`restore_studio`](restore_studio/) | Restore Studio, Live Preview | `workflow/Neron_Restore_Studio_Photoshop.json` |
 
