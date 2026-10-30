@@ -12,6 +12,11 @@
 - Modes Fast / Balance / Clean / Custom; "From image" size; draft/refine balance in Custom and expert; 📋 run report on the node.
 - Ready workflow `ComfyUI-NeronH3EngineFast/workflows/Neron_H3_Engine_Fast.json`. dev only — for testing.
 
+**Установка на чистую систему / Fresh install:**
+- RU: Если Manager или ComfyUI Desktop не поставили библиотеки из `requirements.txt` (soundfile, imageio-ffmpeg), пакет Neron ставит их сам при запуске (в консоли — строка `[Neron pack] ставлю недостающие библиотеки`). Отключить: переменная `NERON_NO_AUTOINSTALL=1`.
+- RU: Audio Studio без soundfile больше не падает целиком (раньше все её ноды, включая Neron Video Combine, становились красными): WAV пишется и читается встроенным модулем Python, а если нужно что-то сверх этого — нода прямо пишет, что поставить.
+- EN: Missing `requirements.txt` libraries are installed automatically at startup (disable with `NERON_NO_AUTOINSTALL=1`). Audio Studio no longer fails as a whole without soundfile: WAV goes through Python's built-in wave module, anything beyond that reports what to install.
+
 **Image Processor (обе версии / both versions):**
 - RU: «Отключено» теперь значит «картинка как есть» — без округления до кратного 32 и без пересчёта пикселей (раньше 1200×720 молча растягивалось до 1216×736). Если форма та же и разница только от округления — края подрезаются на несколько пикселей вместо растяжения, люди не вытягиваются. Подпись под превью говорит, что произошло.
 - EN: "Disabled" now means "as is" — no rounding to 32 and no resampling (1200×720 used to be silently stretched to 1216×736). When the shape is the same and only rounding differs, a few edge pixels are trimmed instead of stretching. The preview caption says what happened.
