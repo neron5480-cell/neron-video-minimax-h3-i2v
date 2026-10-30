@@ -772,7 +772,7 @@ function createPreview(node) {
 }
 
 const DEFAULTS = {
-    "resize_mode": "Standard Presets / Пресеты",
+    "resize_mode": "Disabled / Отключено",
     "ai_preset": "1024x1024 (1:1 Square)",
     "aspect_ratio": "1:1",
     "max_dimension": 1024,
@@ -795,35 +795,34 @@ const HELP_TEXT = `
 ═══════════════════════════════════════════════════
 
 ━━━ WHAT IT IS ━━━
-A single node for preparing the start frame:
-load → resize → color → upscale (optional).
-Live preview right inside the node.
-
-━━━ IMAGE ━━━
-Pick a file. Any size, any format.
+One node to prepare the start frame:
+load → size → color → upscale (optional).
+Live preview inside the node.
 
 ━━━ SIZE ━━━
-Four modes:
-  • Presets          — 1024x1024, 16:9, 9:16, 21:9 etc.
-  • Aspect Ratio     — keep proportion, set limit.
-  • Manual           — exact width and height.
-  • Megapixels       — size by pixel count.
-
-divisible_by — rounding to a multiple
-(32 = MiniMax H3 requirement).
+  • Disabled     — the picture goes AS IS: no
+                   rounding, no resampling. Best for
+                   Neron H3 Engine / Fast: they fit
+                   the frame to the model themselves.
+  • Presets      — 1024x1024, 16:9, 9:16, 21:9…
+  • Aspect Ratio — set a proportion and a limit.
+  • Manual       — exact width and height.
+  • Megapixels   — size by pixel count.
+divisible_by — round to a multiple (32 for H3).
+If only rounding changes the shape, a few edge
+pixels are trimmed instead of stretching. A
+different shape (e.g. a portrait into 1:1) is
+stretched — the caption under the preview says so.
 
 ━━━ COLOR ━━━
-Brightness, contrast, saturation, sharpness.
-Preview updates on the fly — no Queue needed.
+Brightness 0, contrast 1, saturation 1 = no change.
+SHARPNESS 0 = OFF. Anything above ADDS sharpening:
+1.0 and more is strong (halos, grain). For video
+generation keep 0.
 
 ━━━ UPSCALE ━━━
-Optional AI upscale. Connect a model
-to the 'upscale_model' input.
-
-━━━ LIVE PREVIEW ━━━
-The bottom window shows the processed frame.
-Drag any slider — the preview updates instantly.
-Resolution is NOT artificially cut — full size.
+Optional AI upscale: connect a model to
+'upscale_model' and turn upscale on.
 
 ━━━ OUTPUTS ━━━
 IMAGE, MASK, width, height.
@@ -834,34 +833,34 @@ IMAGE, MASK, width, height.
 
 ━━━ ЧТО ЭТО ━━━
 Одна нода для подготовки стартового кадра:
-загрузка → ресайз → цвет → апскейл (опционально).
-Живое превью прямо внутри ноды.
+загрузка → размер → цвет → апскейл (по желанию).
+Живое превью прямо в ноде.
 
-━━━ ИЗОБРАЖЕНИЕ ━━━
-Выбери файл. Любой размер, любой формат.
+━━━ РАЗМЕР ━━━
+  • Отключено   — картинка идёт КАК ЕСТЬ: без
+                  округления и пересчёта пикселей.
+                  Лучший выбор для Neron H3 Engine /
+                  Fast: они сами подгоняют кадр под
+                  модель.
+  • Пресеты     — 1024x1024, 16:9, 9:16, 21:9…
+  • Пропорция   — задать соотношение и предел.
+  • Ручной      — точная ширина и высота.
+  • Мегапиксели — размер по числу пикселей.
+divisible_by — округление до кратного (32 для H3).
+Если форму меняет только округление — по краям
+срезается несколько пикселей вместо растяжения.
+Другая форма (например, вертикальное фото в 1:1)
+растягивается — подпись под превью это скажет.
 
-━━━ РАЗМЕР / SIZE ━━━
-Четыре режима:
-  • Пресеты          — 1024x1024, 16:9, 9:16, 21:9 и т.д.
-  • Соотношение      — сохранить пропорцию, задать предел.
-  • Ручной           — точная ширина и высота.
-  • Мегапиксели      — размер по количеству пикселей.
+━━━ ЦВЕТ ━━━
+Яркость 0, контраст 1, насыщенность 1 — без изменений.
+РЕЗКОСТЬ 0 = ВЫКЛЮЧЕНО. Всё, что выше, ДОБАВЛЯЕТ
+резкость: 1.0 и больше — сильно (ореолы, зерно).
+Для генерации видео держи 0.
 
-divisible_by — округление до кратности
-(32 = требование MiniMax H3).
-
-━━━ ЦВЕТ / COLOR ━━━
-Яркость, контраст, насыщенность, резкость.
-Превью обновляется на лету — Queue не нужен.
-
-━━━ АПСКЕЙЛ / UPSCALE ━━━
-Опциональный AI-апскейл. Подключи модель
-ко входу 'upscale_model'.
-
-━━━ ЖИВОЕ ПРЕВЬЮ ━━━
-В нижнем окне — обработанный кадр.
-Двигай любой ползунок — превью обновляется мгновенно.
-Разрешение НЕ урезается искусственно — полный размер.
+━━━ АПСКЕЙЛ ━━━
+AI-апскейл по желанию: подключи модель ко входу
+'upscale_model' и включи upscale.
 
 ━━━ ВЫХОДЫ ━━━
 IMAGE, MASK, width, height.

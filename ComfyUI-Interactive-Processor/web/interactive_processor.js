@@ -366,7 +366,7 @@ function createPreview(node) {
 
     root.style.cssText =
         "display:flex;flex-direction:column;width:100%;height:100%;" +
-        "min-width:0;box-sizing:border-box;overflow:hidden;" +
+        "min-width:0;max-width:100%;box-sizing:border-box;overflow:hidden;" +
         "background:#151515;border:1px solid #383838";
 
     area.style.cssText =
@@ -576,6 +576,145 @@ function createPreview(node) {
 }
 
 
+
+function setWidgetValue(node, name, value) {
+    const w = getWidget(node, name);
+    if (!w) return;
+    w.value = value;
+    try {
+        w.callback?.(value, app.canvas, node, [0, 0], null);
+    } catch (_) {}
+}
+
+const DEFAULTS = {
+    "resize_mode": "Disabled / Отключено",
+    "ai_preset": "1024x1024 (1:1 Square)",
+    "aspect_ratio": "1:1",
+    "max_dimension": 1024,
+    "manual_width": 1024,
+    "manual_height": 1024,
+    "megapixels": "1.0 MP (1024x1024)",
+    "divisible_by": 32,
+    "BRIGHTNESS / ЯРКОСТЬ": 0.0,
+    "CONTRAST / КОНТРАСТ": 1.0,
+    "SATURATION / НАСЫЩЕННОСТЬ": 1.0,
+    "SHARPNESS / РЕЗКОСТЬ": 0.0,
+    "upscale": "Disabled / Откл",
+    "upscale_scale": 2.0,
+    "upscale_precision": "Fast fp16 / Быстро",
+    "upscale_speed": "Quality / Качество",
+};
+
+const HELP_TEXT = `
+🖼 INTERACTIVE IMAGE PROCESSOR
+═══════════════════════════════════════════════════
+
+━━━ WHAT IT IS ━━━
+One node to prepare the start frame:
+load → size → color → upscale (optional).
+Live preview inside the node.
+
+━━━ SIZE ━━━
+  • Disabled     — the picture goes AS IS: no
+                   rounding, no resampling. Best for
+                   Neron H3 Engine / Fast: they fit
+                   the frame to the model themselves.
+  • Presets      — 1024x1024, 16:9, 9:16, 21:9…
+  • Aspect Ratio — set a proportion and a limit.
+  • Manual       — exact width and height.
+  • Megapixels   — size by pixel count.
+divisible_by — round to a multiple (32 for H3).
+If only rounding changes the shape, a few edge
+pixels are trimmed instead of stretching. A
+different shape (e.g. a portrait into 1:1) is
+stretched — the caption under the preview says so.
+
+━━━ COLOR ━━━
+Brightness 0, contrast 1, saturation 1 = no change.
+SHARPNESS 0 = OFF. Anything above ADDS sharpening:
+1.0 and more is strong (halos, grain). For video
+generation keep 0.
+
+━━━ UPSCALE ━━━
+Optional AI upscale: connect a model to
+'upscale_model' and turn upscale on.
+
+━━━ OUTPUTS ━━━
+IMAGE, MASK, width, height.
+
+═══════════════════════════════════════════════════
+🇷🇺 РУССКИЙ
+═══════════════════════════════════════════════════
+
+━━━ ЧТО ЭТО ━━━
+Одна нода для подготовки стартового кадра:
+загрузка → размер → цвет → апскейл (по желанию).
+Живое превью прямо в ноде.
+
+━━━ РАЗМЕР ━━━
+  • Отключено   — картинка идёт КАК ЕСТЬ: без
+                  округления и пересчёта пикселей.
+                  Лучший выбор для Neron H3 Engine /
+                  Fast: они сами подгоняют кадр под
+                  модель.
+  • Пресеты     — 1024x1024, 16:9, 9:16, 21:9…
+  • Пропорция   — задать соотношение и предел.
+  • Ручной      — точная ширина и высота.
+  • Мегапиксели — размер по числу пикселей.
+divisible_by — округление до кратного (32 для H3).
+Если форму меняет только округление — по краям
+срезается несколько пикселей вместо растяжения.
+Другая форма (например, вертикальное фото в 1:1)
+растягивается — подпись под превью это скажет.
+
+━━━ ЦВЕТ ━━━
+Яркость 0, контраст 1, насыщенность 1 — без изменений.
+РЕЗКОСТЬ 0 = ВЫКЛЮЧЕНО. Всё, что выше, ДОБАВЛЯЕТ
+резкость: 1.0 и больше — сильно (ореолы, зерно).
+Для генерации видео держи 0.
+
+━━━ АПСКЕЙЛ ━━━
+AI-апскейл по желанию: подключи модель ко входу
+'upscale_model' и включи upscale.
+
+━━━ ВЫХОДЫ ━━━
+IMAGE, MASK, width, height.
+
+═══════════════════════════════════════════════════
+`;
+
+function showHelpDialog() {
+    const overlay = document.createElement("div");
+    overlay.style.cssText =
+        "position:fixed;inset:0;background:rgba(0,0,0,0.7);" +
+        "z-index:99999;display:flex;align-items:center;" +
+        "justify-content:center;";
+    const box = document.createElement("div");
+    box.style.cssText =
+        "background:#1a1a1a;color:#e0e0e0;border:1px solid #444;" +
+        "border-radius:8px;padding:20px;max-width:820px;" +
+        "max-height:85vh;overflow-y:auto;font:13px/1.5 monospace;" +
+        "white-space:pre-wrap;box-shadow:0 8px 32px rgba(0,0,0,0.8);";
+    box.textContent = HELP_TEXT;
+    const btn = document.createElement("button");
+    btn.textContent = "Close / Закрыть";
+    btn.style.cssText =
+        "display:block;margin:16px auto 0;padding:8px 24px;" +
+        "background:#2a5d9c;color:#fff;border:none;" +
+        "border-radius:4px;cursor:pointer;font:13px sans-serif;";
+    btn.onclick = () => overlay.remove();
+    box.append(btn);
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    overlay.append(box);
+    document.body.append(overlay);
+}
+
+function resetAllWidgets(node) {
+    for (const [name, value] of Object.entries(DEFAULTS)) {
+        setWidgetValue(node, name, value);
+    }
+
+
 // ---------------------------------------------------------------
 // Регистрация ноды
 // ---------------------------------------------------------------
@@ -596,12 +735,17 @@ app.registerExtension({
             const preview = createPreview(node);
             node.__interactivePreview = preview;
 
-            // Без getMaxHeight: превью занимает всё свободное место ноды.
-            node.addDOMWidget("interactive_preview", "preview", preview.root, {
+            const domWidget = node.addDOMWidget("interactive_preview", "preview", preview.root, {
                 serialize: false,
                 hideOnZoom: false,
                 getMinHeight: () => MIN_PREVIEW_HEIGHT + INFO_HEIGHT,
             });
+            // ширина превью = ширина ноды: раньше картинка вылезала за правый край ноды
+            if (domWidget) {
+                domWidget.computeSize = function (width) {
+                    return [width, MIN_PREVIEW_HEIGHT + INFO_HEIGHT];
+                };
+            }
 
             for (const widget of node.widgets ?? []) {
                 if (!WATCHED.has(widget.name)) continue;
@@ -616,6 +760,12 @@ app.registerExtension({
                     return r;
                 };
             }
+
+            // кнопки в конце: старые сохранённые схемы (значения по порядку) не сдвигаются
+            node.addWidget("button", "🔄 Reset to Defaults / Сброс",
+                null, () => resetAllWidgets(node));
+            node.addWidget("button", "📖 Help / Справка",
+                null, () => showHelpDialog());
 
             const origConfigure = node.onConfigure;
             node.onConfigure = function () {

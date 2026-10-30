@@ -39,7 +39,7 @@ class MySmartLoadImage:
                     ],
                     {
                         "default": (
-                            "Standard Presets / Пресеты"
+                            "Disabled / Отключено"
                         ),
                     },
                 ),
