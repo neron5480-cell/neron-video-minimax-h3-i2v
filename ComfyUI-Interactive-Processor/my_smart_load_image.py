@@ -458,4 +458,4 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SmartLoadAndResizeImage": (
         "⚡ Smart Load & Resize Image"
     ),
-}
+}

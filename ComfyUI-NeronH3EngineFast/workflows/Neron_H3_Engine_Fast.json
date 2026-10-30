@@ -42,7 +42,7 @@
     },
     {
       "id": 2,
-      "type": "InteractiveImageProcessor",
+      "type": "NeronStudioImageProcessor",
       "pos": [
         -520,
         300
@@ -87,7 +87,7 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "InteractiveImageProcessor"
+        "Node name for S&R": "NeronStudioImageProcessor"
       },
       "widgets_values": [
         "",
@@ -103,7 +103,7 @@
         0,
         1,
         1,
-        1.0,
+        0.0,
         "Disabled / Откл",
         2,
         "image",

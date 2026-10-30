@@ -298,6 +298,7 @@ of H3 Engine.
 prompt      — from CR Prompt Text, AutoPrompter…
 first_frame — first frame (LoadImage, Image
               Processor, AutoPrompter img_0).
+              Image Processor: SHARPNESS 0 (off)!
 last_frame  — last frame (optional).
 No frames — pure text-to-video.
 width/height — optional: they set the SHAPE,
@@ -385,6 +386,7 @@ that is how we find the balance.
 prompt      — из CR Prompt Text, AutoPrompter…
 first_frame — первый кадр (LoadImage, Image
               Processor, AutoPrompter img_0).
+              В Image Processor РЕЗКОСТЬ 0 (выкл)!
 last_frame  — последний кадр (необязательно).
 Без кадров — «текст → видео».
 width/height — необязательные: задают ФОРМУ,
