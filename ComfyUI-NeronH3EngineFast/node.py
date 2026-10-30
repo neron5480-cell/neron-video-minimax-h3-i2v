@@ -90,13 +90,13 @@ class NeronH3EngineFast:
                                    "EN: Show draft/refine balance, models, LoRAs and seed. Hidden settings still work.")),
                 "mode": (ef.MODES, _main("режим / mode", default=ef.MODES[1],
                           tooltip="Сколько времени отдать чистовику (он рисует деталь в полном размере):\n"
-                                  "⚡ Быстро — чистовик 3 шага, лёгкая перерисовка.\n"
-                                  "Баланс — 4 шага, перерисовка посильнее.\n"
+                                  "⚡ Быстро — черновик меньше (0.35 площади), чистовик 3 шага.\n"
+                                  "Баланс — черновик 0.5 площади, чистовик 3 шага, сила 0.5 (проверено).\n"
                                   "Чисто — черновик крупнее, чистовик 6 шагов.\n"
                                   "Свой — значения из ползунков эксперта.\n"
                                   "Это стартовые точки для тестов, не замеры.\n\n"
                                   "EN: How much time the refine gets (it draws detail at full size). "
-                                  "Fast — 3 steps, light; Balance — 4 steps, stronger; Clean — bigger draft, 6 steps; "
+                                  "Fast — smaller draft (0.35 area), 3 refine steps; Balance — 0.5 draft area, 3 refine steps at 0.5 (tested); Clean — bigger draft, 6 steps; "
                                   "Custom — expert sliders. Starting points for testing, not measurements.")),
                 "seconds": ("FLOAT", _main("длительность, с / seconds", default=10.0, min=1.0, max=15.0, step=0.5,
                             display="slider", tooltip="До 15 с — на этом обучена модель. Кадры подгоняются к её сетке "
@@ -119,7 +119,7 @@ class NeronH3EngineFast:
                 "draft_steps": ("INT", _exp("черновик · шаги / draft steps", default=8, min=4, max=20,
                                 tooltip="Режим «Свой». Быстрые модели обучены на 8 шагов.\n\nEN: Custom mode. "
                                         "Fast models are trained for 8 steps.")),
-                "refine_steps": ("INT", _exp("чистовик · шаги / refine steps", default=4, min=1, max=12,
+                "refine_steps": ("INT", _exp("чистовик · шаги / refine steps", default=3, min=1, max=12,
                                  tooltip="Режим «Свой». Шаги в полном размере — самые дорогие.\n\nEN: Custom mode. "
                                          "Full-size steps — the expensive ones.")),
                 "refine_strength": ("FLOAT", _exp("чистовик · сила / refine strength", default=0.5, min=0.1,
@@ -180,7 +180,7 @@ class NeronH3EngineFast:
         }
 
     def generate(self, expert=False, mode=None, seconds=10.0, size=None, manual_width=1344, manual_height=768,
-                 draft_area=0.5, draft_steps=8, refine_steps=4, refine_strength=0.5, seed=1, keep_draft_audio=True,
+                 draft_area=0.5, draft_steps=8, refine_steps=3, refine_strength=0.5, seed=1, keep_draft_audio=True,
                  draft_fast_attention=False, lora_1=NO_LORA, lora_1_strength=1.0, lora_2=NO_LORA,
                  lora_2_strength=1.0, draft_model=None, unet_model=None, refine_lora_model=None,
                  upscaler_model=None, clip_model=None, vae_video_model=None, vae_audio_model=None,

@@ -313,8 +313,9 @@ the size is always the passport maximum
 
 📌 MODE / РЕЖИМ 📌
 How much time the refine gets:
-⚡ Fast    — refine 3 steps, light redraw.
-Balance   — refine 4 steps, stronger redraw.
+⚡ Fast    — smaller draft (0.35 area), refine 3 steps.
+Balance   — draft 0.5 area, refine 3 steps at 0.5
+            (tested: as good as 4 steps, ~1 min faster).
 Clean     — bigger draft, refine 6 steps.
 Custom    — your own values (BALANCE sliders).
 These are starting points for our tests,
@@ -401,8 +402,11 @@ width/height — необязательные: задают ФОРМУ,
 
 📌 РЕЖИМ / MODE 📌
 Сколько времени отдать чистовику:
-⚡ Быстро — чистовик 3 шага, лёгкая перерисовка.
-Баланс   — 4 шага, перерисовка посильнее.
+⚡ Быстро — черновик меньше (0.35 площади),
+           чистовик 3 шага.
+Баланс   — черновик 0.5 площади, чистовик 3 шага,
+           сила 0.5 (проверено: как 4 шага,
+           на ~1 мин быстрее).
 Чисто    — черновик крупнее, чистовик 6 шагов.
 Свой     — свои значения (ползунки БАЛАНС).
 Это стартовые точки для наших тестов,
