@@ -594,8 +594,95 @@ def _detect_llama_asset_patterns():
     return None
 
 
+_LLAMA_RELEASES_URL = "https://api.github.com/repos/ggml-org/llama.cpp/releases?per_page=8"
+
+
+def _driver_cuda_version():
+    """Версия CUDA, которую тянет драйвер (из nvidia-smi), например (13, 0). None — не удалось узнать."""
+    try:
+        out = subprocess.run(["nvidia-smi"], capture_output=True, text=True, timeout=10).stdout
+        m = re.search(r"CUDA Version:\s*(\d+)\.(\d+)", out)
+        if m:
+            return int(m.group(1)), int(m.group(2))
+    except Exception:
+        pass
+    return None
+
+
+def _pick_llama_assets(assets):
+    """Под эту систему → (основной zip, zip с CUDA-библиотеками или None, подпись) или None.
+    Имена в релизах llama.cpp меняются (cuda-12.4 → cuda-13.4…), поэтому ищем по образцу, а не по точному имени.
+    Asset names change between releases, so match by pattern, not by exact name."""
+    zips = {a.get("name", ""): a for a in assets if a.get("name", "").endswith(".zip")}
+    system = platform.system()
+    if system == "Windows":
+        if platform.machine().lower() not in ("amd64", "x86_64"):
+            return None
+        if shutil.which("nvidia-smi"):
+            cuda = []
+            for n in zips:
+                m = re.match(r"^llama-.*bin-win-cuda-?(\d+(?:\.\d+)*)-x64\.zip$", n)
+                if m:
+                    cuda.append((tuple(int(x) for x in m.group(1).split(".")), n))
+            drv = _driver_cuda_version()
+            if drv:
+                # драйвер тянет любую сборку своей главной версии CUDA (13.0 → 13.4 можно), но не выше
+                fits = [c for c in cuda if c[0][0] <= drv[0]]
+                cuda = fits or cuda
+            if cuda:
+                cuda.sort(reverse=True)
+                ver = ".".join(str(x) for x in cuda[0][0])
+                runtime = next((a for n, a in zips.items()
+                                if n.startswith("cudart") and f"cuda-{ver}-x64" in n), None)
+                return zips[cuda[0][1]], runtime, f"CUDA {ver}"
+        for key, label in (("bin-win-vulkan-x64", "Vulkan"), ("bin-win-cpu-x64", "CPU"),
+                           ("win-avx2-x64", "CPU AVX2")):
+            for n, a in zips.items():
+                if n.startswith("llama-") and key in n:
+                    return a, None, label
+        return None
+    if system == "Linux":
+        for key, label in (("bin-ubuntu-vulkan-x64", "Vulkan"), ("bin-ubuntu-x64", "CPU")):
+            for n, a in zips.items():
+                if n.startswith("llama-") and key in n:
+                    return a, None, label
+    return None
+
+
+def _download_and_extract(asset, target_dir: Path, flatten_into: Path = None):
+    """Скачать zip и распаковать. flatten_into — положить все файлы прямо в эту папку (для CUDA-библиотек)."""
+    print(f"[Neron Dialog] Скачиваю {asset['name']} ({asset.get('size', 0) / 1024 / 1024:.0f} МБ)...")
+    fd, tmp_name = tempfile.mkstemp(suffix=".zip")
+    os.close(fd)
+    tmp_path = Path(tmp_name)
+    try:
+        urllib.request.urlretrieve(asset["browser_download_url"], tmp_path)
+        with zipfile.ZipFile(tmp_path) as zf:
+            names = [n for n in zf.namelist() if not n.endswith("/")]
+            if flatten_into is not None:
+                flatten_into.mkdir(parents=True, exist_ok=True)
+                for member in names:
+                    with zf.open(member) as src, open(flatten_into / Path(member).name, "wb") as dst:
+                        shutil.copyfileobj(src, dst)
+                return
+            top_dirs = set(n.split("/")[0] for n in names if "/" in n)
+            if len(top_dirs) == 1 and all("/" in n for n in names):
+                prefix = list(top_dirs)[0] + "/"
+                for member in names:
+                    target = target_dir / member[len(prefix):]
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    with zf.open(member) as src, open(target, "wb") as dst:
+                        shutil.copyfileobj(src, dst)
+            else:
+                zf.extractall(target_dir)
+    finally:
+        try:
+            tmp_path.unlink()
+        except Exception:
+            pass
+
+
 def _download_llama_server(vendor_dir: Path):
-    """Скачивает свежий релиз llama.cpp и распаковывает в vendor_dir."""
     global _DOWNLOAD_ATTEMPTED
     if _DOWNLOAD_ATTEMPTED:
         return None
@@ -605,81 +692,46 @@ def _download_llama_server(vendor_dir: Path):
     print("[Neron Dialog] llama-server не найден — пробую скачать свежий релиз...")
 
     try:
-        req = urllib.request.Request(
-            _LLAMA_RELEASE_URL,
-            headers={"User-Agent": "neron-dialog-autoprompter"},
-        )
+        req = urllib.request.Request(_LLAMA_RELEASES_URL, headers={"User-Agent": "neron-autoprompter"})
         with urllib.request.urlopen(req, timeout=30) as r:
-            release = json.loads(r.read())
+            releases = json.loads(r.read())
     except Exception as e:
-        print(f"[Neron Dialog] Не удалось получить список релизов: {e}")
+        print(f"[Neron Dialog] Не удалось получить список релизов llama.cpp: {e}")
         return None
 
-    assets = release.get("assets", [])
-    patterns = _detect_llama_asset_patterns()
-    if not patterns:
-        print("[Neron Dialog] Не могу определить подходящую сборку для этой системы")
-        return None
-
-    chosen = None
-    for pat in patterns:
-        for a in assets:
-            if pat in a["name"] and a["name"].endswith(".zip"):
-                chosen = a
-                break
-        if chosen:
+    picked, tag = None, ""
+    for rel in releases if isinstance(releases, list) else [releases]:
+        picked = _pick_llama_assets(rel.get("assets", []))
+        if picked:
+            tag = rel.get("tag_name", "")
             break
-
-    if not chosen:
-        print(f"[Neron Dialog] В релизе нет подходящего ассета. Искал: {patterns}")
+    if not picked:
+        print("[Neron Dialog] В последних релизах llama.cpp нет сборки для этой системы. "
+              "Скачай вручную: https://github.com/ggml-org/llama.cpp/releases и распакуй в " + str(vendor_dir))
         return None
 
-    print(f"[Neron Dialog] Скачиваю {chosen['name']} "
-          f"({chosen.get('size', 0) / 1024 / 1024:.0f} МБ)...")
-
-    tmp_path = None
+    main, runtime, label = picked
+    print(f"[Neron Dialog] Выбрана сборка {label} из релиза {tag}")
     try:
-        fd, tmp_name = tempfile.mkstemp(suffix=".zip")
-        os.close(fd)
-        tmp_path = Path(tmp_name)
-        urllib.request.urlretrieve(chosen["browser_download_url"], tmp_path)
-
-        print(f"[Neron Dialog] Распаковываю в {vendor_dir}...")
-        with zipfile.ZipFile(tmp_path) as zf:
-            names = [n for n in zf.namelist() if not n.endswith("/")]
-            top_dirs = set(n.split("/")[0] for n in names if "/" in n)
-            if len(top_dirs) == 1 and all("/" in n for n in names):
-                prefix = list(top_dirs)[0] + "/"
-                for member in names:
-                    if not member.startswith(prefix):
-                        continue
-                    target = vendor_dir / member[len(prefix):]
-                    target.parent.mkdir(parents=True, exist_ok=True)
-                    with zf.open(member) as src, open(target, "wb") as dst:
-                        shutil.copyfileobj(src, dst)
-            else:
-                zf.extractall(vendor_dir)
-
+        _download_and_extract(main, vendor_dir)
         exe_name = "llama-server.exe" if platform.system() == "Windows" else "llama-server"
-        exe = vendor_dir / exe_name
-        if not exe.exists():
-            hits = list(vendor_dir.rglob(exe_name))
-            if hits:
-                exe = hits[0]
-        if exe.exists():
-            print(f"[Neron Dialog] ✅ llama-server установлен: {exe}")
-            return exe
-        print("[Neron Dialog] В архиве не нашёл llama-server")
-        return None
+        hits = [h for h in vendor_dir.rglob(exe_name) if h.is_file()]
+        if not hits:
+            print("[Neron Dialog] В архиве не нашёл llama-server")
+            return None
+        exe = hits[0]
+        if runtime is not None:
+            _download_and_extract(runtime, vendor_dir, flatten_into=exe.parent)
+        if platform.system() != "Windows":
+            try:
+                exe.chmod(0o755)
+            except Exception:
+                pass
+        print(f"[Neron Dialog] ✅ llama-server установлен ({label}): {exe}")
+        return exe
     except Exception as e:
         print(f"[Neron Dialog] Ошибка скачивания: {e}")
         return None
-    finally:
-        if tmp_path is not None:
-            try:
-                tmp_path.unlink(missing_ok=True)
-            except Exception:
-                pass
 
 
 # ============================================================
