@@ -38,7 +38,7 @@ class MySmartLoadImage:
                     ],
                     {
                         "default": (
-                            "Standard Presets / Пресеты"
+                            "Disabled / Отключено"
                         ),
                     },
                 ),
@@ -148,6 +148,13 @@ class MySmartLoadImage:
 
         return max(divisible_by, rounded)
 
+    @staticmethod
+    def same_shape(orig_w, orig_h, new_w, new_h, tolerance=0.04):
+        """Формы отличаются меньше чем на 4% — значит, разница только от округления."""
+        a = float(orig_w) / float(orig_h)
+        b = float(new_w) / float(new_h)
+        return abs(a / b - 1.0) < tolerance
+
     def calculate_size(
         self,
         orig_w,
@@ -163,6 +170,12 @@ class MySmartLoadImage:
     ):
         new_w = int(orig_w)
         new_h = int(orig_h)
+
+        # «Отключено» — картинка идёт как есть, без округления и пересчёта пикселей.
+        # Размер под модель подгонит сам генератор (он всё равно приводит кадр к своему холсту).
+        # Disabled — the picture goes as is: no rounding, no resampling.
+        if "Disabled" in resize_mode:
+            return new_w, new_h
 
         if "Standard Presets" in resize_mode:
             preset_dict = {
@@ -356,11 +369,30 @@ class MySmartLoadImage:
         # Если исходные пропорции отличаются
         # от выбранных, изображение растягивается
         # или сжимается до нового разрешения.
+        # Если форма почти та же (разница только от округления до кратного) —
+        # не растягиваем, а подрезаем края на несколько пикселей: люди и предметы
+        # не вытягиваются. Если форма другая (выбран другой формат) — как раньше,
+        # картинка целиком растягивается.
+        # Same shape (only rounding differs) — trim a few edge pixels instead of
+        # stretching; a different shape — stretched whole, as before.
+        keep_shape = (
+            rgb_image.size != (new_w, new_h)
+            and self.same_shape(orig_w, orig_h, new_w, new_h)
+        )
+
         if rgb_image.size != (new_w, new_h):
-            rgb_image = rgb_image.resize(
-                (new_w, new_h),
-                Image.Resampling.LANCZOS,
-            )
+            if keep_shape:
+                rgb_image = ImageOps.fit(
+                    rgb_image,
+                    (new_w, new_h),
+                    Image.Resampling.LANCZOS,
+                    centering=(0.5, 0.5),
+                )
+            else:
+                rgb_image = rgb_image.resize(
+                    (new_w, new_h),
+                    Image.Resampling.LANCZOS,
+                )
 
         image_np = np.asarray(
             rgb_image,
@@ -376,10 +408,18 @@ class MySmartLoadImage:
                 new_w,
                 new_h,
             ):
-                alpha_image = alpha_image.resize(
-                    (new_w, new_h),
-                    Image.Resampling.LANCZOS,
-                )
+                if keep_shape:
+                    alpha_image = ImageOps.fit(
+                        alpha_image,
+                        (new_w, new_h),
+                        Image.Resampling.LANCZOS,
+                        centering=(0.5, 0.5),
+                    )
+                else:
+                    alpha_image = alpha_image.resize(
+                        (new_w, new_h),
+                        Image.Resampling.LANCZOS,
+                    )
 
             mask_np = np.asarray(
                 alpha_image,
@@ -418,4 +458,4 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SmartLoadAndResizeImage": (
         "⚡ Smart Load & Resize Image"
     ),
-}
+}

@@ -1,5 +1,21 @@
 # Changelog / История изменений
 
+## Image Processor — исправления / fixes (30.10.2026)
+
+**RU (обе ноды: Interactive Image Processor и 🖼 Neron Studio Image Processor):**
+- **«Отключено» = картинка как есть**: без округления до кратного 32 и без пересчёта пикселей. Раньше, например, 1200×720 молча растягивалось до 1216×736 — фигуры вытягивались, кадр мылился.
+- Если форму меняет только округление — по краям срезается несколько пикселей вместо растяжения. Подпись под превью говорит, что произошло: «как есть», «края подрезаны» или «другой формат — растянуто».
+- Режим размера у новой ноды по умолчанию — **«Отключено»** (раньше пресет 1024×1024 растягивал любую фотку в квадрат). Сохранённые воркфлоу не меняются.
+- **Резкость: 0 = выключено.** Всё, что выше, добавляет резкость; 1.0 и больше — сильно (ореолы, зерно). Подсказка у ползунка и в справке.
+- Interactive Image Processor: появились **🔄 Сброс** и **📖 Справка** (RU/EN), превью больше не вылезает за край ноды. Кнопки стоят в конце — старые воркфлоу открываются без сдвига настроек.
+
+**EN (both nodes):**
+- **Disabled = as is**: no rounding to 32 and no resampling (1200×720 used to be silently stretched to 1216×736).
+- When only rounding changes the shape, a few edge pixels are trimmed instead of stretching; the preview caption says what happened.
+- New nodes default to **Disabled** (the 1024×1024 preset used to stretch every photo into a square). Saved workflows are unchanged.
+- **Sharpness 0 = off**; anything above adds sharpening, 1.0+ is strong. Tooltip and help explain it.
+- Interactive Image Processor: **Reset** and bilingual **Help** buttons; the preview stays inside the node. Buttons are at the end, so old workflows open without shifted settings.
+
 ## Установка на чистую систему / Fresh install fix (30.10.2026)
 
 **RU:**

@@ -54,6 +54,7 @@ class MyTurboColorFix:
                         "min": 0.00,
                         "max": 2.00,
                         "step": 0.05,
+                        "tooltip": "0 = выключено. Это добавка резкости: уже 0.5 заметно, 1.0 и выше — сильно (ореолы, шум). Для генерации видео лучше 0.\n\nEN: 0 = off. This ADDS sharpening: 0.5 is noticeable, 1.0+ is strong (halos, noise). For video generation keep 0.",
                         "display": "slider",
                     },
                 ),
