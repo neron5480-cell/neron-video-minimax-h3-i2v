@@ -29,7 +29,8 @@ PRESETS = {
 
 
 def _snap(v):
-    return max(GRID, int(round(v / GRID)) * GRID)
+    # обычное округление (0.5 — вверх); round() в Python округляет 0.5 к чётному: 720 → 704 вместо 736
+    return max(GRID, int(math.floor(v / GRID + 0.5)) * GRID)
 
 
 def canvas(width, height):

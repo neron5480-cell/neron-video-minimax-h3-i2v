@@ -300,8 +300,9 @@ first_frame — first frame (LoadImage, Image
               Processor, AutoPrompter img_0).
 last_frame  — last frame (optional).
 No frames — pure text-to-video.
-width/height/length_in — optional, they win over
-the widgets and are clamped to the passport.
+width/height — optional: they set the SHAPE,
+the size is always the passport maximum
+(1200×720 → 1280×768). length_in — frames.
 
 📌 MODE / РЕЖИМ 📌
 How much time the refine gets:
@@ -386,8 +387,9 @@ first_frame — первый кадр (LoadImage, Image
               Processor, AutoPrompter img_0).
 last_frame  — последний кадр (необязательно).
 Без кадров — «текст → видео».
-width/height/length_in — необязательные, главнее
-виджетов и тоже ограничены паспортом.
+width/height — необязательные: задают ФОРМУ,
+размер всегда максимальный по паспорту
+(1200×720 → 1280×768). length_in — кадры.
 
 📌 РЕЖИМ / MODE 📌
 Сколько времени отдать чистовику:

@@ -171,7 +171,9 @@ class NeronH3EngineFast:
                 "first_frame": ("IMAGE", {"tooltip": "Первый кадр (из LoadImage, Image Processor, AutoPrompter img_0). "
                                                      "Без кадров — «текст → видео».\n\nEN: First frame. None — text-to-video."}),
                 "last_frame": ("IMAGE", {"tooltip": "Последний кадр (необязательно).\n\nEN: Last frame (optional)."}),
-                "width": ("INT", {"forceInput": True, "tooltip": "Внешний размер. Больше паспорта не будет."}),
+                "width": ("INT", {"forceInput": True, "tooltip": "Задаёт форму кадра; размер всегда максимальный по паспорту "
+                                                  "(например, 1200×720 → 1280×768).\n\nEN: Sets the frame shape; "
+                                                  "the size is always the passport maximum."}),
                 "height": ("INT", {"forceInput": True}),
                 "length_in": ("INT", {"forceInput": True, "tooltip": "Внешняя длина в кадрах. Не больше 362."}),
             },
@@ -189,7 +191,9 @@ class NeronH3EngineFast:
             raise ValueError("[H3 Fast] Нет промпта: подключи вход prompt / connect the prompt input")
         notes = []
         if width is not None and height is not None:
-            w, h, note = passport.fit(int(width), int(height))
+            # цель этой ноды — максимальный размер модели: провода задают ФОРМУ, размер — паспортный
+            w, h = passport.canvas(int(width), int(height))
+            note = f"форма с проводов {int(width)}×{int(height)} → паспорт {w}×{h}"
         elif size == passport.FROM_IMAGE:
             if first_frame is not None:
                 w, h = passport.canvas(int(first_frame.shape[2]), int(first_frame.shape[1]))
