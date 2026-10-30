@@ -152,6 +152,13 @@ class MySmartLoadImage:
 
         return max(divisible_by, rounded)
 
+    @staticmethod
+    def same_shape(orig_w, orig_h, new_w, new_h, tolerance=0.04):
+        """Формы отличаются меньше чем на 4% — значит, разница только от округления."""
+        a = float(orig_w) / float(orig_h)
+        b = float(new_w) / float(new_h)
+        return abs(a / b - 1.0) < tolerance
+
     def calculate_size(
         self,
         orig_w,
@@ -167,6 +174,11 @@ class MySmartLoadImage:
     ):
         new_w = int(orig_w)
         new_h = int(orig_h)
+
+        # «Отключено» — картинка как есть, без округления и пересчёта пикселей.
+        # Disabled — the picture goes as is.
+        if "Disabled" in resize_mode:
+            return new_w, new_h
 
         if "Standard Presets" in resize_mode:
             preset_dict = {
@@ -265,7 +277,10 @@ class MySmartLoadImage:
         rgb_image = source_image.convert("RGB")
 
         if rgb_image.size != (new_w, new_h):
-            if any(x in resize_mode for x in ["Standard Presets", "Aspect Ratio"]):
+            # пресеты и пропорции — подрезка по центру; а если форма та же и разница только
+            # от округления до кратного — тоже подрезка (несколько пикселей), а не растяжение
+            if (any(x in resize_mode for x in ["Standard Presets", "Aspect Ratio"])
+                    or self.same_shape(orig_w, orig_h, new_w, new_h)):
                 rgb_image = ImageOps.fit(
                     rgb_image,
                     (new_w, new_h),
@@ -282,10 +297,14 @@ class MySmartLoadImage:
 
         if alpha_image is not None:
             if alpha_image.size != (new_w, new_h):
-                alpha_image = alpha_image.resize(
-                    (new_w, new_h),
-                    Image.Resampling.LANCZOS,
-                )
+                if (any(x in resize_mode for x in ["Standard Presets", "Aspect Ratio"])
+                        or self.same_shape(orig_w, orig_h, new_w, new_h)):
+                    alpha_image = ImageOps.fit(alpha_image, (new_w, new_h), Image.Resampling.LANCZOS)
+                else:
+                    alpha_image = alpha_image.resize(
+                        (new_w, new_h),
+                        Image.Resampling.LANCZOS,
+                    )
 
             mask_np = np.asarray(alpha_image, dtype=np.float32) / 255.0
             mask_tensor = 1.0 - torch.from_numpy(mask_np.copy()).unsqueeze(0)

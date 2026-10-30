@@ -121,6 +121,9 @@ function calculateOutputSize(node, origW, origH) {
     let width = origW;
     let height = origH;
 
+    // «Отключено» — картинка как есть (без округления), как в Python-части.
+    const untouched = mode.includes("Disabled");
+
     if (mode.includes("Standard Presets")) {
         [width, height] = PRESET_SIZES[getValue(node, "ai_preset", "")] ?? [1024, 1024];
     } else if (mode.includes("Aspect Ratio")) {
@@ -143,13 +146,14 @@ function calculateOutputSize(node, origW, origH) {
         height = Math.round(Math.sqrt(pixels / ratio));
     }
 
-    if (divisibleBy > 1) {
-        width = roundToDivisible(width, divisibleBy);
-        height = roundToDivisible(height, divisibleBy);
+    if (!untouched) {
+        if (divisibleBy > 1) {
+            width = roundToDivisible(width, divisibleBy);
+            height = roundToDivisible(height, divisibleBy);
+        }
+        width = Math.max(divisibleBy, width);
+        height = Math.max(divisibleBy, height);
     }
-
-    width = Math.max(divisibleBy, width);
-    height = Math.max(divisibleBy, height);
 
     const upscaleOn = String(getValue(node, "upscale", "")).trim()
         === "Enabled / Вкл";
@@ -168,6 +172,7 @@ function calculateOutputSize(node, origW, origH) {
         modelConnected,
         scale,
         divisibleBy,
+        untouched,
     };
 }
 
@@ -520,7 +525,13 @@ function createPreview(node) {
                 out.baseWidth !== sourceImage.naturalWidth ||
                 out.baseHeight !== sourceImage.naturalHeight
             ) {
-                text += ` (кратно ${out.divisibleBy})`;
+                const a = sourceImage.naturalWidth / sourceImage.naturalHeight;
+                const b = out.baseWidth / out.baseHeight;
+                text += Math.abs(a / b - 1) < 0.04
+                    ? ` (кратно ${out.divisibleBy}, края подрезаны — без искажения)`
+                    : ` (кратно ${out.divisibleBy}, другой формат — растянуто)`;
+            } else if (out.untouched) {
+                text += " (как есть / as is)";
             }
             if (out.upscaleOn && out.modelConnected) {
                 text += ` | AI-апскейл ${out.scale.toFixed(2)}x при запуске`;

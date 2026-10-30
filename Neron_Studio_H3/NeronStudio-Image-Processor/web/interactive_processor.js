@@ -360,6 +360,8 @@ function calculateOutputSize(node, origW, origH) {
 
     let width = origW;
     let height = origH;
+    // «Отключено» — картинка как есть (без округления), как в Python-части.
+    const untouched = mode.includes("Disabled");
 
     if (mode.includes("Standard Presets")) {
         [width, height] = PRESET_SIZES[getValue(node, "ai_preset", "")] ?? [1024, 1024];
@@ -383,13 +385,14 @@ function calculateOutputSize(node, origW, origH) {
         height = Math.round(Math.sqrt(pixels / ratio));
     }
 
-    if (divisibleBy > 1) {
-        width = roundToDivisible(width, divisibleBy);
-        height = roundToDivisible(height, divisibleBy);
+    if (!untouched) {
+        if (divisibleBy > 1) {
+            width = roundToDivisible(width, divisibleBy);
+            height = roundToDivisible(height, divisibleBy);
+        }
+        width = Math.max(divisibleBy, width);
+        height = Math.max(divisibleBy, height);
     }
-
-    width = Math.max(divisibleBy, width);
-    height = Math.max(divisibleBy, height);
 
     const upscaleOn = String(getValue(node, "upscale", "")).trim() === "Enabled / Вкл";
     const scale = Number(getValue(node, "upscale_scale", 2));
@@ -406,6 +409,7 @@ function calculateOutputSize(node, origW, origH) {
         modelConnected,
         scale,
         divisibleBy,
+        untouched,
     };
 }
 
@@ -724,6 +728,8 @@ function createPreview(node) {
                 out.baseHeight !== sourceImage.naturalHeight
             ) {
                 text += ` (кратно ${out.divisibleBy})`;
+            } else if (out.untouched) {
+                text += " (как есть / as is)";
             }
             if (out.upscaleOn && out.modelConnected) {
                 text += ` | AI-апскейл ${out.scale.toFixed(2)}x при запуске`;

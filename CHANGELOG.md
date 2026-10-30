@@ -12,6 +12,10 @@
 - Modes Fast / Balance / Clean / Custom; "From image" size; draft/refine balance in Custom and expert; 📋 run report on the node.
 - Ready workflow `ComfyUI-NeronH3EngineFast/workflows/Neron_H3_Engine_Fast.json`. dev only — for testing.
 
+**Image Processor (обе версии / both versions):**
+- RU: «Отключено» теперь значит «картинка как есть» — без округления до кратного 32 и без пересчёта пикселей (раньше 1200×720 молча растягивалось до 1216×736). Если форма та же и разница только от округления — края подрезаются на несколько пикселей вместо растяжения, люди не вытягиваются. Подпись под превью говорит, что произошло.
+- EN: "Disabled" now means "as is" — no rounding to 32 and no resampling (1200×720 used to be silently stretched to 1216×736). When the shape is the same and only rounding differs, a few edge pixels are trimmed instead of stretching. The preview caption says what happened.
+
 ## Neron Stage 🎬 v0.1 — Площадка режиссёра / Director's Stage (28.10.2026, ветка dev)
 
 **RU:**
