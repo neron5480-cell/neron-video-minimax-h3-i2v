@@ -713,6 +713,10 @@ function resetAllWidgets(node) {
     for (const [name, value] of Object.entries(DEFAULTS)) {
         setWidgetValue(node, name, value);
     }
+    updateVisibility(node);
+    node.__interactivePreview?.scheduleRender();
+    node.setDirtyCanvas?.(true, true);
+}
 
 
 // ---------------------------------------------------------------
