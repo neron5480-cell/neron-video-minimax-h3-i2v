@@ -1,5 +1,17 @@
 # Changelog / История изменений
 
+## ⚡ Neron H3 Engine Fast — тестовая версия / test build (dev, 30.10.2026)
+
+**RU:**
+- Новая опытная нода **⚡ Neron H3 Engine Fast** (меню Neron/H3), папка `ComfyUI-NeronH3EngineFast`: черновик в маленьком кадре на быстрой модели → увеличение латента → короткий чистовик в размере паспорта (до 1344×768). Цель — 10 с быстро и без «мыла».
+- Режимы ⚡ Быстро / Баланс / Чисто / Свой; размер «По кадру»; баланс черновика и чистовика — в «Свой» и эксперте; 📋 отчёт прогона на ноде.
+- Готовый воркфлоу `ComfyUI-NeronH3EngineFast/workflows/Neron_H3_Engine_Fast.json`. Пока только в dev — для тестов.
+
+**EN:**
+- New test node **⚡ Neron H3 Engine Fast** (Neron/H3 menu), folder `ComfyUI-NeronH3EngineFast`: small draft on a fast model → latent upscale → short refine at the passport size (up to 1344×768). Goal: 10 s fast and without blur.
+- Modes Fast / Balance / Clean / Custom; "From image" size; draft/refine balance in Custom and expert; 📋 run report on the node.
+- Ready workflow `ComfyUI-NeronH3EngineFast/workflows/Neron_H3_Engine_Fast.json`. dev only — for testing.
+
 ## Neron Stage 🎬 v0.1 — Площадка режиссёра / Director's Stage (28.10.2026, ветка dev)
 
 **RU:**
