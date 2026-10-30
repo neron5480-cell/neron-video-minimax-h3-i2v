@@ -1,5 +1,21 @@
 # Changelog / История изменений
 
+## Автопромтеры — исправления / Autoprompters fixes (30.10.2026)
+
+**RU (AutoPrompter, Dialog Autoprompter, Multi-Image LLM):**
+- **llama-server снова скачивается сам.** llama.cpp переименовал файлы в релизах (cuda-12.4 → cuda-13.x), и старый поиск ничего не находил. Теперь сборка ищется по образцу, под версию CUDA драйвера, вместе с CUDA-библиотеками; без NVIDIA — Vulkan или CPU; если в свежем релизе сборки нет — смотрятся предыдущие.
+- **Один llama-server на обе ноды**: если одна скачала, вторая берёт его же.
+- **AutoPrompter больше не отдаёт ошибку LLM в генератор как промпт** — останавливается и показывает её.
+- **Модели находятся там, где их держит ComfyUI Desktop**: `models/LLM` с подпапками, папки `LLM` из `extra_model_paths` и `LLM` рядом с каждой папкой моделей, которую знает ComfyUI. Новые файлы видны после перезапуска.
+- Ошибка «сервер не найден» объясняет, что делать (RU/EN).
+
+**EN:**
+- **llama-server downloads again** (llama.cpp renamed its release files): matched by pattern for the driver's CUDA version, with the CUDA runtime; Vulkan/CPU without NVIDIA; older releases checked if the newest lacks a build.
+- **One llama-server shared by both nodes.**
+- **AutoPrompter no longer passes an LLM error to the generator as a prompt.**
+- **Models are found where ComfyUI Desktop keeps them** (`models/LLM` subfolders, `LLM` from `extra_model_paths`, `LLM` next to every known models folder).
+- The "server not found" error explains what to do.
+
 ## 🧹 Порядок в пакете / Pack cleanup (30.10.2026)
 
 **RU:**

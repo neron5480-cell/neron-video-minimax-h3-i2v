@@ -89,3 +89,15 @@ def shared_prompts_dir():
         if os.path.isdir(p):
             return p
     return None
+
+
+def find_folder(folder_name):
+    """Папка соседней ноды Neron (в пакете или в custom_nodes) или None.
+    A neighbouring Neron node folder (in the pack or custom_nodes), or None."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    if os.path.basename(here) == folder_name:
+        return here
+    for folder in _candidates(folder_name):
+        if os.path.isdir(folder):
+            return folder
+    return None

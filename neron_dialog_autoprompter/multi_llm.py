@@ -50,7 +50,8 @@ class NeronMultiImageLLM:
             llm_dir = Path(__file__).resolve().parent / ".." / ".." / "models" / "LLM"
         llm_dir.mkdir(parents=True, exist_ok=True)
 
-        all_gguf = [f for f in os.listdir(llm_dir) if f.endswith(".gguf")]
+        from .dialog_node import _llm_list
+        all_gguf = _llm_list()
         models = [m for m in all_gguf if "mmproj" not in m.lower()]
         if not models:
             models = ["No_GGUF_Models_Found"]
@@ -107,7 +108,8 @@ class NeronMultiImageLLM:
             base = Path(folder_paths.models_dir) / "LLM"
         except Exception:
             base = Path(__file__).resolve().parent / ".." / ".." / "models" / "LLM"
-        return base / model_name
+        from .dialog_node import _llm_find
+        return _llm_find(model_name)
 
     def _resolve_mmproj_path(self, mmproj_name: str) -> str:
         if not mmproj_name or mmproj_name == "No_mmproj_Found":
@@ -116,7 +118,8 @@ class NeronMultiImageLLM:
             base = Path(folder_paths.models_dir) / "LLM"
         except Exception:
             base = Path(__file__).resolve().parent / ".." / ".." / "models" / "LLM"
-        path = base / mmproj_name
+        from .dialog_node import _llm_find
+        path = _llm_find(mmproj_name)
         return str(path) if path.exists() else ""
 
     def _load_system_text(self, system_prompt: str) -> str:
@@ -204,7 +207,7 @@ class NeronMultiImageLLM:
 
         server_exe = _find_llama_server()
         if server_exe is None:
-            return ("Ошибка: llama-server.exe не найден.",)
+            return ("Ошибка: не найден llama-server (программа, которая запускает LLM). Нода пробует скачать его сама при первом запуске — причина неудачи в консоли ComfyUI (строки [Neron Dialog]). Проверь интернет и перезапусти ComfyUI. / Error: llama-server not found. The node tries to download it on first run — see the ComfyUI console ([Neron Dialog] lines); check the internet and restart ComfyUI.",)
 
         try:
             _ensure_server_running(server_exe, model_path, mmproj_path, n_gpu_layers, n_ctx)

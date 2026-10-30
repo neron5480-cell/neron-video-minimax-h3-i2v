@@ -28,6 +28,70 @@ _PROMPTS_DIR = _NODE_DIR / "prompts"
 _SESSIONS_DIR = _NODE_DIR / "sessions"
 _SELECTION_FILE = _NODE_DIR / "last_selection.json"
 
+
+# ============================================================
+#  ГДЕ ЛЕЖАТ МОДЕЛИ LLM / WHERE LLM MODELS LIVE
+#  models/LLM (с подпапками) + любые папки «LLM» из extra_model_paths.
+#  models/LLM (subfolders too) + any "LLM" folders from extra_model_paths.
+# ============================================================
+def _llm_roots():
+    roots = []
+    try:
+        roots.append(Path(folder_paths.models_dir) / "LLM")
+    except Exception:
+        roots.append(_NODE_DIR / ".." / ".." / "models" / "LLM")
+    for key in ("LLM", "llm"):
+        try:
+            for p in folder_paths.get_folder_paths(key):
+                roots.append(Path(p))
+        except Exception:
+            pass
+    # ComfyUI Desktop держит модели в нескольких местах (папка установки, общая папка, другой диск).
+    # Обычные загрузчики видят их все — и мы смотрим «LLM» рядом с каждой папкой моделей, которую знает ComfyUI.
+    # ComfyUI Desktop keeps models in several places; look for "LLM" next to every models folder ComfyUI knows.
+    for key in ("diffusion_models", "checkpoints", "text_encoders", "vae", "loras"):
+        try:
+            for p in folder_paths.get_folder_paths(key):
+                roots.append(Path(p).parent / "LLM")
+        except Exception:
+            pass
+    out, seen = [], set()
+    for r in roots:
+        try:
+            k = str(r.resolve()).lower()
+        except Exception:
+            k = str(r).lower()
+        if k not in seen:
+            seen.add(k)
+            out.append(r)
+    return out
+
+
+def _llm_list():
+    names = []
+    for root in _llm_roots():
+        if not root.is_dir():
+            continue
+        for dirpath, _dirs, files in os.walk(root):
+            rel = Path(dirpath).relative_to(root)
+            if "prompts" in rel.parts:
+                continue
+            for f in files:
+                if f.lower().endswith(".gguf"):
+                    n = f if str(rel) == "." else (rel / f).as_posix()
+                    if n not in names:
+                        names.append(n)
+    return sorted(names, key=str.lower)
+
+
+def _llm_find(name):
+    for root in _llm_roots():
+        p = root / name
+        if p.exists():
+            return p
+    return _llm_roots()[0] / name
+
+
 os.makedirs(_PROMPTS_DIR, exist_ok=True)
 os.makedirs(_SESSIONS_DIR, exist_ok=True)
 
@@ -168,7 +232,7 @@ def _find_lighter_quants(models: list, current_model: str) -> list:
     def size_key(name):
         try:
             llm_dir = Path(folder_paths.models_dir) / "LLM"
-            return os.path.getsize(llm_dir / name)
+            return os.path.getsize(_llm_find(name))
         except Exception:
             return 999999999
 
@@ -438,6 +502,94 @@ def _detect_llama_asset_patterns():
         return ["ubuntu-x64", "linux-x64"]
     return None
 
+_LLAMA_RELEASES_URL = "https://api.github.com/repos/ggml-org/llama.cpp/releases?per_page=8"
+
+
+def _driver_cuda_version():
+    """Версия CUDA, которую тянет драйвер (из nvidia-smi), например (13, 0). None — не удалось узнать."""
+    try:
+        out = subprocess.run(["nvidia-smi"], capture_output=True, text=True, timeout=10).stdout
+        m = re.search(r"CUDA Version:\s*(\d+)\.(\d+)", out)
+        if m:
+            return int(m.group(1)), int(m.group(2))
+    except Exception:
+        pass
+    return None
+
+
+def _pick_llama_assets(assets):
+    """Под эту систему → (основной zip, zip с CUDA-библиотеками или None, подпись) или None.
+    Имена в релизах llama.cpp меняются (cuda-12.4 → cuda-13.4…), поэтому ищем по образцу, а не по точному имени.
+    Asset names change between releases, so match by pattern, not by exact name."""
+    zips = {a.get("name", ""): a for a in assets if a.get("name", "").endswith(".zip")}
+    system = platform.system()
+    if system == "Windows":
+        if platform.machine().lower() not in ("amd64", "x86_64"):
+            return None
+        if shutil.which("nvidia-smi"):
+            cuda = []
+            for n in zips:
+                m = re.match(r"^llama-.*bin-win-cuda-?(\d+(?:\.\d+)*)-x64\.zip$", n)
+                if m:
+                    cuda.append((tuple(int(x) for x in m.group(1).split(".")), n))
+            drv = _driver_cuda_version()
+            if drv:
+                # драйвер тянет любую сборку своей главной версии CUDA (13.0 → 13.4 можно), но не выше
+                fits = [c for c in cuda if c[0][0] <= drv[0]]
+                cuda = fits or cuda
+            if cuda:
+                cuda.sort(reverse=True)
+                ver = ".".join(str(x) for x in cuda[0][0])
+                runtime = next((a for n, a in zips.items()
+                                if n.startswith("cudart") and f"cuda-{ver}-x64" in n), None)
+                return zips[cuda[0][1]], runtime, f"CUDA {ver}"
+        for key, label in (("bin-win-vulkan-x64", "Vulkan"), ("bin-win-cpu-x64", "CPU"),
+                           ("win-avx2-x64", "CPU AVX2")):
+            for n, a in zips.items():
+                if n.startswith("llama-") and key in n:
+                    return a, None, label
+        return None
+    if system == "Linux":
+        for key, label in (("bin-ubuntu-vulkan-x64", "Vulkan"), ("bin-ubuntu-x64", "CPU")):
+            for n, a in zips.items():
+                if n.startswith("llama-") and key in n:
+                    return a, None, label
+    return None
+
+
+def _download_and_extract(asset, target_dir: Path, flatten_into: Path = None):
+    """Скачать zip и распаковать. flatten_into — положить все файлы прямо в эту папку (для CUDA-библиотек)."""
+    print(f"[Neron Dialog] Скачиваю {asset['name']} ({asset.get('size', 0) / 1024 / 1024:.0f} МБ)...")
+    fd, tmp_name = tempfile.mkstemp(suffix=".zip")
+    os.close(fd)
+    tmp_path = Path(tmp_name)
+    try:
+        urllib.request.urlretrieve(asset["browser_download_url"], tmp_path)
+        with zipfile.ZipFile(tmp_path) as zf:
+            names = [n for n in zf.namelist() if not n.endswith("/")]
+            if flatten_into is not None:
+                flatten_into.mkdir(parents=True, exist_ok=True)
+                for member in names:
+                    with zf.open(member) as src, open(flatten_into / Path(member).name, "wb") as dst:
+                        shutil.copyfileobj(src, dst)
+                return
+            top_dirs = set(n.split("/")[0] for n in names if "/" in n)
+            if len(top_dirs) == 1 and all("/" in n for n in names):
+                prefix = list(top_dirs)[0] + "/"
+                for member in names:
+                    target = target_dir / member[len(prefix):]
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    with zf.open(member) as src, open(target, "wb") as dst:
+                        shutil.copyfileobj(src, dst)
+            else:
+                zf.extractall(target_dir)
+    finally:
+        try:
+            tmp_path.unlink()
+        except Exception:
+            pass
+
+
 def _download_llama_server(vendor_dir: Path):
     global _DOWNLOAD_ATTEMPTED
     if _DOWNLOAD_ATTEMPTED:
@@ -448,81 +600,46 @@ def _download_llama_server(vendor_dir: Path):
     print("[Neron Dialog] llama-server не найден — пробую скачать свежий релиз...")
 
     try:
-        req = urllib.request.Request(
-            _LLAMA_RELEASE_URL,
-            headers={"User-Agent": "neron-dialog-autoprompter"},
-        )
+        req = urllib.request.Request(_LLAMA_RELEASES_URL, headers={"User-Agent": "neron-autoprompter"})
         with urllib.request.urlopen(req, timeout=30) as r:
-            release = json.loads(r.read())
+            releases = json.loads(r.read())
     except Exception as e:
-        print(f"[Neron Dialog] Не удалось получить список релизов: {e}")
+        print(f"[Neron Dialog] Не удалось получить список релизов llama.cpp: {e}")
         return None
 
-    assets = release.get("assets", [])
-    patterns = _detect_llama_asset_patterns()
-    if not patterns:
-        print("[Neron Dialog] Не могу определить подходящую сборку для этой системы")
-        return None
-
-    chosen = None
-    for pat in patterns:
-        for a in assets:
-            if pat in a["name"] and a["name"].endswith(".zip"):
-                chosen = a
-                break
-        if chosen:
+    picked, tag = None, ""
+    for rel in releases if isinstance(releases, list) else [releases]:
+        picked = _pick_llama_assets(rel.get("assets", []))
+        if picked:
+            tag = rel.get("tag_name", "")
             break
-
-    if not chosen:
-        print(f"[Neron Dialog] В релизе нет подходящего ассета. Искал: {patterns}")
+    if not picked:
+        print("[Neron Dialog] В последних релизах llama.cpp нет сборки для этой системы. "
+              "Скачай вручную: https://github.com/ggml-org/llama.cpp/releases и распакуй в " + str(vendor_dir))
         return None
 
-    print(f"[Neron Dialog] Скачиваю {chosen['name']} "
-          f"({chosen.get('size', 0) / 1024 / 1024:.0f} МБ)...")
-
-    tmp_path = None
+    main, runtime, label = picked
+    print(f"[Neron Dialog] Выбрана сборка {label} из релиза {tag}")
     try:
-        fd, tmp_name = tempfile.mkstemp(suffix=".zip")
-        os.close(fd)
-        tmp_path = Path(tmp_name)
-        urllib.request.urlretrieve(chosen["browser_download_url"], tmp_path)
-
-        print(f"[Neron Dialog] Распаковываю в {vendor_dir}...")
-        with zipfile.ZipFile(tmp_path) as zf:
-            names = [n for n in zf.namelist() if not n.endswith("/")]
-            top_dirs = set(n.split("/")[0] for n in names if "/" in n)
-            if len(top_dirs) == 1 and all("/" in n for n in names):
-                prefix = list(top_dirs)[0] + "/"
-                for member in names:
-                    if not member.startswith(prefix):
-                        continue
-                    target = vendor_dir / member[len(prefix):]
-                    target.parent.mkdir(parents=True, exist_ok=True)
-                    with zf.open(member) as src, open(target, "wb") as dst:
-                        shutil.copyfileobj(src, dst)
-            else:
-                zf.extractall(vendor_dir)
-
+        _download_and_extract(main, vendor_dir)
         exe_name = "llama-server.exe" if platform.system() == "Windows" else "llama-server"
-        exe = vendor_dir / exe_name
-        if not exe.exists():
-            hits = list(vendor_dir.rglob(exe_name))
-            if hits:
-                exe = hits[0]
-        if exe.exists():
-            print(f"[Neron Dialog] ✅ llama-server установлен: {exe}")
-            return exe
-        print("[Neron Dialog] В архиве не нашёл llama-server")
-        return None
+        hits = [h for h in vendor_dir.rglob(exe_name) if h.is_file()]
+        if not hits:
+            print("[Neron Dialog] В архиве не нашёл llama-server")
+            return None
+        exe = hits[0]
+        if runtime is not None:
+            _download_and_extract(runtime, vendor_dir, flatten_into=exe.parent)
+        if platform.system() != "Windows":
+            try:
+                exe.chmod(0o755)
+            except Exception:
+                pass
+        print(f"[Neron Dialog] ✅ llama-server установлен ({label}): {exe}")
+        return exe
     except Exception as e:
         print(f"[Neron Dialog] Ошибка скачивания: {e}")
         return None
-    finally:
-        if tmp_path is not None:
-            try:
-                tmp_path.unlink(missing_ok=True)
-            except Exception:
-                pass
 
 def _find_llama_server():
     if _VENDOR_DIR.exists():
@@ -551,6 +668,24 @@ def _find_llama_server():
         if hits:
             print(f"[Neron Dialog] llama-server найден во внешней ноде: {hits[0]}")
             return hits[0]
+
+    # Обе ноды-автопромтера Neron делят один llama-server: если одна уже скачала, вторая берёт его.
+    # Both Neron autoprompters share one llama-server: if one downloaded it, the other uses it.
+    try:
+        from ._neron_shared import find_folder
+        for name in ("neron_dialog_autoprompter", "NeronStudio-AutoPrompter"):
+            folder = find_folder(name)
+            if not folder:
+                continue
+            vendor = Path(folder) / "vendor"
+            if vendor.exists() and vendor.resolve() != _VENDOR_DIR.resolve():
+                hits = list(vendor.rglob("llama-server.exe")) + list(vendor.rglob("llama-server"))
+                hits = [h for h in hits if h.is_file()]
+                if hits:
+                    print(f"[Neron Dialog] llama-server найден у соседней ноды Neron: {hits[0]}")
+                    return hits[0]
+    except Exception as e:
+        print(f"[Neron Dialog] поиск llama-server у соседней ноды: {e}")
 
     return _download_llama_server(_VENDOR_DIR)
 
@@ -784,7 +919,7 @@ def _check_memory_and_warn(session_key: str, model_name: str, models_list: list,
     except Exception:
         llm_dir = _NODE_DIR / ".." / ".." / "models" / "LLM"
 
-    model_path = llm_dir / model_name
+    model_path = _llm_find(model_name)
     if not model_path.exists():
         return
 
@@ -1014,7 +1149,7 @@ class NeronDialogAutoprompter:
             llm_dir = _NODE_DIR / ".." / ".." / "models" / "LLM"
         llm_dir.mkdir(parents=True, exist_ok=True)
 
-        all_gguf = [f for f in os.listdir(llm_dir) if f.endswith(".gguf")]
+        all_gguf = _llm_list()
         models = [m for m in all_gguf if "mmproj" not in m.lower()]
         if not models:
             models = ["No_GGUF_Models_Found"]
@@ -1135,10 +1270,10 @@ class NeronDialogAutoprompter:
         except Exception:
             llm_dir = _NODE_DIR / ".." / ".." / "models" / "LLM"
 
-        model_path = llm_dir / model
+        model_path = _llm_find(model)
         mmproj_path = ""
         if mmproj and mmproj != "No_mmproj_Found":
-            mmproj_path = str(llm_dir / mmproj)
+            mmproj_path = str(_llm_find(mmproj))
 
         sid = (session_id or "default").strip() or "default"
         session_key = f"{sid}|{model}|{mmproj}"
@@ -1166,7 +1301,7 @@ class NeronDialogAutoprompter:
         }
 
         try:
-            llm_dir_models = [f for f in os.listdir(llm_dir) if f.endswith(".gguf")]
+            llm_dir_models = _llm_list()
             llm_dir_models = [m for m in llm_dir_models if "mmproj" not in m.lower()]
             lang = _detect_language_from_prompt(director_prompt)
             _check_memory_and_warn(session_key, model, llm_dir_models, lang)
@@ -1222,8 +1357,8 @@ try:
             _save_last_selection(model, mmproj, director_prompt)
 
         _LAST_PARAMS[session_key] = {
-            "model_path": str(llm_dir / model) if model else "",
-            "mmproj_path": str(llm_dir / mmproj) if mmproj and mmproj != "No_mmproj_Found" else "",
+            "model_path": str(_llm_find(model)) if model else "",
+            "mmproj_path": str(_llm_find(mmproj)) if mmproj and mmproj != "No_mmproj_Found" else "",
             "n_gpu_layers": int(params.get("n_gpu_layers", -1)),
             "n_ctx": int(params.get("n_ctx", 16384)),
             "max_tokens": int(params.get("max_tokens", 4096)),

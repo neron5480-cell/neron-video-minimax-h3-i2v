@@ -240,6 +240,11 @@ class NeronAutoPrompter:
             )
 
             autoprompt_text = result[0] if isinstance(result, tuple) else str(result)
+            # Ошибку LLM нельзя отдавать в генератор как промпт: остановиться и показать её.
+            # Never pass an LLM error on to the video generator as a prompt — stop and show it.
+            head = str(autoprompt_text).lstrip()[:20].lower()
+            if not head or head.startswith(("ошибка", "error", "❌", "⚠")):
+                raise RuntimeError("[AutoPrompter] LLM не сработал / LLM failed:\n" + str(autoprompt_text))
             log.info(
                 "[AutoPrompter] LLM ответ (%s символов)",
                 len(autoprompt_text),
