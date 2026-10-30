@@ -8,6 +8,12 @@ import folder_paths
 
 
 class MySmartLoadImage:
+    # Один код загрузки на все ноды Neron (Interactive, Studio, Smart Load).
+    # PRESET_FIT = True — пресеты и пропорции подрезаются по центру (Studio),
+    # False — растягиваются целиком (Interactive, Smart Load — как было).
+    # One loader for all Neron image nodes; PRESET_FIT picks crop vs stretch.
+    PRESET_FIT = False
+
     @classmethod
     def INPUT_TYPES(cls):
         input_dir = folder_paths.get_input_directory()
@@ -377,7 +383,16 @@ class MySmartLoadImage:
         # stretching; a different shape — stretched whole, as before.
         keep_shape = (
             rgb_image.size != (new_w, new_h)
-            and self.same_shape(orig_w, orig_h, new_w, new_h)
+            and (
+                self.same_shape(orig_w, orig_h, new_w, new_h)
+                or (
+                    self.PRESET_FIT
+                    and any(
+                        x in resize_mode
+                        for x in ("Standard Presets", "Aspect Ratio")
+                    )
+                )
+            )
         )
 
         if rgb_image.size != (new_w, new_h):

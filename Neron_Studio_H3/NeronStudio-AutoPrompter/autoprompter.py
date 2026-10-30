@@ -6,7 +6,9 @@
 import logging
 
 from .multi_llm import NeronMultiImageLLM
-from .h3_static_camera import MyH3StaticCamera
+from ._neron_shared import load_camera  # камера H3 — одна копия в ComfyUI-H3-Static-Camera
+
+MyH3StaticCamera = load_camera().MyH3StaticCamera
 from .dialog_node import (
     _auto_pick_model, 
     _auto_pick_mmproj, 

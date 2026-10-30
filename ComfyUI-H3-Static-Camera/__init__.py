@@ -18,12 +18,14 @@ NODE_DISPLAY_NAME_MAPPINGS = {}
 
 # Smart Load & Resize Image
 try:
-    from .my_smart_load_image import MySmartLoadImage
+    from ._neron_shared import load as _core
+
+    MySmartLoadImage = _core("loader").MySmartLoadImage
 
     NODE_CLASS_MAPPINGS["SmartLoadAndResizeImage"] = MySmartLoadImage
     NODE_DISPLAY_NAME_MAPPINGS[
         "SmartLoadAndResizeImage"
-    ] = "Smart Load & Resize Image"
+    ] = "Smart Load & Resize Image (legacy → Interactive Image Processor)"
 
     print("[H3 Nodes] Smart Load loaded successfully.")
 
@@ -51,12 +53,14 @@ except Exception:
 # Turbo Color Fix
 # Ошибка этой ноды больше не блокирует остальные ноды.
 try:
-    from .my_turbo_color_fix import MyTurboColorFix
+    from ._neron_shared import load as _core
+
+    MyTurboColorFix = _core("color").MyTurboColorFix
 
     NODE_CLASS_MAPPINGS["TurboColorFixAdaIN"] = MyTurboColorFix
     NODE_DISPLAY_NAME_MAPPINGS[
         "TurboColorFixAdaIN"
-    ] = "Manual Color & Upscale Panel"
+    ] = "Manual Color & Upscale Panel (legacy → Interactive Image Processor)"
 
     print("[H3 Nodes] Turbo Color Fix loaded successfully.")
 

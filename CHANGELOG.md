@@ -1,5 +1,19 @@
 # Changelog / История изменений
 
+## 🧹 Порядок в пакете / Pack cleanup (dev, 30.10.2026)
+
+**RU:**
+- **Один код картинки на четыре ноды**: Interactive Image Processor, 🖼 Neron Studio Image Processor, Smart Load & Resize Image и Manual Color & Upscale Panel. Раньше было три разные копии, и старые ноды из воркфлоу v1.0/v2.0 всё ещё растягивали картинку при «Отключено». Теперь у всех «Отключено» = как есть, резкость 0 = выкл. Поля нод не изменились — старые воркфлоу открываются как раньше. Студия по-прежнему подрезает пресеты по центру, простая нода — растягивает.
+- **Камера H3 — одна копия** (в `ComfyUI-H3-Static-Camera`); AutoPrompter берёт её оттуда.
+- Старые ноды подписаны в меню «(legacy → …)»: Smart Load, Color Panel, старая тема Audio Studio. Ничего не удалено.
+- В README — **карта**: какую ноду брать для какой задачи, и какие папки ставить вместе при ручной установке.
+
+**EN:**
+- **One image code for four nodes** (Interactive, Studio, Smart Load, Color Panel). Old v1.0/v2.0 nodes no longer stretch in Disabled. Node fields are unchanged; old workflows open as before.
+- **One copy of the H3 camera**; AutoPrompter uses it from `ComfyUI-H3-Static-Camera`.
+- Legacy nodes are labelled "(legacy → …)" in the menu; nothing removed.
+- README has a **map** of which node to use and which folders go together in a manual install.
+
 ## ⚡ Neron H3 Engine Fast — тестовая версия / test build (dev, 30.10.2026)
 
 **RU:**

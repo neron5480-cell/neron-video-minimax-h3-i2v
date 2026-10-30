@@ -6,8 +6,15 @@ import torch
 import torch.nn.functional as F
 import folder_paths
 
-from .my_smart_load_image import MySmartLoadImage
-from .my_turbo_color_fix import MyTurboColorFix
+from ._neron_shared import load as _core
+
+MyTurboColorFix = _core("color").MyTurboColorFix
+
+
+class MySmartLoadImage(_core("loader").MySmartLoadImage):
+    """Тот же общий код загрузки; в студии пресеты и пропорции подрезаются по центру, а не растягиваются.
+    Same shared loader; in the Studio presets and aspect ratios are center-cropped, not stretched."""
+    PRESET_FIT = True
 
 
 WEB_DIRECTORY = "./web"
@@ -56,6 +63,8 @@ class InteractiveImageProcessor:
         loader_inputs = dict(MySmartLoadImage.INPUT_TYPES()["required"])
         color_inputs = dict(MyTurboColorFix.INPUT_TYPES()["required"])
         color_inputs.pop("image", None)
+        for extra in ("upscale_precision", "upscale_speed"):   # их у этой ноды не было
+            color_inputs.pop(extra, None)
 
         return {
             "required": {**loader_inputs, **color_inputs},

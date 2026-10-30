@@ -124,6 +124,10 @@ class InteractiveImageProcessor:
             None,
         )
 
+        # у этой ноды их не было: не добавляем, чтобы старые схемы не сдвигались
+        for extra in ("upscale_precision", "upscale_speed"):
+            color_inputs.pop(extra, None)
+
         return {
             "required": {
                 **loader_inputs,
