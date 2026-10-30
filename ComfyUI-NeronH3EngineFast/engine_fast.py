@@ -269,7 +269,12 @@ def upscale(latent, w, h, choice, report):
         name = files[0] if files else None
     elif choice and choice != UPSCALER_NONE:
         name = choice
-    if name and has_node("LatentUpscaleModelLoader") and has_node("MiniMaxH3LatentUpscaleWithModel"):
+    missing = [n for n in ("LatentUpscaleModelLoader", "MiniMaxH3LatentUpscaleWithModel") if not has_node(n)]
+    if name and missing:
+        report.append(f"Увеличение: файл {base(name)} есть, но в этом ComfyUI нет родной ноды "
+                      f"{', '.join(missing)} — обнови ComfyUI. Пока простое растяжение")
+        return stretch(latent, w, h)
+    if name:
         try:
             up_model = node("LatentUpscaleModelLoader", model_name=name)[0]
             out = node("MiniMaxH3LatentUpscaleWithModel", model=up_model, samples=latent, width=int(w),
@@ -344,10 +349,8 @@ def generate(prompt, width, height, length, seed, models, settings, first_frame=
     model = node("MiniMaxH3SigmaShift", model=model, shift_video=shift, shift_audio=SHIFT_AUDIO)[0]
     model = set_attention(model, settings["draft_fast_attention"], report, "Черновик")
     send("Черновик / Draft", 0, d_steps)
-    ts = time.time()
     out = sample(model, cond_draft, draft_latent, seed, d_steps, 1.0)
-    report.append(f"Черновик: {time.time() - t:.0f} с (из них генерация {time.time() - ts:.0f} с, "
-                  f"загрузка и подготовка {ts - t:.0f} с)")
+    report.append(f"Черновик: {time.time() - t:.0f} с (с загрузкой модели)")
     del model, draft_latent, cond_draft
     if not same_unet:
         free("модель черновика выгружена")
@@ -379,10 +382,8 @@ def generate(prompt, width, height, length, seed, models, settings, first_frame=
     model = set_attention(model, False, report, "Чистовик")
     report.append(f"Чистовик: {base(models['unet'])} + {base(rl)} ×{rl_strength:g}")
     send("Чистовик / Refine", 0, r_steps)
-    ts = time.time()
     out = sample(model, cond_full, out, int(seed) + 1, r_steps, r_strength)
-    report.append(f"Чистовик: {time.time() - t:.0f} с (из них генерация {time.time() - ts:.0f} с, "
-                  f"загрузка и подготовка {ts - t:.0f} с)")
+    report.append(f"Чистовик: {time.time() - t:.0f} с (с загрузкой модели)")
     del model, cond_full
     if settings["keep_draft_audio"] and draft_audio is not None:
         video_lat, _ = split(out)
