@@ -388,6 +388,18 @@ OFF → visible: MODE, CAMERA, DURATION.
 ON  → adds: LLM MODEL, LLM PARAMS,
       and (in Manual mode) MANUAL TEXT.
 
+━━━ WHICH LLM MODEL ━━━
+The system prompt (H3_NSFW_Engine 1.txt) is a long,
+detailed instruction written for Qwen 3.5 9B
+(vision version + its mmproj).
+Smaller or older models (e.g. Qwen2.5-VL 7B) often
+can't hold such a long instruction: they just
+translate your brief, change almost nothing and
+barely describe the camera.
+That is the model, not the node. Use Qwen 3.5 9B
+or a larger vision model. Q6 vs Q8 of the SAME
+model matters much less than the model itself.
+
 ━━━ GOSTRABYTER ━━━
 UNLOAD AFTER RUN = true by default.
 After prompt generation, llama-server is killed.
@@ -451,6 +463,18 @@ fps     — по умолчанию 24.
 ВЫКЛ → видны: РЕЖИМ, КАМЕРА, ДЛИНА.
 ВКЛ  → появляются: МОДЕЛЬ LLM, ПАРАМЕТРЫ LLM,
        и (в Manual режиме) ТЕКСТ ВРУЧНУЮ.
+
+━━━ КАКУЮ МОДЕЛЬ LLM БРАТЬ ━━━
+Системный промпт (H3_NSFW_Engine 1.txt) — длинная
+подробная инструкция, написанная под Qwen 3.5 9B
+(версия с картинками + её mmproj).
+Модели поменьше или постарше (например,
+Qwen2.5-VL 7B) часто не удерживают такую длинную
+инструкцию: просто переводят бриф, почти ничего не
+меняют и еле описывают камеру.
+Это модель, а не нода. Берите Qwen 3.5 9B или
+крупнее (с картинками). Q6 против Q8 ОДНОЙ модели
+значит гораздо меньше, чем сама модель.
 
 ━━━ ГОСТРАБАЙТЕР ━━━
 UNLOAD AFTER RUN = true по умолчанию.
