@@ -1,5 +1,16 @@
 # Changelog / История изменений
 
+## 🖼 Image Processor: превью = выход / preview = output (31.10.2026)
+
+**RU (Interactive Image Processor и 🖼 Neron Studio Image Processor):**
+- **Что видит глаз — то и уходит в генератор.** Пока двигаешь ползунок — быстрое превью в полном размере выхода той же математикой (раньше резкость считалась на уменьшенной копии и выглядела иначе). Через ~0.3 с после остановки — **точный кадр от сервера, тем же кодом, что и при запуске** (в подписи «✓»). Проверено: превью и реальный выход совпадают до 1 уровня яркости из 255. Считается на процессоре, видеокарту не трогает. AI-апскейл в превью не входит.
+- Превью **чёткое при любом приближении** холста и на мониторах с масштабом Windows.
+- После **загрузки картинки** нода не разъезжается: лишние поля спрятаны, рамки на месте, дубль превью ComfyUI убран.
+
+**AutoPrompter:** в справке, подсказке и README — какую модель LLM брать: системный промпт написан под Qwen 3.5 9B; модели поменьше (например, Qwen2.5-VL 7B) часто просто переводят бриф.
+
+**EN:** Image Processors — **preview = output** (fast full-size preview, then the exact frame from the same Python code, ✓, verified within 1/255), sharp at any zoom and on HiDPI, no layout breakage after upload. AutoPrompter — a note on which LLM to use (written for Qwen 3.5 9B).
+
 ## Автопромтеры — исправления / Autoprompters fixes (30.10.2026)
 
 **RU (AutoPrompter, Dialog Autoprompter, Multi-Image LLM):**

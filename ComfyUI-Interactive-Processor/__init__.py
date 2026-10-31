@@ -7,6 +7,15 @@ import folder_paths
 
 from .my_smart_load_image import MySmartLoadImage
 from .my_turbo_color_fix import MyTurboColorFix
+from ._neron_shared import load_file as _load_file
+
+# точное превью: кадр тем же кодом, что и при запуске (один раз на сервер)
+try:
+    _load_file("ComfyUI-Interactive-Processor", "preview_route.py", "neron_image_preview_route").register(
+        _load_file("ComfyUI-Interactive-Processor", "my_smart_load_image.py", "neron_image_core_loader").MySmartLoadImage,
+        _load_file("ComfyUI-Interactive-Processor", "my_turbo_color_fix.py", "neron_image_core_color").MyTurboColorFix)
+except Exception as _e:
+    print("[Interactive Image Processor] exact preview route:", _e)
 
 
 WEB_DIRECTORY = "./web"

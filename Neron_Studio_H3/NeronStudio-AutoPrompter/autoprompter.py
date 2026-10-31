@@ -107,7 +107,12 @@ class NeronAutoPrompter:
                     "default": DEFAULT_FPS, "min": 1, "max": 60, "step": 1,
                 }),
 
-                "model": (model_choices, {"default": default_model}),
+                "model": (model_choices, {"default": default_model,
+                          "tooltip": "Системный промпт написан под Qwen 3.5 9B (с картинками). Модели поменьше "
+                                     "(например, Qwen2.5-VL 7B) часто просто переводят бриф и почти не описывают "
+                                     "камеру — это модель, а не нода.\n\nEN: The system prompt is written for "
+                                     "Qwen 3.5 9B (vision). Smaller models (e.g. Qwen2.5-VL 7B) often just translate "
+                                     "the brief and barely describe the camera — that is the model, not the node."}),
                 "mmproj": (mmproj_choices, {"default": default_mmproj}),
                 "system_prompt": (prompt_choices, {"default": default_prompt}),
 

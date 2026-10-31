@@ -10,6 +10,14 @@ from ._neron_shared import load as _core
 
 MyTurboColorFix = _core("color").MyTurboColorFix
 
+# точное превью: кадр тем же кодом, что и при запуске (один раз на сервер)
+try:
+    from ._neron_shared import load_file as _load_file
+    _load_file("ComfyUI-Interactive-Processor", "preview_route.py", "neron_image_preview_route").register(
+        _core("loader").MySmartLoadImage, MyTurboColorFix)
+except Exception as _e:
+    print("[Neron Studio Image Processor] exact preview route:", _e)
+
 
 class MySmartLoadImage(_core("loader").MySmartLoadImage):
     """Тот же общий код загрузки; в студии пресеты и пропорции подрезаются по центру, а не растягиваются.

@@ -14,6 +14,8 @@ LLM-режиссёр и камера-оператор для пайплайна 
 
 **Модели LLM (GGUF)** кладутся в `ComfyUI/models/LLM/`. `llama-server` скачивается сам при первом запуске.
 
+**Какую модель брать:** системный промпт написан под **Qwen 3.5 9B** (с картинками + её mmproj). Модели поменьше или постарше (например, Qwen2.5-VL 7B) часто просто переводят бриф и почти не описывают камеру — это модель, а не нода. Q6 против Q8 одной модели значит гораздо меньше, чем сама модель.
+
 **Для режима АВТО** нужен системный промпт под модель (для H3 — `prompts/H3_NSFW_Engine 1.txt`).
 
 > ℹ️ Файлы `dialog_node.py` и `multi_llm.py` в этой папке — подсобный код, из которого AutoPrompter берёт функции. Как отдельные ноды они здесь **не** регистрируются. Самостоятельные **Neron Dialog Autoprompter** и **Neron Multi-Image LLM** лежат в папке `neron_dialog_autoprompter` в корне репозитория.
@@ -33,6 +35,8 @@ LLM director and camera operator for the Neron Studio H3 pipeline. From an image
 **Outputs:** `minimax_prompt`, `frames_count`, `storyboard_json`, `img_0`, `img_1`, `img_2`, `last_frm` · **Menu:** `Neron/AutoPrompter`
 
 **LLM models (GGUF)** go to `ComfyUI/models/LLM/`. `llama-server` downloads itself on the first run.
+
+**Which model:** the system prompt is written for **Qwen 3.5 9B** (vision + its mmproj). Smaller or older models (e.g. Qwen2.5-VL 7B) often just translate your brief and barely describe the camera — that is the model, not the node. Q6 vs Q8 of the same model matters much less than the model itself.
 
 **AUTO camera mode** needs a system prompt for the model (for H3 — `prompts/H3_NSFW_Engine 1.txt`).
 

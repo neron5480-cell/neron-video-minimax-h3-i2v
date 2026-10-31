@@ -1,13 +1,14 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
+const PRESET_FIT = false;   // как PRESET_FIT в Python-части / mirrors the Python side
 const NODE_NAME = "InteractiveImageProcessor";
 
 const MIN_PREVIEW_HEIGHT = 300;
 const INFO_HEIGHT = 30;
 const UPDATE_DELAY_MS = 40;
-const MAX_RENDER_SCALE = 3;
-const MAX_PREVIEW_PIXELS = 4_000_000;
+const MAX_RENDER_SCALE = 8;   // не ограничиваем чёткость на больших мониторах и при сильном приближении
+const MAX_PREVIEW_PIXELS = 24_000_000;
 
 const PRESET_SIZES = {
     "1024x1024 (1:1 Square)": [1024, 1024],
@@ -72,14 +73,17 @@ const roundToDivisible = (value, d) =>
 // Показать / спрятать виджет (способ, проверенный в других расширениях).
 function toggleWidget(widget, show) {
     if (!widget) return;
-
-    if (widget.__origType === undefined) {
-        widget.__origType = widget.type;
-        widget.__origComputeSize = widget.computeSize;
+    // Новый интерфейс ComfyUI прячет поле по флагу hidden. Старый способ (подмена type и размера)
+    // он сбрасывает — поля вылезали обратно, а рамки групп наезжали. Если старый способ уже
+    // успел поменять поле — возвращаем как было.
+    // The new ComfyUI frontend hides a widget by the hidden flag; the old type/size swap got reset.
+    if (widget.__origType !== undefined) {
+        widget.type = widget.__origType;
+        if (widget.__origComputeSize) widget.computeSize = widget.__origComputeSize;
+        else delete widget.computeSize;
+        delete widget.__origType;
+        delete widget.__origComputeSize;
     }
-
-    widget.type = show ? widget.__origType : "converted-widget";
-    widget.computeSize = show ? widget.__origComputeSize : () => [0, -4];
     widget.hidden = !show;
 }
 
@@ -113,6 +117,22 @@ function updateVisibility(node) {
 // ---------------------------------------------------------------
 // Расчёт итогового размера (повторяет логику Python-части)
 // ---------------------------------------------------------------
+
+// Совпадает ли видимость полей с тем, что должно быть (интерфейс мог сбросить её сам).
+function visibilityMismatch(node) {
+    const mode = String(getValue(node, "resize_mode", ""));
+    const active = new Set(MODE_WIDGETS.find(([key]) => mode.includes(key))?.[1] ?? []);
+    for (const name of ALL_SIZE_WIDGETS) {
+        const w = getWidget(node, name);
+        if (w && !!w.hidden === active.has(name)) return true;
+    }
+    const upscaleOn = String(getValue(node, "upscale", "")).trim() === "Enabled / Вкл";
+    for (const name of UPSCALE_WIDGETS) {
+        const w = getWidget(node, name);
+        if (w && !!w.hidden === upscaleOn) return true;
+    }
+    return false;
+}
 
 function calculateOutputSize(node, origW, origH) {
     const mode = String(getValue(node, "resize_mode", ""));
@@ -234,7 +254,8 @@ function resample(source, srcW, srcH, dstW, dstH) {
     let curW = srcW;
     let curH = srcH;
 
-    while (curW / 2 >= dstW || curH / 2 >= dstH) {
+    // промежуточные уменьшения вдвое — только при сильном уменьшении (больше 4×), иначе один проход «high»
+    while (curW / 4 >= dstW && curH / 4 >= dstH) {
         const nextW = Math.max(dstW, Math.ceil(curW / 2));
         const nextH = Math.max(dstH, Math.ceil(curH / 2));
         const step = makeCanvas(nextW, nextH);
@@ -267,40 +288,39 @@ function channelMeans(imageData) {
 
 // Нерезкая маска 3x3 (как в Python-части), на вещественных числах.
 function sharpen(buf, w, h, amount) {
+    // Ровно как в Python-части: размытие 3×3 с краями «отражением» (reflect), затем x + (x − blur) × сила.
+    // Same as the Python side: 3×3 box blur with reflect edges, then x + (x − blur) × amount.
+    const rx = (x) => (x < 0 ? -x : x >= w ? 2 * w - 2 - x : x);
+    const ry = (y) => (y < 0 ? -y : y >= h ? 2 * h - 2 - y : y);
     const tmp = new Float32Array(buf.length);
 
     for (let y = 0; y < h; y++) {
         for (let x = 0; x < w; x++) {
-            const x0 = Math.max(x - 1, 0);
-            const x2 = Math.min(x + 1, w - 1);
             const i = (y * w + x) * 3;
-            const a = (y * w + x0) * 3;
-            const c = (y * w + x2) * 3;
+            const a = (y * w + rx(x - 1)) * 3;
+            const c = (y * w + rx(x + 1)) * 3;
             for (let ch = 0; ch < 3; ch++) {
                 tmp[i + ch] = (buf[a + ch] + buf[i + ch] + buf[c + ch]) / 3;
             }
         }
     }
 
+    const src = buf.slice();
     for (let y = 0; y < h; y++) {
-        const y0 = Math.max(y - 1, 0);
-        const y2 = Math.min(y + 1, h - 1);
+        const y0 = ry(y - 1);
+        const y2 = ry(y + 1);
         for (let x = 0; x < w; x++) {
             const i = (y * w + x) * 3;
             const a = (y0 * w + x) * 3;
             const c = (y2 * w + x) * 3;
             for (let ch = 0; ch < 3; ch++) {
                 const blurred = (tmp[a + ch] + tmp[i + ch] + tmp[c + ch]) / 3;
-                buf[i + ch] += (buf[i + ch] - blurred) * amount;
+                buf[i + ch] = src[i + ch] + (src[i + ch] - blurred) * amount;
             }
         }
     }
 }
 
-
-// Тот же порядок и та же математика, что в Python:
-// яркость -> контраст (вокруг среднего) -> насыщенность -> резкость.
-// Обрезка до 0..255 только в самом конце.
 function processPixels(base, s) {
     const { imageData, means } = base;
     const { width, height, data } = imageData;
@@ -349,11 +369,20 @@ function processPixels(base, s) {
 // Превью
 // ---------------------------------------------------------------
 
-function getRenderScale() {
+// Сколько настоящих точек экрана приходится на одну CSS-точку окна превью.
+// Меряем по факту (размер на экране × плотность экрана), а не угадываем по масштабу холста:
+// новый интерфейс ComfyUI может растягивать окно сам — тогда угаданный масштаб давал мыльное превью.
+// Real device pixels per CSS pixel of the preview area, measured on screen (not guessed from zoom).
+function getRenderScale(area) {
     const dpr = window.devicePixelRatio || 1;
-    const zoom = app.canvas?.ds?.scale || 1;
-    const scale = Math.min(MAX_RENDER_SCALE, Math.max(1, dpr * zoom));
-    return Math.round(scale * 2) / 2;
+    let k = app.canvas?.ds?.scale || 1;
+    try {
+        if (area && area.clientWidth > 0) {
+            const shown = area.getBoundingClientRect().width;
+            if (shown > 0) k = shown / area.clientWidth;
+        }
+    } catch (_) {}
+    return Math.min(MAX_RENDER_SCALE, Math.max(0.25, dpr * k));
 }
 
 
@@ -454,6 +483,94 @@ function createPreview(node) {
         return base;
     }
 
+    // Кадр в размере выхода — тем же способом, что и Python-часть:
+    // «Отключено» — как есть; та же форма (разница от округления) или пресет в студии — подрезка по центру;
+    // иначе — растяжение целиком.
+    // Frame at the output size, the same way the Python side does it.
+    let fullBase = null;
+    let processed = null;
+
+    function sameShape(w0, h0, w1, h1) {
+        return Math.abs((w0 / h0) / (w1 / h1) - 1) < 0.04;
+    }
+
+    function getFullBase(out) {
+        const nw = sourceImage.naturalWidth, nh = sourceImage.naturalHeight;
+        const bw = out.untouched ? nw : out.baseWidth;
+        const bh = out.untouched ? nh : out.baseHeight;
+        const mode = String(getValue(node, "resize_mode", ""));
+        const crop = !out.untouched && (bw !== nw || bh !== nh) && (sameShape(nw, nh, bw, bh) ||
+            (PRESET_FIT && (mode.includes("Standard Presets") || mode.includes("Aspect Ratio"))));
+        const key = `${loadedValue}|${bw}x${bh}|${crop}`;
+        if (fullBase?.key === key) return fullBase;
+        let c;
+        if (bw === nw && bh === nh) {
+            c = makeCanvas(bw, bh, true);
+            c.ctx.drawImage(sourceImage, 0, 0);
+        } else if (crop) {
+            const k = Math.max(bw / nw, bh / nh);
+            const sw = Math.round(bw / k), sh = Math.round(bh / k);
+            const cut = makeCanvas(sw, sh);
+            cut.ctx.drawImage(sourceImage, Math.floor((nw - sw) / 2), Math.floor((nh - sh) / 2), sw, sh, 0, 0, sw, sh);
+            c = resample(cut.canvas, sw, sh, bw, bh);
+        } else {
+            c = resample(sourceImage, nw, nh, bw, bh);
+        }
+        const imageData = c.ctx.getImageData(0, 0, bw, bh);
+        fullBase = { key, imageData, means: channelMeans(imageData) };
+        processed = null;
+        return fullBase;
+    }
+
+    function getProcessed(out, settings) {
+        const b = getFullBase(out);
+        const key = b.key + "|" + JSON.stringify(settings);
+        if (processed?.key === key) return processed;
+        const frame = processPixels(b, settings);
+        const c = makeCanvas(frame.width, frame.height);
+        c.ctx.putImageData(frame, 0, 0);
+        processed = { key, canvas: c.canvas };
+        node.__neronPreviewFrame = c.canvas;   // для проверки «превью = выход» / for preview == output checks
+        return processed;
+    }
+
+    // ---- точное превью от сервера / exact preview from the server ----
+    let exact = null;          // { key, canvas }
+    let exactTimer = null;
+    let exactWanted = "";
+
+    function exactKey(settings) {
+        const names = ["image", "resize_mode", "ai_preset", "aspect_ratio", "max_dimension",
+                       "manual_width", "manual_height", "megapixels", "divisible_by"];
+        return JSON.stringify([names.map((n) => getValue(node, n, null)), settings, PRESET_FIT]);
+    }
+
+    function requestExact(key, settings) {
+        exactWanted = key;
+        window.clearTimeout(exactTimer);
+        exactTimer = window.setTimeout(async () => {
+            if (exactWanted !== key) return;
+            try {
+                const body = {
+                    image: getValue(node, "image", ""), resize_mode: getValue(node, "resize_mode", ""),
+                    ai_preset: getValue(node, "ai_preset", ""), aspect_ratio: getValue(node, "aspect_ratio", ""),
+                    max_dimension: getValue(node, "max_dimension", 1024), manual_width: getValue(node, "manual_width", 1024),
+                    manual_height: getValue(node, "manual_height", 1024), megapixels: getValue(node, "megapixels", ""),
+                    divisible_by: getValue(node, "divisible_by", 32), preset_fit: PRESET_FIT, ...settings,
+                };
+                const r = await api.fetchApi("/neron/image_preview", { method: "POST", body: JSON.stringify(body),
+                                                                       headers: { "Content-Type": "application/json" } });
+                if (!r.ok || exactWanted !== key) return;
+                const bmp = await createImageBitmap(await r.blob());
+                const c = makeCanvas(bmp.width, bmp.height);
+                c.ctx.drawImage(bmp, 0, 0);
+                exact = { key, canvas: c.canvas };
+                node.__neronPreviewFrame = c.canvas;
+                scheduleRender();
+            } catch (_) { /* нет сервера — остаётся быстрое превью / no server: keep the fast preview */ }
+        }, 350);
+    }
+
     async function render() {
         const token = ++renderToken;
 
@@ -465,9 +582,10 @@ function createPreview(node) {
             const cssH = area.clientHeight;
             if (!cssW || !cssH) return;
 
-            const scale = getRenderScale();
-            lastScale = scale;
+            const scale = getRenderScale(area);
+            lastScale = Math.round(scale * 100) / 100;
 
+            // холст — ровно в точках экрана: картинка не растягивается браузером второй раз
             let W = Math.round(cssW * scale);
             let H = Math.round(cssH * scale);
             const pixels = W * H;
@@ -504,15 +622,31 @@ function createPreview(node) {
             dw = Math.max(1, dw);
             dh = Math.max(1, dh);
 
-            const frame = processPixels(getBase(dw, dh), {
+            // Цвет и резкость считаются в ПОЛНОМ размере выхода — ровно то, что уйдёт в генератор,
+            // и только потом уменьшаются для показа. Раньше резкость считалась на уменьшенной копии
+            // и на глаз выглядела совсем не так, как в генераторе.
+            // Color and sharpness are computed at FULL output size (exactly what goes downstream),
+            // then scaled for display. Before, sharpness ran on the small copy and looked different.
+            const settings = {
                 brightness: Number(getValue(node, "BRIGHTNESS / ЯРКОСТЬ", 0)),
                 contrast: Number(getValue(node, "CONTRAST / КОНТРАСТ", 1)),
                 saturation: Number(getValue(node, "SATURATION / НАСЫЩЕННОСТЬ", 1)),
                 sharpness: Number(getValue(node, "SHARPNESS / РЕЗКОСТЬ", 0)),
-            });
-
-            ctx.putImageData(
-                frame,
+            };
+            // Точный кадр от сервера (тот же Python-код, что и при запуске), если он уже готов
+            // для этих настроек; иначе — быстрый кадр браузера и запрос точного.
+            const ek = exactKey(settings);
+            let src;
+            const isExact = exact?.key === ek;
+            if (isExact) {
+                src = exact.canvas;
+            } else {
+                src = getProcessed(out, settings).canvas;
+                requestExact(ek, settings);
+            }
+            const shown = resample(src, src.width, src.height, dw, dh);
+            ctx.drawImage(
+                shown.canvas,
                 Math.floor((W - dw) / 2),
                 Math.floor((H - dh) / 2),
             );
@@ -533,6 +667,7 @@ function createPreview(node) {
             } else if (out.untouched) {
                 text += " (как есть / as is)";
             }
+            text += isExact ? "  ✓" : "  …";
             if (out.upscaleOn && out.modelConnected) {
                 text += ` | AI-апскейл ${out.scale.toFixed(2)}x при запуске`;
             } else if (out.upscaleOn) {
@@ -555,7 +690,7 @@ function createPreview(node) {
 
     // Зум графа не меняет размер элемента, поэтому следим отдельно.
     function checkScale() {
-        if (sourceImage && getRenderScale() !== lastScale) scheduleRender();
+        if (sourceImage && Math.round(getRenderScale(area) * 100) / 100 !== lastScale) scheduleRender();
     }
 
     let observer = null;
@@ -564,12 +699,30 @@ function createPreview(node) {
         observer.observe(area);
     }
 
+    // Приближение холста колёсиком не меняет размер окна (ComfyUI растягивает его через transform),
+    // поэтому ни ResizeObserver, ни отрисовка ноды об этом не узнают — превью оставалось в старом
+    // разрешении и растягивалось (мыло). Раз в 0.3 с сверяем настоящий масштаб на экране и перерисовываем.
+    // Wheel zoom scales the preview via CSS transform without resizing it, so nothing fired and the
+    // preview was stretched (blurry). Every 0.3 s compare the real on-screen scale and re-render.
+    const zoomWatch = window.setInterval(() => {
+        if (!area.isConnected) return;
+        try { if (visibilityMismatch(node)) updateVisibility(node); } catch (_) {}
+        // штатное второе превью ComfyUI (дублирует наше и удлиняет ноду) — прячем
+        try {
+            const dup = node.widgets?.find((w) => w.name === "$$canvas-image-preview");
+            if (dup && !dup.hidden) { dup.hidden = true; node.setDirtyCanvas?.(true, true); }
+        } catch (_) {}
+        if (!sourceImage) return;
+        if (Math.round(getRenderScale(area) * 100) / 100 !== lastScale) scheduleRender();
+    }, 300);
+
     return {
         root,
         scheduleRender,
         checkScale,
         destroy() {
             window.clearTimeout(timer);
+            window.clearInterval(zoomWatch);
             observer?.disconnect();
         },
     };
@@ -757,9 +910,7 @@ app.registerExtension({
                 const original = widget.callback;
                 widget.callback = function () {
                     const r = original?.apply(this, arguments);
-                    if (widget.name === "resize_mode" || widget.name === "upscale") {
-                        updateVisibility(node);
-                    }
+                    updateVisibility(node);
                     preview.scheduleRender();
                     return r;
                 };
@@ -787,6 +938,7 @@ app.registerExtension({
             ]);
 
             updateVisibility(node);
+            for (const t of [50, 300, 800]) window.setTimeout(() => updateVisibility(node), t);
             window.setTimeout(preview.scheduleRender, 150);
 
             return result;
