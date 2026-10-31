@@ -155,12 +155,17 @@ function setWidgetValue(node, name, value) {
 
 function toggleWidget(widget, show) {
     if (!widget) return;
-    if (widget.__origType === undefined) {
-        widget.__origType = widget.type;
-        widget.__origComputeSize = widget.computeSize;
+    // Новый интерфейс ComfyUI прячет поле по флагу hidden. Старый способ (подмена type и размера)
+    // он сбрасывает — поля вылезали обратно, а рамки групп наезжали. Если старый способ уже
+    // успел поменять поле — возвращаем как было.
+    // The new ComfyUI frontend hides a widget by the hidden flag; the old type/size swap got reset.
+    if (widget.__origType !== undefined) {
+        widget.type = widget.__origType;
+        if (widget.__origComputeSize) widget.computeSize = widget.__origComputeSize;
+        else delete widget.computeSize;
+        delete widget.__origType;
+        delete widget.__origComputeSize;
     }
-    widget.type = show ? widget.__origType : "converted-widget";
-    widget.computeSize = show ? widget.__origComputeSize : () => [0, -4];
     widget.hidden = !show;
 }
 
@@ -352,6 +357,22 @@ function updateVisibility(node) {
     } catch (error) {
         console.warn("[Interactive Image Processor] visibility:", error);
     }
+}
+
+// Совпадает ли видимость полей с тем, что должно быть (интерфейс мог сбросить её сам).
+function visibilityMismatch(node) {
+    const mode = String(getValue(node, "resize_mode", ""));
+    const active = new Set(MODE_WIDGETS.find(([key]) => mode.includes(key))?.[1] ?? []);
+    for (const name of ALL_SIZE_WIDGETS) {
+        const w = getWidget(node, name);
+        if (w && !!w.hidden === active.has(name)) return true;
+    }
+    const upscaleOn = String(getValue(node, "upscale", "")).trim() === "Enabled / Вкл";
+    for (const name of UPSCALE_WIDGETS) {
+        const w = getWidget(node, name);
+        if (w && !!w.hidden === upscaleOn) return true;
+    }
+    return false;
 }
 
 function calculateOutputSize(node, origW, origH) {
@@ -777,7 +798,14 @@ function createPreview(node) {
     // Wheel zoom scales the preview via CSS transform without resizing it, so nothing fired and the
     // preview was stretched (blurry). Every 0.3 s compare the real on-screen scale and re-render.
     const zoomWatch = window.setInterval(() => {
-        if (!sourceImage || !area.isConnected) return;
+        if (!area.isConnected) return;
+        try { if (visibilityMismatch(node)) updateVisibility(node); } catch (_) {}
+        // штатное второе превью ComfyUI (дублирует наше и удлиняет ноду) — прячем
+        try {
+            const dup = node.widgets?.find((w) => w.name === "$$canvas-image-preview");
+            if (dup && !dup.hidden) { dup.hidden = true; node.setDirtyCanvas?.(true, true); }
+        } catch (_) {}
+        if (!sourceImage) return;
         if (Math.round(getRenderScale(area) * 100) / 100 !== lastScale) scheduleRender();
     }, 300);
 
@@ -981,9 +1009,7 @@ app.registerExtension({
                 const original = widget.callback;
                 widget.callback = function () {
                     const r = original?.apply(this, arguments);
-                    if (widget.name === "resize_mode" || widget.name === "upscale") {
-                        updateVisibility(node);
-                    }
+                    updateVisibility(node);
                     preview.scheduleRender();
                     return r;
                 };
@@ -1004,6 +1030,7 @@ app.registerExtension({
                 return r;
             };
 
+            for (const t of [50, 300, 800]) window.setTimeout(() => updateVisibility(node), t);
             window.setTimeout(preview.scheduleRender, 150);
 
             return result;
