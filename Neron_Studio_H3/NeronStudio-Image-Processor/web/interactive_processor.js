@@ -52,7 +52,7 @@ const GROUP_GAP = 18;
 const MIN_PREVIEW_HEIGHT = 320;
 const INFO_HEIGHT = 30;
 const UPDATE_DELAY_MS = 40;
-const MAX_RENDER_SCALE = 4;
+const MAX_RENDER_SCALE = 8;   // не ограничиваем чёткость на больших мониторах и при сильном приближении
 
 const LABEL_FONT = "bold 10px sans-serif";
 

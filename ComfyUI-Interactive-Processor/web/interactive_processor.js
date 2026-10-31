@@ -7,8 +7,8 @@ const NODE_NAME = "InteractiveImageProcessor";
 const MIN_PREVIEW_HEIGHT = 300;
 const INFO_HEIGHT = 30;
 const UPDATE_DELAY_MS = 40;
-const MAX_RENDER_SCALE = 3;
-const MAX_PREVIEW_PIXELS = 4_000_000;
+const MAX_RENDER_SCALE = 8;   // не ограничиваем чёткость на больших мониторах и при сильном приближении
+const MAX_PREVIEW_PIXELS = 24_000_000;
 
 const PRESET_SIZES = {
     "1024x1024 (1:1 Square)": [1024, 1024],
