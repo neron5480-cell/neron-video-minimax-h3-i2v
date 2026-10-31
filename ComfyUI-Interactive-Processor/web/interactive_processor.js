@@ -84,7 +84,9 @@ function toggleWidget(widget, show) {
         delete widget.__origType;
         delete widget.__origComputeSize;
     }
+    if (!!widget.hidden === !show) return false;
     widget.hidden = !show;
+    return true;
 }
 
 
@@ -95,16 +97,19 @@ function updateVisibility(node) {
             MODE_WIDGETS.find(([key]) => mode.includes(key))?.[1] ?? [],
         );
 
+        let changed = false;
         for (const name of ALL_SIZE_WIDGETS) {
-            toggleWidget(getWidget(node, name), active.has(name));
+            changed = toggleWidget(getWidget(node, name), active.has(name)) || changed;
         }
 
         const upscaleOn = String(getValue(node, "upscale", "")).trim()
             === "Enabled / Вкл";
 
         for (const name of UPSCALE_WIDGETS) {
-            toggleWidget(getWidget(node, name), upscaleOn);
+            changed = toggleWidget(getWidget(node, name), upscaleOn) || changed;
         }
+        if (!changed && node.__neronVisDone) return;
+        node.__neronVisDone = true;
 
         node.setDirtyCanvas?.(true, true);
     } catch (error) {
@@ -516,6 +521,19 @@ function createPreview(node) {
         } else {
             c = resample(sourceImage, nw, nh, bw, bh);
         }
+        // Огромные картинки (4K и больше) для быстрого превью ужимаем до ~2 Мп, чтобы ползунки
+        // не тормозили; точный кадр в полном размере всё равно приходит от сервера (✓).
+        // Huge images are reduced to ~2 MP for the fast preview; the exact full frame comes from the server.
+        const LIVE_MAX = 2_000_000;
+        if (bw * bh > LIVE_MAX) {
+            const k = Math.sqrt(LIVE_MAX / (bw * bh));
+            const sw = Math.max(1, Math.round(bw * k)), sh = Math.max(1, Math.round(bh * k));
+            c = resample(c.canvas, bw, bh, sw, sh);
+            const small = c.ctx.getImageData(0, 0, sw, sh);
+            fullBase = { key, imageData: small, means: channelMeans(small) };
+            processed = null;
+            return fullBase;
+        }
         const imageData = c.ctx.getImageData(0, 0, bw, bh);
         fullBase = { key, imageData, means: channelMeans(imageData) };
         processed = null;
@@ -910,7 +928,9 @@ app.registerExtension({
                 const original = widget.callback;
                 widget.callback = function () {
                     const r = original?.apply(this, arguments);
-                    updateVisibility(node);
+                    if (widget.name === "resize_mode" || widget.name === "upscale" || widget.name === "image") {
+                        updateVisibility(node);
+                    }
                     preview.scheduleRender();
                     return r;
                 };
