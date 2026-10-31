@@ -363,8 +363,7 @@ function getRenderScale(area) {
             if (shown > 0) k = shown / area.clientWidth;
         }
     } catch (_) {}
-    const scale = Math.min(MAX_RENDER_SCALE, Math.max(0.25, dpr * k));
-    return Math.round(scale * 4) / 4;
+    return Math.min(MAX_RENDER_SCALE, Math.max(0.25, dpr * k));
 }
 
 
@@ -477,8 +476,9 @@ function createPreview(node) {
             if (!cssW || !cssH) return;
 
             const scale = getRenderScale(area);
-            lastScale = scale;
+            lastScale = Math.round(scale * 100) / 100;
 
+            // холст — ровно в точках экрана: картинка не растягивается браузером второй раз
             let W = Math.round(cssW * scale);
             let H = Math.round(cssH * scale);
             const pixels = W * H;
@@ -566,7 +566,7 @@ function createPreview(node) {
 
     // Зум графа не меняет размер элемента, поэтому следим отдельно.
     function checkScale() {
-        if (sourceImage && getRenderScale(area) !== lastScale) scheduleRender();
+        if (sourceImage && Math.round(getRenderScale(area) * 100) / 100 !== lastScale) scheduleRender();
     }
 
     let observer = null;
@@ -575,12 +575,23 @@ function createPreview(node) {
         observer.observe(area);
     }
 
+    // Приближение холста колёсиком не меняет размер окна (ComfyUI растягивает его через transform),
+    // поэтому ни ResizeObserver, ни отрисовка ноды об этом не узнают — превью оставалось в старом
+    // разрешении и растягивалось (мыло). Раз в 0.3 с сверяем настоящий масштаб на экране и перерисовываем.
+    // Wheel zoom scales the preview via CSS transform without resizing it, so nothing fired and the
+    // preview was stretched (blurry). Every 0.3 s compare the real on-screen scale and re-render.
+    const zoomWatch = window.setInterval(() => {
+        if (!sourceImage || !area.isConnected) return;
+        if (Math.round(getRenderScale(area) * 100) / 100 !== lastScale) scheduleRender();
+    }, 300);
+
     return {
         root,
         scheduleRender,
         checkScale,
         destroy() {
             window.clearTimeout(timer);
+            window.clearInterval(zoomWatch);
             observer?.disconnect();
         },
     };
