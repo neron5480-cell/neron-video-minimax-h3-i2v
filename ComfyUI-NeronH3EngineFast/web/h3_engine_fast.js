@@ -313,7 +313,7 @@ the size is always the passport maximum
 
 📌 MODE / РЕЖИМ 📌
 How much time the refine gets:
-⚡ Fast    — smaller draft (0.35 area), refine 3 steps.
+⚡ Fast    — smaller draft (0.45 area), refine 3 steps.
 Balance   — draft 0.5 area, refine 3 steps at 0.5
             (tested: as good as 4 steps, ~1 min faster).
 Clean     — bigger draft, refine 6 steps.
@@ -330,7 +330,9 @@ No frame — 16:9. Never bigger than the passport.
 📌 BALANCE (Custom / expert) 📌
 draft area      — share of the final area for the
                   draft. Smaller = faster, more work
-                  for the refine.
+                  for the refine. Not below 0.4: the
+                  model starts adding ribbons and frills
+                  and ignores the prompt.
 draft steps     — fast models are trained on 8.
 refine steps    — full-size steps, the expensive ones.
 refine strength — how much the refine redraws.
@@ -402,7 +404,7 @@ width/height — необязательные: задают ФОРМУ,
 
 📌 РЕЖИМ / MODE 📌
 Сколько времени отдать чистовику:
-⚡ Быстро — черновик меньше (0.35 площади),
+⚡ Быстро — черновик меньше (0.45 площади),
            чистовик 3 шага.
 Баланс   — черновик 0.5 площади, чистовик 3 шага,
            сила 0.5 (проверено: как 4 шага,
@@ -422,7 +424,9 @@ width/height — необязательные: задают ФОРМУ,
 📌 БАЛАНС («Свой» / эксперт) 📌
 площадь черновика — доля площади финала.
                   Меньше — быстрее, но чистовику
-                  больше работы.
+                  больше работы. Не ниже 0.4: модель
+                  начинает дорисовывать ленточки и
+                  рюшечки и не слушает промпт.
 шаги черновика    — быстрые модели обучены на 8.
 шаги чистовика    — шаги в полном размере, самые
                   дорогие.

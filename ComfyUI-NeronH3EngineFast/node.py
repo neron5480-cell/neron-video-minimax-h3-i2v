@@ -90,13 +90,13 @@ class NeronH3EngineFast:
                                    "EN: Show draft/refine balance, models, LoRAs and seed. Hidden settings still work.")),
                 "mode": (ef.MODES, _main("режим / mode", default=ef.MODES[1],
                           tooltip="Сколько времени отдать чистовику (он рисует деталь в полном размере):\n"
-                                  "⚡ Быстро — черновик меньше (0.35 площади), чистовик 3 шага (проверено).\n"
+                                  "⚡ Быстро — черновик меньше (0.45 площади), чистовик 3 шага.\n"
                                   "Баланс — черновик 0.5 площади, чистовик 3 шага, сила 0.5 (проверено).\n"
                                   "Чисто — черновик крупнее, чистовик 6 шагов.\n"
                                   "Свой — значения из ползунков эксперта.\n"
                                   "Это стартовые точки для тестов, не замеры.\n\n"
                                   "EN: How much time the refine gets (it draws detail at full size). "
-                                  "Fast — smaller draft (0.35 area), 3 refine steps; Balance — 0.5 draft area, 3 refine steps at 0.5 (tested); Clean — bigger draft, 6 steps; "
+                                  "Fast — smaller draft (0.45 area), 3 refine steps; Balance — 0.5 draft area, 3 refine steps at 0.5 (tested); Clean — bigger draft, 6 steps; "
                                   "Custom — expert sliders. Starting points for testing, not measurements.")),
                 "seconds": ("FLOAT", _main("длительность, с / seconds", default=10.0, min=1.0, max=15.0, step=0.5,
                             display="slider", tooltip="До 15 с — на этом обучена модель. Кадры подгоняются к её сетке "
@@ -111,11 +111,13 @@ class NeronH3EngineFast:
                                                             "EN: Only with size = Manual. Clamped to the passport.")),
                 "manual_height": ("INT", _exp("ручной размер · высота / manual height", default=768, min=256,
                                   max=8192, step=32, tooltip="Только при размере «Ручной».\n\nEN: Only with size = Manual.")),
-                "draft_area": ("FLOAT", _exp("черновик · площадь / draft area", default=0.5, min=0.25, max=1.0,
+                "draft_area": ("FLOAT", _exp("черновик · площадь / draft area", default=0.5, min=0.4, max=1.0,
                                step=0.05, display="slider",
                                tooltip="Режим «Свой». Доля площади финального кадра: 0.5 → 1344×768 становится 960×544. "
-                                       "Меньше — быстрее, но чистовику больше работы.\n\nEN: Custom mode. Share of the "
-                                       "final area for the draft. Smaller = faster, more work for the refine.")),
+                                       "Меньше — быстрее, но чистовику больше работы. Ниже 0.4 модель начинает дорисовывать лишнее "
+                                       "(ленточки, рюшечки) и не слушает промпт — поэтому 0.4 — нижний предел.\n\nEN: Custom mode. "
+                                       "Share of the final area for the draft. Smaller = faster, more work for the refine. Below "
+                                       "0.4 the model invents extra details (ribbons, frills) and ignores the prompt, so 0.4 is the floor.")),
                 "draft_steps": ("INT", _exp("черновик · шаги / draft steps", default=8, min=4, max=20,
                                 tooltip="Режим «Свой». Быстрые модели обучены на 8 шагов.\n\nEN: Custom mode. "
                                         "Fast models are trained for 8 steps.")),
