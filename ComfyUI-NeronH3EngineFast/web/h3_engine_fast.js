@@ -318,8 +318,10 @@ Balance   — draft 0.5 area, refine 3 steps at 0.5
             (tested: as good as 4 steps, ~1 min faster).
 Clean     — bigger draft, refine 6 steps.
 Custom    — your own values (BALANCE sliders).
-These are starting points for our tests,
-not measurements.
+Measured: RTX 5070 Ti 16 GB, 48 GB RAM, int8
+models, no upscaler, 10 s at the model's full size:
+  Fast 7–9 min · Balance 8–12 · Clean 12–14.
+Roughly: Fast ≈ 1 min per second of video.
 
 📌 SECONDS / SIZE 📌
 Up to 15 s, frames on the model grid (17k+5).
@@ -411,8 +413,10 @@ width/height — необязательные: задают ФОРМУ,
            на ~1 мин быстрее).
 Чисто    — черновик крупнее, чистовик 6 шагов.
 Свой     — свои значения (ползунки БАЛАНС).
-Это стартовые точки для наших тестов,
-а не замеры.
+Замер: RTX 5070 Ti 16 ГБ, 48 ГБ ОЗУ, модели int8,
+без апскейлера, 10 с в полном размере модели:
+  Быстро 7–9 мин · Баланс 8–12 · Чисто 12–14.
+Грубо: Быстро ≈ 1 минута на секунду видео.
 
 📌 СЕКУНДЫ / РАЗМЕР 📌
 До 15 с, кадры по сетке модели (17k+5).
