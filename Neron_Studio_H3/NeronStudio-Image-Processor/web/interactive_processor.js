@@ -459,7 +459,8 @@ function resample(source, srcW, srcH, dstW, dstH) {
     let curW = srcW;
     let curH = srcH;
 
-    while (curW / 2 >= dstW || curH / 2 >= dstH) {
+    // промежуточные уменьшения вдвое — только при сильном уменьшении (больше 4×), иначе один проход «high»
+    while (curW / 4 >= dstW && curH / 4 >= dstH) {
         const nextW = Math.max(dstW, Math.ceil(curW / 2));
         const nextH = Math.max(dstH, Math.ceil(curH / 2));
         const step = makeCanvas(nextW, nextH);
@@ -562,11 +563,21 @@ function processPixels(base, s) {
     return out;
 }
 
-function getRenderScale() {
+// Сколько настоящих точек экрана приходится на одну CSS-точку окна превью.
+// Меряем по факту (размер на экране × плотность экрана), а не угадываем по масштабу холста:
+// новый интерфейс ComfyUI может растягивать окно сам — тогда угаданный масштаб давал мыльное превью.
+// Real device pixels per CSS pixel of the preview area, measured on screen (not guessed from zoom).
+function getRenderScale(area) {
     const dpr = window.devicePixelRatio || 1;
-    const zoom = app.canvas?.ds?.scale || 1;
-    const scale = Math.min(MAX_RENDER_SCALE, Math.max(1, dpr * zoom));
-    return Math.round(scale * 2) / 2;
+    let k = app.canvas?.ds?.scale || 1;
+    try {
+        if (area && area.clientWidth > 0) {
+            const shown = area.getBoundingClientRect().width;
+            if (shown > 0) k = shown / area.clientWidth;
+        }
+    } catch (_) {}
+    const scale = Math.min(MAX_RENDER_SCALE, Math.max(0.25, dpr * k));
+    return Math.round(scale * 4) / 4;
 }
 
 function createPreview(node) {
@@ -674,7 +685,7 @@ function createPreview(node) {
             const cssH = area.clientHeight;
             if (!cssW || !cssH) return;
 
-            const scale = getRenderScale();
+            const scale = getRenderScale(area);
             lastScale = scale;
 
             const W = Math.round(cssW * scale);
@@ -751,7 +762,7 @@ function createPreview(node) {
     }
 
     function checkScale() {
-        if (sourceImage && getRenderScale() !== lastScale) scheduleRender();
+        if (sourceImage && getRenderScale(area) !== lastScale) scheduleRender();
     }
 
     let observer = null;
