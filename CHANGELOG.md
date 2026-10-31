@@ -1,5 +1,11 @@
 # Changelog / История изменений
 
+## 🎥 MiniMax H3 Generator (Lite): HD-режимы / HD modes (dev, 31.10.2026)
+
+**RU:** В Lite-генератор встроены режимы из ⚡ H3 Engine Fast: **⚡ Быстро HD, Баланс HD, Чисто HD** — полный размер модели за один прогон (черновик → увеличение → чистовик). Добавлены в конец списка режимов, новых полей нет — старые воркфлоу (в том числе Neron Studio H3 Full Pipeline) открываются как раньше. После прогона на ноде — 📋 отчёт со временем этапов. Площадь черновика не ниже 0.4 (ниже модель дорисовывает ленточки и не слушает промпт).
+
+**EN:** The Lite generator gets the H3 Engine Fast modes: **Fast HD, Balance HD, Clean HD** — full model size in one run (draft → upscale → refine). Appended to the mode list with no new fields, so old workflows open as before. A 📋 run report appears on the node.
+
 ## Автопромтеры: где искать модели / Autoprompters: model folders (dev, 30.10.2026)
 
 **RU:** **llama-server снова скачивается сам**: llama.cpp поменял имена файлов в релизах (cuda-12.4 → cuda-13.x), и старый поиск ничего не находил. Теперь сборка ищется по образцу, под версию CUDA твоего драйвера, вместе с CUDA-библиотеками; нет NVIDIA — Vulkan или CPU. **AutoPrompter больше не отдаёт ошибку LLM в генератор как промпт** — останавливается и показывает её. AutoPrompter и Dialog Autoprompter **делят один llama-server**: если одна нода уже скачала его, вторая берёт тот же (раньше AutoPrompter мог не найти сервер, скачанный диалоговым). Ошибка «сервер не найден» теперь объясняет, что делать (RU/EN). AutoPrompter, Dialog Autoprompter и Multi-Image LLM видят GGUF-модели не только прямо в `models/LLM`, но и **в подпапках** (`models/LLM/Qwen/…`) в папках `LLM` из `extra_model_paths` (модели на другом диске) и в папке `LLM` рядом с **каждой** папкой моделей, которую знает ComfyUI (Desktop держит модели в нескольких местах). Новые файлы появляются в списке после перезапуска ComfyUI.

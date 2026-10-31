@@ -19,6 +19,7 @@ from .frames import (
 from .memory import free_between_stages, log_vram
 from .lora_cache import NO_LORA
 from . import pipeline
+from . import hd
 
 
 log = logging.getLogger("Neron.H3.Generator")
@@ -85,9 +86,17 @@ class NeronMiniMaxH3Generator:
             "required": {
                 "expert_mode": ("BOOLEAN", {"default": False}),
 
+                # HD-режимы добавлены В КОНЕЦ списка: старые схемы (Turbo / Normal) открываются как раньше.
                 "MODE / РЕЖИМ": (
-                    ["Turbo / Турбо", "Normal / Обычный"],
-                    {"default": "Turbo / Турбо"},
+                    ["Turbo / Турбо", "Normal / Обычный"] + hd.MODES,
+                    {"default": "Turbo / Турбо",
+                     "tooltip": "Turbo — 8 шагов, Normal — 20 шагов, в выбранном размере.\n"
+                                "HD-режимы — полный размер модели за один прогон: маленький черновик → "
+                                "увеличение → короткий чистовик. ⚡ Быстро HD ≈ 1 мин на секунду видео, "
+                                "Баланс HD — чище, Чисто HD — ещё чище и дольше (замер на RTX 5070 Ti 16 ГБ).\n\n"
+                                "EN: Turbo — 8 steps, Normal — 20 steps at the chosen size. HD modes — full model "
+                                "size in one run: small draft → upscale → short refine. Fast HD ≈ 1 min per "
+                                "second of video; Balance HD cleaner; Clean HD cleanest and slowest."},
                 ),
                 "SECONDS / СЕКУНДЫ": ("FLOAT", {
                     "default": DEFAULT_SECONDS,
@@ -305,6 +314,9 @@ class NeronMiniMaxH3Generator:
 
         width, height = self._resolve_size(kwargs)
 
+        if mode in hd.PRESETS:
+            return self._generate_hd(mode, prompt, width, height, total_frames, kwargs)
+
         is_turbo = mode.startswith("Turbo")
         steps = (
             int(kwargs.get("turbo_steps", 8)) if is_turbo
@@ -375,6 +387,31 @@ class NeronMiniMaxH3Generator:
                 )
 
         return video, audio, last_frame, frames_count
+
+    # ------------------------------------------------------------------
+    def _generate_hd(self, mode, prompt, width, height, total_frames, kwargs):
+        """HD: форма — из размера (пресет / ручной / провода), размер — максимальный по паспорту модели."""
+        w, h = hd.canvas(width, height)
+        if (w, h) != (width, height):
+            log.info("[H3 Generator] HD: %sx%s → паспорт модели %sx%s", width, height, w, h)
+        refs = [kwargs.get("ref_image_" + str(i)) for i in range(4)]
+        free_between_stages("HD: перед стартом")
+        try:
+            video, audio, last_frame, frames_count, report = hd.generate(
+                mode=mode, prompt=prompt, ref_images=refs, width=w, height=h, length=total_frames,
+                seed=int(kwargs.get("seed", 1)), user_loras=self._collect_loras(kwargs),
+                models=self._resolve_models(kwargs),
+                decode_tile_size=int(kwargs.get("decode_tile_size", 0) or 0),
+                ref_video=kwargs.get("ref_video"), ref_video_audio=kwargs.get("ref_video_audio"),
+                ref_audio=kwargs.get("ref_audio"))
+        except Exception:
+            free_between_stages("HD: после ошибки")
+            raise
+        finally:
+            if kwargs.get("FREE AFTER RUN / ОЧИСТКА ПОСЛЕ", True):
+                free_between_stages("После генерации (FREE AFTER RUN)")
+        return {"ui": {"text": ["\n".join(report)]},
+                "result": (video, audio, last_frame, frames_count)}
 
 
 NODE_CLASS_MAPPINGS = {

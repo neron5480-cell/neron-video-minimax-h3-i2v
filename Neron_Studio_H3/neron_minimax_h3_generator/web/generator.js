@@ -1,4 +1,5 @@
 import { app } from "../../scripts/app.js";
+import { ComfyWidgets } from "../../scripts/widgets.js";
 
 const NODE_NAME = "NeronMiniMaxH3Generator";
 
@@ -378,6 +379,22 @@ Normal — 20 steps, better quality.
 Both modes use the same model. Turbo just applies
 a special 8-step LoRA on top.
 
+⚡ HD modes — the model's FULL size in one run:
+a small draft (fast model) → upscale → a short
+refine at full size. Size = the passport maximum
+for your preset's shape (e.g. 16:9 → 1344×768).
+⚡ Fast HD    — draft 0.45 area, refine 3 steps.
+Balance HD    — draft 0.5 area, refine 3 steps.
+Clean HD      — draft 0.6 area, refine 6 steps.
+Measured: RTX 5070 Ti 16 GB, int8 models, 10 s at
+full size: Fast 7–9 min, Balance 8–12, Clean 12–14.
+Draft model: Fast H3 if downloaded
+(fastvideo_fasth3_8step_v2_pruned_int8_convrot),
+otherwise base model + turbo LoRA (slower).
+Refine LoRA: Taomate 3-step if present, else turbo.
+After a run the node shows a 📋 Report with the
+time of every stage.
+
 📌 SECONDS / СЕКУНДЫ 📌
 Working range: 1 to 15 seconds.
 15 seconds is the safety margin — not a limit.
@@ -489,6 +506,23 @@ Normal — 20 шагов, качество выше.
 
 Оба режима работают с одной моделью. Turbo просто
 накладывает сверху специальную 8-шаговую LoRA.
+
+⚡ HD-режимы — ПОЛНЫЙ размер модели за один прогон:
+маленький черновик (быстрая модель) → увеличение →
+короткий чистовик в полном размере. Размер —
+максимум паспорта для формы пресета
+(например, 16:9 → 1344×768).
+⚡ Быстро HD — черновик 0.45 площади, чистовик 3 шага.
+Баланс HD   — черновик 0.5, чистовик 3 шага.
+Чисто HD    — черновик 0.6, чистовик 6 шагов.
+Замер: RTX 5070 Ti 16 ГБ, модели int8, 10 с в полном
+размере: Быстро 7–9 мин, Баланс 8–12, Чисто 12–14.
+Модель черновика: Fast H3, если скачана
+(fastvideo_fasth3_8step_v2_pruned_int8_convrot),
+иначе базовая + турбо-LoRA (медленнее).
+LoRA чистовика: Taomate 3-step, если есть, иначе турбо.
+После прогона на ноде появляется 📋 Отчёт со
+временем каждого этапа.
 
 📌 СЕКУНДЫ / SECONDS 📌
 Рабочий диапазон: от 1 до 15 секунд.
@@ -645,6 +679,27 @@ app.registerExtension({
         const origDrawFg = nodeType.prototype.onDrawForeground;
         const origResize = nodeType.prototype.onResize;
         const origRemoved = nodeType.prototype.onRemoved;
+        const origExecuted = nodeType.prototype.onExecuted;
+
+        // 📋 отчёт HD-режимов — поле внизу ноды (не сохраняется в схему)
+        nodeType.prototype.onExecuted = function (message) {
+            const r = origExecuted?.apply(this, arguments);
+            const text = (message?.text || []).join("\n");
+            if (!text) return r;
+            let w = getWidget(this, "report");
+            if (!w) {
+                w = ComfyWidgets["STRING"](this, "report", ["STRING", { multiline: true }], app).widget;
+                w.serialize = false;
+                if (w.inputEl) { w.inputEl.readOnly = true; w.inputEl.style.opacity = 0.85; w.inputEl.style.fontSize = "11px"; }
+            }
+            w.value = "📋 Отчёт / Report\n" + text;
+            try {
+                const sz = this.computeSize();
+                this.setSize([Math.max(this.size[0], sz[0]), Math.max(this.size[1], sz[1])]);
+            } catch (_) {}
+            app.graph?.setDirtyCanvas(true, true);
+            return r;
+        };
 
         nodeType.prototype.onNodeCreated = function () {
             const r = origCreated?.apply(this, arguments);
