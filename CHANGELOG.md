@@ -1,5 +1,18 @@
 # Changelog / История изменений
 
+## ✨ Neron Video Editor v0.3: AI-правка куска / AI edit of a piece (dev, 01.11.2026)
+
+**RU:**
+- AI-событие переделано по отзыву: вместо «ключевых кадров» (модель рисовала картинку целиком, как кадр) — **правка по образцам**, как в обычном генераторе. Выбрали кусок (2–15 с) → написали, что сделать → всё. Кусок уходит модели как `<Video 1>`, картинки, лежащие на полоске внутри куска, — как `<Picture N>` (не наклеиваются), время их появления/исчезновения пульт пишет в промпт сам. Промпт — в формате правки H3; свой полный промпт уходит как есть и виден в эксперте.
+- «Область» у AI-куска: из AI берётся только она. Длину куска теперь можно сжать до 2 с.
+- AI-движок сначала ищет модель **ref2va**, потом fl2va.
+- Исправлено: падение на больших видео (IndexError 60825600) и выбор чужих моделей.
+
+**EN:**
+- The AI event is reworked after feedback: instead of keyframes (the model painted the picture as a whole frame) it is now **reference editing**, like the regular generator. Pick a piece (2–15 s) → write what to do. The piece is `<Video 1>`, pictures inside it are `<Picture N>` (not pasted), their times go into the prompt automatically. H3 edit-format prompt; a full own prompt is used verbatim.
+- “Area” for AI pieces; pieces can be as short as 2 s. The engine prefers **ref2va**, then fl2va.
+- Fixed: crash on big videos and picking foreign models.
+
 ## ✨ Neron Video Editor v0.2: AI-переход / AI transition (dev, 01.11.2026)
 
 **RU:**

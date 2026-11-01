@@ -60,13 +60,13 @@ def _box(b, allow_none=True):
     return out
 
 
-def ai_seconds(sec):
-    """Длина AI-куска на сетке модели (24 к/с, 17k+5 кадров, 124–362) → секунды.
-    AI piece length snapped to the model grid."""
-    n = max(124, int(round(float(sec) * 24)))
-    while n % 17 != 5:
-        n += 1
-    return min(362, n) / 24.0
+def in_ai(pic, events):
+    """Картинка лежит внутри AI-куска → она образец для модели, а не наклейка.
+    A picture starting inside an AI piece is a reference for the model, not an overlay."""
+    for e in events:
+        if e["kind"] == "ai" and e["t"] <= pic["t"] < e["t"] + e["dur"]:
+            return e
+    return None
 
 
 def norm_event(e):
@@ -97,16 +97,10 @@ def norm_event(e):
         "id": str(e.get("id") or ""),
     }
     if kind == "ai":
-        # AI-кусок: длина = длина генерации (5–15 с), во весь кадр по умолчанию
-        ev["dur"] = ai_seconds(_f(e.get("dur"), 6.0, 5.0, 15.0))
-        ev["pic"] = int(_f(e.get("pic"), 0, 0, 4))
-        ev["pic_at"] = _f(e.get("pic_at"), 2.0, 0.0, 15.0)
-        ev["start"] = e.get("start") if e.get("start") in ("motion", "frame", "none") else "motion"
-        ev["back"] = bool(e.get("back", False))
-        ev["style"] = str(e.get("style") or "dissolve")
-        ev["text"] = str(e.get("text") or "")[:4000]
+        # AI-кусок = окно правки 2–15 с (столько видео-образца берёт модель) / edit window 2–15 s
+        ev["dur"] = _f(e.get("dur"), 6.0, 2.0, 15.0)
+        ev["text"] = str(e.get("text") or "")[:6000]
         ev["sound"] = "ai" if e.get("sound") == "ai" else "orig"
-        ev["keep_bw"] = bool(e.get("keep_bw", True))
         ev["seed"] = int(_f(e.get("seed"), 0, 0, 1e9))
         ev["tin"] = e.get("tin") if e.get("tin") in TRANSITIONS else "dissolve"
         ev["tout"] = e.get("tout") if e.get("tout") in TRANSITIONS else "dissolve"
@@ -336,6 +330,8 @@ def render(state, main, videos, images, device, progress=None, ai=None):
     evs = []
     for ev in state["events"]:
         if ev["kind"] == "picture" and ev["src"] not in images:
+            continue
+        if ev["kind"] == "picture" and in_ai(ev, state["events"]):
             continue
         if ev["kind"] == "insert" and ev["src"] not in videos:
             continue

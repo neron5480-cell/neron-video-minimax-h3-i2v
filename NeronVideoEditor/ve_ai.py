@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Neron Video Editor — AI-кусок через MiniMax H3 / AI piece via MiniMax H3.
+Neron Video Editor — AI-правка куска видео / AI edit of a video piece (MiniMax H3).
 
-RU: Событие «✨ AI» пульта: модель рисует кусок ролика, а к его кадрам «прибиты»
-    (MiniMaxH3AddGuide) настоящие кадры видео 1 — в начале (движение, чтобы стык был
-    гладким), картинка — на нужной секунде, и при «вернуться» — снова настоящие кадры
-    в конце. Так переход начинается из оригинала и (по желанию) в него возвращается.
-    Память — строго по очереди, как в H3 Engine: текст → генерация → раскодировка.
-    Готовые куски запоминаются на диске (temp) — повторная «Очередь» их не пересчитывает.
-EN: The pult's “✨ AI” event: the model paints a piece of the clip while real frames
-    of video 1 are anchored (MiniMaxH3AddGuide) at its start (motion, for a smooth
-    seam), the picture at the chosen second, and — with “return” — real frames at the
-    end. Staged memory as in H3 Engine. Finished pieces are cached on disk (temp).
+RU: Как в обычном генераторе: выбранный кусок видео 1 идёт модели образцом <Video 1>,
+    картинки, лежащие на полоске внутри куска, — образцами <Picture N>, а промпт пульт
+    собирает сам: ваши слова + время появления/исчезновения картинок (по их месту на
+    полоске) + «оригинал сохранить». Готовый кусок встаёт обратно на своё место.
+    Память — по очереди, как в H3 Engine. Готовые куски запоминаются (память + temp).
+EN: Like the regular generator: the chosen piece of video 1 is <Video 1>, pictures lying
+    on the timeline inside it are <Picture N>, and the pult writes the prompt: your words
+    + appear/disappear times from the pictures' places + “keep the original”. The
+    finished piece goes back in place. Staged memory; pieces are cached.
 """
 
 import gc
@@ -22,21 +21,20 @@ import os
 import time
 
 import torch
-import torch.nn.functional as F
 
 log = logging.getLogger("Neron.VideoEditor.AI")
 
 FPS = 24
 GRID = 32
 MAX_FRAMES = 362            # 15 с — верх обучения модели / training max
-MIN_FRAMES = 124            # ~5 с — низ обучения модели / training min
-ANCHOR = 22                 # кусок-якорь: 22 кадра ≈ 0.9 с (сетка 17k+5) / anchor clip
+MIN_FRAMES = 48             # 2 с — короче образец-видео модель не берёт / ref video min 2 s
 
 SHIFT_VIDEO, SHIFT_AUDIO = 12.0, 3.0
 SAMPLER, SCHEDULER = "res_multistep", "simple"
 QUALITY_STEPS, TURBO_STEPS, TURBO_STRENGTH = 40, 12, 0.8
 
-UNET_NAME = "minimax_h3_fl2va_pruned_int8_convrot.safetensors"
+UNET_NAME = "minimax_h3_ref2va_pruned_int8_convrot.safetensors"     # правка по образцам / reference editing
+UNET_FALLBACK = "minimax_h3_fl2va_pruned_int8_convrot.safetensors"
 CLIP_NAME = "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors"
 CLIP_TYPE = "minimax"
 VAE_VIDEO_NAME = "minimax_h3_video_vae_fp16.safetensors"
@@ -45,21 +43,6 @@ TURBO_LORA_NAME = "minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensor
 
 MODES = ["⚡ Турбо / Turbo", "Качество / Quality"]
 SIZES = {"Полный / Full (768)": 768, "Средний / Medium (640)": 640, "Черновик / Draft (512)": 512}
-
-# Готовые фразы перехода (английский — язык гайда MiniMax) / transition phrases
-STYLES = {
-    "dissolve": "The live-action footage slowly and seamlessly dissolves into the new image, which then comes to life.",
-    "pencil": ("A graphite pencil starts sketching over the live-action footage; pencil lines spread across the frame "
-               "until the whole scene becomes a black-and-white pencil drawing on white paper, which then comes alive. "
-               "Keep the hand-drawn pencil look: graphite strokes, white paper, no colour, no photorealism."),
-    "drain": ("The colours drain out of the live-action footage, leaving only outlines, and the scene turns into "
-              "a hand-drawn illustration, which then comes alive."),
-    "ink": ("Black ink spreads across the frame like on wet paper and forms the new image, which then comes alive. "
-            "Keep the ink drawing style."),
-    "paper": ("Paper texture shows through the live-action footage and the scene turns into an illustration on paper, "
-              "which then comes alive."),
-    "custom": "",
-}
 
 
 # ---------------------------------------------------------------- размеры / sizes
@@ -85,8 +68,9 @@ def canvas(width, height, short=768):
     return w2, h2
 
 
-def frames_for(seconds):
-    n = max(MIN_FRAMES, int(round(float(seconds) * FPS)))
+def frames_for_len(L):
+    """Длина генерации на сетке модели (17k+5), не короче образца. / Model grid length, not shorter than the ref."""
+    n = max(5, int(L))
     while n % 17 != 5:
         n += 1
     return min(MAX_FRAMES, n)
@@ -100,8 +84,7 @@ def _node(class_name, **kw):
         raise RuntimeError(f"[Neron Video Editor] нет ноды ComfyUI «{class_name}» — обновите ComfyUI "
                            f"/ ComfyUI node “{class_name}” is missing — update ComfyUI")
     out = getattr(cls(), cls.FUNCTION)(**kw)
-    # новые ноды (io.ComfyNode) отдают NodeOutput / new-style nodes return NodeOutput
-    if hasattr(out, "result"):
+    if hasattr(out, "result"):      # новые ноды отдают NodeOutput / new-style nodes return NodeOutput
         out = out.result
     return out
 
@@ -168,7 +151,7 @@ def _decode(out, vae):
                        "/ not enough VRAM to decode — shorten the piece or lower the size")
 
 
-# ---------------------------------------------------------------- якоря / anchors
+# ---------------------------------------------------------------- образцы и промпт / references & prompt
 def _rgb(x):
     x = x[..., :3].float()
     if x.shape[-1] == 1:
@@ -176,64 +159,50 @@ def _rgb(x):
     return x
 
 
-def _frames_at(src, times):
-    """Кадры источника по секундам → [k,H,W,3]."""
-    return torch.stack([_rgb(src.at(max(0.0, t))) for t in times]).cpu()
+def segment(main, t0, dur):
+    """Кусок видео 1 в 24 к/с (так модель принимает образец-видео). / The piece at 24 fps."""
+    L = max(MIN_FRAMES, int(round(dur * FPS)))
+    return torch.stack([_rgb(main.at(t0 + j / FPS)) for j in range(L)]).cpu()
 
 
-def plan(ev, main, images, n):
-    """Что и куда прибиваем / what gets anchored where. → [(frame_idx, frames [k,H,W,3]), …], отчёт."""
-    guides, notes = [], []
-    t0, dur = ev["t"], n / FPS
-    end_room = ANCHOR if ev["back"] else 0
-    if ev["start"] == "motion":
-        clip = _frames_at(main, [t0 + j / FPS for j in range(ANCHOR)])
-        guides.append((0, clip))
-        notes.append(f"начало: {ANCHOR} настоящих кадров (движение) / start: {ANCHOR} real frames (motion)")
-    elif ev["start"] == "frame":
-        guides.append((0, _frames_at(main, [t0])))
-        notes.append("начало: 1 настоящий кадр / start: 1 real frame")
-    pic = images.get(ev["pic"]) if ev["pic"] else None
-    if pic is not None:
-        lo = ANCHOR if ev["start"] == "motion" else 1 if ev["start"] == "frame" else 0
-        hi = n - 1 - end_room
-        idx = int(round(ev["pic_at"] * FPS))
-        idx = max(lo, min(hi, idx))
-        guides.append((idx, _rgb(pic).unsqueeze(0).cpu()))
-        notes.append(f"картинка {ev['pic']} на кадре {idx} ({idx / FPS:.1f} с) / picture at frame {idx}")
-    if ev["back"]:
-        t1 = t0 + dur
-        clip = _frames_at(main, [t1 - (ANCHOR - j) / FPS for j in range(ANCHOR)])
-        guides.append((n - ANCHOR, clip))
-        notes.append("конец: возврат в настоящее видео / end: back to the real footage")
-    return guides, notes
+_APPEAR = {"cut": "appears", "dissolve": "gradually materializes", "reveal": "gradually materializes",
+           "wipe": "gradually materializes", "dip": "gradually materializes"}
+_LEAVE = {"cut": "disappears", "dissolve": "smoothly fades away", "reveal": "smoothly fades away",
+          "wipe": "smoothly fades away", "dip": "smoothly fades away"}
 
 
-def prompt_for(ev):
-    parts = [STYLES.get(ev["style"], "")]
+def prompt_for(ev, pics):
+    """Промпт в формате правки H3 (как в ваших схемах). pics: [(n, a, b, tin, tout)] — время от начала куска.
+    Если вы сами написали полный промпт (есть <Video 1> или subject_definitions) — берём как есть.
+    H3 edit-format prompt. A full prompt written by the user is used verbatim."""
     txt = ev["text"].strip()
-    if txt:
-        parts.append(txt if txt[-1] in ".!?…" else txt + ".")
-    if ev["start"] != "none":
-        parts.append("The clip starts as a direct continuation of the original live-action footage: same camera, "
-                     "same people, same motion.")
-    if ev["back"]:
-        parts.append("At the end the scene returns to the original live-action footage.")
-    return " ".join(p for p in parts if p).strip()
-
-
-def _keep_bw(frames, idx_from, ramp=12):
-    """Ч/б как у рисунка: от картинки и дальше — без цвета (плавно за ramp кадров)."""
-    g = frames[..., 0] * 0.299 + frames[..., 1] * 0.587 + frames[..., 2] * 0.114
-    n = frames.shape[0]
-    k = torch.clamp((torch.arange(n, dtype=torch.float32) - (idx_from - ramp)) / max(1, ramp), 0.0, 1.0)
-    k = k.view(n, 1, 1, 1)
-    return frames * (1 - k) + g.unsqueeze(-1) * k
-
-
-def is_gray(img, tol=0.03):
-    x = _rgb(img)
-    return float((x.max(-1).values - x.min(-1).values).mean()) < tol
+    if "<Video 1>" in txt or "subject_definitions" in txt:
+        return txt
+    if txt and txt[-1] not in ".!?…":
+        txt += "."
+    dur = ev["dur"]
+    subj = ["<Video 1> is the source footage."]
+    timing = []
+    for n, a, b, tin, tout in pics:
+        subj.append(f"<Picture {n}> is a reference image: use only its main object, not its background or frame.")
+        line = f"At {a:.1f} s the element from <Picture {n}> {_APPEAR.get(tin, 'appears')}"
+        if b < dur - 0.05:
+            line += f"; at {b:.1f} s it {_LEAVE.get(tout, 'disappears')}"
+        timing.append(line + ".")
+    out = [
+        "subject_definitions:", " ".join(subj), "",
+        "summary:",
+        "[video editing] The target video is an edited version of <Video 1>. The goal is to preserve the original "
+        "footage exactly as it is and apply only the change described below.", "",
+        "retention_analysis:",
+        "<Video 1>: fully_preserved - the original video's composition, lighting, motion, grain, and all actions of "
+        "the people must remain completely unchanged. Do not alter the footage quality or style.", "",
+        "detailed_description:",
+        "[Shot 1] The original footage plays exactly as provided. " + " ".join(p for p in [txt] + timing if p) +
+        " The added element blends naturally with the scene's light and moves physically plausibly with it. "
+        "The camera behavior follows the original video precisely.",
+    ]
+    return "\n".join(out)
 
 
 # ---------------------------------------------------------------- генерация / generation
@@ -261,26 +230,29 @@ def _cache_dir():
     return d
 
 
-def piece(ev, main, images, engine, aspect_wh, progress_note=None):
-    """Готовый AI-кусок: dict(frames [n,h,w,3] float 0..1 CPU, audio|None, fps, notes, cached).
-    aspect_wh — размер видео 1 (кусок той же формы)."""
+def piece(ev, main, pics, engine, aspect_wh, ref_audio=None):
+    """AI-правка куска. pics: [(n, image, a, b, tin, tout)] — картинки внутри куска (время от его начала).
+    ref_audio — звук куска (для «звук: AI»).
+    → dict(frames [n,h,w,3] 0..1 CPU, audio|None, fps, notes, cached, prompt)."""
+    if not ev["text"].strip() and not pics:
+        raise RuntimeError("[Neron Video Editor] ✨ AI: напишите, что сделать с куском, или положите внутрь него "
+                           "картинку / ✨ AI: write what to do with the piece or put a picture inside it")
     short = SIZES.get(engine.get("size"), 768)
     w, h = canvas(aspect_wh[0], aspect_wh[1], short)
-    n = frames_for(ev["dur"])
-    guides, notes = plan(ev, main, images, n)
-    prompt = prompt_for(ev)
-    if not prompt:
-        raise RuntimeError("[Neron Video Editor] AI: опишите словами, что происходит, или выберите вид перехода "
-                           "/ AI: describe what happens or pick a transition style")
+    ref = segment(main, ev["t"], ev["dur"])
+    n = frames_for_len(ref.shape[0])
+    prompt = prompt_for(ev, [(k, a, b, ti, to) for k, _, a, b, ti, to in pics])
     models = engine["models"]
     seed = int(engine.get("seed", 1)) + int(ev.get("seed", 0))
-    key = _hash(prompt, w, h, n, engine["mode"], seed, models, ev["sound"] == "ai",
-                *[g for _, g in guides], *[i for i, _ in guides])
-    notes.insert(0, f"размер {w}×{h}, {n} кадров ({n / FPS:.1f} с) / size, frames")
+    turbo = engine["mode"] == MODES[0]
+    want_audio = ev["sound"] == "ai"
+    key = _hash(prompt, w, h, n, engine["mode"], seed, models, want_audio, ref, *[p[1] for p in pics])
+    notes = [f"размер {w}×{h}, {n} кадров ({n / FPS:.1f} с) / size, frames",
+             f"образцы: <Video 1> + картинок {len(pics)} / refs: video + {len(pics)} pictures"]
 
     if key in _MEM:
         r = _MEM[key]
-        return dict(r, notes=notes + ["взято из памяти — без генерации / reused, no generation"], cached=True)
+        return dict(r, notes=notes + ["взято из памяти — без генерации / reused"], cached=True, prompt=prompt)
     path = os.path.join(_cache_dir(), key + ".pt")
     if os.path.isfile(path):
         try:
@@ -288,27 +260,31 @@ def piece(ev, main, images, engine, aspect_wh, progress_note=None):
             r = {"frames": d["frames"].float() / 255.0, "audio": d.get("audio"), "fps": FPS}
             _MEM.clear()
             _MEM[key] = r
-            return dict(r, notes=notes + ["взято с диска — без генерации / reused from disk"], cached=True)
+            return dict(r, notes=notes + ["взято с диска — без генерации / reused from disk"], cached=True,
+                        prompt=prompt)
         except Exception:
             pass
 
     t_all = time.time()
-    turbo = engine["mode"] == MODES[0]
     steps = TURBO_STEPS if turbo else QUALITY_STEPS
     free("перед AI-куском / before the AI piece")
 
-    # 1. текст + якоря / text + anchors
+    # 1. текст + образцы / text + references
     clip = _node("CLIPLoader", clip_name=models["clip"], type=CLIP_TYPE, device="default")[0]
     vae = _node("VAELoader", vae_name=models["vae_video"])[0]
-    positive, latent = _node("MiniMaxH3ImageToVideo", clip=clip, vae=vae, prompt=prompt,
-                             width=int(w), height=int(h), length=int(n))
-    del clip
-    free("текстовый энкодер выгружен / text encoder unloaded")
-    for idx, frames in guides:
-        positive = _node("MiniMaxH3AddGuide", positive=positive, vae=vae, latent=latent,
-                         image=frames, frame_idx=int(idx))[0]
-    del vae
-    free("якоря готовы / anchors ready")
+    params = {"clip": clip, "vae": vae, "prompt": prompt, "width": int(w), "height": int(h), "length": int(n),
+              "ref_image_size": "match" if turbo else "max", "ref_videos": {"ref_video_0": ref}}
+    if pics:
+        params["ref_images"] = {f"ref_image_{i}": _rgb(p[1]).unsqueeze(0).cpu() for i, p in enumerate(pics)}
+    avae = None
+    if want_audio and ref_audio is not None:
+        avae = _node("VAELoader", vae_name=models["vae_audio"])[0]
+        params["audio_vae"] = avae
+        params["ref_video_audios"] = {"ref_video_audio_0": ref_audio}
+    res = _node("MiniMaxH3ReferenceToVideo", **params)
+    positive, latent = res[0], res[1]
+    del clip, vae, avae, params, res
+    free("текст и образцы готовы / text and references ready")
 
     # 2. генерация / sampling
     model = _node("UNETLoader", unet_name=models["unet"], weight_dtype="default")[0]
@@ -341,17 +317,12 @@ def piece(ev, main, images, engine, aspect_wh, progress_note=None):
     del vae
     free("видео-VAE выгружен / video VAE unloaded")
     audio = None
-    if ev["sound"] == "ai":
+    if want_audio:
         avae = _node("VAELoader", vae_name=models["vae_audio"])[0]
         audio = _node("VAEDecodeAudio", samples=out, vae=avae)[0]
         del avae
         free("аудио-VAE выгружен / audio VAE unloaded")
     del out
-
-    pic_idx = next((i for i, g in guides if g.shape[0] == 1 and i > 0), None)
-    if ev["keep_bw"] and pic_idx is not None and ev["pic"] in images and is_gray(images[ev["pic"]]):
-        video = _keep_bw(video, pic_idx)
-        notes.append("ч/б рисунка удержан / drawing kept black-and-white")
 
     r = {"frames": video, "audio": audio, "fps": FPS}
     try:
@@ -361,4 +332,4 @@ def piece(ev, main, images, engine, aspect_wh, progress_note=None):
     _MEM.clear()
     _MEM[key] = r
     notes.append(f"генерация {gen_s:.0f} с, всего {time.time() - t_all:.0f} с ({steps} шагов) / generation time")
-    return dict(r, notes=notes, cached=False)
+    return dict(r, notes=notes, cached=False, prompt=prompt)

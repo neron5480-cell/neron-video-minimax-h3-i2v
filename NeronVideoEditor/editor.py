@@ -253,7 +253,7 @@ def _files(kind):
 
 # по каким словам узнать нужный файл / keywords that identify the right file
 KEYS = {
-    "unet": (("fl2va",), ("ref2va",)),
+    "unet": (("ref2va",), ()),
     "clip": (("qwen3vl",), ()),
     "vae_video": (("video_vae",), ()),
     "vae_audio": (("audio_vae",), ()),
@@ -283,14 +283,19 @@ def _pick(files, wanted, kind=None):
     return files[0]
 
 
+def _pick_unet(unets):
+    from . import ve_ai
+    f = _pick(unets, ve_ai.UNET_NAME, "unet")
+    if "ref2va" in _base(f):
+        return f
+    return _pick(unets, ve_ai.UNET_FALLBACK, None) if ve_ai.UNET_FALLBACK in [_base(x) for x in unets] else \
+        next((x for x in unets if "fl2va" in _base(x)), f)
+
+
 def _check_models(models, turbo):
     """Явно чужие модели — понятная ошибка, а не странный результат через 10 минут.
     Clearly wrong models get a clear error instead of a strange result 10 minutes later."""
-    u, c = _base(models["unet"]), _base(models["clip"])
-    if "ref2va" in u:
-        raise _err(f"выбрана модель {models['unet']} — это ref2va (для правки по образцу). Для AI-перехода нужна "
-                   "fl2va (minimax_h3_fl2va_…). Включите «⚙ эксперт» в ✨ AI-движке и выберите её",
-                   "ref2va is selected; the AI transition needs the fl2va model — pick it under “⚙ expert”")
+    c = _base(models["clip"])
     if "qwen" not in c:
         raise _err(f"текстовый энкодер {models['clip']} не от MiniMax H3. Нужен qwen3vl_32b_minimax_h3_… "
                    "Включите «⚙ эксперт» в ✨ AI-движке и выберите его",
@@ -318,8 +323,9 @@ class NeronVEAI:
                      "Другое число — другой вариант того же перехода. / Another number — another take."}),
             "expert": ("BOOLEAN", {"default": False, "label_on": "⚙ эксперт / expert", "label_off": "⚙ эксперт / expert",
                        "tooltip": "Показать выбор моделей. / Show model files."}),
-            "unet_model": (unets, {"default": _pick(unets, ve_ai.UNET_NAME, "unet"), "tooltip":
-                           "Модель MiniMax H3 fl2va (та же, что в H3 Engine). / The MiniMax H3 fl2va model."}),
+            "unet_model": (unets, {"default": _pick_unet(unets), "tooltip":
+                           "Лучше ref2va — модель правки по образцам (minimax_h3_ref2va_…). Можно и fl2va. "
+                           "/ Best is ref2va — the reference-editing model; fl2va also works."}),
             "clip_model": (clips, {"default": _pick(clips, ve_ai.CLIP_NAME, "clip")}),
             "vae_video_model": (vaes, {"default": _pick(vaes, ve_ai.VAE_VIDEO_NAME, "vae_video")}),
             "vae_audio_model": (vaes, {"default": _pick(vaes, ve_ai.VAE_AUDIO_NAME, "vae_audio")}),
@@ -479,7 +485,7 @@ class NeronVEPult:
         except Exception:
             prog = None
 
-        ai_src, ai_audio, ai_ui, info = {}, {}, {}, []
+        ai_src, ai_audio, ai_ui, info, ai_prompts = {}, {}, {}, [], {}
         ai_events = [e for e in state["events"] if e["kind"] == "ai"]
         if ai_events:
             if not ai:
@@ -488,14 +494,18 @@ class NeronVEPult:
             from . import ve_ai
             w1, h1 = int(v1["frames"].shape[2]), int(v1["frames"].shape[1])
             for k, ev in enumerate(ai_events):
-                if ev["pic"] and ev["pic"] not in imgs:
-                    raise _err(f"✨ AI: картинка {ev['pic']} не подключена к кубику 🖼 Картинки ×4",
-                               f"✨ AI: picture {ev['pic']} is not connected to the 🖼 Pictures ×4 cube")
-                r = ve_ai.piece(ev, main, imgs, ai, (w1, h1))
+                pics = []
+                inside = sorted((p for p in state["events"] if p["kind"] == "picture" and p["src"] in imgs
+                                 and core.in_ai(p, [ev])), key=lambda p: p["t"])
+                for j, p in enumerate(inside):
+                    img = core._crop(core._rgb(imgs[p["src"]]), p["crop"])
+                    pics.append((j + 1, img, p["t"] - ev["t"], p["t"] + p["dur"] - ev["t"], p["tin"], p["tout"]))
+                r = ve_ai.piece(ev, main, pics, ai, (w1, h1), ref_audio=_audio_slice(v1["audio"], ev["t"], ev["dur"]))
                 ai_src[ev["id"]] = core.Source(r["frames"], r["fps"])
                 if r["audio"] is not None:
                     ai_audio[ev["id"]] = r["audio"]
                 info.append(f"✨ AI {k + 1}: " + "; ".join(r["notes"]))
+                ai_prompts[ev["id"]] = r["prompt"]
                 try:
                     ai_ui[ev["id"]] = _proxy_video(r["frames"], r["fps"], None)
                 except Exception:
@@ -512,7 +522,7 @@ class NeronVEPult:
             out_audio["waveform"] = torch.zeros_like(out_audio["waveform"])
 
         # предпросмотр для пульта / previews for the pult
-        ui = {"sources": [], "images": [], "notes": notes, "info": info, "ai": ai_ui}
+        ui = {"sources": [], "images": [], "notes": notes, "info": info, "ai": ai_ui, "ai_prompts": ai_prompts}
         for i, v in sorted(vids.items()):
             src = main if i == 1 else others[i]
             try:
@@ -537,6 +547,19 @@ class NeronVEPult:
 
         return {"ui": {"neron_ve": [ui]},
                 "result": (frames, out_audio, float(fps1), int(frames.shape[0]))}
+
+
+def _audio_slice(audio, t0, dur):
+    """Звук куска видео 1 (образец для «звук: AI»). / The piece's audio."""
+    try:
+        wf, sr = audio["waveform"], int(audio["sample_rate"])
+    except Exception:
+        return None
+    if wf is None:
+        return None
+    a, b = int(t0 * sr), int((t0 + dur) * sr)
+    seg = wf[..., a:b]
+    return {"waveform": seg, "sample_rate": sr} if seg.shape[-1] > sr else None
 
 
 def _plain(frames):

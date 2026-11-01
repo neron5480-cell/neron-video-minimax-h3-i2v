@@ -1,6 +1,6 @@
-# ✂ Neron Video Editor — видео → видео (v0.2, тест)
+# ✂ Neron Video Editor — видео → видео (v0.3, тест)
 
-**RU** · [EN ниже](#-neron-video-editor--video--video-v02-test)
+**RU** · [EN ниже](#-neron-video-editor--video--video-v03-test)
 
 Правка готового видео без порчи остального: видео 1 идёт как есть, кадр в кадр, а в нужные секунды поверх проявляются картинки и куски других видео.
 
@@ -10,7 +10,7 @@
 |---|---|
 | **🎬 Neron Video ×3 / Видео ×3** | До трёх видео. **Видео 1 — ведущее** (его меняем), 2 и 3 — откуда берём врезки. Подключите IMAGE от **Load Video** — звук и fps (video_info) подключатся сами. Следующий слот открывается после подключения. |
 | **🖼 Neron Pictures ×4 / Картинки ×4** | До четырёх картинок (рисунки, кадры) через **Load Image**. |
-| **✨ Neron Edit AI / AI-движок** | Настройки AI-кусков (MiniMax H3 fl2va — те же модели, что у H3 Engine): ⚡ Турбо / Качество, размер, сид; модели — под «⚙ эксперт». Выход — во вход `ai` пульта. |
+| **✨ Neron Edit AI / AI-движок** | Настройки AI-кусков (MiniMax H3: лучше ref2va, можно fl2va; файлы находит по названию): ⚡ Турбо / Качество, размер, сид; модели — под «⚙ эксперт». Выход — во вход `ai` пульта. |
 | **🎛 Neron Edit Pult / Монтажный пульт** | Предпросмотр, полоска времени с событиями, области и переходы. Выходы: `images`, `audio`, `fps`, `frame_count` — как у видео 1. Сам сохраняет ролик в `output/Neron_Videos` (галочка 💾). |
 
 Готовая схема: [`workflow/Neron_Video_Editor_v0.2.json`](workflow/Neron_Video_Editor_v0.2.json) (выберите свои файлы в Load Video / Load Image).
@@ -23,7 +23,7 @@
 4. Справа: как **появится** и **уйдёт** (Сразу, Наплыв, Проявление, Шторка, Через тьму), **где** (весь кадр или область — двигается и растягивается прямо на кадре, Shift — с пропорцией), **✂ Участок** — какой кусок источника взять, **подогнать цвет**, **звук врезки**.
 5. «Очередь» → вкладки **Результат** и **До/После** (шторка сравнения).
 
-**✨ AI-переход** (кнопка «+ ✨ AI»): модель рисует кусок 5–15 с, а к нему «прибиты» (MiniMaxH3AddGuide) настоящие кадры видео 1 — ≈1 с в начале, чтобы стык продолжал движение, ваша картинка на нужной секунде и, с «↩ Вернуться», снова настоящие кадры в конце. Выбираете, **как** (наплыв, карандаш, цвет вытекает, чернила, бумага, свои слова) и пишете, **что происходит**. «Держать ч/б рисунка» убирает цвет после появления чёрно-белой картинки. Готовые куски запоминаются (в `temp`), правка монтажа их не пересчитывает; до «Очереди» в «Монтаже» виден набросок.
+**✨ AI-правка** (кнопка «+ ✨ AI»): растяните кусок на полоске (2–15 с) и напишите, **что сделать** — например, «над спиной спасателя расправляются прозрачные белые крылья ангела». Модель MiniMax H3 (лучше ref2va) получает кусок как `<Video 1>`. Нужен образец — положите **картинку внутрь куска**: она станет `<Picture 1>`, а время её появления и исчезновения пульт впишет в промпт сам (по её месту на полоске, от начала куска). Промпт собирается в формате правки H3 (`[video editing]`, оригинал сохранить); написали полный промпт сами — уйдёт как есть. **Область** — из AI берётся только она, остальное оригинал. Вне куска видео не меняется. Готовые куски запоминаются; ушедший в модель промпт виден в «🔧 эксперт».
 
 **Проявление** сначала показывает тёмные линии, потом остальное — как будто рисуют карандашом. В «Монтаже» оно показано примерно, точно — в «Результате».
 
@@ -31,14 +31,14 @@
 
 ## Честно о пределах
 
-* AI-переход ещё не проверен на настоящей модели: у разработчика нет видеокарты с H3. Проверены расстановка якорей настоящими нодами ComfyUI и весь путь пульта. Время генерации — смотрите в строке состояния пульта после прогона. Правка кистью (крылья) через ref2va — следующий шаг.
+* AI-правка ещё не проверена на настоящей модели: у разработчика нет видеокарты с H3. Проверено, что нода образцов ComfyUI принимает кусок и картинки, и весь путь пульта. Время генерации — в строке состояния пульта после прогона.
 * Всё видео держится в памяти ComfyUI: 15 с Full HD 30 fps ≈ 11 ГБ ОЗУ на вход и столько же на выход. Длинные ролики режьте в Load Video (`frame_load_cap`, `skip_first_frames`).
 * Если `video_info` не подключён, fps видео 1 берётся 24 (пульт предупредит); в эксперте можно задать свой.
 * У скачанных и телефонных роликов «паспорт» файла часто врёт о частоте кадров (30 вместо ~28), и Load Video ускоряет видео. Кубик сверяет частоту с настоящими метками времени и берёт настоящую — в строке состояния пульта будут оба числа.
 
 ---
 
-# ✂ Neron Video Editor — video → video (v0.2, test)
+# ✂ Neron Video Editor — video → video (v0.3, test)
 
 Edit a ready video without spoiling the rest: video 1 plays as is, frame for frame, and pictures and pieces of other videos appear on top at chosen seconds.
 
@@ -50,6 +50,6 @@ Edit a ready video without spoiling the rest: video 1 plays as is, frame for fra
 
 **How to use:** Load Video → **🎬 Video ×3**, pictures → **🖼 Pictures ×4**, both cubes → **🎛 Pult**. Put the playhead where you need and press **+ 🖼 Picture** or **+ 🎬 Insert**; drag and stretch the event on the strip. On the right choose how it **appears** and **leaves** (Cut, Dissolve, Reveal, Wipe, Dip to black), **where** (full frame or an area you move on the frame), **✂ Piece** of the source, **match colour**, **insert sound**. Queue → **Result** and **Before/After** tabs.
 
-**✨ AI transition** (“+ ✨ AI”, needs **✨ Neron Edit AI** on the pult's `ai` input): MiniMax H3 paints a 5–15 s piece with real frames of video 1 anchored at its start (≈1 s, smooth seam), your picture at the chosen second and, with “↩ Return”, real frames at the end. Pieces are cached; editing the cut doesn't regenerate them.
+**✨ AI edit** (“+ ✨ AI”, needs **✨ Neron Edit AI** on the pult's `ai` input): stretch the piece (2–15 s) and write what to do. MiniMax H3 (ref2va best) gets it as `<Video 1>`; a picture placed inside the piece becomes `<Picture 1>` and its appear/disappear times go into the prompt automatically. **Area** keeps everything else original. Pieces are cached.
 
-**Limits:** the AI transition is not yet tested on the real model (the developer has no H3-capable GPU); anchoring was verified with ComfyUI's real nodes. The whole video is held in memory: 15 s Full HD 30 fps ≈ 11 GB RAM in and the same out — trim long clips in Load Video. Without `video_info`, video 1 fps is taken as 24 (the pult warns); set your own in expert mode. Downloaded/phone clips often have a wrong fps in the header, which makes Load Video speed them up; the cube checks the real timestamps and uses the real rate (both numbers are shown in the pult status).
+**Limits:** the AI edit is not yet tested on the real model (no H3-capable GPU here); ComfyUI's reference node accepting the piece and pictures was verified. The whole video is held in memory: 15 s Full HD 30 fps ≈ 11 GB RAM in and the same out — trim long clips in Load Video. Without `video_info`, video 1 fps is taken as 24 (the pult warns); set your own in expert mode. Downloaded/phone clips often have a wrong fps in the header, which makes Load Video speed them up; the cube checks the real timestamps and uses the real rate (both numbers are shown in the pult status).

@@ -15,19 +15,10 @@ import { api } from "../../scripts/api.js";
 const T = (ru, en) => `${ru} / ${en}`;
 const ACC = "#b388ff";
 const COL = { picture: "#9b6cff", insert: "#2fa79a", ai: "#c8961e" };
-const AI_STYLES = [
-    ["dissolve", "Плавный наплыв", "Smooth dissolve"],
-    ["pencil", "Карандаш прорисовывает", "Pencil sketches it"],
-    ["drain", "Цвет вытекает, остаются линии", "Colour drains to lines"],
-    ["ink", "Чернила растекаются", "Ink spreads"],
-    ["paper", "Проступает бумага", "Paper shows through"],
-    ["custom", "Только мои слова", "Only my words"],
-];
-// длина AI-куска на сетке модели (как ve_core.ai_seconds) / AI length on the model grid
-function aiSeconds(sec) {
-    let n = Math.max(124, Math.round(sec * 24));
-    while (n % 17 !== 5) n++;
-    return Math.min(362, n) / 24;
+const aiDur = (sec) => clamp(Math.round(sec * 10) / 10, 2, 15);   // окно правки 2–15 с / edit window
+// картинка внутри AI-куска — образец для модели / a picture inside an AI piece is a reference
+function aiOf(pic, events) {
+    return events.find((e) => e.kind === "ai" && !e.off && e.t <= pic.t && pic.t < e.t + e.dur) || null;
 }
 const TR = [
     ["cut", "Сразу", "Cut"],
@@ -159,7 +150,7 @@ const HELP_PULT = `
 <b>Звук:</b> видео 1, свой (провод <i>audio</i>, например из Audio Studio), смешать или без звука. У врезки можно включить её звук — он плавно перехватит звук на время врезки.<br>
 <b>Выходы:</b> <i>images, audio, fps</i> → Neron Video Combine или Video Combine. Пульт и сам сохраняет ролик в <i>output/Neron_Videos</i> (галочка 💾).<br>
 <b>🔧 Эксперт:</b> мягкость края, прозрачность, «вписать/заполнить», сила подгонки цвета, скорость врезки, свой fps, громкости.<br>
-<b>✨ AI-переход</b> (нужна нода <b>✨ AI-движок</b> на входе <i>ai</i>): кнопка <b>+ ✨ AI</b> — модель MiniMax H3 рисует кусок 5–15 с. К нему «прибиты» настоящие кадры видео 1 (≈1 с в начале — стык продолжает движение), ваша <b>картинка</b> на нужной секунде и, с <b>↩ Вернуться</b>, снова настоящие кадры в конце. Выберите, <b>как</b> (наплыв, карандаш, чернила…) и опишите словами, <b>что происходит</b>. Готовый кусок запоминается: правка монтажа его не пересчитывает. До «Очереди» в «Монтаже» виден набросок.<br>
+<b>✨ AI-правка</b> (нужна нода <b>✨ AI-движок</b> на входе <i>ai</i>): <b>+ ✨ AI</b> → растяните кусок на полоске (2–15 с) → напишите, <b>что сделать</b> («над спиной спасателя расправляются прозрачные белые крылья ангела»). Модель MiniMax H3 (ref2va) получает кусок как <i>&lt;Video 1&gt;</i>. Нужен образец — положите <b>картинку внутрь куска</b>: она станет <i>&lt;Picture 1&gt;</i>, а время её появления и исчезновения пульт впишет в промпт сам. <b>Область</b> — из AI берётся только она. Вне куска — оригинал. Готовый кусок запоминается.<br>
 <b>Длина:</b> монтаж работает с любой длиной, но всё видео держится в памяти: 15 с Full HD ≈ 11 ГБ ОЗУ. Длинные ролики лучше резать в Load Video (frame_load_cap / skip_first_frames).
 <h3>🎛 Edit Pult — how to use</h3>
 <b>1.</b> Connect <b>Load Video</b> to the <b>🎬 Video ×3</b> cube: <b>video 1</b> is the lead (the one we edit); videos 2 and 3 are sources for inserts. Audio and fps wire themselves.<br>
@@ -170,7 +161,7 @@ const HELP_PULT = `
 <b>6.</b> For an insert, <b>✂ Piece</b> selects which part of the source video to take, and from which source second.<br>
 <b>7.</b> Press Queue. <b>Result</b> shows the finished clip, <b>Before/After</b> a compare shutter.<br><br>
 <b>Main rule:</b> everything outside events and their areas is video 1, frame for frame. Size, length and fps match video 1.<br>
-<b>✨ AI transition</b> (needs the <b>✨ AI Engine</b> node on the <i>ai</i> input): <b>+ ✨ AI</b> — MiniMax H3 paints a 5–15 s piece with real frames of video 1 anchored (≈1 s at the start so the seam continues the motion), your <b>picture</b> at the chosen second and, with <b>↩ Return</b>, real frames again at the end. Pick <b>how</b> (dissolve, pencil, ink…) and describe <b>what happens</b>. Finished pieces are remembered.<br>
+<b>✨ AI edit</b> (needs <b>✨ AI Engine</b> on the <i>ai</i> input): <b>+ ✨ AI</b> → stretch the piece (2–15 s) → write <b>what to do</b>. MiniMax H3 (ref2va) gets the piece as <i>&lt;Video 1&gt;</i>. For a reference, put a <b>picture inside the piece</b>: it becomes <i>&lt;Picture 1&gt;</i> and the pult writes its times into the prompt. <b>Area</b> — only it is taken from AI. Outside the piece — the original.<br>
 <b>Length:</b> any length works, but the whole video is held in memory: 15 s Full HD ≈ 11 GB RAM. Trim long clips in Load Video.
 `;
 const HELP_VIDEOS = `
@@ -199,12 +190,12 @@ const HELP_AI = `
 <b>Размер:</b> меньше — быстрее; кусок всё равно растянется до размера видео 1.<br>
 <b>Сид:</b> другое число — другой вариант.<br>
 Модели — те же, что у H3 Engine (MiniMax H3 fl2va). Выбор файлов — под «⚙ эксперт».<br>
-<b>Как работает переход:</b> к кадрам будущего куска «прибиты» настоящие кадры видео 1 (≈1 с в начале — стык продолжает движение), картинка — на нужной секунде, и при «↩ вернуться» — снова настоящие кадры в конце.
+<b>Модель:</b> лучше ref2va (правка по образцам), можно fl2va. Нода сама находит файлы по названию.
 <h3>✨ AI Engine</h3>
 Connect <b>ai</b> to the Edit Pult's <b>ai</b> input. The engine computes nothing itself: the pult generates only the <b>✨ AI</b> events that changed. Finished pieces are remembered, so editing the cut doesn't regenerate them.<br>
 <b>Mode:</b> ⚡ Turbo — fast, for tries; Quality — slower and cleaner. <b>Size:</b> smaller is faster. <b>Seed:</b> another number — another take.<br>
 Models are the same as H3 Engine (MiniMax H3 fl2va); file choice is under “⚙ expert”.<br>
-<b>How the transition works:</b> real frames of video 1 are anchored to the piece (≈1 s at the start so the seam continues the motion), the picture at the chosen second, and with “↩ return” real frames again at the end.
+<b>Model:</b> ref2va (reference editing) is best; fl2va also works. Files are found by name.
 `;
 const AI_EXPERT = ["unet_model", "clip_model", "vae_video_model", "vae_audio_model", "turbo_lora_model"];
 function setupAI(node) {
@@ -870,6 +861,7 @@ function setupPult(node) {
         else { g.fillStyle = "#15171c"; g.fillRect(fr.x, fr.y, fr.w, fr.h); }
         for (const e of state.events) {
             if (e.off) continue;
+            if (e.kind === "picture" && aiOf(e, state.events)) continue;     // образец, не наклейка / a reference
             const ph = phase(e, curT);
             if (!ph) continue;
             const [stage, p] = ph;
@@ -898,25 +890,32 @@ function setupPult(node) {
 
     // AI-кусок ещё не сгенерирован: набросок того, что будет / AI piece not generated yet: a sketch
     function drawAIPlaceholder(e) {
-        const rel = curT - e.t;
-        const im = e.pic ? imgEls[e.pic] : null;
-        if (im && im.complete && im.naturalWidth) {
-            const a = clamp((rel - (e.pic_at - 1)) / 1, 0, 1) * (e.back ? clamp((e.dur - 0.9 - rel) / 1, 0, 1) : 1);
-            if (a > 0) {
-                g.save(); g.globalAlpha = a;
-                const k = Math.max(fr.w / im.naturalWidth, fr.h / im.naturalHeight);
-                const tw = im.naturalWidth * k, th = im.naturalHeight * k;
-                g.beginPath(); g.rect(fr.x, fr.y, fr.w, fr.h); g.clip();
-                g.drawImage(im, fr.x + (fr.w - tw) / 2, fr.y + (fr.h - th) / 2, tw, th);
-                g.restore();
-            }
-        }
         g.save();
         g.strokeStyle = COL.ai; g.lineWidth = 3; g.setLineDash([10, 6]);
-        g.strokeRect(fr.x + 2, fr.y + 2, fr.w - 4, fr.h - 4);
+        if (e.area) {
+            const A = e.area; g.beginPath();
+            g.ellipse(fr.x + (A.x + A.w / 2) * fr.w, fr.y + (A.y + A.h / 2) * fr.h, A.w / 2 * fr.w, A.h / 2 * fr.h, 0, 0, Math.PI * 2);
+            if (A.shape !== "ellipse") { g.beginPath(); g.rect(fr.x + A.x * fr.w, fr.y + A.y * fr.h, A.w * fr.w, A.h * fr.h); }
+            g.stroke();
+        } else g.strokeRect(fr.x + 2, fr.y + 2, fr.w - 4, fr.h - 4);
         g.setLineDash([]);
+        // картинки-образцы — значком в углу / reference pictures as a corner badge
+        let bx = fr.x + 8;
+        for (const p of state.events) {
+            if (p.kind !== "picture" || p.off || !aiOf(p, [e])) continue;
+            const im = imgEls[p.src];
+            const on = curT >= p.t && curT < p.t + p.dur;
+            if (im && im.complete && im.naturalWidth) {
+                const h = 46, w = h * im.naturalWidth / im.naturalHeight;
+                g.globalAlpha = on ? 1 : 0.35;
+                g.fillStyle = "#000"; g.fillRect(bx - 2, fr.y + 6, w + 4, h + 4);
+                g.drawImage(im, bx, fr.y + 8, w, h);
+                g.globalAlpha = 1;
+                bx += w + 10;
+            }
+        }
         g.font = "bold 11px Segoe UI, Arial";
-        const lines = ["✨ " + T("AI-кусок — появится после Очереди", "AI piece — appears after Queue").split(" / ")[0], "AI piece — appears after Queue"];
+        const lines = ["✨ AI-кусок — появится после Очереди", "AI piece — appears after Queue"];
         const bw = Math.min(fr.w - 8, Math.max(...lines.map((l) => g.measureText(l).width)) + 20);
         g.fillStyle = "rgba(0,0,0,.7)"; g.fillRect(fr.x + fr.w / 2 - bw / 2, fr.y + fr.h - 46, bw, 38);
         g.fillStyle = "#ffd36b"; g.textAlign = "center";
@@ -1076,7 +1075,8 @@ function setupPult(node) {
             if (kOut > 0) { const xo = tX(e.t + e.dur - kOut * sc, w); c.beginPath(); c.moveTo(x1, y + LANE_H); c.lineTo(xo, y); c.lineTo(x1, y); c.fill(); }
             if (e.id === sel) { c.strokeStyle = "#fff"; c.lineWidth = 2; c.strokeRect(x0 + 1, y + 1, x1 - x0 - 2, LANE_H - 2); }
             c.fillStyle = "#fff"; c.font = "bold 10px Segoe UI, Arial";
-            const label = (e.kind === "picture" ? "🖼 " + e.src : e.kind === "ai" ? "✨ AI" + (e.pic ? " → 🖼" + e.pic : "") + (e.back ? " ↩" : "") + (S.ai[e.id] ? " ✓" : "")
+            const label = (e.kind === "picture" ? "🖼 " + e.src + (aiOf(e, state.events) ? " ✨" + T("образец", "ref") : "")
+                : e.kind === "ai" ? "✨ AI" + (S.ai[e.id] ? " ✓" : "") + (e.text ? " · " + e.text.slice(0, 60) : "")
                 : "🎬 " + T("видео", "video") + " " + e.src) + (e.area ? " ▣" : "") + (e.sound === true || e.sound === "ai" ? " 🔊" : "");
             c.save(); c.beginPath(); c.rect(x0, y, x1 - x0, LANE_H); c.clip();
             c.fillText(label, x0 + 5, y + 14);
@@ -1136,7 +1136,7 @@ function setupPult(node) {
     });
     const tEnd = () => {
         if (tdrag) {
-            if (tdrag.e && tdrag.e.kind === "ai") { tdrag.e.dur = aiSeconds(tdrag.e.dur); dirty = true; renderSideValues(); }
+            if (tdrag.e && tdrag.e.kind === "ai") { tdrag.e.dur = aiDur(tdrag.e.dur); dirty = true; renderSideValues(); }
             if (tdrag.moved) save();
             tdrag = null;
         }
@@ -1156,17 +1156,15 @@ function setupPult(node) {
             if (!S.vids[1]) { setStatus(T("Сначала подключите видео 1", "First connect video 1"), "warn"); return; }
             if (mode !== "edit") setMode("edit");
             const D = dur1();
-            const firstPic = Number(Object.keys(S.pics).find((k) => S.pics[k]) || 0);
             const ev = {
-                id: newId(), kind: "ai", t: clamp(Math.round(curT * 10) / 10, 0, Math.max(0, D - 1)), dur: aiSeconds(6),
-                pic: firstPic, pic_at: 2.5, start: "motion", back: false, style: "dissolve", text: "", sound: "orig",
-                keep_bw: true, seed: 0, tin: "dissolve", din: 0.3, tout: "dissolve", dout: 0.3, area: null, opacity: 1,
+                id: newId(), kind: "ai", t: clamp(Math.round(curT * 10) / 10, 0, Math.max(0, D - 2)), dur: aiDur(Math.min(6, Math.max(2, D - curT))),
+                text: "", sound: "orig", seed: 0, tin: "dissolve", din: 0.3, tout: "dissolve", dout: 0.3, area: null, opacity: 1,
             };
             state.events.push(ev);
             save();
             select(ev.id);
-            setStatus(T("✨ AI-событие добавлено. Опишите справа, что происходит, и подключите ноду ✨ AI-движок",
-                "✨ AI event added. Describe on the right what happens and connect the ✨ AI Engine node"), "ok");
+            setStatus(T("✨ Кусок выбран. Растяните его на полоске и напишите справа, что сделать", "✨ Piece chosen. Stretch it on the strip and write on the right what to do"), "ok");
+            setTimeout(() => side.querySelector("textarea")?.focus(), 50);
             return;
         }
         if (kind === "picture" && !Object.values(S.pics).some(Boolean)) {
@@ -1398,85 +1396,80 @@ function setupPult(node) {
 
     function aiPanel(ev) {
         const box = el("div", "nve-sec");
-        headRow(box, "✨ " + T("AI-ПЕРЕХОД", "AI TRANSITION"), ev);
+        headRow(box, "✨ " + T("AI-ПРАВКА КУСКА", "AI EDIT OF A PIECE"), ev);
         if (!upstream(node, "ai")) box.appendChild(el("div", "nve-small", "⚠ " + T("Подключите ноду ✨ AI-движок ко входу ai пульта.",
             "Connect the ✨ AI Engine node to the pult's ai input.")));
         const r1 = el("div", "nve-row");
-        r1.appendChild(el("span", "nve-lbl", T("Начало, с", "Start, s")));
-        r1.appendChild(numIn(() => ev.t, (v) => { ev.t = v; }, 0.1, 0, 36000, T("С какой секунды видео 1 начинается AI-кусок", "Second of video 1 where the AI piece starts")));
-        const goB = el("button", "nve-btn sm", "⏱");
-        goB.title = T("Поставить начало на бегунок", "Set the start at the playhead");
-        goB.onclick = () => { ev.t = Math.round(curT * 10) / 10; save(); dirty = true; renderSideValues(); };
-        r1.appendChild(goB);
+        r1.appendChild(el("span", "nve-lbl", T("Кусок, с", "Piece, s")));
+        r1.appendChild(numIn(() => ev.t, (v) => { ev.t = v; }, 0.1, 0, 36000, T("С какой секунды видео 1", "From which second of video 1")));
+        r1.appendChild(el("span", "nve-small", "+"));
+        r1.appendChild(numIn(() => ev.dur, (v) => { ev.dur = aiDur(v); }, 0.5, 2, 15,
+            T("Длина куска: 2–15 с. Модель видит весь кусок и правит его", "Piece length: 2–15 s. The model sees the whole piece and edits it")));
         box.appendChild(r1);
-        const r2 = el("div", "nve-row");
-        r2.appendChild(el("span", "nve-lbl", T("Длина, с", "Length, s")));
-        r2.appendChild(numIn(() => ev.dur, (v) => { ev.dur = aiSeconds(v); }, 0.5, 5, 15,
-            T("5–15 с — на этом обучена модель. Подгоняется к её сетке кадров", "5–15 s — what the model was trained on; snapped to its frame grid")));
-        box.appendChild(r2);
-
-        // картинка / picture
-        const r3 = el("div", "nve-row");
-        r3.appendChild(el("span", "nve-lbl", T("Картинка", "Picture")));
-        r3.appendChild(seg([[0, T("нет", "none"), T("Без картинки — только слова", "No picture — words only")]].concat([1, 2, 3, 4].map((n) => [n, String(n), "", !S.pics[n]])),
-            () => ev.pic || 0, (v) => { ev.pic = v; }));
-        box.appendChild(r3);
-        if (ev.pic) {
-            const r4 = el("div", "nve-row");
-            r4.appendChild(el("span", "nve-lbl", T("Видна с, с", "Shown at, s")));
-            r4.appendChild(numIn(() => ev.pic_at, (v) => { ev.pic_at = v; }, 0.1, 0, 15,
-                T("На какой секунде AI-куска картинка должна быть видна полностью (от его начала)", "Second of the AI piece (from its start) where the picture is fully shown")));
-            box.appendChild(r4);
-            box.appendChild(check(T("Держать ч/б рисунка", "Keep the drawing B/W"), () => ev.keep_bw !== false, (v) => { ev.keep_bw = v; },
-                T("Если рисунок чёрно-белый, после его появления цвет убирается — модель не раскрасит карандаш", "If the drawing is B/W, colour is removed after it appears so the model can't colour the pencil")));
-        }
-        // как / style
-        const r5 = el("div", "nve-row");
-        r5.appendChild(el("span", "nve-lbl", T("Как", "How")));
-        const st = el("select", "nve-sel");
-        for (const [k, ru, en] of AI_STYLES) { const o = el("option", "", T(ru, en)); o.value = k; st.appendChild(o); }
-        st.value = ev.style || "dissolve";
-        st.onchange = () => { ev.style = st.value; save(); };
-        st.addEventListener("pointerdown", (e) => e.stopPropagation());
-        r5.appendChild(st);
-        box.appendChild(r5);
-        box.appendChild(el("div", "nve-small", T("Что происходит (словами, лучше по-английски):", "What happens (in words, English works best):")));
+        box.appendChild(el("div", "nve-h", "✍ " + T("ЧТО СДЕЛАТЬ", "WHAT TO DO")));
         const ta = el("textarea", "nve-ta");
-        ta.placeholder = T("напр.: деревья качаются от ветра, по реке плывёт лодка", "e.g.: trees sway in the wind, a boat drifts down the river");
+        ta.style.minHeight = "84px";
+        ta.placeholder = T("напр.: над спиной спасателя расправляются прозрачные белые крылья ангела",
+            "e.g.: translucent white angel wings unfold above the rescuer's back");
         ta.value = ev.text || "";
-        ta.addEventListener("input", () => { ev.text = ta.value; });
+        ta.addEventListener("input", () => { ev.text = ta.value; drawTimeline(); });
         ta.addEventListener("change", save);
         ta.addEventListener("blur", save);
         ta.addEventListener("pointerdown", (e) => e.stopPropagation());
         ta.addEventListener("keydown", (e) => e.stopPropagation());
         box.appendChild(ta);
-        // начало и конец / start and end
-        const r6 = el("div", "nve-row");
-        r6.appendChild(el("span", "nve-lbl", T("Стык в начале", "Start seam")));
-        r6.appendChild(seg([
-            ["motion", T("Движение", "Motion"), T("Модель видит ~1 с настоящего видео — переход продолжает движение, стык гладкий", "The model sees ~1 s of real video — the move continues, smooth seam")],
-            ["frame", T("Кадр", "Frame"), T("Модель видит один настоящий кадр", "The model sees one real frame")],
-            ["none", T("Нет", "None"), T("Без опоры на видео — свободная сцена", "No anchor — a free scene")],
-        ], () => ev.start || "motion", (v) => { ev.start = v; }));
-        box.appendChild(r6);
-        box.appendChild(check("↩ " + T("Вернуться к видео в конце", "Return to the video at the end"), () => !!ev.back, (v) => { ev.back = v; },
-            T("В конце AI-куска модель видит ~1 с настоящего видео и возвращается в него", "At the end the model sees ~1 s of real video and returns into it")));
+        // картинки-образцы внутри куска / reference pictures inside
+        const pics = state.events.filter((p) => p.kind === "picture" && !p.off && aiOf(p, [ev])).sort((a, b) => a.t - b.t);
+        if (pics.length) {
+            const lst = el("div", "nve-small", "🖼 " + T("Образцы внутри куска (время — от его начала):", "References inside the piece (time from its start):"));
+            box.appendChild(lst);
+            pics.forEach((p, i) => {
+                const a = (p.t - ev.t).toFixed(1), b = Math.min(ev.dur, p.t + p.dur - ev.t).toFixed(1);
+                box.appendChild(el("div", "nve-small", `  <Picture ${i + 1}> = ${T("картинка", "picture")} ${p.src}: ${a}–${b} ${T("с", "s")}${p.crop ? " ✂" : ""}`));
+            });
+        } else {
+            box.appendChild(el("div", "nve-small", "🖼 " + T("Нужна картинка-образец? Положите «+ 🖼 Картинка» внутрь этого куска — время появления и исчезновения пульт впишет сам. Нет картинки — модель нарисует по словам.",
+                "Need a reference? Put a “+ 🖼 Picture” inside this piece — the pult writes its times itself. No picture — the model draws from words.")));
+        }
+        box.appendChild(el("div", "nve-small", T("Вне куска видео не меняется.", "Outside the piece the video is untouched.")));
+        // область / area
         const r7 = el("div", "nve-row");
-        r7.appendChild(el("span", "nve-lbl", "🔊 " + T("Звук", "Sound")));
-        r7.appendChild(seg([["orig", T("Оригинал", "Original"), T("Звук видео 1 не трогаем", "Keep video 1 sound")],
-            ["ai", "AI", T("Звук, который сгенерирует модель (плавно перехватит)", "The model's own sound (smooth takeover)")]], () => ev.sound || "orig", (v) => { ev.sound = v; }));
+        r7.appendChild(el("span", "nve-lbl", T("Взять из AI", "Take from AI")));
+        r7.appendChild(seg([
+            ["full", T("Весь кадр", "Full"), T("Кусок встаёт целиком", "The whole piece goes in")],
+            ["area", T("Область", "Area"), T("Из AI берётся только эта область, остальное — оригинал. Двигайте и тяните её на кадре", "Only this area is taken from AI, the rest stays original. Move and resize it on the frame")],
+        ], () => (ev.area ? "area" : "full"), (v) => {
+            if (v === "full") ev.area = null;
+            else if (!ev.area) ev.area = { x: 0.2, y: 0.05, w: 0.6, h: 0.6, shape: "ellipse", feather: 0.08 };
+        }));
         box.appendChild(r7);
-        const r8 = el("div", "nve-row nve-expert");
-        r8.appendChild(el("span", "nve-lbl", T("Вариант", "Variant")));
-        r8.appendChild(numIn(() => ev.seed || 0, (v) => { ev.seed = Math.round(v); }, 1, 0, 999999, T("Другое число — другой вариант этого куска", "Another number — another take of this piece")));
+        if (ev.area) box.appendChild(slider(T("Мягкий край", "Soft edge"), () => ev.area.feather ?? 0.08, (v) => { ev.area.feather = v; }, 0, 0.3, 0.01,
+            T("Насколько мягко AI-область переходит в оригинал", "How softly the AI area blends into the original"), (v) => Math.round(v * 100) + "%"));
+        const r8 = el("div", "nve-row");
+        r8.appendChild(el("span", "nve-lbl", "🔊 " + T("Звук", "Sound")));
+        r8.appendChild(seg([["orig", T("Оригинал", "Original"), T("Звук видео 1 не трогаем", "Keep video 1 sound")],
+            ["ai", "AI", T("Звук, который сгенерирует модель", "The model's own sound")]], () => ev.sound || "orig", (v) => { ev.sound = v; }));
         box.appendChild(r8);
         const r9 = el("div", "nve-row nve-expert");
-        r9.appendChild(el("span", "nve-lbl", T("Склейка, с", "Seam blend, s")));
-        r9.appendChild(numIn(() => ev.din, (v) => { ev.din = v; ev.tin = v > 0 ? "dissolve" : "cut"; }, 0.1, 0, 3, T("Короткий наплыв на входе — прячет мелкую разницу", "Short dissolve in — hides small differences")));
-        r9.appendChild(numIn(() => ev.dout, (v) => { ev.dout = v; ev.tout = v > 0 ? "dissolve" : "cut"; }, 0.1, 0, 3, T("Короткий наплыв на выходе", "Short dissolve out")));
+        r9.appendChild(el("span", "nve-lbl", T("Вариант", "Variant")));
+        r9.appendChild(numIn(() => ev.seed || 0, (v) => { ev.seed = Math.round(v); }, 1, 0, 999999, T("Другое число — другой вариант этого куска", "Another number — another take")));
         box.appendChild(r9);
-        if (S.ai[ev.id]) box.appendChild(el("div", "nve-small", "✓ " + T("Кусок готов. Пока событие не меняли — повторная Очередь его не пересчитывает.",
-            "Piece ready. Until you change the event, Queue won't regenerate it.")));
+        const r10 = el("div", "nve-row nve-expert");
+        r10.appendChild(el("span", "nve-lbl", T("Склейка, с", "Seam blend, s")));
+        r10.appendChild(numIn(() => ev.din, (v) => { ev.din = v; ev.tin = v > 0 ? "dissolve" : "cut"; }, 0.1, 0, 3, T("Короткий наплыв на входе", "Short dissolve in")));
+        r10.appendChild(numIn(() => ev.dout, (v) => { ev.dout = v; ev.tout = v > 0 ? "dissolve" : "cut"; }, 0.1, 0, 3, T("Короткий наплыв на выходе", "Short dissolve out")));
+        box.appendChild(r10);
+        if (S.aiPrompts && S.aiPrompts[ev.id]) {
+            const d = el("details", "nve-expert");
+            d.style.flexDirection = "column";
+            const sm = el("summary", "nve-small", T("Промпт, ушедший в модель", "Prompt sent to the model"));
+            const pre = el("div", "nve-small", S.aiPrompts[ev.id]);
+            pre.style.whiteSpace = "pre-wrap"; pre.style.userSelect = "text";
+            d.append(sm, pre);
+            box.appendChild(d);
+        }
+        if (S.ai[ev.id]) box.appendChild(el("div", "nve-small", "✓ " + T("Кусок готов. Пока его не меняли — повторная Очередь не пересчитывает.",
+            "Piece ready. Until you change it, Queue won't regenerate it.")));
         return box;
     }
 
@@ -1617,6 +1610,7 @@ function setupPult(node) {
         for (const p of msg.images || []) exact.pics[p.slot] = { ref: p.ref, w: p.w, h: p.h };
         S.result = msg.result || null;
         S.ai = msg.ai || {};
+        S.aiPrompts = msg.ai_prompts || {};
         for (const [id, ref] of Object.entries(S.ai)) setSrc(aiEl(id), viewUrl(ref));
         S.saved = msg.saved || null;
         setSrc(rEl, S.result ? viewUrl(S.result, Date.now()) : null);
