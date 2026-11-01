@@ -272,7 +272,7 @@ function setupVSampler(node) {
         "<b>RU:</b> ① Сверху — ваши ролики (из «Видео ×3»). Ведите мышкой по кадрам — выделится кусок «откуда — докуда»; "
         + "▶ — посмотреть кусок; <b>➜</b> или просто перетащите выделенное вниз — кусок встанет в монтаж. Двойной клик — весь ролик. "
         + "② <b>МОНТАЖ</b> — куски идут друг за другом. Тянуть кусок — переставить; тянуть края — обрезать; клик — поставить курсор; "
-        + "<b>Переход</b>: надвиньте кусок на предыдущий — на сколько надвинули, столько длится переход (жёлтый клин); вид — внизу: наплыв, через тьму, через свет, шторка, растворение, круг, проявление. Звук тоже перетекает. Здесь при просмотре стык показан резко — переход виден в собранном монтаже (в Пульте). "
+        + "<b>Переход</b>: надвиньте кусок на предыдущий — на сколько надвинули, столько длится переход (жёлтый клин); вид — внизу: наплыв, через тьму, через свет, шторка, растворение, круг, проявление. Звук тоже перетекает. Как только монтаж собран («Монтаж готов»), окно показывает его целиком — с переходами и звуком; пока собирается — куски без переходов. "
         + "<b>✂</b> (или S) — разрезать на курсоре; <b>⧉</b> (Ctrl+D) — копия; <b>🗑</b> (Delete) — убрать; Ctrl+Z — отменить. "
         + "Колёсико — приблизить, Shift+колёсико — прокрутка. Пробел — смотреть. "
         + "<b>⏭ ПРОПУСТИТЬ</b> — ролики идут в Пульт как есть. <b>🔇</b> — без звука роликов. "
@@ -280,7 +280,7 @@ function setupVSampler(node) {
         + "<b>⚙ ДЛЯ СПЕЦОВ → 🧲 РЕЗАТЬ В ДОЛЮ</b>: склейки, края и курсор прилипают к долям темпа Пульта — смена кадра попадает в удар.<br>"
         + "<b>EN:</b> ① Your clips from Video ×3 on top. Drag across the frames to select a piece; ▶ watches it; <b>➜</b> or drag it down — "
         + "it goes into the edit. Double-click selects the whole clip. ② <b>EDIT</b> — pieces play one after another. Drag a piece to reorder, "
-        + "drag its edges to trim, click to set the cursor; <b>slide a piece over the previous one</b> for a transition (yellow wedge; type below: dissolve, dip to black/white, wipe, pixel dissolve, circle, reveal; audio crossfades; the preview here shows a cut, the built edit has the transition); <b>✂</b> (S) cuts at the cursor; <b>⧉</b> (Ctrl+D) copies; <b>🗑</b> (Delete) removes; "
+        + "drag its edges to trim, click to set the cursor; <b>slide a piece over the previous one</b> for a transition (yellow wedge; type below: dissolve, dip to black/white, wipe, pixel dissolve, circle, reveal; audio crossfades; once the edit is built the monitor plays it with transitions); <b>✂</b> (S) cuts at the cursor; <b>⧉</b> (Ctrl+D) copies; <b>🗑</b> (Delete) removes; "
         + "Ctrl+Z undoes. Wheel zooms, Shift+wheel scrolls, space plays. <b>⏭ BYPASS</b> sends the clips as they are; <b>🔇</b> drops the clip sound. "
         + "The edit is built into a frame-accurate mp4 for the Pult automatically. "
         + "<b>⚙ EXPERT → 🧲 CUT ON THE BEAT</b>: cuts, edges and the cursor stick to the Pult tempo beats.";
@@ -293,6 +293,12 @@ function setupVSampler(node) {
     const monEmpty = el("div", "empty", T("Подключите «Видео ×3» ко входу videos", "Wire Video ×3 into videos"));
     mon.appendChild(monTag);
     mon.appendChild(monEmpty);
+    // собранный монтаж (с переходами и звуком) — его и показываем, когда он готов
+    // the built edit (with transitions and sound) — shown whenever it is ready
+    const edV = el("video");
+    edV.preload = "auto"; edV.playsInline = true;
+    mon.insertBefore(edV, monTag);
+    const edReady = () => !!(R.ref && R.key === editKey() && edV.dataset.url);
     const timeRow = el("div", "nvs-time");
     const timeLbl = el("span", "", "0:00.00");
     const timeTot = el("i", "", "");
@@ -349,7 +355,15 @@ function setupVSampler(node) {
     }
     function showPlayer(k) {
         shown = k;
+        edV.style.display = k === -2 ? "block" : "none";
         vids.forEach((v, i) => { if (v) v.style.display = i === k ? "block" : "none"; });
+        if (k === -2) {
+            monEmpty.style.display = "none";
+            monTag.textContent = "🎬 " + T("Монтаж с переходами", "Edit with transitions");
+            monTag.style.color = "#ffd166";
+            mon.style.borderColor = "#ffd166";
+            return;
+        }
         monEmpty.style.display = k >= 0 && vids[k] ? "none" : "flex";
         monTag.textContent = k >= 0 && items[k] ? `${k + 1}. ${items[k].name}` : "";
         monTag.style.color = VCOLORS[k] || "#fff";
@@ -363,6 +377,11 @@ function setupVSampler(node) {
     }
     // кадр монтажа на курсоре
     function showEditAt(t) {
+        if (edReady()) {
+            showPlayer(-2);
+            try { edV.currentTime = clamp(t, 0, Math.max(0, (edV.duration || R.len) - 0.02)); } catch (e) { /* ещё грузится */ }
+            return;
+        }
         const h = pieceAt(Math.min(t, Math.max(0, editLen() - 1e-4)));
         if (h) seekShow(h.p.src, h.p.in + h.o);
     }
@@ -978,6 +997,7 @@ function setupVSampler(node) {
         if (P.raf) cancelAnimationFrame(P.raf);
         P.raf = null;
         vids.forEach((v) => { if (v) v.pause(); });
+        edV.pause();
         playBtn.textContent = "▶";
         drawAll();
     }
@@ -1023,6 +1043,27 @@ function setupVSampler(node) {
         if (P.on) { vids.forEach((v) => { if (v) v.pause(); }); if (P.raf) cancelAnimationFrame(P.raf); }
         let t = from == null ? S.cur : from;
         if (t >= editLen() - 0.02) t = 0;
+        if (edReady()) {
+            // готовый монтаж: играем его — переходы и звук как в Пульте / play the built edit
+            vids.forEach((v) => { if (v) v.pause(); });
+            P.on = true; P.mode = "edit"; P.fromT = t;
+            playBtn.textContent = "❚❚";
+            showPlayer(-2);
+            edV.muted = false;
+            try { edV.currentTime = t; } catch (e) { /* ок */ }
+            edV.play().catch(() => {});
+            const loopE = () => {
+                if (!P.on || P.mode !== "edit") return;
+                P.t = edV.currentTime;
+                if (edV.ended || P.t >= R.len - 0.02) { stopPlay(); S.cur = P.fromT; showEditAt(S.cur); drawEdit(); return; }
+                const pps = pxPerSec();
+                if (S.zoom > 0 && X(P.t) > ecv.clientWidth - 30) { S.x0 = P.t - 30 / pps; }
+                drawEdit();
+                P.raf = requestAnimationFrame(loopE);
+            };
+            P.raf = requestAnimationFrame(loopE);
+            return;
+        }
         const h = pieceAt(t);
         if (!h) return;
         P.on = true; P.mode = "edit"; P.fromT = t;
@@ -1121,7 +1162,7 @@ function setupVSampler(node) {
         }
         if (R.ref && R.key === editKey()) { setStatus(T(`🎬 Монтаж готов для Пульта · ${fmt(R.len)}`, `Edit ready for the Pult · ${fmt(R.len)}`), "ok"); return; }
         R.err = "";
-        setStatus(T("Монтаж изменён — соберу для Пульта…", "Edit changed — building it for the Pult…"), "");
+        setStatus(T("Монтаж изменён — собираю… (пока просмотр без переходов)", "Edit changed — building… (preview without transitions meanwhile)"), "");
         R.timer = setTimeout(renderNow, 1400);
     }
     async function renderNow() {
@@ -1140,6 +1181,11 @@ function setupVSampler(node) {
             if (!d.ok) throw new Error(d.error || "error");
             if (key === editKey()) {
                 R.ref = d.ref; R.key = key; R.len = d.length || 0; R.err = "";
+                if (d.ref) {
+                    const url = viewUrl(d.ref) + "&t=" + Date.now();
+                    edV.dataset.url = url; edV.src = url;
+                    edV.addEventListener("loadeddata", () => { if (!P.on) showEditAt(S.cur); }, { once: true });
+                }
                 setStatus(T(`🎬 Монтаж готов для Пульта · ${fmt(R.len)}`, `Edit ready for the Pult · ${fmt(R.len)}`), "ok");
             }
         } catch (e) {
