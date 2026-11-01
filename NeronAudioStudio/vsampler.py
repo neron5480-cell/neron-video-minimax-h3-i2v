@@ -158,14 +158,58 @@ def _edit_audio(plan, mute):
     return mix
 
 
+def _ffmpeg_version(exe):
+    import subprocess
+    try:
+        r = subprocess.run([exe, "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10)
+        return r.stdout.decode("utf-8", "ignore").splitlines()[0][:80]
+    except Exception:
+        return "?"
+
+
+def _reason(err):
+    """Самая полезная строка ошибки ffmpeg (причина обычно в начале, а не в хвосте).
+    The most useful ffmpeg error line (the cause is usually first, not last)."""
+    lines = [x.strip() for x in err.splitlines() if x.strip()]
+    keys = ("do not match", "Invalid", "invalid", "Error", "error", "not", "failed", "Unable")
+    for ln in lines:
+        if any(k in ln for k in keys) and "Task finished" not in ln and "Conversion failed" not in ln:
+            return ln[:300]
+    return " | ".join(lines[-3:])[:300]
+
+
 def build_edit(plan, wav_path, out_path, preset="veryfast"):
-    """Монтаж с переходами в mp4: у каждого стыка свой xfade (или резкая склейка).
-    The edit with per-junction transitions (xfade) or hard cuts."""
+    """Монтаж с переходами. Сначала обычная сборка; если ffmpeg ругается — строгая (единая
+    частота и шкала времени у каждого звена цепочки). Полный текст ошибки — в консоль.
+    The edit with transitions. Normal build first; on failure a strict one (same frame rate
+    and time base on every link). The full ffmpeg error goes to the console."""
     exe = _ffmpeg_exe()
     if not exe:
         raise RuntimeError("ffmpeg не найден / ffmpeg not found")
+    errs = []
+    for strict in (False, True):
+        ok, err = _build_edit_try(exe, plan, wav_path, out_path, preset, strict)
+        if ok:
+            if strict:
+                print("[Neron Video Sampler] собрано в строгом режиме / built in strict mode")
+            return out_path
+        errs.append(err)
+    ver = _ffmpeg_version(exe)
+    print(f"[Neron Video Sampler] ffmpeg: {exe} ({ver})\n--- ошибка / error (обычная / normal) ---\n{errs[0][-4000:]}"
+          f"\n--- ошибка / error (строгая / strict) ---\n{errs[1][-4000:]}")
+    raise RuntimeError(f"ffmpeg не смог собрать монтаж / ffmpeg could not build the edit: {_reason(errs[1])} "
+                       f"[{ver}; полный текст — в консоли ComfyUI / full text in the ComfyUI console]")
+
+
+def _build_edit_try(exe, plan, wav_path, out_path, preset, strict):
     W, H, F = plan["width"], plan["height"], plan["fps"]
     segs = plan["segments"]
+    # строгий режим: точная дробь частоты и общая шкала времени у всех звеньев
+    # strict mode: exact frame-rate fraction and one shared time base on every link
+    from fractions import Fraction
+    Fq = Fraction(F).limit_denominator(1001)
+    fr_s = f"{Fq.numerator}/{Fq.denominator}"
+    norm = f",fps={fr_s},settb=AVTB" if strict else ""
     args = [exe, "-y", "-v", "error"]
     chains = []
     for s in segs:
@@ -177,7 +221,7 @@ def build_edit(plan, wav_path, out_path, preset="veryfast"):
             f"[{s['k']}:v]trim=start={_f(ts)}:end={_f(te)},setpts=PTS-STARTPTS,fps={F},"
             f"scale={W}:{H}:force_original_aspect_ratio=decrease,pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=black,"
             f"setsar=1,format=yuv420p,tpad=stop_duration={_f(post)}:stop_mode=clone,"
-            f"trim=duration={_f(ln)},setpts=PTS-STARTPTS[v{s['k']}]")
+            f"trim=duration={_f(ln)},setpts=PTS-STARTPTS{norm}[v{s['k']}]")
     a_in = len(segs)
     args += ["-i", wav_path]
     cur, acc = "v0", segs[0]["len"]
@@ -190,25 +234,29 @@ def build_edit(plan, wav_path, out_path, preset="veryfast"):
             if tr == "custom":
                 chains.append(f"[{cur}]format=gbrp[ga{k}];[v{k}]format=gbrp[gb{k}];"
                               f"[ga{k}][gb{k}]xfade=transition=custom:expr='{REVEAL_EXPR}':duration={_f(s['td'])}:"
-                              f"offset={_f(off)},format=yuv420p[{out}]")
+                              f"offset={_f(off)},format=yuv420p{norm}[{out}]")
             else:
-                chains.append(f"[{cur}][v{k}]xfade=transition={tr}:duration={_f(s['td'])}:offset={_f(off)}[{out}]")
+                chains.append(f"[{cur}][v{k}]xfade=transition={tr}:duration={_f(s['td'])}:offset={_f(off)}{norm}[{out}]")
             acc = acc + s["len"] - s["td"]
         else:
-            chains.append(f"[{cur}][v{k}]concat=n=2:v=1:a=0[{out}]")
+            chains.append(f"[{cur}][v{k}]concat=n=2:v=1:a=0{norm}[{out}]")
             acc = acc + s["len"]
         cur = out
     chains.append(f"[{cur}]null[vout]")
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     args += ["-filter_complex", ";".join(chains), "-map", "[vout]", "-map", f"{a_in}:a:0",
-             "-c:v", "libx264", "-preset", preset, "-crf", "17", "-pix_fmt", "yuv420p", "-r", str(F),
+             "-c:v", "libx264", "-preset", preset, "-crf", "17", "-pix_fmt", "yuv420p", "-r", fr_s,
              "-c:a", "aac", "-b:a", "192k", "-t", _f(plan["length"]), "-movflags", "+faststart", out_path]
     import subprocess
+    try:
+        if os.path.isfile(out_path):
+            os.remove(out_path)
+    except OSError:
+        pass
     r = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if r.returncode != 0 or not os.path.isfile(out_path):
-        msg = r.stderr.decode("utf-8", "ignore").strip().splitlines()[-3:]
-        raise RuntimeError("ffmpeg не смог собрать монтаж / ffmpeg could not build the edit: " + " | ".join(msg))
-    return out_path
+    if r.returncode != 0 or not os.path.isfile(out_path) or os.path.getsize(out_path) == 0:
+        return False, r.stderr.decode("utf-8", "ignore")
+    return True, ""
 
 
 def _edit_key(items, pieces, mute):
