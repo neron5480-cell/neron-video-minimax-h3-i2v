@@ -4,13 +4,13 @@ import { makeUserSized } from "./neron_common.js";
 
 // ============================================================================
 //  Neron Video Sampler / Видео-сэмплер
-//  RU: Между «Видео ×3» и Пультом. Сверху три дорожки — три ролика (кадры-превью):
+//  RU: Между «Видео ×24» и Пультом. Сверху дорожки роликов (до 24, кадры-превью, прокрутка):
 //      мышкой выделяете кусок «откуда — докуда», ▶ — посмотреть, ➜ или перетащить
 //      вниз — кусок попадает в МОНТАЖ. Внизу монтажная лента: куски идут друг за
 //      другом; их можно резать (✂), переставлять (тянуть), обрезать (тянуть края),
 //      копировать, удалять. Экран слева показывает результат. ⏭ ПРОПУСТИТЬ — ролики
 //      идут в Пульт как есть. 🔇 — без звука роликов (звук у нас делает Пульт).
-//  EN: Between Video ×3 and the Pult. Three source rows (thumbnails): select a piece,
+//  EN: Between Video ×24 and the Pult. Source rows (up to 24, thumbnails, scroll): select a piece,
 //      ▶ to watch, ➜ or drag it down into the EDIT. The edit strip: pieces play one
 //      after another; cut (✂), reorder (drag), trim (drag edges), copy, delete. The
 //      screen shows the result. ⏭ BYPASS — clips go to the Pult as they are.
@@ -18,8 +18,9 @@ import { makeUserSized } from "./neron_common.js";
 // ============================================================================
 
 const NODE = "NeronVideoSampler";
-const MAX_SRC = 3, MAX_PIECES = 200;
-const VCOLORS = ["#4dabf7", "#f783ac", "#69db7c"];
+const MAX_SRC = 24, MAX_PIECES = 200;
+// цвета роликов: первые три — прежние, дальше — по кругу оттенков / clip colours: first three as before, then around the hue wheel
+const VCOLORS = ["#4dabf7", "#f783ac", "#69db7c"].concat(Array.from({ length: 21 }, (_, i) => `hsl(${Math.round((40 + i * 137.5) % 360)},70%,66%)`));
 const SRC_H = 46, RULER_H = 18, LANE_H = 66, EDGE = 9, THUMB_W = 96, THUMB_H = 54;
 const T = (ru, en) => `${ru} / ${en}`;
 // переходы между кусками (как в vsampler.py) / transitions between pieces
@@ -99,7 +100,7 @@ function injectStyles() {
 .nvs-mon .empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:11px;color:var(--nt-muted,#8b90a0);line-height:1.5}
 .nvs-time{flex:none;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--nt-bright,#e6e8ee)}
 .nvs-time i{font-style:normal;color:var(--nt-muted,#8b90a0);font-weight:400}
-.nvs-srcs{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;overflow:hidden}
+.nvs-srcs{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;overflow-y:auto;overflow-x:hidden;max-height:${SRC_H * 4 + 40}px}
 .nvs-h{font-size:11px;font-weight:800;color:var(--nt-muted2,#9aa0ae);letter-spacing:.5px;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nvs-h i{font-style:normal;font-weight:400;color:#6c7180;letter-spacing:0}
 .nvs-src{display:flex;align-items:center;gap:6px;height:${SRC_H}px;flex:none;background:var(--nt-card,#20232a);border-radius:7px;padding:0 6px}
@@ -222,7 +223,13 @@ function setupVSampler(node) {
     const R = { ref: null, key: "", busy: false, timer: null, err: "", len: 0 };
     const editKey = () => JSON.stringify([S.mute, items.map(refKey), S.pieces.map((p, i) => [p.src, +p.in.toFixed(4), +p.len.toFixed(4), p.tr, +tdOf(i).toFixed(4)])]);
     node.neronCube = () => {
-        if (S.bypass) return { kind: "videos", items: items.map((x) => ({ ...x })), mute: S.mute, bypass: true };
+        if (S.bypass) {
+            // Пульт показывает до трёх роликов рядом; остальные — только через монтаж
+            // the Pult shows up to three clips side by side; more only via the edit
+            const note = items.length > 3 ? T(`🎬 Роликов ${items.length}: Пульт покажет первые 3. Выключите ⏭ в Видео-сэмплере и смонтируйте — уйдут все`,
+                `🎬 ${items.length} clips: the Pult shows the first 3. Turn ⏭ off in the Video Sampler and edit — all of them go`) : "";
+            return { kind: "videos", items: items.map((x) => ({ ...x })), mute: S.mute, bypass: true, note };
+        }
         // сэмплер включён: Пульт видит только монтаж — один блок
         const ready = R.ref && R.key === editKey();
         let note = "";
@@ -269,7 +276,7 @@ function setupVSampler(node) {
 
     const help = el("div", "nvs-help");
     help.innerHTML =
-        "<b>RU:</b> ① Сверху — ваши ролики (из «Видео ×3»). Ведите мышкой по кадрам — выделится кусок «откуда — докуда»; "
+        "<b>RU:</b> ① Сверху — ваши ролики (из «Видео ×24»; больше четырёх — прокрутка колёсиком). Ведите мышкой по кадрам — выделится кусок «откуда — докуда»; "
         + "▶ — посмотреть кусок; <b>➜</b> или просто перетащите выделенное вниз — кусок встанет в монтаж. Двойной клик — весь ролик. "
         + "② <b>МОНТАЖ</b> — куски идут друг за другом. Тянуть кусок — переставить; тянуть края — обрезать; клик — поставить курсор; "
         + "<b>Переход</b>: надвиньте кусок на предыдущий — на сколько надвинули, столько длится переход (жёлтый клин); вид — внизу: наплыв, через тьму, через свет, шторка, растворение, круг, проявление. Звук тоже перетекает. Как только монтаж собран («Монтаж готов»), окно показывает его целиком — с переходами и звуком; пока собирается — куски без переходов. "
@@ -278,7 +285,7 @@ function setupVSampler(node) {
         + "<b>⏭ ПРОПУСТИТЬ</b> — ролики идут в Пульт как есть. <b>🔇</b> — без звука роликов. "
         + "Монтаж сам собирается в точный по кадрам mp4 и уходит в Пульт. "
         + "<b>⚙ ДЛЯ СПЕЦОВ → 🧲 РЕЗАТЬ В ДОЛЮ</b>: склейки, края и курсор прилипают к долям темпа Пульта — смена кадра попадает в удар.<br>"
-        + "<b>EN:</b> ① Your clips from Video ×3 on top. Drag across the frames to select a piece; ▶ watches it; <b>➜</b> or drag it down — "
+        + "<b>EN:</b> ① Your clips from Video ×24 on top (more than four — scroll). Drag across the frames to select a piece; ▶ watches it; <b>➜</b> or drag it down — "
         + "it goes into the edit. Double-click selects the whole clip. ② <b>EDIT</b> — pieces play one after another. Drag a piece to reorder, "
         + "drag its edges to trim, click to set the cursor; <b>slide a piece over the previous one</b> for a transition (yellow wedge; type below: dissolve, dip to black/white, wipe, pixel dissolve, circle, reveal; audio crossfades; once the edit is built the monitor plays it with transitions); <b>✂</b> (S) cuts at the cursor; <b>⧉</b> (Ctrl+D) copies; <b>🗑</b> (Delete) removes; "
         + "Ctrl+Z undoes. Wheel zooms, Shift+wheel scrolls, space plays. <b>⏭ BYPASS</b> sends the clips as they are; <b>🔇</b> drops the clip sound. "
@@ -290,7 +297,7 @@ function setupVSampler(node) {
     const monWrap = el("div", "nvs-monwrap");
     const mon = el("div", "nvs-mon");
     const monTag = el("div", "tag");
-    const monEmpty = el("div", "empty", T("Подключите «Видео ×3» ко входу videos", "Wire Video ×3 into videos"));
+    const monEmpty = el("div", "empty", T("Подключите «Видео ×24» ко входу videos", "Wire Video ×24 into videos"));
     mon.appendChild(monTag);
     mon.appendChild(monEmpty);
     // собранный монтаж (с переходами и звуком) — его и показываем, когда он готов
@@ -455,7 +462,7 @@ function setupVSampler(node) {
         h.innerHTML = "① РОЛИКИ / CLIPS <i>— ведите мышкой по кадрам; ➜ или перетащите вниз / drag across the frames; ➜ or drag it down</i>";
         srcs.appendChild(h);
         if (!items.length) {
-            srcs.appendChild(el("div", "nvs-sempty", T("Подключите «Видео ×3» ко входу videos и выберите ролики — они появятся здесь, каждый своей дорожкой.",
+            srcs.appendChild(el("div", "nvs-sempty", T("Подключите «Видео ×24» ко входу videos и выберите ролики — они появятся здесь, каждый своей дорожкой.",
                 "Wire Video ×3 into the videos input and pick clips — each one appears here as its own row.")));
             return;
         }
@@ -1157,7 +1164,8 @@ function setupVSampler(node) {
     function scheduleRender() {
         if (R.timer) clearTimeout(R.timer);
         if (S.bypass || !S.pieces.length) {
-            if (!R.busy) setStatus(S.bypass ? T("⏭ ролики идут в Пульт как есть", "⏭ clips go to the Pult as they are") : "", "");
+            if (!R.busy) setStatus(S.bypass ? (items.length > 3 ? T(`⏭ в Пульт идут первые 3 из ${items.length} — выключите ⏭, чтобы смонтировать все`, `⏭ the Pult gets the first 3 of ${items.length} — turn ⏭ off to edit them all`)
+                : T("⏭ ролики идут в Пульт как есть", "⏭ clips go to the Pult as they are")) : "", "");
             return;
         }
         if (R.ref && R.key === editKey()) { setStatus(T(`🎬 Монтаж готов для Пульта · ${fmt(R.len)}`, `Edit ready for the Pult · ${fmt(R.len)}`), "ok"); return; }

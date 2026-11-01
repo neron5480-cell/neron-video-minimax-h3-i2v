@@ -12,8 +12,9 @@ import { neronTap, makeUserSized } from "./neron_common.js";
 //      A cube goes into the Pult (Neron Mixer) with a single wire.
 // ============================================================================
 
-const MAX_V = 3, MAX_S = 8;
-const VCOLORS = ["#4dabf7", "#f783ac", "#69db7c"];
+const MAX_V = 24, MAX_S = 8;
+// цвета роликов: первые три — прежние, дальше — по кругу оттенков / clip colours: first three as before, then around the hue wheel
+const VCOLORS = ["#4dabf7", "#f783ac", "#69db7c"].concat(Array.from({ length: 21 }, (_, i) => `hsl(${Math.round((40 + i * 137.5) % 360)},70%,66%)`));
 const SCOLORS = ["#ff9f43", "#54a0ff", "#1dd1a1", "#ff6b81", "#feca57", "#a29bfe", "#48dbfb", "#ee5253"];
 const T = (ru, en) => `${ru} / ${en}`;
 
@@ -76,23 +77,24 @@ function injectStyles() {
 }
 
 const HELP = {
-    video: `NERON VIDEO ×3
+    video: `NERON VIDEO ×24
 ===================================================
-Up to three video clips in one node.
+Up to 24 video clips in one node (short 5–10 s clips for a couple of minutes).
   • Pick a clip in slot 1 (list of input/output videos) or ⬆ upload it,
-    or drop a video file onto the slot. Slot 2 opens, then slot 3.
+    or drop a video file onto the slot. The next slot opens after each one.
   • Each clip can be watched right in the node.
   • ✕ removes a clip; the next ones move up.
   • Wire the "videos" output into the video input of the Neron Mixer (Pult).
-    The Pult shows all clips; in the saved clip they play one after another
-    (1 → 2 → 3).
+    Many clips: put the Video Sampler between the cube and the Pult — cut and
+    join them there; the Pult gets one finished edit. Wired straight into the
+    Pult, only the first 3 clips are shown.
 
 ===================================================
 🇷🇺 РУССКИЙ
 ===================================================
-До трёх роликов в одной ноде.
+До 24 роликов в одной ноде (короткие куски по 5–10 с на пару минут).
   • Выберите ролик в слоте 1 (список роликов из input и output) или ⬆ загрузите,
-    или перетащите файл прямо на слот. Откроется слот 2, потом слот 3.
+    или перетащите файл прямо на слот. После каждого открывается следующий слот.
   • Каждый ролик можно посмотреть прямо в ноде.
   • ✕ убирает ролик, следующие сдвигаются вверх.
   • Выход videos подключите ко входу video у Neron Mixer (Пульта).
@@ -189,7 +191,7 @@ function setupCube(node, kind) {
     const root = el("div", "ncb-root");
     outer.appendChild(root);
     const top = el("div", "ncb-top");
-    const title = el("b", "", isV ? "🎬 " + T("ВИДЕО ×3", "VIDEO ×3") : "🎵 " + T("ЗВУК ×8", "SOUND ×8"));
+    const title = el("b", "", isV ? "🎬 " + T("ВИДЕО ×24", "VIDEO ×24") : "🎵 " + T("ЗВУК ×8", "SOUND ×8"));
     title.style.color = isV ? "#4dabf7" : "#ff9f43";
     const status = el("div", "ncb-status", "");
     const help = el("button", "ncb-btn", "📖");
@@ -209,8 +211,8 @@ function setupCube(node, kind) {
     function setStatus(t, err) { status.textContent = t || ""; status.title = t || ""; status.className = "ncb-status" + (err ? " err" : ""); }
     function summary() {
         setStatus(items.length
-            ? (isV ? T(`роликов: ${items.length} из 3`, `clips: ${items.length} of 3`) : T(`звуков: ${items.length} из 8`, `sounds: ${items.length} of 8`))
-                + " · " + T("провод → Пульт", "wire → Pult")
+            ? (isV ? T(`роликов: ${items.length} из ${MAX_V}`, `clips: ${items.length} of ${MAX_V}`) : T(`звуков: ${items.length} из ${MAX_S}`, `sounds: ${items.length} of ${MAX_S}`))
+                + " · " + (isV && items.length > 3 ? T("больше 3 — через Видео-сэмплер", "more than 3 — via the Video Sampler") : T("провод → Пульт", "wire → Pult"))
             : (isV ? T("выберите ролик в слоте 1", "pick a clip in slot 1") : T("выберите звук в строке 1", "pick a sound in row 1")));
     }
 
