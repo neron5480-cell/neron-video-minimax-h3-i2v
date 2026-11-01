@@ -45,6 +45,14 @@ const fmtT = (s) => {
     return `${String(m).padStart(2, "0")}:${r.toFixed(1).padStart(4, "0")}`;
 };
 const smooth = (p) => { p = clamp(p, 0, 1); return p * p * (3 - 2 * p); };
+// мышь в собственных точках элемента: холст ComfyUI масштабирует ноду, экранные точки не совпадают
+// mouse in the element's own px: the ComfyUI canvas zoom scales the node, screen px differ
+function localXY(e, elem) {
+    const rc = elem.getBoundingClientRect();
+    const w = elem.clientWidth || rc.width, h = elem.clientHeight || rc.height;
+    const kx = rc.width ? w / rc.width : 1, ky = rc.height ? h / rc.height : 1;
+    return { x: (e.clientX - rc.left) * kx, y: (e.clientY - rc.top) * ky, w, h };
+}
 
 // ---------------------------------------------------------------- стили
 function injectStyles() {
@@ -831,8 +839,7 @@ function setupPult(node) {
     };
     cv.addEventListener("pointerdown", (e) => {
         e.stopPropagation();
-        const rc = cv.getBoundingClientRect();
-        const mx = e.clientX - rc.left, my = e.clientY - rc.top;
+        const { x: mx, y: my } = localXY(e, cv);
         if (mode === "compare") { drag = { kind: "shutter" }; shutter = clamp((mx - fr.x) / fr.w, 0, 1); dirty = true; cv.setPointerCapture(e.pointerId); return; }
         const eb = editBox();
         if (!eb) return;
@@ -844,8 +851,7 @@ function setupPult(node) {
         cv.setPointerCapture(e.pointerId);
     });
     cv.addEventListener("pointermove", (e) => {
-        const rc = cv.getBoundingClientRect();
-        const mx = e.clientX - rc.left, my = e.clientY - rc.top;
+        const { x: mx, y: my } = localXY(e, cv);
         if (!drag) {
             const eb = editBox();
             let cur = "default";
@@ -981,8 +987,7 @@ function setupPult(node) {
     }
     tl.addEventListener("pointerdown", (ev) => {
         ev.stopPropagation();
-        const rc = tl.getBoundingClientRect(), w = rc.width;
-        const mx = ev.clientX - rc.left, my = ev.clientY - rc.top;
+        const { x: mx, y: my, w } = localXY(ev, tl);
         const hit = my > TL_RULER + 12 ? tlHit(mx, my, w) : null;
         if (hit) {
             select(hit.e.id);
@@ -996,8 +1001,7 @@ function setupPult(node) {
         tl.setPointerCapture(ev.pointerId);
     });
     tl.addEventListener("pointermove", (ev) => {
-        const rc = tl.getBoundingClientRect(), w = rc.width;
-        const mx = ev.clientX - rc.left, my = ev.clientY - rc.top;
+        const { x: mx, y: my, w } = localXY(ev, tl);
         if (!tdrag) {
             const hit = my > TL_RULER + 12 ? tlHit(mx, my, w) : null;
             tl.style.cursor = hit ? (hit.edge === "m" ? "grab" : "ew-resize") : "pointer";
