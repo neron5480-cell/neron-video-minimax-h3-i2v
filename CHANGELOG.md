@@ -1,5 +1,23 @@
 # Changelog / История изменений
 
+## ✂ Neron Video Editor — видео → видео, v0.1 / video → video, v0.1 (dev, 01.11.2026)
+
+**RU:**
+- Новый проект в папке `NeronVideoEditor`, меню **Neron/Video Editor**: кубики **🎬 Видео ×3** и **🖼 Картинки ×4** + **🎛 Монтажный пульт**.
+- Видео 1 идёт как есть, кадр в кадр; поверх в нужные секунды проявляются **картинки** и **куски видео 2/3** — во весь кадр или в области (прямоугольник/овал, мягкий край), с переходами **Сразу / Наплыв / Проявление / Шторка / Через тьму**. У врезки — **✂ участок** источника, секунда источника, скорость, **свой звук** (плавно перехватывает звук), **подгонка цвета** под сцену.
+- Проверено: вне событий и областей изменено 0 пикселей; итог того же размера, длины и fps, что видео 1.
+- Подключили IMAGE от Load Video — звук и video_info подключаются сами; слоты открываются по мере подключения.
+- Пульт: живой предпросмотр, полоска времени (тащить, растягивать), вкладки **Результат** и **До/После**, сохранение в `output/Neron_Videos`, 📖 справка на двух языках, 🔧 эксперт, размер ноды меняется мышкой.
+- Пока без нейросети. Только в dev — для тестов.
+
+**EN:**
+- New project in `NeronVideoEditor`, menu **Neron/Video Editor**: **🎬 Video ×3** and **🖼 Pictures ×4** cubes + **🎛 Edit Pult**.
+- Video 1 passes frame for frame; **pictures** and **pieces of videos 2/3** appear on top at chosen seconds — full frame or in an area (rect/oval, soft edge), with **Cut / Dissolve / Reveal / Wipe / Dip to black**. Inserts get a source **✂ piece**, source second, speed, **own sound** (smooth takeover) and **colour matching**.
+- Verified: 0 pixels changed outside events and areas; output has video 1's size, length and fps.
+- Wiring IMAGE from Load Video auto-wires audio and video_info; slots open as you connect.
+- Pult: live preview, draggable timeline, **Result** and **Before/After** tabs, saving to `output/Neron_Videos`, bilingual 📖 help, 🔧 expert mode, resizable node.
+- No neural network yet. dev only — for testing.
+
 ## 🖼 Image Processor: превью = выход / preview = output (dev, 31.10.2026)
 
 **RU (обе ноды):**
