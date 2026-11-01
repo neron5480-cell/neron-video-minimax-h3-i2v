@@ -237,6 +237,78 @@ class NeronVEImages:
         return ({"neron": "ve_images", "images": out},)
 
 
+
+# ---------------------------------------------------------------- ✨ AI-движок / AI engine
+NOT_FOUND = "__not_found__"
+
+
+def _files(kind):
+    try:
+        import folder_paths
+        f = list(folder_paths.get_filename_list(kind))
+    except Exception:
+        f = []
+    return f or [NOT_FOUND]
+
+
+def _pick(files, wanted):
+    if wanted in files:
+        return wanted
+    for f in files:
+        if f.replace("\\", "/").split("/")[-1] == wanted:
+            return f
+    return files[0]
+
+
+class NeronVEAI:
+    @classmethod
+    def INPUT_TYPES(cls):
+        from . import ve_ai
+        unets, clips, vaes, loras = _files("diffusion_models"), _files("text_encoders"), _files("vae"), _files("loras")
+        return {"required": {
+            "mode": (ve_ai.MODES, {"default": ve_ai.MODES[0], "tooltip":
+                     "⚡ Турбо — быстро (12 шагов, турбо-LoRA), для проб и черновиков. Качество — 40 шагов, примерно "
+                     "в 3 раза дольше, чище деталь.\n\nEN: Turbo — fast (12 steps, turbo LoRA) for tries and drafts. "
+                     "Quality — 40 steps, about 3× slower, cleaner detail."}),
+            "size": (list(ve_ai.SIZES), {"default": list(ve_ai.SIZES)[0], "tooltip":
+                     "Размер AI-куска (короткая сторона). Форма — как у видео 1. Меньше — быстрее; в пульте кусок всё "
+                     "равно растянется до размера видео 1.\n\nEN: AI piece size (short side), same shape as video 1. "
+                     "Smaller is faster; the pult scales it to video 1 anyway."}),
+            "seed": ("INT", {"default": 1, "min": 0, "max": 0xFFFFFFFF, "tooltip":
+                     "Другое число — другой вариант того же перехода. / Another number — another take."}),
+            "expert": ("BOOLEAN", {"default": False, "label_on": "⚙ эксперт / expert", "label_off": "⚙ эксперт / expert",
+                       "tooltip": "Показать выбор моделей. / Show model files."}),
+            "unet_model": (unets, {"default": _pick(unets, ve_ai.UNET_NAME), "tooltip":
+                           "Модель MiniMax H3 fl2va (та же, что в H3 Engine). / The MiniMax H3 fl2va model."}),
+            "clip_model": (clips, {"default": _pick(clips, ve_ai.CLIP_NAME)}),
+            "vae_video_model": (vaes, {"default": _pick(vaes, ve_ai.VAE_VIDEO_NAME)}),
+            "vae_audio_model": (vaes, {"default": _pick(vaes, ve_ai.VAE_AUDIO_NAME)}),
+            "turbo_lora_model": (loras, {"default": _pick(loras, ve_ai.TURBO_LORA_NAME)}),
+        }}
+
+    RETURN_TYPES = ("NERON_VE_AI",)
+    RETURN_NAMES = ("ai",)
+    OUTPUT_TOOLTIPS = ("В пульт, вход ai / Into the pult's ai input",)
+    FUNCTION = "pack"
+    CATEGORY = "Neron/Video Editor"
+    DESCRIPTION = ("Настройки AI-кусков пульта (MiniMax H3). Генерирует сам пульт — только те ✨ AI-события, что "
+                   "изменились. / Settings for the pult's AI pieces (MiniMax H3); the pult generates only changed events.")
+
+    def pack(self, mode, size, seed, expert=False, unet_model=None, clip_model=None, vae_video_model=None,
+             vae_audio_model=None, turbo_lora_model=None):
+        from . import ve_ai
+        need = {"unet": (unet_model, "diffusion_models"), "clip": (clip_model, "text_encoders"),
+                "vae_video": (vae_video_model, "vae"), "vae_audio": (vae_audio_model, "vae")}
+        if mode == ve_ai.MODES[0]:
+            need["turbo_lora"] = (turbo_lora_model, "loras")
+        models = {}
+        for k, (v, kind) in need.items():
+            if not v or v == NOT_FOUND:
+                raise _err(f"не найдена модель ({k}) в папке models/{kind}", f"model not found ({k}) in models/{kind}")
+            models[k] = v
+        models.setdefault("turbo_lora", turbo_lora_model)
+        return ({"neron": "ve_ai", "mode": mode, "size": size, "seed": int(seed), "models": models},)
+
 # ---------------------------------------------------------------- предпросмотр / preview proxies
 _PROXY = {}
 
@@ -317,6 +389,7 @@ class NeronVEPult:
                 "videos": ("NERON_VE_VIDEOS", {"tooltip": "От кубика 🎬 Видео ×3 / From the 🎬 Video ×3 cube"}),
                 "images": ("NERON_VE_IMAGES", {"tooltip": "От кубика 🖼 Картинки ×4 / From the 🖼 Pictures ×4 cube"}),
                 "audio": ("AUDIO", {"tooltip": "Свой звук: музыка из Audio Studio и т.п. (необязательно) / Your own sound, e.g. from Audio Studio (optional)"}),
+                "ai": ("NERON_VE_AI", {"tooltip": "От ноды ✨ AI-движок — для событий ✨ AI / From ✨ AI Engine — for ✨ AI events"}),
             },
         }
 
@@ -335,7 +408,7 @@ class NeronVEPult:
                    "видео 2/3. Вне событий — оригинал кадр в кадр. / Edit Pult: video 1 plays as is; pictures and "
                    "pieces of videos 2/3 appear on top at chosen seconds. Outside events — the untouched original.")
 
-    def run(self, edit_json, videos=None, images=None, audio=None):
+    def run(self, edit_json, videos=None, images=None, audio=None, ai=None):
         try:
             raw = json.loads(edit_json or "{}")
         except Exception:
@@ -364,16 +437,40 @@ class NeronVEPult:
         except Exception:
             prog = None
 
-        frames = core.render(state, main, others, imgs, device, prog) if state["events"] else _plain(v1["frames"])
+        ai_src, ai_audio, ai_ui, info = {}, {}, {}, []
+        ai_events = [e for e in state["events"] if e["kind"] == "ai"]
+        if ai_events:
+            if not ai:
+                raise _err("есть события ✨ AI — подключите ноду ✨ AI-движок ко входу ai пульта",
+                           "there are ✨ AI events — connect the ✨ AI Engine node to the pult's ai input")
+            from . import ve_ai
+            w1, h1 = int(v1["frames"].shape[2]), int(v1["frames"].shape[1])
+            for k, ev in enumerate(ai_events):
+                if ev["pic"] and ev["pic"] not in imgs:
+                    raise _err(f"✨ AI: картинка {ev['pic']} не подключена к кубику 🖼 Картинки ×4",
+                               f"✨ AI: picture {ev['pic']} is not connected to the 🖼 Pictures ×4 cube")
+                r = ve_ai.piece(ev, main, imgs, ai, (w1, h1))
+                ai_src[ev["id"]] = core.Source(r["frames"], r["fps"])
+                if r["audio"] is not None:
+                    ai_audio[ev["id"]] = r["audio"]
+                info.append(f"✨ AI {k + 1}: " + "; ".join(r["notes"]))
+                try:
+                    ai_ui[ev["id"]] = _proxy_video(r["frames"], r["fps"], None)
+                except Exception:
+                    pass
+
+        frames = (core.render(state, main, others, imgs, device, prog, ai=ai_src) if state["events"]
+                  else _plain(v1["frames"]))
         duration = main.n / fps1
         has_any_audio = v1["audio"] is not None or audio is not None or any(
             v.get("audio") is not None for v in vids.values())
-        out_audio = core.mix_audio(state, duration, v1["audio"], {i: v.get("audio") for i, v in vids.items()}, audio)
+        out_audio = core.mix_audio(state, duration, v1["audio"], {i: v.get("audio") for i, v in vids.items()}, audio,
+                                   ai_audio=ai_audio)
         if not has_any_audio or state["audio"] == "none":
             out_audio["waveform"] = torch.zeros_like(out_audio["waveform"])
 
         # предпросмотр для пульта / previews for the pult
-        ui = {"sources": [], "images": [], "notes": notes}
+        ui = {"sources": [], "images": [], "notes": notes, "info": info, "ai": ai_ui}
         for i, v in sorted(vids.items()):
             src = main if i == 1 else others[i]
             try:
@@ -422,11 +519,13 @@ def _device():
 
 
 NODE_CLASS_MAPPINGS = {
+    "NeronVEAI": NeronVEAI,
     "NeronVEVideos": NeronVEVideos,
     "NeronVEImages": NeronVEImages,
     "NeronVEPult": NeronVEPult,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
+    "NeronVEAI": "✨ Neron Edit AI / AI-движок",
     "NeronVEVideos": "🎬 Neron Video ×3 / Видео ×3 (Editor)",
     "NeronVEImages": "🖼 Neron Pictures ×4 / Картинки ×4",
     "NeronVEPult": "🎛 Neron Edit Pult / Монтажный пульт",

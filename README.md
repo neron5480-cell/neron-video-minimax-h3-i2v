@@ -185,14 +185,14 @@
 
 ---
 
-## ✂ Проект 7: NERON VIDEO EDITOR — видео → видео (v0.1, тест, ветка dev)
+## ✂ Проект 7: NERON VIDEO EDITOR — видео → видео (v0.2, тест, ветка dev)
 
 👋 Ноды лежат в папке **[`NeronVideoEditor`](NeronVideoEditor/)**.
 
 *   **🎬 Видео ×3** и **🖼 Картинки ×4** — кубики входов: подключаете обычные Load Video / Load Image, звук и fps подтягиваются сами.
 *   **🎛 Монтажный пульт** — видео 1 идёт как есть, а в нужные секунды поверх **проявляются картинки и куски видео 2/3**: во весь кадр или в своей области, с наплывом, проявлением, шторкой, через затемнение.
 *   Вне событий и областей — **оригинал кадр в кадр**. Размер, длина и fps — как у видео 1. Звук: свой, видео 1 или из Audio Studio.
-*   Пока без нейросети (чистый монтаж). AI-переходы и правка через MiniMax H3 — следующие шаги.
+*   **✨ AI-переход** (нода ✨ AI-движок): MiniMax H3 рисует кусок 5–15 с из настоящего видео в вашу картинку и обратно. Правка кистью (крылья) — следующий шаг.
 
 Подробно — в **[README внутри NeronVideoEditor](NeronVideoEditor/README.md)**.
 
@@ -412,14 +412,14 @@ Details in the **[README inside NeronStage](NeronStage/README.md)**.
 
 ---
 
-## ✂ Project 7: NERON VIDEO EDITOR — video → video (v0.1, test, dev branch)
+## ✂ Project 7: NERON VIDEO EDITOR — video → video (v0.2, test, dev branch)
 
 👋 The nodes live in the **[`NeronVideoEditor`](NeronVideoEditor/)** folder.
 
 *   **🎬 Video ×3** and **🖼 Pictures ×4** are input cubes: wire ordinary Load Video / Load Image; audio and fps wire themselves.
 *   **🎛 Edit Pult** — video 1 plays as is, and at chosen seconds **pictures and pieces of videos 2/3 appear on top**: full frame or in their own area, with dissolve, reveal, wipe or dip to black.
 *   Outside events and areas — **the original, frame for frame**. Size, length and fps match video 1. Sound: video 1, your own, or from Audio Studio.
-*   No neural network yet (pure editing). AI transitions and MiniMax H3 edits are the next steps.
+*   **✨ AI transition** (✨ AI Engine node): MiniMax H3 paints a 5–15 s piece from the real video into your picture and back. Brush edits (wings) are next.
 
 Details in the **[README inside NeronVideoEditor](NeronVideoEditor/README.md)**.
 

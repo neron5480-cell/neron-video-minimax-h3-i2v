@@ -1,5 +1,21 @@
 # Changelog / История изменений
 
+## ✨ Neron Video Editor v0.2: AI-переход / AI transition (dev, 01.11.2026)
+
+**RU:**
+- Новая нода **✨ Neron Edit AI / AI-движок** (MiniMax H3 fl2va — те же модели, что у H3 Engine): ⚡ Турбо / Качество, размер, сид; модели под «⚙ эксперт». Подключается ко входу `ai` пульта.
+- В пульте — кнопка **+ ✨ AI**: модель рисует кусок 5–15 с, а к нему через **MiniMaxH3AddGuide** «прибиты» настоящие кадры видео 1 (≈1 с в начале — стык продолжает движение), картинка на нужной секунде и, с «↩ Вернуться», настоящие кадры в конце. Виды: наплыв, карандаш, цвет вытекает, чернила, бумага, свои слова. «Держать ч/б рисунка». Звук: оригинал или звук модели.
+- Готовые AI-куски запоминаются (память + `temp`): правка монтажа их не пересчитывает. До «Очереди» в «Монтаже» виден набросок.
+- Исправлено: видео ускорялось, если «паспорт» файла врёт о частоте кадров (скачанные/телефонные ролики) — кубик сверяет с настоящими метками времени. Мышь совпадает с кадром и полоской при любом масштабе холста.
+- Проверено без модели (у разработчика нет видеокарты с H3): якоря расставлены и приняты настоящими нодами ComfyUI, весь путь пульта, вне AI-куска — оригинал кадр в кадр. На модели — нужен тест.
+
+**EN:**
+- New **✨ Neron Edit AI** node (MiniMax H3 fl2va, same models as H3 Engine) for the pult's `ai` input.
+- **+ ✨ AI** in the pult: a 5–15 s piece with real video 1 frames anchored via **MiniMaxH3AddGuide** at the start (smooth seam), the picture at the chosen second and, with “↩ Return”, real frames at the end. Styles: dissolve, pencil, colour drain, ink, paper, own words. “Keep drawing B/W”. Sound: original or the model's.
+- AI pieces are cached (memory + `temp`); editing the cut doesn't regenerate them.
+- Fixed: speed-up from a wrong fps header in downloaded/phone clips; mouse matches the frame and timeline at any canvas zoom.
+- Verified without the model (no H3-capable GPU here): anchors accepted by ComfyUI's real nodes, full pult path, original untouched outside the AI piece. Needs a test on the model.
+
 ## ✂ Neron Video Editor — видео → видео, v0.1 / video → video, v0.1 (dev, 01.11.2026)
 
 **RU:**

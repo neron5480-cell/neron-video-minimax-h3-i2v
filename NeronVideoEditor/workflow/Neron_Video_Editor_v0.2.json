@@ -1,15 +1,15 @@
 {
- "id": "642078ed-060c-4461-8ab7-9b8573b8695e",
+ "id": "cedfac49-f7ec-4181-992e-e7c593ff5462",
  "revision": 0,
- "last_node_id": 6,
- "last_link_id": 9,
+ "last_node_id": 8,
+ "last_link_id": 13,
  "nodes": [
   {
    "id": 1,
    "type": "VHS_LoadVideo",
    "pos": [
-    20,
-    20
+    0,
+    0
    ],
    "size": [
     259.8983612060547,
@@ -143,7 +143,7 @@
     "Node name for S&R": "VHS_LoadVideo"
    },
    "widgets_values": {
-    "video": "lead.mp4",
+    "video": "insert.mp4",
     "force_rate": 0,
     "custom_width": 0,
     "custom_height": 0,
@@ -156,7 +156,7 @@
      "hidden": false,
      "paused": false,
      "params": {
-      "filename": "lead.mp4",
+      "filename": "insert.mp4",
       "type": "input",
       "format": "video/mp4",
       "force_rate": 0,
@@ -169,7 +169,7 @@
     }
    },
    "widgets_values_named": {
-    "video": "lead.mp4",
+    "video": "insert.mp4",
     "force_rate": 0,
     "custom_width": 0,
     "custom_height": 0,
@@ -182,7 +182,7 @@
      "hidden": false,
      "paused": false,
      "params": {
-      "filename": "lead.mp4",
+      "filename": "insert.mp4",
       "type": "input",
       "format": "video/mp4",
       "force_rate": 0,
@@ -199,7 +199,7 @@
    "id": 2,
    "type": "VHS_LoadVideo",
    "pos": [
-    20,
+    0,
     520
    ],
    "size": [
@@ -390,8 +390,8 @@
    "id": 3,
    "type": "LoadImage",
    "pos": [
-    300,
-    700
+    320,
+    760
    ],
    "size": [
     282.798828125,
@@ -452,8 +452,8 @@
    "id": 4,
    "type": "NeronVEVideos",
    "pos": [
-    330,
-    40
+    320,
+    0
    ],
    "size": [
     290.2545989990234,
@@ -539,8 +539,8 @@
    "id": 5,
    "type": "NeronVEImages",
    "pos": [
-    330,
-    400
+    320,
+    330
    ],
    "size": [
     270.9546875,
@@ -587,17 +587,154 @@
   },
   {
    "id": 6,
+   "type": "NeronVEAI",
+   "pos": [
+    320,
+    480
+   ],
+   "size": [
+    285.1012786865234,
+    184
+   ],
+   "flags": {},
+   "order": 5,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "mode",
+     "name": "mode",
+     "type": "COMBO",
+     "widget": {
+      "name": "mode"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "size",
+     "name": "size",
+     "type": "COMBO",
+     "widget": {
+      "name": "size"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "seed",
+     "name": "seed",
+     "type": "INT",
+     "widget": {
+      "name": "seed"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "expert",
+     "name": "expert",
+     "type": "BOOLEAN",
+     "widget": {
+      "name": "expert"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "unet_model",
+     "name": "unet_model",
+     "type": "COMBO",
+     "widget": {
+      "name": "unet_model"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "clip_model",
+     "name": "clip_model",
+     "type": "COMBO",
+     "widget": {
+      "name": "clip_model"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "vae_video_model",
+     "name": "vae_video_model",
+     "type": "COMBO",
+     "widget": {
+      "name": "vae_video_model"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "vae_audio_model",
+     "name": "vae_audio_model",
+     "type": "COMBO",
+     "widget": {
+      "name": "vae_audio_model"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "turbo_lora_model",
+     "name": "turbo_lora_model",
+     "type": "COMBO",
+     "widget": {
+      "name": "turbo_lora_model"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "ai",
+     "name": "ai",
+     "type": "NERON_VE_AI",
+     "links": [
+      10
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "NeronVEAI"
+   },
+   "widgets_values": [
+    "⚡ Турбо / Turbo",
+    "Полный / Full (768)",
+    1,
+    "randomize",
+    false,
+    "__not_found__",
+    "__not_found__",
+    "__not_found__",
+    "__not_found__",
+    "__not_found__",
+    ""
+   ],
+   "widgets_values_named": {
+    "mode": "⚡ Турбо / Turbo",
+    "size": "Полный / Full (768)",
+    "seed": 1,
+    "control_after_generate": "randomize",
+    "expert": false,
+    "unet_model": "__not_found__",
+    "clip_model": "__not_found__",
+    "vae_video_model": "__not_found__",
+    "vae_audio_model": "__not_found__",
+    "turbo_lora_model": "__not_found__",
+    "nve_ai_bar": ""
+   }
+  },
+  {
+   "id": 7,
    "type": "NeronVEPult",
    "pos": [
-    620,
-    40
+    640,
+    0
    ],
    "size": [
     1040,
     660
    ],
    "flags": {},
-   "order": 5,
+   "order": 6,
    "mode": 0,
    "inputs": [
     {
@@ -622,6 +759,13 @@
      "link": null
     },
     {
+     "localized_name": "ai",
+     "name": "ai",
+     "shape": 7,
+     "type": "NERON_VE_AI",
+     "link": 10
+    },
+    {
      "localized_name": "edit_json",
      "name": "edit_json",
      "type": "STRING",
@@ -636,19 +780,25 @@
      "localized_name": "images",
      "name": "images",
      "type": "IMAGE",
-     "links": null
+     "links": [
+      11
+     ]
     },
     {
      "localized_name": "audio",
      "name": "audio",
      "type": "AUDIO",
-     "links": null
+     "links": [
+      12
+     ]
     },
     {
      "localized_name": "fps",
      "name": "fps",
      "type": "FLOAT",
-     "links": null
+     "links": [
+      13
+     ]
     },
     {
      "localized_name": "frame_count",
@@ -661,11 +811,147 @@
     "Node name for S&R": "NeronVEPult"
    },
    "widgets_values": [
-    "{\"v\": 1, \"events\": [], \"audio\": \"main\", \"save\": true, \"main_gain\": 1, \"ext_gain\": 1, \"fps1\": 0}"
+    "{\"v\":1,\"events\":[],\"audio\":\"main\",\"save\":false,\"main_gain\":1,\"ext_gain\":1,\"fps1\":0}",
+    ""
    ],
    "widgets_values_named": {
-    "edit_json": "{\"v\":1,\"events\":[{\"id\":\"dw14lsy\",\"kind\":\"insert\",\"src\":2,\"t\":4.5,\"dur\":3,\"s\":0,\"tin\":\"dissolve\",\"din\":1,\"tout\":\"dissolve\",\"dout\":1,\"area\":{\"x\":0.3,\"y\":0.15,\"w\":0.4,\"h\":0.5,\"shape\":\"ellipse\",\"feather\":0.04},\"crop\":null,\"fit\":\"cover\",\"match\":false,\"match_k\":0.7,\"opacity\":1,\"sound\":true,\"speed\":1}],\"audio\":\"main\",\"save\":true,\"main_gain\":1,\"ext_gain\":1,\"fps1\":0}",
+    "edit_json": "{\"v\":1,\"events\":[],\"audio\":\"main\",\"save\":false,\"main_gain\":1,\"ext_gain\":1,\"fps1\":0}",
     "nve_pult": ""
+   }
+  },
+  {
+   "id": 8,
+   "type": "VHS_VideoCombine",
+   "pos": [
+    1720,
+    0
+   ],
+   "size": [
+    224.8026580810547,
+    238
+   ],
+   "flags": {},
+   "order": 7,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "images",
+     "name": "images",
+     "type": "IMAGE",
+     "link": 11
+    },
+    {
+     "localized_name": "audio",
+     "name": "audio",
+     "shape": 7,
+     "type": "AUDIO",
+     "link": 12
+    },
+    {
+     "localized_name": "meta_batch",
+     "name": "meta_batch",
+     "shape": 7,
+     "type": "VHS_BatchManager",
+     "link": null
+    },
+    {
+     "localized_name": "vae",
+     "name": "vae",
+     "shape": 7,
+     "type": "VAE",
+     "link": null
+    },
+    {
+     "localized_name": "frame_rate",
+     "name": "frame_rate",
+     "type": "FLOAT",
+     "widget": {
+      "name": "frame_rate"
+     },
+     "link": 13
+    },
+    {
+     "localized_name": "loop_count",
+     "name": "loop_count",
+     "type": "INT",
+     "widget": {
+      "name": "loop_count"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "filename_prefix",
+     "name": "filename_prefix",
+     "type": "STRING",
+     "widget": {
+      "name": "filename_prefix"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "format",
+     "name": "format",
+     "type": "COMBO",
+     "widget": {
+      "name": "format"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "pingpong",
+     "name": "pingpong",
+     "type": "BOOLEAN",
+     "widget": {
+      "name": "pingpong"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "save_output",
+     "name": "save_output",
+     "type": "BOOLEAN",
+     "widget": {
+      "name": "save_output"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "Filenames",
+     "name": "Filenames",
+     "type": "VHS_FILENAMES",
+     "links": null
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VHS_VideoCombine"
+   },
+   "widgets_values": {
+    "frame_rate": 8,
+    "loop_count": 0,
+    "filename_prefix": "AnimateDiff",
+    "format": "image/gif",
+    "pingpong": false,
+    "save_output": true,
+    "videopreview": {
+     "hidden": false,
+     "paused": false,
+     "params": {}
+    }
+   },
+   "widgets_values_named": {
+    "frame_rate": 8,
+    "loop_count": 0,
+    "filename_prefix": "AnimateDiff",
+    "format": "image/gif",
+    "pingpong": false,
+    "save_output": true,
+    "videopreview": {
+     "hidden": false,
+     "paused": false,
+     "params": {}
+    }
    }
   }
  ],
@@ -730,7 +1016,7 @@
    8,
    4,
    0,
-   6,
+   7,
    0,
    "NERON_VE_VIDEOS"
   ],
@@ -738,13 +1024,53 @@
    9,
    5,
    0,
-   6,
+   7,
    1,
    "NERON_VE_IMAGES"
+  ],
+  [
+   10,
+   6,
+   0,
+   7,
+   3,
+   "NERON_VE_AI"
+  ],
+  [
+   11,
+   7,
+   0,
+   8,
+   0,
+   "IMAGE"
+  ],
+  [
+   12,
+   7,
+   1,
+   8,
+   1,
+   "AUDIO"
+  ],
+  [
+   13,
+   7,
+   2,
+   8,
+   4,
+   "FLOAT"
   ]
  ],
  "groups": [],
  "config": {},
- "extra": {},
+ "extra": {
+  "ds": {
+   "scale": 0.9,
+   "offset": [
+    416,
+    110
+   ]
+  }
+ },
  "version": 0.4
 }

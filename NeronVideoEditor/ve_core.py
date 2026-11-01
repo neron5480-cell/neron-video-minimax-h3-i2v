@@ -60,11 +60,20 @@ def _box(b, allow_none=True):
     return out
 
 
+def ai_seconds(sec):
+    """Длина AI-куска на сетке модели (24 к/с, 17k+5 кадров, 124–362) → секунды.
+    AI piece length snapped to the model grid."""
+    n = max(124, int(round(float(sec) * 24)))
+    while n % 17 != 5:
+        n += 1
+    return min(362, n) / 24.0
+
+
 def norm_event(e):
     if not isinstance(e, dict):
         return None
     kind = e.get("kind")
-    if kind not in ("picture", "insert"):
+    if kind not in ("picture", "insert", "ai"):
         return None
     ev = {
         "kind": kind,
@@ -85,7 +94,25 @@ def norm_event(e):
         "sound": bool(e.get("sound", False)),
         "speed": _f(e.get("speed"), 1.0, 0.1, 8.0),
         "off": bool(e.get("off", False)),
+        "id": str(e.get("id") or ""),
     }
+    if kind == "ai":
+        # AI-кусок: длина = длина генерации (5–15 с), во весь кадр по умолчанию
+        ev["dur"] = ai_seconds(_f(e.get("dur"), 6.0, 5.0, 15.0))
+        ev["pic"] = int(_f(e.get("pic"), 0, 0, 4))
+        ev["pic_at"] = _f(e.get("pic_at"), 2.0, 0.0, 15.0)
+        ev["start"] = e.get("start") if e.get("start") in ("motion", "frame", "none") else "motion"
+        ev["back"] = bool(e.get("back", False))
+        ev["style"] = str(e.get("style") or "dissolve")
+        ev["text"] = str(e.get("text") or "")[:4000]
+        ev["sound"] = "ai" if e.get("sound") == "ai" else "orig"
+        ev["keep_bw"] = bool(e.get("keep_bw", True))
+        ev["seed"] = int(_f(e.get("seed"), 0, 0, 1e9))
+        ev["tin"] = e.get("tin") if e.get("tin") in TRANSITIONS else "dissolve"
+        ev["tout"] = e.get("tout") if e.get("tout") in TRANSITIONS else "dissolve"
+        ev["din"] = _f(e.get("din"), 0.3, 0.0, 3.0)
+        ev["dout"] = _f(e.get("dout"), 0.3, 0.0, 3.0)
+        ev["src"] = 0
     if kind == "insert":
         ev["src"] = int(_f(e.get("src"), 2, 2, 3))
     # переходы не длиннее самого события / transitions never longer than the event
@@ -300,7 +327,7 @@ def _rgb(x):
     return x.float()
 
 
-def render(state, main, videos, images, device, progress=None):
+def render(state, main, videos, images, device, progress=None, ai=None):
     """main: Source видео 1. videos: {2: Source, 3: Source}. images: {1..4: [H,W,3]}.
     Возвращает тензор кадров [N,H,W,3] на CPU — та же длина и размер, что у видео 1."""
     N = main.n
@@ -311,6 +338,8 @@ def render(state, main, videos, images, device, progress=None):
         if ev["kind"] == "picture" and ev["src"] not in images:
             continue
         if ev["kind"] == "insert" and ev["src"] not in videos:
+            continue
+        if ev["kind"] == "ai" and (not ai or ev["id"] not in ai):
             continue
         evs.append(ev)
 
@@ -324,6 +353,9 @@ def render(state, main, videos, images, device, progress=None):
                 img = _rgb(images[ev["src"]]).to(device)
                 cache[k] = place(_crop(img, ev["crop"]), ev["area"], ev["fit"], H, W)
             return cache[k]
+        if ev["kind"] == "ai":
+            img = _rgb(ai[ev["id"]].at(t - ev["t"])).to(device)
+            return place(img, ev["area"], "cover", H, W)
         src = videos[ev["src"]]
         st = ev["s"] + (t - ev["t"]) * ev["speed"]
         img = _rgb(src.at(st)).to(device)
@@ -410,7 +442,7 @@ def _fit_len(x, n):
     return np.pad(x, ((0, 0), (0, n - x.shape[1])))
 
 
-def mix_audio(state, duration, main_audio, video_audio, ext_audio, sr=44100):
+def mix_audio(state, duration, main_audio, video_audio, ext_audio, sr=44100, ai_audio=None):
     """Звук итогового ролика: длина = длина видео 1.
     video_audio: {2: AUDIO, 3: AUDIO} — для врезок со звуком."""
     n = max(1, int(round(duration * sr)))
@@ -435,10 +467,17 @@ def mix_audio(state, duration, main_audio, video_audio, ext_audio, sr=44100):
 
     # врезки со звуком: плавно перехватывают звук на время события
     times = np.arange(n, dtype=np.float64) / sr
+    ai_audio = ai_audio or {}
     for ev in state["events"]:
-        if ev["kind"] != "insert" or not ev["sound"]:
+        if ev["kind"] == "ai":
+            if ev["sound"] != "ai" or ev["id"] not in ai_audio:
+                continue
+            a = prep(ai_audio[ev["id"]])
+            ev = dict(ev, s=0.0, speed=1.0)
+        elif ev["kind"] != "insert" or not ev["sound"]:
             continue
-        a = prep(video_audio.get(ev["src"]))
+        else:
+            a = prep(video_audio.get(ev["src"]))
         if a is None:
             continue
         i0 = int(round(ev["t"] * sr))
