@@ -185,14 +185,14 @@
 
 ---
 
-## ✂ Проект 7: NERON VIDEO EDITOR — видео → видео (v0.3, тест, ветка dev)
+## ✂ Проект 7: NERON VIDEO EDITOR — видео → видео (v0.4, тест, ветка dev)
 
 👋 Ноды лежат в папке **[`NeronVideoEditor`](NeronVideoEditor/)**.
 
 *   **🎬 Видео ×3** и **🖼 Картинки ×4** — кубики входов: подключаете обычные Load Video / Load Image, звук и fps подтягиваются сами.
 *   **🎛 Монтажный пульт** — видео 1 идёт как есть, а в нужные секунды поверх **проявляются картинки и куски видео 2/3**: во весь кадр или в своей области, с наплывом, проявлением, шторкой, через затемнение.
 *   Вне событий и областей — **оригинал кадр в кадр**. Размер, длина и fps — как у видео 1. Звук: свой, видео 1 или из Audio Studio.
-*   **✨ AI-правка** (нода ✨ AI-движок): выбрали кусок, написали, что сделать (картинка-образец — по желанию), MiniMax H3 правит только этот кусок.
+*   **✨ AI-правка видео** (нода ✨ AI-движок): выбрали кусок, обвели, где менять, написали, что сделать — MiniMax H3 перерисует только внутри рамки, остальное — ваше видео.
 
 Подробно — в **[README внутри NeronVideoEditor](NeronVideoEditor/README.md)**.
 
@@ -412,14 +412,14 @@ Details in the **[README inside NeronStage](NeronStage/README.md)**.
 
 ---
 
-## ✂ Project 7: NERON VIDEO EDITOR — video → video (v0.3, test, dev branch)
+## ✂ Project 7: NERON VIDEO EDITOR — video → video (v0.4, test, dev branch)
 
 👋 The nodes live in the **[`NeronVideoEditor`](NeronVideoEditor/)** folder.
 
 *   **🎬 Video ×3** and **🖼 Pictures ×4** are input cubes: wire ordinary Load Video / Load Image; audio and fps wire themselves.
 *   **🎛 Edit Pult** — video 1 plays as is, and at chosen seconds **pictures and pieces of videos 2/3 appear on top**: full frame or in their own area, with dissolve, reveal, wipe or dip to black.
 *   Outside events and areas — **the original, frame for frame**. Size, length and fps match video 1. Sound: video 1, your own, or from Audio Studio.
-*   **✨ AI edit** (✨ AI Engine node): pick a piece, write what to do (optional reference picture), MiniMax H3 edits only that piece.
+*   **✨ AI video edit** (✨ AI Engine node): pick a piece, outline where to change, write what to do — MiniMax H3 repaints only inside the box.
 
 Details in the **[README inside NeronVideoEditor](NeronVideoEditor/README.md)**.
 

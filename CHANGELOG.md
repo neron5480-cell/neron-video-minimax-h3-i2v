@@ -1,5 +1,19 @@
 # Changelog / История изменений
 
+## ✨ Neron Video Editor v0.4: AI-правка видео по маске / masked AI video edit (dev, 01.11.2026)
+
+**RU:**
+- Цель — править само видео, а не делать новое. AI-кусок теперь — **перерисовка внутри рамки**: MiniMax H3 (ref2va) + патч **Fun ControlNet Union** (`MiniMaxH3FunControlNetApply`, mask + source_video, по документации Comfy). Модель видит ваше видео вокруг рамки и перерисовывает только её; пульт ещё раз накладывает рамку на оригинал — вне её кадр в кадр.
+- «Где менять» (рамка) у AI-куска обязательна. Картинки внутри куска — образцы `<Picture N>` с автоматическим временем.
+- Короткому куску модель досматривает настоящее продолжение (генерация от 5 с — на этом она обучена), в ролик идёт только сам кусок.
+- AI-движок: новый выбор патча (`models/model_patches`), турбо-LoRA для ref2va (4 шага). Нет файла — ошибка со ссылкой, что и куда скачать.
+
+**EN:**
+- Goal: edit the real video. The AI piece is now a **masked repaint**: MiniMax H3 (ref2va) + the **Fun ControlNet Union** patch with mask + source_video (per Comfy docs). Only the box is repainted; outside it — the original, frame for frame.
+- The “where to change” box is required. Pictures inside the piece are `<Picture N>` references with automatic timing.
+- Short pieces get the real continuation as context (generation from 5 s); only the piece goes into the clip.
+- AI Engine: patch picker, ref2va turbo LoRA (4 steps); missing files give an error with the download link.
+
 ## ✨ Neron Video Editor v0.3: AI-правка куска / AI edit of a piece (dev, 01.11.2026)
 
 **RU:**

@@ -257,7 +257,8 @@ KEYS = {
     "clip": (("qwen3vl",), ()),
     "vae_video": (("video_vae",), ()),
     "vae_audio": (("audio_vae",), ()),
-    "turbo_lora": (("turbo",), ()),
+    "turbo_lora": (("ref2v", "turbo"), ()),
+    "patch": (("controlnet",), ()),
 }
 
 
@@ -283,15 +284,6 @@ def _pick(files, wanted, kind=None):
     return files[0]
 
 
-def _pick_unet(unets):
-    from . import ve_ai
-    f = _pick(unets, ve_ai.UNET_NAME, "unet")
-    if "ref2va" in _base(f):
-        return f
-    return _pick(unets, ve_ai.UNET_FALLBACK, None) if ve_ai.UNET_FALLBACK in [_base(x) for x in unets] else \
-        next((x for x in unets if "fl2va" in _base(x)), f)
-
-
 def _check_models(models, turbo):
     """Явно чужие модели — понятная ошибка, а не странный результат через 10 минут.
     Clearly wrong models get a clear error instead of a strange result 10 minutes later."""
@@ -300,9 +292,18 @@ def _check_models(models, turbo):
         raise _err(f"текстовый энкодер {models['clip']} не от MiniMax H3. Нужен qwen3vl_32b_minimax_h3_… "
                    "Включите «⚙ эксперт» в ✨ AI-движке и выберите его",
                    "this text encoder is not MiniMax H3's; pick qwen3vl_32b_minimax_h3_… under “⚙ expert”")
-    if turbo and "turbo" not in _base(models.get("turbo_lora") or ""):
-        raise _err("для ⚡ Турбо нужна турбо-LoRA H3 (…fl2v_turbo…) — выберите её в «⚙ эксперт» или режим Качество",
-                   "Turbo needs the H3 turbo LoRA — pick it under “⚙ expert” or use Quality")
+    from . import ve_ai
+    if "ref2va" not in _base(models["unet"]):
+        raise _err(f"для правки по маске нужна модель ref2va ({ve_ai.UNET_NAME}): {ve_ai.UNET_URL}",
+                   f"masked editing needs the ref2va model: {ve_ai.UNET_URL}")
+    if "controlnet" not in _base(models.get("patch") or ""):
+        raise _err(f"выбран не тот патч. Нужен {ve_ai.PATCH_NAME}: {ve_ai.PATCH_URL}",
+                   f"wrong patch; need {ve_ai.PATCH_NAME}: {ve_ai.PATCH_URL}")
+    tl = _base(models.get("turbo_lora") or "")
+    if turbo and not ("turbo" in tl and "ref2v" in tl):
+        raise _err(f"для ⚡ Турбо нужна турбо-LoRA для ref2va ({ve_ai.TURBO_LORA_NAME}): {ve_ai.TURBO_URL} — "
+                   "или выберите режим Качество",
+                   f"Turbo needs the ref2va turbo LoRA: {ve_ai.TURBO_URL} — or use Quality")
 
 
 class NeronVEAI:
@@ -310,6 +311,7 @@ class NeronVEAI:
     def INPUT_TYPES(cls):
         from . import ve_ai
         unets, clips, vaes, loras = _files("diffusion_models"), _files("text_encoders"), _files("vae"), _files("loras")
+        patches = _files("model_patches")
         return {"required": {
             "mode": (ve_ai.MODES, {"default": ve_ai.MODES[0], "tooltip":
                      "⚡ Турбо — быстро (12 шагов, турбо-LoRA), для проб и черновиков. Качество — 40 шагов, примерно "
@@ -323,13 +325,17 @@ class NeronVEAI:
                      "Другое число — другой вариант того же перехода. / Another number — another take."}),
             "expert": ("BOOLEAN", {"default": False, "label_on": "⚙ эксперт / expert", "label_off": "⚙ эксперт / expert",
                        "tooltip": "Показать выбор моделей. / Show model files."}),
-            "unet_model": (unets, {"default": _pick_unet(unets), "tooltip":
-                           "Лучше ref2va — модель правки по образцам (minimax_h3_ref2va_…). Можно и fl2va. "
-                           "/ Best is ref2va — the reference-editing model; fl2va also works."}),
+            "unet_model": (unets, {"default": _pick(unets, ve_ai.UNET_NAME, "unet"), "tooltip":
+                           "Модель ref2va (minimax_h3_ref2va_…) — с ней работает патч перерисовки по маске. "
+                           "/ The ref2va model, used with the masked-repaint patch."}),
             "clip_model": (clips, {"default": _pick(clips, ve_ai.CLIP_NAME, "clip")}),
             "vae_video_model": (vaes, {"default": _pick(vaes, ve_ai.VAE_VIDEO_NAME, "vae_video")}),
             "vae_audio_model": (vaes, {"default": _pick(vaes, ve_ai.VAE_AUDIO_NAME, "vae_audio")}),
-            "turbo_lora_model": (loras, {"default": _pick(loras, ve_ai.TURBO_LORA_NAME, "turbo_lora")}),
+            "turbo_lora_model": (loras, {"default": _pick(loras, ve_ai.TURBO_LORA_NAME, "turbo_lora"), "tooltip":
+                                 "Турбо-LoRA для ref2va: minimax_h3_ref2v_turbo_4step… / Turbo LoRA for ref2va"}),
+            "patch_model": (patches, {"default": _pick(patches, ve_ai.PATCH_NAME, "patch"), "tooltip":
+                            "Патч перерисовки по маске: minimax_h3_fun_controlnet_union… (папка models/model_patches) "
+                            "/ The masked-repaint patch (models/model_patches)"}),
         }}
 
     RETURN_TYPES = ("NERON_VE_AI",)
@@ -341,10 +347,15 @@ class NeronVEAI:
                    "изменились. / Settings for the pult's AI pieces (MiniMax H3); the pult generates only changed events.")
 
     def pack(self, mode, size, seed, expert=False, unet_model=None, clip_model=None, vae_video_model=None,
-             vae_audio_model=None, turbo_lora_model=None):
+             vae_audio_model=None, turbo_lora_model=None, patch_model=None):
         from . import ve_ai
+        if not patch_model or patch_model == NOT_FOUND:
+            raise _err(f"нет патча перерисовки по маске. Скачайте {ve_ai.PATCH_NAME} в models/model_patches: "
+                       f"{ve_ai.PATCH_URL} — и перезапустите ComfyUI",
+                       f"the masked-repaint patch is missing; download it to models/model_patches: {ve_ai.PATCH_URL}")
         need = {"unet": (unet_model, "diffusion_models"), "clip": (clip_model, "text_encoders"),
-                "vae_video": (vae_video_model, "vae"), "vae_audio": (vae_audio_model, "vae")}
+                "vae_video": (vae_video_model, "vae"), "vae_audio": (vae_audio_model, "vae"),
+                "patch": (patch_model, "model_patches")}
         if mode == ve_ai.MODES[0]:
             need["turbo_lora"] = (turbo_lora_model, "loras")
         models = {}

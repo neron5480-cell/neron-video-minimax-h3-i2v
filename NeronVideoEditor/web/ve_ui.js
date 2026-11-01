@@ -150,7 +150,7 @@ const HELP_PULT = `
 <b>Звук:</b> видео 1, свой (провод <i>audio</i>, например из Audio Studio), смешать или без звука. У врезки можно включить её звук — он плавно перехватит звук на время врезки.<br>
 <b>Выходы:</b> <i>images, audio, fps</i> → Neron Video Combine или Video Combine. Пульт и сам сохраняет ролик в <i>output/Neron_Videos</i> (галочка 💾).<br>
 <b>🔧 Эксперт:</b> мягкость края, прозрачность, «вписать/заполнить», сила подгонки цвета, скорость врезки, свой fps, громкости.<br>
-<b>✨ AI-правка</b> (нужна нода <b>✨ AI-движок</b> на входе <i>ai</i>): <b>+ ✨ AI</b> → растяните кусок на полоске (2–15 с) → напишите, <b>что сделать</b> («над спиной спасателя расправляются прозрачные белые крылья ангела»). Модель MiniMax H3 (ref2va) получает кусок как <i>&lt;Video 1&gt;</i>. Нужен образец — положите <b>картинку внутрь куска</b>: она станет <i>&lt;Picture 1&gt;</i>, а время её появления и исчезновения пульт впишет в промпт сам. <b>Область</b> — из AI берётся только она. Вне куска — оригинал. Готовый кусок запоминается.<br>
+<b>✨ AI-правка видео</b> (нужна нода <b>✨ AI-движок</b> на входе <i>ai</i>): <b>+ ✨ AI</b> → растяните кусок на полоске → <b>обведите на кадре, где менять</b> (золотая рамка, с запасом) → напишите, <b>что сделать</b> («над спиной спасателя расправляются прозрачные белые крылья ангела»). MiniMax H3 перерисует <b>только внутри рамки</b>, видя ваше видео вокруг, — остальное остаётся вашим видео. Нужен образец — положите <b>картинку внутрь куска</b>: она станет <i>&lt;Picture 1&gt;</i>, время пульт впишет сам. Готовый кусок запоминается.<br>
 <b>Длина:</b> монтаж работает с любой длиной, но всё видео держится в памяти: 15 с Full HD ≈ 11 ГБ ОЗУ. Длинные ролики лучше резать в Load Video (frame_load_cap / skip_first_frames).
 <h3>🎛 Edit Pult — how to use</h3>
 <b>1.</b> Connect <b>Load Video</b> to the <b>🎬 Video ×3</b> cube: <b>video 1</b> is the lead (the one we edit); videos 2 and 3 are sources for inserts. Audio and fps wire themselves.<br>
@@ -161,7 +161,7 @@ const HELP_PULT = `
 <b>6.</b> For an insert, <b>✂ Piece</b> selects which part of the source video to take, and from which source second.<br>
 <b>7.</b> Press Queue. <b>Result</b> shows the finished clip, <b>Before/After</b> a compare shutter.<br><br>
 <b>Main rule:</b> everything outside events and their areas is video 1, frame for frame. Size, length and fps match video 1.<br>
-<b>✨ AI edit</b> (needs <b>✨ AI Engine</b> on the <i>ai</i> input): <b>+ ✨ AI</b> → stretch the piece (2–15 s) → write <b>what to do</b>. MiniMax H3 (ref2va) gets the piece as <i>&lt;Video 1&gt;</i>. For a reference, put a <b>picture inside the piece</b>: it becomes <i>&lt;Picture 1&gt;</i> and the pult writes its times into the prompt. <b>Area</b> — only it is taken from AI. Outside the piece — the original.<br>
+<b>✨ AI video edit</b> (needs <b>✨ AI Engine</b> on <i>ai</i>): <b>+ ✨ AI</b> → stretch the piece → <b>outline where to change</b> (gold box, with room) → write <b>what to do</b>. MiniMax H3 repaints <b>only inside the box</b>, seeing your video around it; the rest stays your video. For a reference, put a <b>picture inside the piece</b> (<i>&lt;Picture 1&gt;</i>, timing automatic).<br>
 <b>Length:</b> any length works, but the whole video is held in memory: 15 s Full HD ≈ 11 GB RAM. Trim long clips in Load Video.
 `;
 const HELP_VIDEOS = `
@@ -190,14 +190,14 @@ const HELP_AI = `
 <b>Размер:</b> меньше — быстрее; кусок всё равно растянется до размера видео 1.<br>
 <b>Сид:</b> другое число — другой вариант.<br>
 Модели — те же, что у H3 Engine (MiniMax H3 fl2va). Выбор файлов — под «⚙ эксперт».<br>
-<b>Модель:</b> лучше ref2va (правка по образцам), можно fl2va. Нода сама находит файлы по названию.
+<b>Нужны файлы</b> (нода находит их по названию, нет — скажет, что скачать): модель <i>minimax_h3_ref2va…</i>, патч <i>minimax_h3_fun_controlnet_union…</i> (models/model_patches), для Турбо — LoRA <i>minimax_h3_ref2v_turbo_4step…</i>.
 <h3>✨ AI Engine</h3>
 Connect <b>ai</b> to the Edit Pult's <b>ai</b> input. The engine computes nothing itself: the pult generates only the <b>✨ AI</b> events that changed. Finished pieces are remembered, so editing the cut doesn't regenerate them.<br>
 <b>Mode:</b> ⚡ Turbo — fast, for tries; Quality — slower and cleaner. <b>Size:</b> smaller is faster. <b>Seed:</b> another number — another take.<br>
 Models are the same as H3 Engine (MiniMax H3 fl2va); file choice is under “⚙ expert”.<br>
-<b>Model:</b> ref2va (reference editing) is best; fl2va also works. Files are found by name.
+<b>Files</b> (found by name; if missing the node says what to download): <i>minimax_h3_ref2va…</i>, the patch <i>minimax_h3_fun_controlnet_union…</i> (models/model_patches), for Turbo the LoRA <i>minimax_h3_ref2v_turbo_4step…</i>.
 `;
-const AI_EXPERT = ["unet_model", "clip_model", "vae_video_model", "vae_audio_model", "turbo_lora_model"];
+const AI_EXPERT = ["unet_model", "clip_model", "vae_video_model", "vae_audio_model", "turbo_lora_model", "patch_model"];
 function setupAI(node) {
     injectStyles();
     const bar = el("div", "nve-cube");
@@ -885,7 +885,7 @@ function setupPult(node) {
             g.drawImage(lay, fr.x, fr.y, fr.w, fr.h);
             g.restore();
         }
-        if (ev && ev.area && !playing) drawBox(ev.area, ev.kind === "picture" ? COL.picture : COL.insert, ev.kind === "picture" ? "🖼" : "🎬");
+        if (ev && ev.area && !playing) drawBox(ev.area, ev.kind === "picture" ? COL.picture : ev.kind === "ai" ? COL.ai : COL.insert, ev.kind === "picture" ? "🖼" : ev.kind === "ai" ? "✨" : "🎬");
     }
 
     // AI-кусок ещё не сгенерирован: набросок того, что будет / AI piece not generated yet: a sketch
@@ -1158,12 +1158,14 @@ function setupPult(node) {
             const D = dur1();
             const ev = {
                 id: newId(), kind: "ai", t: clamp(Math.round(curT * 10) / 10, 0, Math.max(0, D - 2)), dur: aiDur(Math.min(6, Math.max(2, D - curT))),
-                text: "", sound: "orig", seed: 0, tin: "dissolve", din: 0.3, tout: "dissolve", dout: 0.3, area: null, opacity: 1,
+                text: "", sound: "orig", seed: 0, tin: "dissolve", din: 0.3, tout: "dissolve", dout: 0.3, opacity: 1,
+                area: { x: 0.25, y: 0.15, w: 0.5, h: 0.45, shape: "ellipse", feather: 0.06 },
             };
             state.events.push(ev);
             save();
             select(ev.id);
-            setStatus(T("✨ Кусок выбран. Растяните его на полоске и напишите справа, что сделать", "✨ Piece chosen. Stretch it on the strip and write on the right what to do"), "ok");
+            setStatus(T("✨ Кусок выбран: растяните его на полоске, обведите на кадре, где менять, и напишите, что сделать",
+                "✨ Piece chosen: stretch it on the strip, outline where to change on the frame, write what to do"), "ok");
             setTimeout(() => side.querySelector("textarea")?.focus(), 50);
             return;
         }
@@ -1396,7 +1398,7 @@ function setupPult(node) {
 
     function aiPanel(ev) {
         const box = el("div", "nve-sec");
-        headRow(box, "✨ " + T("AI-ПРАВКА КУСКА", "AI EDIT OF A PIECE"), ev);
+        headRow(box, "✨ " + T("AI-ПРАВКА ВИДЕО", "AI VIDEO EDIT"), ev);
         if (!upstream(node, "ai")) box.appendChild(el("div", "nve-small", "⚠ " + T("Подключите ноду ✨ AI-движок ко входу ai пульта.",
             "Connect the ✨ AI Engine node to the pult's ai input.")));
         const r1 = el("div", "nve-row");
@@ -1431,20 +1433,18 @@ function setupPult(node) {
             box.appendChild(el("div", "nve-small", "🖼 " + T("Нужна картинка-образец? Положите «+ 🖼 Картинка» внутрь этого куска — время появления и исчезновения пульт впишет сам. Нет картинки — модель нарисует по словам.",
                 "Need a reference? Put a “+ 🖼 Picture” inside this piece — the pult writes its times itself. No picture — the model draws from words.")));
         }
-        box.appendChild(el("div", "nve-small", T("Вне куска видео не меняется.", "Outside the piece the video is untouched.")));
-        // область / area
+        box.appendChild(el("div", "nve-small", T("Вне куска и вне рамки видео не меняется.", "Outside the piece and the box the video is untouched.")));
+        // где менять — обязательно / where to change — required
+        if (!ev.area) { ev.area = { x: 0.25, y: 0.15, w: 0.5, h: 0.45, shape: "ellipse", feather: 0.06 }; save(); dirty = true; }
+        box.appendChild(el("div", "nve-h", "◯ " + T("ГДЕ МЕНЯТЬ", "WHERE TO CHANGE")));
+        box.appendChild(el("div", "nve-small", T("Золотая рамка на кадре: двигайте и тяните её (Shift — с пропорцией). Модель перерисует только внутри, остальное — ваше видео. Берите с запасом: крыльям нужно место.",
+            "The gold box on the frame: move and resize it (Shift keeps proportion). The model repaints only inside; the rest is your video. Leave room: wings need space.")));
         const r7 = el("div", "nve-row");
-        r7.appendChild(el("span", "nve-lbl", T("Взять из AI", "Take from AI")));
-        r7.appendChild(seg([
-            ["full", T("Весь кадр", "Full"), T("Кусок встаёт целиком", "The whole piece goes in")],
-            ["area", T("Область", "Area"), T("Из AI берётся только эта область, остальное — оригинал. Двигайте и тяните её на кадре", "Only this area is taken from AI, the rest stays original. Move and resize it on the frame")],
-        ], () => (ev.area ? "area" : "full"), (v) => {
-            if (v === "full") ev.area = null;
-            else if (!ev.area) ev.area = { x: 0.2, y: 0.05, w: 0.6, h: 0.6, shape: "ellipse", feather: 0.08 };
-        }));
+        r7.appendChild(el("span", "nve-lbl", T("Форма", "Shape")));
+        r7.appendChild(seg([["ellipse", "◯ " + T("Овал", "Oval")], ["rect", "▭ " + T("Прямоуг.", "Rect")]], () => ev.area.shape, (v) => { ev.area.shape = v; }));
         box.appendChild(r7);
-        if (ev.area) box.appendChild(slider(T("Мягкий край", "Soft edge"), () => ev.area.feather ?? 0.08, (v) => { ev.area.feather = v; }, 0, 0.3, 0.01,
-            T("Насколько мягко AI-область переходит в оригинал", "How softly the AI area blends into the original"), (v) => Math.round(v * 100) + "%"));
+        box.appendChild(slider(T("Мягкий край", "Soft edge"), () => ev.area.feather ?? 0.06, (v) => { ev.area.feather = v; }, 0, 0.3, 0.01,
+            T("Насколько мягко перерисованное переходит в оригинал", "How softly the repaint blends into the original"), (v) => Math.round(v * 100) + "%"));
         const r8 = el("div", "nve-row");
         r8.appendChild(el("span", "nve-lbl", "🔊 " + T("Звук", "Sound")));
         r8.appendChild(seg([["orig", T("Оригинал", "Original"), T("Звук видео 1 не трогаем", "Keep video 1 sound")],
