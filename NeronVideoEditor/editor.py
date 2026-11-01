@@ -116,6 +116,48 @@ def _fps_from_info(info):
     return None
 
 
+def _real_fps(path):
+    """Настоящая средняя частота по меткам времени файла (кадров / секунд).
+    Real average frame rate from the file's timestamps (frames / seconds)."""
+    try:
+        import av
+        with av.open(path) as c:
+            s = c.streams.video[0]
+            r = s.average_rate
+            if r and float(r) > 0:
+                return float(r)
+            if s.frames and s.duration and s.time_base:
+                return s.frames / float(s.duration * s.time_base)
+    except Exception:
+        pass
+    return None
+
+
+def _check_fps(fps, info, audio, slot):
+    """Load Video (VHS) берёт fps из «паспорта» файла (OpenCV). У скачанных и телефонных
+    роликов паспорт часто врёт (30 вместо ~28): видео выходит ускоренным. Сверяем с
+    настоящими метками времени и при расхождении берём настоящую частоту.
+    VHS reads fps from the file header via OpenCV; downloaded/phone clips often lie
+    (30 instead of ~28), which speeds the video up. Compare with real timestamps."""
+    if not fps or not isinstance(info, dict):
+        return fps, None
+    path = getattr(audio, "file", None)          # VHS: ленивый звук знает путь / lazy audio knows the path
+    try:
+        nominal = float(info.get("source_fps") or 0)
+    except Exception:
+        nominal = 0.0
+    if not path or not isinstance(path, str) or not os.path.isfile(path) or nominal <= 0:
+        return fps, None
+    real = _real_fps(path)
+    if not real or abs(real - nominal) / nominal < 0.005:
+        return fps, None
+    fixed = fps * real / nominal
+    note = (f"видео {slot}: в файле написано {nominal:.3f} fps, а по настоящему времени {real:.3f} — "
+            f"взято {fixed:.3f}, чтобы не ускорялось / video {slot}: header says {nominal:.3f} fps, "
+            f"real timing {real:.3f} — using {fixed:.3f} so it isn't sped up")
+    return fixed, note
+
+
 def _from_video_obj(v):
     """VIDEO (ядро ComfyUI, Load Video) → (кадры, звук, fps)."""
     get = getattr(v, "get_components", None)
@@ -157,6 +199,7 @@ class NeronVEVideos:
             if v is None:
                 continue
             audio, fps = kw.get(f"audio_{i}"), _fps_from_info(kw.get(f"info_{i}"))
+            fps, note = _check_fps(fps, kw.get(f"info_{i}"), audio, i)
             if not torch.is_tensor(v):
                 r = _from_video_obj(v)
                 if r is None:
@@ -167,7 +210,7 @@ class NeronVEVideos:
                 fps = fps or f2
             if v.ndim != 4 or v.shape[0] < 1:
                 raise _err(f"видео {i}: нет кадров", f"video {i}: no frames")
-            out[i] = {"frames": v, "audio": audio, "fps": fps, "fps_known": fps is not None}
+            out[i] = {"frames": v, "audio": audio, "fps": fps, "fps_known": fps is not None, "note": note}
         return ({"neron": "ve_videos", "videos": out},)
 
 
@@ -304,7 +347,7 @@ class NeronVEPult:
             raise _err("подключите видео 1 (ведущее) к кубику 🎬 Видео ×3",
                        "connect video 1 (the lead) to the 🎬 Video ×3 cube")
 
-        notes = []
+        notes = [v["note"] for _, v in sorted(vids.items()) if v.get("note")]
         v1 = vids[1]
         fps1 = state["fps1"] or v1["fps"] or core.DEFAULT_FPS
         if not v1["fps"] and not state["fps1"]:

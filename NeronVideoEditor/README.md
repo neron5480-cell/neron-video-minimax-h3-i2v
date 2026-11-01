@@ -31,6 +31,7 @@
 * Нейросети здесь пока нет — это монтаж. AI-переходы, оживление рисунков и правка через MiniMax H3 — следующие шаги.
 * Всё видео держится в памяти ComfyUI: 15 с Full HD 30 fps ≈ 11 ГБ ОЗУ на вход и столько же на выход. Длинные ролики режьте в Load Video (`frame_load_cap`, `skip_first_frames`).
 * Если `video_info` не подключён, fps видео 1 берётся 24 (пульт предупредит); в эксперте можно задать свой.
+* У скачанных и телефонных роликов «паспорт» файла часто врёт о частоте кадров (30 вместо ~28), и Load Video ускоряет видео. Кубик сверяет частоту с настоящими метками времени и берёт настоящую — в строке состояния пульта будут оба числа.
 
 ---
 
@@ -46,4 +47,4 @@ Edit a ready video without spoiling the rest: video 1 plays as is, frame for fra
 
 **How to use:** Load Video → **🎬 Video ×3**, pictures → **🖼 Pictures ×4**, both cubes → **🎛 Pult**. Put the playhead where you need and press **+ 🖼 Picture** or **+ 🎬 Insert**; drag and stretch the event on the strip. On the right choose how it **appears** and **leaves** (Cut, Dissolve, Reveal, Wipe, Dip to black), **where** (full frame or an area you move on the frame), **✂ Piece** of the source, **match colour**, **insert sound**. Queue → **Result** and **Before/After** tabs.
 
-**Limits:** no neural network yet (pure editing). The whole video is held in memory: 15 s Full HD 30 fps ≈ 11 GB RAM in and the same out — trim long clips in Load Video. Without `video_info`, video 1 fps is taken as 24 (the pult warns); set your own in expert mode.
+**Limits:** no neural network yet (pure editing). The whole video is held in memory: 15 s Full HD 30 fps ≈ 11 GB RAM in and the same out — trim long clips in Load Video. Without `video_info`, video 1 fps is taken as 24 (the pult warns); set your own in expert mode. Downloaded/phone clips often have a wrong fps in the header, which makes Load Video speed them up; the cube checks the real timestamps and uses the real rate (both numbers are shown in the pult status).
