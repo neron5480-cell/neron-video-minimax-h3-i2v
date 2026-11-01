@@ -245,7 +245,8 @@ def _hash(*parts):
     for p in parts:
         if torch.is_tensor(p):
             flat = p.reshape(-1)
-            idx = torch.linspace(0, flat.numel() - 1, steps=min(4097, flat.numel())).long()
+            k = min(4097, flat.numel())  # отпечаток — целыми числами / integer sample points (float linspace overflowed)
+            idx = torch.arange(k, dtype=torch.int64) * (flat.numel() - 1) // max(1, k - 1)
             h.update(flat[idx].float().cpu().numpy().tobytes())
             h.update(str(tuple(p.shape)).encode())
         else:

@@ -251,13 +251,53 @@ def _files(kind):
     return f or [NOT_FOUND]
 
 
-def _pick(files, wanted):
+# по каким словам узнать нужный файл / keywords that identify the right file
+KEYS = {
+    "unet": (("fl2va",), ("ref2va",)),
+    "clip": (("qwen3vl",), ()),
+    "vae_video": (("video_vae",), ()),
+    "vae_audio": (("audio_vae",), ()),
+    "turbo_lora": (("turbo",), ()),
+}
+
+
+def _base(f):
+    return f.replace("\\", "/").split("/")[-1].lower()
+
+
+def _pick(files, wanted, kind=None):
+    """Точное имя → файл со словами-приметами (MiniMax/H3) → первый. Раньше сразу брался первый
+    файл списка — и попадалась чужая модель (ref2va, энкодер Flux).
+    Exact name → a file with the right keywords → first file."""
     if wanted in files:
         return wanted
     for f in files:
-        if f.replace("\\", "/").split("/")[-1] == wanted:
+        if _base(f) == wanted.lower():
             return f
+    if kind in KEYS:
+        need, avoid = KEYS[kind]
+        cands = [f for f in files if all(k in _base(f) for k in need) and not any(a in _base(f) for a in avoid)]
+        h3 = [f for f in cands if "minimax" in _base(f) or "h3" in _base(f)]
+        if h3 or cands:
+            return (h3 or cands)[0]
     return files[0]
+
+
+def _check_models(models, turbo):
+    """Явно чужие модели — понятная ошибка, а не странный результат через 10 минут.
+    Clearly wrong models get a clear error instead of a strange result 10 minutes later."""
+    u, c = _base(models["unet"]), _base(models["clip"])
+    if "ref2va" in u:
+        raise _err(f"выбрана модель {models['unet']} — это ref2va (для правки по образцу). Для AI-перехода нужна "
+                   "fl2va (minimax_h3_fl2va_…). Включите «⚙ эксперт» в ✨ AI-движке и выберите её",
+                   "ref2va is selected; the AI transition needs the fl2va model — pick it under “⚙ expert”")
+    if "qwen" not in c:
+        raise _err(f"текстовый энкодер {models['clip']} не от MiniMax H3. Нужен qwen3vl_32b_minimax_h3_… "
+                   "Включите «⚙ эксперт» в ✨ AI-движке и выберите его",
+                   "this text encoder is not MiniMax H3's; pick qwen3vl_32b_minimax_h3_… under “⚙ expert”")
+    if turbo and "turbo" not in _base(models.get("turbo_lora") or ""):
+        raise _err("для ⚡ Турбо нужна турбо-LoRA H3 (…fl2v_turbo…) — выберите её в «⚙ эксперт» или режим Качество",
+                   "Turbo needs the H3 turbo LoRA — pick it under “⚙ expert” or use Quality")
 
 
 class NeronVEAI:
@@ -278,12 +318,12 @@ class NeronVEAI:
                      "Другое число — другой вариант того же перехода. / Another number — another take."}),
             "expert": ("BOOLEAN", {"default": False, "label_on": "⚙ эксперт / expert", "label_off": "⚙ эксперт / expert",
                        "tooltip": "Показать выбор моделей. / Show model files."}),
-            "unet_model": (unets, {"default": _pick(unets, ve_ai.UNET_NAME), "tooltip":
+            "unet_model": (unets, {"default": _pick(unets, ve_ai.UNET_NAME, "unet"), "tooltip":
                            "Модель MiniMax H3 fl2va (та же, что в H3 Engine). / The MiniMax H3 fl2va model."}),
-            "clip_model": (clips, {"default": _pick(clips, ve_ai.CLIP_NAME)}),
-            "vae_video_model": (vaes, {"default": _pick(vaes, ve_ai.VAE_VIDEO_NAME)}),
-            "vae_audio_model": (vaes, {"default": _pick(vaes, ve_ai.VAE_AUDIO_NAME)}),
-            "turbo_lora_model": (loras, {"default": _pick(loras, ve_ai.TURBO_LORA_NAME)}),
+            "clip_model": (clips, {"default": _pick(clips, ve_ai.CLIP_NAME, "clip")}),
+            "vae_video_model": (vaes, {"default": _pick(vaes, ve_ai.VAE_VIDEO_NAME, "vae_video")}),
+            "vae_audio_model": (vaes, {"default": _pick(vaes, ve_ai.VAE_AUDIO_NAME, "vae_audio")}),
+            "turbo_lora_model": (loras, {"default": _pick(loras, ve_ai.TURBO_LORA_NAME, "turbo_lora")}),
         }}
 
     RETURN_TYPES = ("NERON_VE_AI",)
@@ -307,6 +347,7 @@ class NeronVEAI:
                 raise _err(f"не найдена модель ({k}) в папке models/{kind}", f"model not found ({k}) in models/{kind}")
             models[k] = v
         models.setdefault("turbo_lora", turbo_lora_model)
+        _check_models(models, mode == ve_ai.MODES[0])
         return ({"neron": "ve_ai", "mode": mode, "size": size, "seed": int(seed), "models": models},)
 
 # ---------------------------------------------------------------- предпросмотр / preview proxies
@@ -316,7 +357,8 @@ _PROXY = {}
 def _key(t, extra=""):
     try:
         flat = t.reshape(-1)
-        idx = torch.linspace(0, flat.numel() - 1, steps=min(257, flat.numel())).long()
+        k = min(257, flat.numel())  # отпечаток — целыми числами / integer sample points (float linspace overflowed)
+        idx = torch.arange(k, dtype=torch.int64) * (flat.numel() - 1) // max(1, k - 1)
         sample = flat[idx].float().cpu().numpy().tobytes()
     except Exception:
         sample = b""
