@@ -1,5 +1,11 @@
 # Changelog / История изменений
 
+## 🎬 Видео-сэмплер: плавные переходы / Video Sampler: smooth transitions (01.11.2026)
+
+**RU:** В монтаже Видео-сэмплера появились переходы. **Надвиньте кусок на предыдущий** — на сколько надвинули, столько длится переход (жёлтый клин на ленте); утащили дальше — кусок переставляется, как раньше. Вид перехода — внизу у выделенного куска: **наплыв, через тьму, через свет, шторка, растворение, круг, проявление** (сначала тёмное — как карандашный рисунок) или «сразу», и длина в секундах. Звук на стыке перетекает плавно. Как только монтаж собран, окно сэмплера показывает и играет его **с переходами и звуком**. Если ffmpeg на компьютере придирчив к частоте кадров, сэмплер сам собирает монтаж в строгом режиме; при ошибке полный текст — в консоли ComfyUI. Старые схемы открываются как раньше.
+
+**EN:** The Video Sampler edit gets transitions. **Slide a piece over the previous one** — the overlap is the transition (yellow wedge); drag further to reorder as before. Pick the type and length below for the selected piece: dissolve, dip to black/white, wipe, pixel dissolve, circle, reveal (dark first, like a pencil drawing) or cut. Audio crossfades. Once built, the sampler monitor plays the edit with transitions and sound. A strict fallback build handles picky ffmpeg versions; on failure the full error goes to the ComfyUI console. Old workflows open unchanged.
+
 ## 🖼 Image Processor: превью = выход / preview = output (31.10.2026)
 
 **RU (Interactive Image Processor и 🖼 Neron Studio Image Processor):**
