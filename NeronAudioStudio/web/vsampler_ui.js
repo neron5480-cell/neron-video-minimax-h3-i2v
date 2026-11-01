@@ -22,6 +22,17 @@ const MAX_SRC = 3, MAX_PIECES = 200;
 const VCOLORS = ["#4dabf7", "#f783ac", "#69db7c"];
 const SRC_H = 46, RULER_H = 18, LANE_H = 66, EDGE = 9, THUMB_W = 96, THUMB_H = 54;
 const T = (ru, en) => `${ru} / ${en}`;
+// переходы между кусками (как в vsampler.py) / transitions between pieces
+const TRANS = [
+    ["fade", "Наплыв", "Dissolve", "Одно плавно перетекает в другое", "One smoothly melts into the other"],
+    ["dip", "Через тьму", "Dip to black", "Кадр гаснет и проявляется следующий", "Fades to black, then the next appears"],
+    ["white", "Через свет", "Dip to white", "Вспышка белого между кусками", "A white flash between pieces"],
+    ["wipe", "Шторка", "Wipe", "Новый кадр въезжает мягкой шторкой", "The new shot slides in with a soft wipe"],
+    ["dissolve", "Растворение", "Pixel dissolve", "Крупинками, как песок", "In grains, like sand"],
+    ["circle", "Круг", "Circle", "Новый кадр раскрывается кругом из центра", "Opens as a circle from the centre"],
+    ["reveal", "Проявление", "Reveal", "Сначала проступает тёмное, потом остальное — как карандашный рисунок", "Dark parts first, then the rest — like a pencil drawing"],
+];
+const TR_ICON = { fade: "◐", dip: "●", white: "○", wipe: "▶", dissolve: "░", circle: "◎", reveal: "✎" };
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const fmt = (t) => { t = Math.max(0, t || 0); const m = Math.floor(t / 60); return `${m}:${(t - m * 60).toFixed(2).padStart(5, "0")}`; };
 
@@ -125,7 +136,8 @@ function setupVSampler(node) {
         };
         for (const p of Array.isArray(o.pieces) ? o.pieces.slice(0, MAX_PIECES) : []) {
             if (!p || !(Number(p.len) > 0.03)) continue;
-            S.pieces.push({ id: p.id || uid(), src: clamp(Math.round(Number(p.src) || 0), 0, MAX_SRC - 1), in: Math.max(0, Number(p.in) || 0), len: Number(p.len) });
+            S.pieces.push({ id: p.id || uid(), src: clamp(Math.round(Number(p.src) || 0), 0, MAX_SRC - 1), in: Math.max(0, Number(p.in) || 0), len: Number(p.len),
+                tr: TRANS.some((x) => x[0] === p.tr) ? p.tr : "fade", td: Math.max(0, Number(p.td) || 0) });
         }
         if (o.sel && typeof o.sel === "object") {
             for (const k of Object.keys(o.sel)) {
@@ -184,16 +196,23 @@ function setupVSampler(node) {
     const snapT = (t) => (S.snap ? Math.round(t / beatLen()) * beatLen() : t);
 
     // ---------- монтаж: где какой кусок ----------
-    const editLen = () => S.pieces.reduce((a, p) => a + p.len, 0);
-    const starts = () => { const r = []; let t = 0; for (const p of S.pieces) { r.push(t); t += p.len; } return r; };
+    // наложение на предыдущий кусок = длина перехода; не больше половины соседей
+    // overlap with the previous piece = transition length; at most half of either neighbour
+    const tdMax = (i) => (i > 0 ? Math.min(S.pieces[i - 1].len, S.pieces[i].len) / 2 : 0);
+    const tdOf = (i) => (i > 0 ? clamp(S.pieces[i].td || 0, 0, tdMax(i)) : 0);
+    const starts = () => { const r = []; let t = 0; S.pieces.forEach((p, i) => { const a = t - tdOf(i); r.push(a); t = a + p.len; }); return r; };
+    const editLen = () => { const st = starts(); const n = S.pieces.length; return n ? st[n - 1] + S.pieces[n - 1].len : 0; };
     const fpsOf = (k) => (info[k] && info[k].fps) || 24;
     const frame = () => 1 / fpsOf(S.pieces.length ? S.pieces[0].src : 0);
+    // на наложении показываем середину перехода: до неё — старый кусок, после — новый
+    // on an overlap the switch is at the middle of the transition
     const pieceAt = (t) => {
-        let a = 0;
+        const st = starts();
         for (let i = 0; i < S.pieces.length; i++) {
             const p = S.pieces[i];
-            if (t >= a && t < a + p.len) return { i, p, a, o: t - a };
-            a += p.len;
+            const a = i > 0 ? st[i] + tdOf(i) / 2 : st[i];
+            const b = i + 1 < S.pieces.length ? st[i + 1] + tdOf(i + 1) / 2 : st[i] + p.len;
+            if (t >= a && t < b) return { i, p, a: st[i], o: t - st[i] };
         }
         return null;
     };
@@ -201,7 +220,7 @@ function setupVSampler(node) {
 
     // ---------- для Пульта ----------
     const R = { ref: null, key: "", busy: false, timer: null, err: "", len: 0 };
-    const editKey = () => JSON.stringify([S.mute, items.map(refKey), S.pieces.map((p) => [p.src, +p.in.toFixed(4), +p.len.toFixed(4)])]);
+    const editKey = () => JSON.stringify([S.mute, items.map(refKey), S.pieces.map((p, i) => [p.src, +p.in.toFixed(4), +p.len.toFixed(4), p.tr, +tdOf(i).toFixed(4)])]);
     node.neronCube = () => {
         if (S.bypass) return { kind: "videos", items: items.map((x) => ({ ...x })), mute: S.mute, bypass: true };
         // сэмплер включён: Пульт видит только монтаж — один блок
@@ -253,6 +272,7 @@ function setupVSampler(node) {
         "<b>RU:</b> ① Сверху — ваши ролики (из «Видео ×3»). Ведите мышкой по кадрам — выделится кусок «откуда — докуда»; "
         + "▶ — посмотреть кусок; <b>➜</b> или просто перетащите выделенное вниз — кусок встанет в монтаж. Двойной клик — весь ролик. "
         + "② <b>МОНТАЖ</b> — куски идут друг за другом. Тянуть кусок — переставить; тянуть края — обрезать; клик — поставить курсор; "
+        + "<b>Переход</b>: надвиньте кусок на предыдущий — на сколько надвинули, столько длится переход (жёлтый клин); вид — внизу: наплыв, через тьму, через свет, шторка, растворение, круг, проявление. Звук тоже перетекает. Здесь при просмотре стык показан резко — переход виден в собранном монтаже (в Пульте). "
         + "<b>✂</b> (или S) — разрезать на курсоре; <b>⧉</b> (Ctrl+D) — копия; <b>🗑</b> (Delete) — убрать; Ctrl+Z — отменить. "
         + "Колёсико — приблизить, Shift+колёсико — прокрутка. Пробел — смотреть. "
         + "<b>⏭ ПРОПУСТИТЬ</b> — ролики идут в Пульт как есть. <b>🔇</b> — без звука роликов. "
@@ -260,7 +280,7 @@ function setupVSampler(node) {
         + "<b>⚙ ДЛЯ СПЕЦОВ → 🧲 РЕЗАТЬ В ДОЛЮ</b>: склейки, края и курсор прилипают к долям темпа Пульта — смена кадра попадает в удар.<br>"
         + "<b>EN:</b> ① Your clips from Video ×3 on top. Drag across the frames to select a piece; ▶ watches it; <b>➜</b> or drag it down — "
         + "it goes into the edit. Double-click selects the whole clip. ② <b>EDIT</b> — pieces play one after another. Drag a piece to reorder, "
-        + "drag its edges to trim, click to set the cursor; <b>✂</b> (S) cuts at the cursor; <b>⧉</b> (Ctrl+D) copies; <b>🗑</b> (Delete) removes; "
+        + "drag its edges to trim, click to set the cursor; <b>slide a piece over the previous one</b> for a transition (yellow wedge; type below: dissolve, dip to black/white, wipe, pixel dissolve, circle, reveal; audio crossfades; the preview here shows a cut, the built edit has the transition); <b>✂</b> (S) cuts at the cursor; <b>⧉</b> (Ctrl+D) copies; <b>🗑</b> (Delete) removes; "
         + "Ctrl+Z undoes. Wheel zooms, Shift+wheel scrolls, space plays. <b>⏭ BYPASS</b> sends the clips as they are; <b>🔇</b> drops the clip sound. "
         + "The edit is built into a frame-accurate mp4 for the Pult automatically. "
         + "<b>⚙ EXPERT → 🧲 CUT ON THE BEAT</b>: cuts, edges and the cursor stick to the Pult tempo beats.";
@@ -601,6 +621,21 @@ function setupVSampler(node) {
             g.strokeStyle = sel ? "#fff" : "rgba(0,0,0,.8)"; g.lineWidth = sel ? 2 : 1;
             g.strokeRect(x0 + 0.5, y0 + 0.5, Math.max(1, x1 - x0 - 1), lh - 1);
             if (sel) { g.fillStyle = "#fff"; g.fillRect(x0, y0 + lh / 2 - 9, 4, 18); g.fillRect(x1 - 4, y0 + lh / 2 - 9, 4, 18); }
+            // переход: наложение на предыдущий кусок / transition overlap
+            const td = tdOf(i);
+            if (td > 0) {
+                const xo = X(st[i] + td);
+                g.fillStyle = "rgba(255,209,102,.30)";
+                g.beginPath(); g.moveTo(x0, y0 + lh); g.lineTo(xo, y0); g.lineTo(xo, y0 + lh); g.closePath(); g.fill();
+                g.strokeStyle = "#ffd166"; g.lineWidth = 2;
+                g.beginPath(); g.moveTo(x0, y0 + lh); g.lineTo(xo, y0); g.stroke();
+                if (xo - x0 > 14) {
+                    g.fillStyle = "#1b1d23"; g.fillRect((x0 + xo) / 2 - 9, y0 + 4, 18, 16);
+                    g.fillStyle = "#ffd166"; g.font = "bold 11px Segoe UI"; g.textAlign = "center";
+                    g.fillText(TR_ICON[p.tr] || "◐", (x0 + xo) / 2, y0 + 13);
+                    g.textAlign = "left";
+                }
+            }
             if (x1 - x0 > 46) {
                 g.save(); g.beginPath(); g.rect(x0 + 4, y0, x1 - x0 - 8, lh); g.clip();
                 g.fillStyle = "#fff"; g.font = "bold 10px Segoe UI";
@@ -681,7 +716,7 @@ function setupVSampler(node) {
         } else {
             const pc = S.pieces[hit];
             S.selId = pc.id;
-            ed = { mode: edge ? "trim" + edge : "move", i: hit, id: pc.id, x0: p.x, in0: pc.in, len0: pc.len, moved: false, t };
+            ed = { mode: edge ? "trim" + edge : "move", i: hit, id: pc.id, x0: p.x, in0: pc.in, len0: pc.len, td0: tdOf(hit), moved: false, t };
             if (!edge) setCursor(t);
         }
         drawEdit(); showPiece();
@@ -725,9 +760,25 @@ function setupVSampler(node) {
             }
             seekShow(pc.src, pc.in);
             S.cur = starts()[S.pieces.indexOf(pc)];
-        } else if (ed.mode === "move") {
-            drag.ghost = { idx: insertIndex(p.x), src: pc.src };
-            ecv.style.cursor = "grabbing";
+        } else if (ed.mode === "move" || ed.mode === "overlap") {
+            // надвинули на предыдущий — переход; дальше — переставить / slide over the previous → transition; further → reorder
+            const i = S.pieces.indexOf(pc);
+            const want = ed.td0 - dt;
+            if (i > 0 && want >= -0.05 && want <= tdMax(i) + 0.05 && !(ed.mode === "move" && drag.ghost && Math.abs(dt) > tdMax(i) + 0.3)) {
+                const fr = frame();
+                pc.td = clamp(Math.round(Math.max(0, want) / fr) * fr, 0, tdMax(i));
+                if (pc.td > 0 && !pc.tr) pc.tr = "fade";
+                ed.mode = "overlap";
+                drag.ghost = null;
+                ecv.style.cursor = "col-resize";
+                const st = starts();
+                S.cur = st[i] + pc.td / 2;
+                setStatus(pc.td > 0 ? T(`Переход «${trName(pc.tr)}»: ${pc.td.toFixed(2)} с`, `Transition: ${pc.td.toFixed(2)} s`) : T("Резкая склейка", "Hard cut"), "ok");
+            } else {
+                if (ed.mode === "overlap") { pc.td = ed.td0; ed.mode = "move"; }
+                drag.ghost = { idx: insertIndex(p.x), src: pc.src };
+                ecv.style.cursor = "grabbing";
+            }
         }
         drawEdit(); showPiece();
     });
@@ -773,6 +824,8 @@ function setupVSampler(node) {
         else showEditAt(S.cur);
         drawEdit();
     }
+
+    const trName = (k) => { const t = TRANS.find((x) => x[0] === k) || TRANS[0]; return t[1]; };
 
     // ---------- действия с кусками ----------
     function addPiece(k, idx) {
@@ -873,9 +926,43 @@ function setupVSampler(node) {
             mk("◀", T("Переставить левее", "Move left"), () => moveSel(-1)).disabled = i === 0;
             mk("▶", T("Переставить правее", "Move right"), () => moveSel(1)).disabled = i === S.pieces.length - 1;
             mk("⧉ " + T("КОПИЯ", "COPY"), T("Копия рядом (Ctrl+D)", "Copy next to it (Ctrl+D)"), dupSel);
+            if (i > 0) {
+                // переход в этот кусок из предыдущего / transition into this piece
+                const lab = el("span", "", "  ⟷ " + T("Переход", "Transition"));
+                lab.style.cssText = "color:#ffd166;font-weight:700;margin-left:6px";
+                pbar.appendChild(lab);
+                const sel = el("select", "nvs-sel");
+                sel.style.cssText = "height:24px;background:#23252b;color:#e8eaf0;border:1px solid #3a3e49;border-radius:5px;font-size:11px";
+                const o0 = el("option", "", T("Сразу (резко)", "Cut")); o0.value = "cut"; sel.appendChild(o0);
+                for (const [k, ru, en, tr, te] of TRANS) { const o = el("option", "", T(ru, en)); o.value = k; o.title = T(tr, te); sel.appendChild(o); }
+                sel.value = tdOf(i) > 0 ? sp.tr : "cut";
+                sel.title = T("Как этот кусок появляется после предыдущего. Можно и мышкой: надвиньте кусок на предыдущий",
+                    "How this piece follows the previous one. Or with the mouse: slide the piece over the previous one");
+                sel.addEventListener("pointerdown", (e) => e.stopPropagation());
+                sel.addEventListener("change", () => {
+                    pushUndo();
+                    if (sel.value === "cut") sp.td = 0;
+                    else { sp.tr = sel.value; if (!(tdOf(i) > 0)) sp.td = Math.min(0.5, tdMax(i)); }
+                    changed();
+                });
+                pbar.appendChild(sel);
+                if (tdOf(i) > 0) {
+                    const num = el("input", "");
+                    num.type = "number"; num.step = "0.1"; num.min = "0.04"; num.max = String(tdMax(i).toFixed(2));
+                    num.value = tdOf(i).toFixed(2);
+                    num.title = T("Длина перехода, с (не больше половины соседних кусков)", "Transition length, s (at most half of the neighbours)");
+                    num.style.cssText = "width:56px;height:22px;background:#23252b;color:#e8eaf0;border:1px solid #3a3e49;border-radius:5px;font-size:11px";
+                    num.addEventListener("pointerdown", (e) => e.stopPropagation());
+                    num.addEventListener("keydown", (e) => e.stopPropagation());
+                    num.addEventListener("change", () => { const v = parseFloat(num.value); if (isFinite(v)) { pushUndo(); sp.td = clamp(v, 0, tdMax(i)); changed(); } });
+                    pbar.appendChild(num);
+                    pbar.appendChild(el("span", "", T("с", "s")));
+                }
+            }
             mk("🗑", T("Убрать кусок (Delete)", "Remove the piece (Delete)"), delSel, "#7a2f36");
         } else {
-            pbar.insertBefore(el("span", "", T("Клик по куску — выделить; края — обрезать; тянуть — переставить", "Click a piece to select; edges trim; drag to reorder")), pbar.firstChild);
+            pbar.insertBefore(el("span", "", T("Клик по куску — выделить; края — обрезать; тянуть — переставить; надвинуть на соседний — плавный переход",
+                "Click a piece to select; edges trim; drag to reorder; slide over the neighbour — smooth transition")), pbar.firstChild);
             pbar.firstChild.style.color = "#8b90a0";
         }
         const und = mk("↶", T("Отменить (Ctrl+Z)", "Undo (Ctrl+Z)"), undo);
@@ -948,11 +1035,12 @@ function setupVSampler(node) {
             const v = vids[p.src];
             const st = starts();
             P.t = st[P.i] + clamp(v.currentTime - p.in, 0, p.len);
-            if (v.currentTime >= p.in + p.len - 0.008 || v.ended) {
+            const half = P.i + 1 < S.pieces.length ? tdOf(P.i + 1) / 2 : 0;    // на переходе — к середине / mid-transition
+            if (v.currentTime >= p.in + p.len - half - 0.008 || v.ended) {
                 if (P.i + 1 >= S.pieces.length) { stopPlay(); S.cur = P.fromT; showEditAt(S.cur); drawEdit(); return; }
                 const n = S.pieces[P.i + 1];
-                if (n.src === p.src && Math.abs(n.in - (p.in + p.len)) < 0.02) P.i++;   // кусок продолжается — просто дальше
-                else startPiece(P.i + 1, 0);
+                if (half === 0 && n.src === p.src && Math.abs(n.in - (p.in + p.len)) < 0.02) P.i++;   // кусок продолжается — просто дальше
+                else startPiece(P.i + 1, half);
             }
             // следить за курсором при приближении
             const pps = pxPerSec();

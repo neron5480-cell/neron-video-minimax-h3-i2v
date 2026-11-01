@@ -7,10 +7,16 @@ RU: Стоит между «Видео ×3» и Пультом. Сверху т�
     идут друг за другом, их можно резать, переставлять, обрезать. Экран показывает
     результат. ⏭ ПРОПУСТИТЬ — ролики идут в Пульт как есть. 🔇 — без звука роликов.
     Монтаж собирается в настоящий mp4 (точно по кадрам) и уходит в Пульт одним роликом.
+    Переходы: надвиньте кусок на предыдущий — на сколько надвинули, столько длится
+    переход (наплыв, через тьму/свет, шторка, растворение, круг, проявление). Звук
+    на стыке тоже перетекает плавно.
 EN: Sits between Video ×3 and the Pult. Three source rows (three clips): select a
     piece and put it into the edit. The edit strip below: pieces play one after
     another; cut, reorder, trim them. ⏭ BYPASS — clips go to the Pult as they are.
     🔇 — no clip sound. The edit is built into a real frame-accurate mp4.
+    Transitions: slide a piece over the previous one — the overlap is the transition
+    (dissolve, dip to black/white, wipe, pixel dissolve, circle, reveal); audio
+    crossfades too.
 """
 
 import os
@@ -25,7 +31,22 @@ from server import PromptServer
 
 from .drum_machine import SAMPLE_RATE, _num
 from .mixer import video_path
-from .arrange import probe_video, clip_video_wave, build_video
+from .arrange import probe_video, clip_video_wave, _f
+from .mixer import _ffmpeg_exe
+
+# переход → фильтр ffmpeg xfade / transition → ffmpeg xfade filter
+TRANS = {
+    "fade": "fade",               # наплыв / dissolve
+    "dip": "fadeblack",           # через тьму / dip to black
+    "white": "fadewhite",         # через свет / dip to white
+    "wipe": "smoothleft",         # шторка / wipe
+    "dissolve": "dissolve",       # растворение (крупинками) / pixel dissolve
+    "circle": "circleopen",       # круг / circle
+    "reveal": "custom",           # проявление: сначала тёмное, как карандаш / reveal: dark first
+}
+# проявление: P идёт 1→0; сначала проступают тёмные места нового кадра, мягкий край 0.25
+# reveal: P goes 1→0; dark parts of the new frame come first, soft edge 0.25
+REVEAL_EXPR = "A*(1-st(0,clip((1.25*(1-P)-B/255)/0.25,0,1)))+B*ld(0)"
 
 MAX_SRC = 3
 MAX_PIECES = 200
@@ -54,15 +75,17 @@ def parse_vsampler(js):
             "src": int(_num(p.get("src", 0), 0, 0, MAX_SRC - 1)),
             "in": _num(p.get("in", 0), 0.0, 0.0, 36000.0),
             "len": ln,
+            # переход ИЗ предыдущего куска в этот: вид и длина наложения / transition from the previous piece
+            "tr": p.get("tr") if p.get("tr") in TRANS else "fade",
+            "td": _num(p.get("td", 0), 0.0, 0.0, 10.0),
         })
     return {"bypass": bool(raw.get("bypass", True)), "mute": bool(raw.get("mute", False)), "pieces": pieces}
 
 
 def _edit_plan(items, pieces):
-    """Куски -> план для build_video (тот же точный по кадрам сборщик, что и в «Поле»)."""
-    segs, waves_src = [], []
-    t = 0.0
-    first = None
+    """Куски -> план сборки: где каждый кусок стоит в монтаже и сколько он наложен на предыдущий.
+    Pieces -> build plan: where each piece sits and how much it overlaps the previous one."""
+    segs, first = [], None
     for p in pieces:
         if p["src"] >= len(items):
             continue
@@ -75,51 +98,117 @@ def _edit_plan(items, pieces):
         if ln < 0.04:
             continue
         first = first or info
-        segs.append({"k": len(segs), "a": t, "b": t + ln, "off": t - a, "dur": info["duration"], "path": path})
-        waves_src.append((items[p["src"]], a, ln))
-        t += ln
+        segs.append({"k": len(segs), "src_a": a, "len": ln, "dur": info["duration"], "path": path,
+                     "ref": items[p["src"]], "tr": p["tr"], "td": p["td"]})
     if not segs:
-        return None, None
+        return None
     fps = float(first.get("fps") or 24.0)
-    # кадр — ровно 1/fps: края кусков ставим на кадры, чтобы склейка была точной
-    # концы кусков округляем от начала монтажа (а не каждую длину) — ошибка не копится
-    t, exact = 0.0, 0.0
+    fr = 1.0 / fps
+    # длины и наложения — ровно по кадрам; наложение не больше половины соседних кусков
+    # lengths and overlaps snapped to frames; an overlap is at most half of either neighbour
     for s in segs:
-        exact += s["b"] - s["a"]
-        end = max(t + 1.0 / fps, round(exact * fps) / fps)
-        src_a = s["a"] - s["off"]
-        s["a"], s["b"] = t, end
-        s["off"] = t - src_a
-        t = end
-    plan = {"width": int(first.get("width") or 1280) // 2 * 2, "height": int(first.get("height") or 720) // 2 * 2, "fps": fps,
-            "segments": segs, "trans": "cut", "trans_dur": 0.0, "length": t}
-    return plan, waves_src
+        s["n"] = max(1, int(round(s["len"] * fps)))
+    t = 0
+    for i, s in enumerate(segs):
+        if i == 0:
+            s["tdn"] = 0
+        else:
+            cap = min(segs[i - 1]["n"], s["n"]) // 2
+            s["tdn"] = max(0, min(cap, int(round(s["td"] * fps))))
+        s["start_n"] = t - s["tdn"]
+        t = s["start_n"] + s["n"]
+    for s in segs:
+        s["a"] = s["start_n"] * fr
+        s["b"] = (s["start_n"] + s["n"]) * fr
+        s["len"] = s["n"] * fr
+        s["td"] = s["tdn"] * fr
+    return {"width": int(first.get("width") or 1280) // 2 * 2, "height": int(first.get("height") or 720) // 2 * 2,
+            "fps": fps, "segments": segs, "length": t * fr}
 
 
-def _edit_audio(plan, waves_src, mute):
+def _edit_audio(plan, mute):
+    """Звук монтажа: на наложении — плавный переход (один стихает, другой нарастает).
+    Edit audio: crossfade on overlaps, 5 ms ramps on hard cuts."""
     total = int(round(plan["length"] * SAMPLE_RATE))
     mix = np.zeros((total, 2), dtype=np.float32)
     if mute:
         return mix
-    for s, (ref, a, ln) in zip(plan["segments"], waves_src):
-        w = clip_video_wave(ref)
+    segs = plan["segments"]
+    for i, s in enumerate(segs):
+        w = clip_video_wave(s["ref"])
         if w is None or not len(w):
             continue
-        i0 = int(round(a * SAMPLE_RATE))
-        n = int(round((s["b"] - s["a"]) * SAMPLE_RATE))
-        piece = w[i0:i0 + n]
+        i0 = int(round(s["src_a"] * SAMPLE_RATE))
+        n = int(round(s["len"] * SAMPLE_RATE))
+        piece = w[i0:i0 + n].copy()
         o = int(round(s["a"] * SAMPLE_RATE))
         k = min(len(piece), total - o)
-        if k > 0:
-            # 5 мс сглаживания на стыках — без щелчков
-            piece = piece[:k].copy()
-            r = min(220, k // 2)
-            if r > 0:
-                ramp = np.linspace(0.0, 1.0, r, dtype=np.float32)[:, None]
-                piece[:r] *= ramp
-                piece[-r:] *= ramp[::-1]
-            mix[o:o + k] += piece
+        if k <= 0:
+            continue
+        piece = piece[:k]
+        fin = int(round(s["td"] * SAMPLE_RATE)) if s["td"] > 0 else 220
+        nxt = segs[i + 1]["td"] if i + 1 < len(segs) else 0.0
+        fout = int(round(nxt * SAMPLE_RATE)) if nxt > 0 else 220
+        fin, fout = min(fin, k // 2), min(fout, k // 2)
+        if fin > 0:
+            piece[:fin] *= np.linspace(0.0, 1.0, fin, dtype=np.float32)[:, None]
+        if fout > 0:
+            piece[-fout:] *= np.linspace(1.0, 0.0, fout, dtype=np.float32)[:, None]
+        mix[o:o + k] += piece
     return mix
+
+
+def build_edit(plan, wav_path, out_path, preset="veryfast"):
+    """Монтаж с переходами в mp4: у каждого стыка свой xfade (или резкая склейка).
+    The edit with per-junction transitions (xfade) or hard cuts."""
+    exe = _ffmpeg_exe()
+    if not exe:
+        raise RuntimeError("ffmpeg не найден / ffmpeg not found")
+    W, H, F = plan["width"], plan["height"], plan["fps"]
+    segs = plan["segments"]
+    args = [exe, "-y", "-v", "error"]
+    chains = []
+    for s in segs:
+        ln = s["len"]
+        ts, te = s["src_a"], min(s["dur"], s["src_a"] + ln)
+        post = max(0.0, ln - (te - ts))
+        args += ["-i", s["path"]]
+        chains.append(
+            f"[{s['k']}:v]trim=start={_f(ts)}:end={_f(te)},setpts=PTS-STARTPTS,fps={F},"
+            f"scale={W}:{H}:force_original_aspect_ratio=decrease,pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=black,"
+            f"setsar=1,format=yuv420p,tpad=stop_duration={_f(post)}:stop_mode=clone,"
+            f"trim=duration={_f(ln)},setpts=PTS-STARTPTS[v{s['k']}]")
+    a_in = len(segs)
+    args += ["-i", wav_path]
+    cur, acc = "v0", segs[0]["len"]
+    for s in segs[1:]:
+        k = s["k"]
+        out = f"x{k}"
+        if s["td"] > 0:
+            tr = TRANS.get(s["tr"], "fade")
+            off = acc - s["td"]
+            if tr == "custom":
+                chains.append(f"[{cur}]format=gbrp[ga{k}];[v{k}]format=gbrp[gb{k}];"
+                              f"[ga{k}][gb{k}]xfade=transition=custom:expr='{REVEAL_EXPR}':duration={_f(s['td'])}:"
+                              f"offset={_f(off)},format=yuv420p[{out}]")
+            else:
+                chains.append(f"[{cur}][v{k}]xfade=transition={tr}:duration={_f(s['td'])}:offset={_f(off)}[{out}]")
+            acc = acc + s["len"] - s["td"]
+        else:
+            chains.append(f"[{cur}][v{k}]concat=n=2:v=1:a=0[{out}]")
+            acc = acc + s["len"]
+        cur = out
+    chains.append(f"[{cur}]null[vout]")
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    args += ["-filter_complex", ";".join(chains), "-map", "[vout]", "-map", f"{a_in}:a:0",
+             "-c:v", "libx264", "-preset", preset, "-crf", "17", "-pix_fmt", "yuv420p", "-r", str(F),
+             "-c:a", "aac", "-b:a", "192k", "-t", _f(plan["length"]), "-movflags", "+faststart", out_path]
+    import subprocess
+    r = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if r.returncode != 0 or not os.path.isfile(out_path):
+        msg = r.stderr.decode("utf-8", "ignore").strip().splitlines()[-3:]
+        raise RuntimeError("ffmpeg не смог собрать монтаж / ffmpeg could not build the edit: " + " | ".join(msg))
+    return out_path
 
 
 def _edit_key(items, pieces, mute):
@@ -127,7 +216,8 @@ def _edit_key(items, pieces, mute):
     for p in pieces:
         path = video_path(items[p["src"]]) if p["src"] < len(items) else None
         st = os.stat(path) if path else None
-        parts.append([path, st.st_mtime if st else 0, st.st_size if st else 0, round(p["in"], 4), round(p["len"], 4)])
+        parts.append([path, st.st_mtime if st else 0, st.st_size if st else 0, round(p["in"], 4), round(p["len"], 4),
+                      p["tr"], round(p["td"], 4)])
     return hashlib.sha1(json.dumps([parts, bool(mute)]).encode("utf-8")).hexdigest()[:14]
 
 
@@ -138,17 +228,17 @@ def render_edit(items, pieces, mute):
     out_dir = os.path.join(folder_paths.get_output_directory(), *EDIT_SUB.split("/"))
     out = os.path.join(out_dir, name)
     ref = {"name": name, "subfolder": EDIT_SUB, "type": "output", "label": "🎬 Монтаж / Edit"}
-    plan, waves_src = _edit_plan(items, pieces)
+    plan = _edit_plan(items, pieces)
     if not plan:
         return None, 0.0
     if os.path.isfile(out) and os.path.getsize(out) > 0:
         return ref, plan["length"]
     os.makedirs(out_dir, exist_ok=True)
     wav = os.path.join(out_dir, f"edit_{key}.wav")
-    sf.write(wav, _edit_audio(plan, waves_src, mute), SAMPLE_RATE, subtype="PCM_16")
+    sf.write(wav, _edit_audio(plan, mute), SAMPLE_RATE, subtype="PCM_16")
     tmp = os.path.join(out_dir, f"edit_{key}.part.mp4")
     try:
-        build_video(plan, wav, tmp, preset="veryfast")
+        build_edit(plan, wav, tmp, preset="veryfast")
         os.replace(tmp, out)
         _prune(out_dir, keep=24)
     finally:
