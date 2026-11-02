@@ -82,7 +82,8 @@ def encode(frames, fps, path, audio=None, max_w=None, crf=20, preset="veryfast")
         cmd += ["-vf", vf, "-c:v", "libx264", "-preset", preset, "-crf", str(crf), "-pix_fmt", "yuv420p",
                 "-movflags", "+faststart"]
         if wav:
-            cmd += ["-c:a", "aac", "-b:a", "160k", "-af", "apad", "-shortest"]
+            # длина явно (apad + -shortest в ffmpeg 7 может зависнуть) / explicit length
+            cmd += ["-c:a", "aac", "-b:a", "160k", "-af", "apad", "-t", f"{n / fps:.3f}"]
         cmd += [path]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         try:
