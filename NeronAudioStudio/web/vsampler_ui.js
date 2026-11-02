@@ -93,8 +93,8 @@ function injectStyles() {
 .nvs-help{display:none;flex:none;background:var(--nt-card,#20232a);border-radius:7px;padding:8px 10px;font-size:11px;line-height:1.55}
 .nvs-help b{color:#ffd166}
 .nvs-main{display:flex;gap:10px;flex:1;min-height:120px;overflow:hidden}
-.nvs-monwrap{display:flex;flex-direction:column;gap:4px;flex:none;height:100%;max-width:46%}
-.nvs-mon{position:relative;flex:1;min-height:0;aspect-ratio:16/9;background:#000;border-radius:7px;overflow:hidden;border:2px solid var(--nt-line2,#2b2f3a)}
+.nvs-monwrap{display:flex;flex-direction:column;gap:4px;flex:none;max-width:46%;align-self:flex-start}
+.nvs-mon{position:relative;flex:none;width:320px;height:180px;background:#000;border-radius:7px;overflow:hidden;border:2px solid var(--nt-line2,#2b2f3a)}
 .nvs-mon video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none;background:#000}
 .nvs-mon .tag{position:absolute;left:8px;top:6px;font-size:11px;font-weight:800;text-shadow:0 1px 3px #000;pointer-events:none;z-index:2}
 .nvs-mon .empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:11px;color:var(--nt-muted,#8b90a0);line-height:1.5}
@@ -314,6 +314,27 @@ function setupVSampler(node) {
     monWrap.appendChild(mon);
     monWrap.appendChild(timeRow);
     main.appendChild(monWrap);
+    // экран держит форму кадра: растёт в ширину, пока есть высота, а не вытягивается в полоску
+    // the monitor keeps the frame shape: it widens while there is height, never stretches into a strip
+    let monAR = 16 / 9, monARset = false;
+    const fitMon = () => {
+        const W = main.clientWidth, H = main.clientHeight;
+        if (W < 50 || H < 50) return;
+        const h = Math.max(60, H - timeRow.offsetHeight - 4);
+        let w = Math.min(W * 0.46, h * monAR);
+        w = Math.max(120, Math.floor(w));
+        const mh = Math.floor(w / monAR);
+        if (mon.style.width !== w + "px") mon.style.width = w + "px";
+        if (mon.style.height !== mh + "px") mon.style.height = mh + "px";
+    };
+    mon.addEventListener("loadedmetadata", (e) => {
+        // форма — по готовому монтажу, а до него по первому ролику (чтобы экран не прыгал от вертикальных)
+        // shape follows the built edit, before that the first clip (so portrait clips do not make it jump)
+        const v = e.target; if (!(v.videoWidth > 0 && v.videoHeight > 0)) return;
+        if (v !== edV && monARset) return;
+        monARset = true; monAR = v.videoWidth / v.videoHeight; fitMon();
+    }, true);
+    new ResizeObserver(fitMon).observe(main);
     const srcs = el("div", "nvs-srcs");
     main.appendChild(srcs);
     root.appendChild(main);
