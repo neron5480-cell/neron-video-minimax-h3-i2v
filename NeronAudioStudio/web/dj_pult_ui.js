@@ -1754,7 +1754,17 @@ function setupDJ(node) {
     }
 
     const domWidget = node.addDOMWidget("neron_dj", "neron_dj", root, { serialize: false, hideOnZoom: false });
-    sizer = makeUserSized(node, domWidget, root, { minH: 220, autoH: () => Math.max(300, wrap.offsetHeight + 22) });
+    // Пока нода невидима (переключили схему), её высота меряется как 0 — тогда берём последнюю
+    // настоящую, а когда пульт снова виден, перемеряем. While hidden (another workflow tab) the
+    // node measures 0 — keep the last real height and re-measure once visible again.
+    node.properties = node.properties || {};
+    const djAutoH = () => {
+        const h = wrap.offsetHeight;
+        if (root.isConnected && h > 100) node.properties.neron_dj_h = h + 22;
+        return Math.max(300, Number(node.properties.neron_dj_h) || 720);
+    };
+    sizer = makeUserSized(node, domWidget, root, { minH: 220, autoH: djAutoH });
+    new ResizeObserver(() => { if (wrap.offsetHeight > 100) relayout(); }).observe(wrap);
 
     paintDeckHead("a"); paintDeckHead("b");
     paintPads("a"); paintPads("b");

@@ -438,7 +438,7 @@ function setupCube(node, kind) {
 
     const domWidget = node.addDOMWidget(isV ? "neron_video_cube" : "neron_sound_cube", "neron_cube", outer, { serialize: false, hideOnZoom: false });
     let sizer = null;
-    sizer = makeUserSized(node, domWidget, outer, { minH: isV ? 200 : 80, autoH: () => natH, margin: 4 });
+    sizer = makeUserSized(node, domWidget, outer, { minH: isV ? 200 : 80, autoH: () => natH, margin: 4, grow: true });
     outer.style.overflow = "hidden";
     // ширину ноды поменяли — перемерить высоту (ролики масштабируются по ширине)
     new ResizeObserver(() => { if (outer.clientWidth && Math.abs(outer.clientWidth - lastW) > 2) requestAnimationFrame(measure); }).observe(outer);
