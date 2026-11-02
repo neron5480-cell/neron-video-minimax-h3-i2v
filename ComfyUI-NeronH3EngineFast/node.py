@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """⚡ Neron H3 Engine Fast — скорость + качество: черновик → увеличение → чистовик.
 
-Новичок видит: режим (Быстро / Баланс / Чисто), длительность, размер. Всё остальное — под ⚙ экспертом.
+Новичок видит: режим (Баланс / Чисто / Свой), длительность, размер. Всё остальное — под ⚙ экспертом.
 Опытная нода для поиска баланса; когда найдём его — войдёт опцией в H3 Engine.
 """
 import logging
@@ -88,18 +88,17 @@ class NeronH3EngineFast:
                 "expert": ("BOOLEAN", _main("⚙ эксперт / expert", default=False,
                            tooltip="Показать баланс черновика и чистовика, модели, LoRA и сид. Скрытое всё равно работает.\n\n"
                                    "EN: Show draft/refine balance, models, LoRAs and seed. Hidden settings still work.")),
-                "mode": (ef.MODES, _main("режим / mode", default=ef.MODES[1],
+                "mode": (ef.MODES, _main("режим / mode", default=ef.MODES[0],
                           tooltip="Сколько времени отдать чистовику (он рисует деталь в полном размере):\n"
-                                  "⚡ Быстро — черновик меньше (0.45 площади), чистовик 3 шага.\n"
                                   "Баланс — черновик 0.5 площади, чистовик 3 шага, сила 0.5 (проверено).\n"
                                   "Чисто — черновик крупнее, чистовик 6 шагов.\n"
                                   "Свой — значения из ползунков эксперта.\n"
                                   "Замер (RTX 5070 Ti 16 ГБ, 48 ГБ ОЗУ, модели int8, без апскейлера), 10 с в полном размере модели: "
-                                  "Быстро 7–9 мин, Баланс 8–12, Чисто 12–14.\n\n"
+                                  "Баланс 8–12 мин, Чисто 12–14.\n\n"
                                   "EN: How much time the refine gets (it draws detail at full size). "
-                                  "Fast — smaller draft (0.45 area), 3 refine steps; Balance — 0.5 draft area, 3 refine steps at 0.5 (tested); Clean — bigger draft, 6 steps; "
+                                  "Balance — 0.5 draft area, 3 refine steps at 0.5 (tested); Clean — bigger draft, 6 steps; "
                                   "Custom — expert sliders. Measured (RTX 5070 Ti 16 GB, 48 GB RAM, int8 models, no upscaler), 10 s at full "
-                                  "model size: Fast 7–9 min, Balance 8–12, Clean 12–14.")),
+                                  "model size: Balance 8–12 min, Clean 12–14.")),
                 "seconds": ("FLOAT", _main("длительность, с / seconds", default=10.0, min=1.0, max=15.0, step=0.5,
                             display="slider", tooltip="До 15 с — на этом обучена модель. Кадры подгоняются к её сетке "
                                                        "(17k+5).\n\nEN: Up to 15 s — what the model was trained on.")),

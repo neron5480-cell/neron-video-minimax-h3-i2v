@@ -92,11 +92,11 @@ class NeronMiniMaxH3Generator:
                     {"default": "Turbo / Турбо",
                      "tooltip": "Turbo — 8 шагов, Normal — 20 шагов, в выбранном размере.\n"
                                 "HD-режимы — полный размер модели за один прогон: маленький черновик → "
-                                "увеличение → короткий чистовик. ⚡ Быстро HD ≈ 1 мин на секунду видео, "
-                                "Баланс HD — чище, Чисто HD — ещё чище и дольше (замер на RTX 5070 Ti 16 ГБ).\n\n"
+                                "увеличение → короткий чистовик. "
+                                "Баланс HD — 8–12 мин на 10 с, Чисто HD — ещё чище и дольше (замер на RTX 5070 Ti 16 ГБ).\n\n"
                                 "EN: Turbo — 8 steps, Normal — 20 steps at the chosen size. HD modes — full model "
-                                "size in one run: small draft → upscale → short refine. Fast HD ≈ 1 min per "
-                                "second of video; Balance HD cleaner; Clean HD cleanest and slowest."},
+                                "size in one run: small draft → upscale → short refine. "
+                                "Balance HD 8–12 min per 10 s; Clean HD cleanest and slowest."},
                 ),
                 "SECONDS / СЕКУНДЫ": ("FLOAT", {
                     "default": DEFAULT_SECONDS,

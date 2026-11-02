@@ -18,11 +18,11 @@
 защищённая раскодировка, часы генерации, справка RU/EN. Только родные ноды ComfyUI.
 
 ### 🎚 НАСТРОЙКИ
-* Новичок видит: **режим** (⚡ Быстро / Баланс / Чисто / Свой), **длительность**, **размер**.
+* Новичок видит: **режим** (Баланс / Чисто / Свой), **длительность**, **размер**.
   «По кадру» — форма первого кадра в размере паспорта.
 * «Свой» и ⚙ эксперт открывают баланс: площадь черновика, шаги черновика, шаги и сила чистовика.
 * **Замер** (RTX 5070 Ti 16 ГБ, 48 ГБ ОЗУ, модели int8, без апскейлера), 10 с в полном размере модели:
-  ⚡ Быстро — 7–9 мин · Баланс — 8–12 мин · Чисто — 12–14 мин. Грубо: Быстро ≈ 1 минута на секунду видео.
+  Баланс — 8–12 мин · Чисто — 12–14 мин.
   Для сравнения: Турбо в H3 Engine — ~7 мин на **5** секунд.
 * Площадь черновика не ниже 0.4: ниже модель дорисовывает ленточки и рюшечки и не слушает промпт.
 * После прогона на ноде появляется **📋 Отчёт**: размеры, шаги, апскейлер, время каждого этапа.
@@ -47,7 +47,7 @@ becomes an option of H3 Engine.
 * **Refine** — full size, base model + fast LoRA (Taomate 3-step or our turbo), a few partial steps.
 * Beginners see mode / seconds / size; Custom and ⚙ expert show the balance sliders.
   **Measured** (RTX 5070 Ti 16 GB, 48 GB RAM, int8 models, no upscaler), 10 s at full model size:
-  Fast 7–9 min · Balance 8–12 min · Clean 12–14 min (H3 Engine Turbo: ~7 min for **5** s).
+  Balance 8–12 min · Clean 12–14 min (H3 Engine Turbo: ~7 min for **5** s).
   Draft area not below 0.4 — below it the model invents ribbons and frills and ignores the prompt.
 * After a run the node shows a **📋 Report** with sizes, steps, upscaler and the time of each stage.
 

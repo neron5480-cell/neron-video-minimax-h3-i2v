@@ -383,11 +383,10 @@ a special 8-step LoRA on top.
 a small draft (fast model) → upscale → a short
 refine at full size. Size = the passport maximum
 for your preset's shape (e.g. 16:9 → 1344×768).
-⚡ Fast HD    — draft 0.45 area, refine 3 steps.
 Balance HD    — draft 0.5 area, refine 3 steps.
 Clean HD      — draft 0.6 area, refine 6 steps.
 Measured: RTX 5070 Ti 16 GB, int8 models, 10 s at
-full size: Fast 7–9 min, Balance 8–12, Clean 12–14.
+full size: Balance 8–12 min, Clean 12–14.
 Draft model: Fast H3 if downloaded
 (fastvideo_fasth3_8step_v2_pruned_int8_convrot),
 otherwise base model + turbo LoRA (slower).
@@ -512,11 +511,10 @@ Normal — 20 шагов, качество выше.
 короткий чистовик в полном размере. Размер —
 максимум паспорта для формы пресета
 (например, 16:9 → 1344×768).
-⚡ Быстро HD — черновик 0.45 площади, чистовик 3 шага.
 Баланс HD   — черновик 0.5, чистовик 3 шага.
 Чисто HD    — черновик 0.6, чистовик 6 шагов.
 Замер: RTX 5070 Ti 16 ГБ, модели int8, 10 с в полном
-размере: Быстро 7–9 мин, Баланс 8–12, Чисто 12–14.
+размере: Баланс 8–12 мин, Чисто 12–14.
 Модель черновика: Fast H3, если скачана
 (fastvideo_fasth3_8step_v2_pruned_int8_convrot),
 иначе базовая + турбо-LoRA (медленнее).
@@ -747,6 +745,9 @@ app.registerExtension({
         nodeType.prototype.onConfigure = function () {
             const r = origConfigure?.apply(this, arguments);
             const node = this;
+            // «Быстро HD» убран — старые схемы открываются в «Баланс HD» / old "Fast HD" → Balance HD
+            const modeW = getWidget(node, "MODE / РЕЖИМ");
+            if (modeW && String(modeW.value).startsWith("⚡")) modeW.value = "Баланс HD / Balance HD";
             const expertW = getWidget(node, "expert_mode");
             const runApply = () => {
                 applyExpertMode(node, !!expertW?.value);

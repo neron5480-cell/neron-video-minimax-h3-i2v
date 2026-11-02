@@ -24,14 +24,14 @@ MiniMax H3 is a **local, quantized model**. It has strict compute limits.
 
 ### ⚡ HD-РЕЖИМЫ (dev, тест) / HD MODES
 
-**RU:** В списке «РЕЖИМ» добавлены ⚡ Быстро HD, Баланс HD и Чисто HD — полный размер модели за один прогон:
+**RU:** В списке «РЕЖИМ» добавлены Баланс HD и Чисто HD — полный размер модели за один прогон:
 маленький черновик на быстрой модели → увеличение → короткий чистовик в полном размере. Размер — максимум
 паспорта для формы пресета (16:9 → 1344×768). Образцы (`ref_image_0…3`) и AutoPrompter работают как раньше.
-Замер (RTX 5070 Ti 16 ГБ, модели int8, 10 с в полном размере): Быстро 7–9 мин, Баланс 8–12, Чисто 12–14.
+Замер (RTX 5070 Ti 16 ГБ, модели int8, 10 с в полном размере): Баланс 8–12 мин, Чисто 12–14 (⚡ Быстро HD убран: пережог на живой съёмке).
 Для черновика нужна Fast H3 (`fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors` в `models/diffusion_models`),
 без неё — базовая модель + турбо-LoRA (медленнее). Для чистовика — Taomate 3-step LoRA, если есть, иначе турбо.
 Turbo и Normal не изменились, старые схемы открываются как раньше.
 
-**EN:** The MODE list gains Fast HD, Balance HD and Clean HD — the model's full size in one run: small draft on a fast
+**EN:** The MODE list gains Balance HD and Clean HD — the model's full size in one run: small draft on a fast
 model → upscale → short refine at full size. References and AutoPrompter work as before. Measured (RTX 5070 Ti 16 GB,
-int8 models, 10 s full size): Fast 7–9 min, Balance 8–12, Clean 12–14. Turbo and Normal are unchanged.
+int8 models, 10 s full size): Balance 8–12 min, Clean 12–14 (Fast HD removed: overcooks live footage). Turbo and Normal are unchanged.

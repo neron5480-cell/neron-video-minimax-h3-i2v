@@ -110,6 +110,12 @@
 - Legacy nodes are labelled "(legacy → …)" in the menu; nothing removed.
 - README has a **map** of which node to use and which folders go together in a manual install.
 
+## Убран режим «⚡ Быстро» / "Fast" mode removed (dev, 02.11.2026)
+
+**RU:** В ⚡ H3 Engine Fast убран режим «⚡ Быстро», в Lite-генераторе — «⚡ Быстро HD»: на живой съёмке давали пережог и лишние детали, а выигрыш по времени был около минуты. Остались Баланс, Чисто, Свой. Старые схемы с «Быстро» сами открываются в «Балансе».
+
+**EN:** "Fast" removed from H3 Engine Fast and "Fast HD" from the Lite generator: they overcooked live footage and added extra details for about a minute of saving. Balance, Clean and Custom remain. Old workflows with Fast open as Balance.
+
 ## ⚡ Neron H3 Engine Fast — тестовая версия / test build (dev, 30.10.2026)
 
 **RU:**

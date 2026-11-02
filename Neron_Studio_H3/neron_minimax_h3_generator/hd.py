@@ -34,7 +34,10 @@ PRESETS = {
     BALANCE_HD: (0.5, 8, 3, 0.5),
     CLEAN_HD: (0.6, 8, 6, 0.6),
 }
-MODES = list(PRESETS)
+# «⚡ Быстро HD» убран из списка (02.11): пережог на живой съёмке; старые схемы считаются как Баланс HD.
+# "Fast HD" removed from the list; old workflows run as Balance HD.
+PRESETS[FAST_HD] = PRESETS[BALANCE_HD]
+MODES = [BALANCE_HD, CLEAN_HD]
 
 FAST_UNET_NAME = "fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors"
 TAOMATE_LORA_NAME = "minimax_h3_taomate_fl2va_3step_ema_comfyui.safetensors"
