@@ -135,8 +135,10 @@ class NeronVideoCombine:
         with tempfile.TemporaryDirectory(prefix="neron_vc_") as tmp:
             wav = None
             if audio is not None:
-                wav = os.path.join(tmp, "audio.wav")
-                sf.write(wav, audio_to_stereo(audio), SAMPLE_RATE, subtype="PCM_16")
+                snd = audio_to_stereo(audio)
+                if len(snd):  # пустой звук (например, пустой DJ Пульт) — видео без звука / empty audio — video without sound
+                    wav = os.path.join(tmp, "audio.wav")
+                    sf.write(wav, snd, SAMPLE_RATE, subtype="PCM_16")
 
             if images is not None and len(images) > 0:
                 n = len(images)
