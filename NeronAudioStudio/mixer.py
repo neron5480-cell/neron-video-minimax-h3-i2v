@@ -311,8 +311,13 @@ def mux_video(vpath, wav_path, out_path):
     if not exe:
         return False
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    base = [exe, "-y", "-v", "error", "-i", vpath, "-i", wav_path, "-map", "0:v:0", "-map", "1:a:0"]
-    tail = ["-af", "apad", "-c:a", "aac", "-b:a", "192k", "-shortest", out_path]
+    base = [exe, "-nostdin", "-y", "-v", "error", "-i", vpath, "-i", wav_path, "-map", "0:v:0", "-map", "1:a:0"]
+    # Длина задаётся явно (-t длина видео). Связка apad + -shortest при копировании картинки
+    # в ffmpeg 7 зависает навсегда — Пульт «висел» на сохранении клипа.
+    # Length is set explicitly (-t = video length). apad + -shortest with a copied video stream
+    # hangs forever in ffmpeg 7 — that is what froze the Pult while saving the clip.
+    dur = _clip_len(vpath)
+    tail = ["-af", "apad", "-c:a", "aac", "-b:a", "192k"] + (["-t", f"{dur:.3f}"] if dur > 0 else ["-shortest"]) + [out_path]
     for vcodec in (["-c:v", "copy"], ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18"]):
         r = subprocess.run(base + vcodec + tail, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if r.returncode == 0 and os.path.isfile(out_path):

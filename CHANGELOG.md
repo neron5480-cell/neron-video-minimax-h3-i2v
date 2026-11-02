@@ -1,5 +1,19 @@
 # Changelog / История изменений
 
+## 🎬 Длинные клипы: Видео ×24, быстрое сохранение / Long clips: Video ×24, fast saving (02.11.2026)
+
+**RU:**
+- **Пульт больше не «висит» на сохранении клипа.** В ffmpeg 7 (стоит в свежем ComfyUI) склейка видео со звуком могла не закончиться никогда: процессор почти не занят, прогресс стоит часами. Теперь длина звука задаётся точно по длине видео — клип на пару минут сохраняется за секунды. То же исправлено в Neron Video Combine.
+- **Видео ×24** (было ×3): до 24 роликов в одной ноде, нода сама растёт под новые слоты.
+- **Видео-сэмплер:** экран держит форму кадра, список роликов растягивается и подрастает при добавлении.
+- **DJ Пульт:** без треков больше не останавливает весь запуск — отдаёт тишину, Пульт этот канал пропускает; не прячется наполовину после переключения схем.
+
+**EN:**
+- **The Pult no longer hangs while saving the clip.** With ffmpeg 7 (shipped with recent ComfyUI) muxing video + sound could run forever at near-zero CPU. The audio length is now set exactly to the video length — a two-minute clip saves in seconds. Same fix in Neron Video Combine.
+- **Video ×24** (was ×3): up to 24 clips in one node, the node grows with new slots.
+- **Video Sampler:** the monitor keeps the frame shape; the clip list is resizable and grows as clips are added.
+- **DJ Pult:** with no tracks it no longer stops the whole run — it outputs silence and the Pult skips that channel; no longer half-hidden after switching workflows.
+
 ## 🎬 Видео-сэмплер: плавные переходы / Video Sampler: smooth transitions (01.11.2026)
 
 **RU:** В монтаже Видео-сэмплера появились переходы. **Надвиньте кусок на предыдущий** — на сколько надвинули, столько длится переход (жёлтый клин на ленте); утащили дальше — кусок переставляется, как раньше. Вид перехода — внизу у выделенного куска: **наплыв, через тьму, через свет, шторка, растворение, круг, проявление** (сначала тёмное — как карандашный рисунок) или «сразу», и длина в секундах. Звук на стыке перетекает плавно. Как только монтаж собран, окно сэмплера показывает и играет его **с переходами и звуком**. Если ffmpeg на компьютере придирчив к частоте кадров, сэмплер сам собирает монтаж в строгом режиме; при ошибке полный текст — в консоли ComfyUI. Старые схемы открываются как раньше.

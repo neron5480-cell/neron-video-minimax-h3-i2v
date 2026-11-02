@@ -182,10 +182,13 @@ function makeUserSized(node, domWidget, root, opts) {
     const margin = opts.margin ?? 14;
     node.properties = node.properties || {};
     const manual = () => node.properties.neron_manual_size === true;
+    // grow: содержимое важнее — нода не бывает ниже того, что в ней лежит (мышкой можно только больше)
+    // grow: content wins — the node is never shorter than its content (the mouse can only make it taller)
     const curH = () => {
         if (!manual()) return autoH();
         const h = Number(node.properties.neron_panel_h);
-        return h > 0 ? Math.max(minH, h) : autoH();
+        const v = h > 0 ? Math.max(minH, h) : autoH();
+        return opts.grow ? Math.max(v, autoH()) : v;
     };
     const o = domWidget.options || (domWidget.options = {});
     o.getMinHeight = () => (manual() ? minH : curH());

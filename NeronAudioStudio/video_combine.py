@@ -8,7 +8,7 @@ from ._deps import sf
 import folder_paths
 
 from .drum_machine import SAMPLE_RATE, _num
-from .mixer import _ffmpeg_exe, audio_to_stereo
+from .mixer import _ffmpeg_exe, audio_to_stereo, _clip_len
 
 # ----------------------------------------------------------------------------
 #  Neron Video Combine - собирает и сохраняет готовое видео и показывает его
@@ -135,14 +135,16 @@ class NeronVideoCombine:
         with tempfile.TemporaryDirectory(prefix="neron_vc_") as tmp:
             wav = None
             if audio is not None:
-                wav = os.path.join(tmp, "audio.wav")
-                sf.write(wav, audio_to_stereo(audio), SAMPLE_RATE, subtype="PCM_16")
+                snd = audio_to_stereo(audio)
+                if len(snd):  # пустой звук (например, пустой DJ Пульт) — видео без звука / empty audio — video without sound
+                    wav = os.path.join(tmp, "audio.wav")
+                    sf.write(wav, snd, SAMPLE_RATE, subtype="PCM_16")
 
             if images is not None and len(images) > 0:
                 n = len(images)
                 first = _to_numpy(images[0:1])[0]
                 h, w = int(first.shape[0]), int(first.shape[1])
-                cmd = [exe, "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{w}x{h}", "-r", f"{fps}", "-i", "-"]
+                cmd = [exe, "-nostdin", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{w}x{h}", "-r", f"{fps}", "-i", "-"]
                 if wav:
                     cmd += ["-i", wav]
                 cmd += ["-map", "0:v:0"]
@@ -150,7 +152,8 @@ class NeronVideoCombine:
                     cmd += ["-map", "1:a:0"]
                 cmd += ["-vf", PAD] + vargs
                 if wav:
-                    cmd += aargs + ["-af", "apad", "-shortest"]
+                    # длина явно = кадры / fps (apad + -shortest в ffmpeg 7 может зависнуть) / explicit length
+                    cmd += aargs + ["-af", "apad", "-t", f"{n / fps:.3f}"]
                 cmd += [out_path]
                 proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
                 try:
@@ -170,12 +173,14 @@ class NeronVideoCombine:
                 src = _video_source(video, tmp)
                 if not src:
                     raise RuntimeError("[Neron] Video Combine: не удалось получить файл из входа video")
-                base = [exe, "-y", "-v", "error", "-i", src]
+                base = [exe, "-nostdin", "-y", "-v", "error", "-i", src]
                 if wav:
                     base += ["-i", wav]
                 base += ["-map", "0:v:0"]
                 base += ["-map", "1:a:0"] if wav else ["-map", "0:a:0?"]
-                tail_a = (aargs + ["-af", "apad", "-shortest"]) if wav else (["-c:a", "copy"] if copy_mode else aargs)
+                # длина явно = длина видео (apad + -shortest в ffmpeg 7 зависает) / explicit length = video length
+                vdur = _clip_len(src) if wav else 0.0
+                a_len = ["-t", f"{vdur:.3f}"] if vdur > 0 else ["-shortest"]
                 attempts = []
                 if copy_mode:
                     attempts.append(["-c:v", "copy"])
@@ -185,7 +190,7 @@ class NeronVideoCombine:
                     if copy_mode and vc[:2] == ["-c:v", "copy"] and not wav:
                         ta = ["-c:a", "copy"]
                     else:
-                        ta = aargs + (["-af", "apad", "-shortest"] if wav else [])
+                        ta = aargs + (["-af", "apad"] + a_len if wav else [])
                     r = subprocess.run(base + vc + ta + [out_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     if r.returncode == 0 and os.path.isfile(out_path):
                         ok = True

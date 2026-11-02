@@ -2,11 +2,11 @@
 """
 Кубики для Пульта / Cubes for the Pult
 
-RU: Видео ×3 — одна нода, в ней до трёх загрузчиков видео. Загрузили ролик —
+RU: Видео — одна нода, в ней до 24 загрузчиков видео (было 3). Загрузили ролик —
     открывается следующий слот. Звук ×8 — одна нода, в ней до восьми загрузчиков
     звука. Оба кубика одним проводом идут в Пульт (Neron Mixer), а Пульт сам
     показывает, что пришло и сколько.
-EN: Video ×3 — one node with up to three video loaders. Load a clip and the next
+EN: Video — one node with up to 24 video loaders (was 3). Load a clip and the next
     slot opens. Sound ×8 — one node with up to eight audio loaders. Each cube goes
     into the Pult (Neron Mixer) with a single wire; the Pult shows what arrived.
 """
@@ -16,7 +16,7 @@ import json
 from .drum_machine import _num
 from .mixer import AUDIO_EXTS, VIDEO_EXTS, media_path
 
-MAX_VIDEOS = 3
+MAX_VIDEOS = 24          # ролики по 5–10 с на пару минут / short clips for a couple of minutes
 MAX_SOUNDS = 8
 
 
@@ -70,7 +70,7 @@ class NeronVideoCube:
     OUTPUT_TOOLTIPS = ("Ролики для Пульта (Neron Mixer, вход video) / Clips for the Pult (Neron Mixer, video input)",)
     FUNCTION = "load"
     CATEGORY = "NeronAudio"
-    DESCRIPTION = "До 3 роликов в одной ноде. Up to 3 clips in one node."
+    DESCRIPTION = "До 24 роликов в одной ноде. Up to 24 clips in one node."
 
     def load(self, cube_json):
         clips = parse_video_cube(cube_json)
@@ -104,4 +104,4 @@ class NeronSoundCube:
 
 
 NODE_CLASS_MAPPINGS = {"NeronVideoCube": NeronVideoCube, "NeronSoundCube": NeronSoundCube}
-NODE_DISPLAY_NAME_MAPPINGS = {"NeronVideoCube": "Neron Video ×3 / Видео ×3", "NeronSoundCube": "Neron Sound ×8 / Звук ×8"}
+NODE_DISPLAY_NAME_MAPPINGS = {"NeronVideoCube": "Neron Video ×24 / Видео ×24", "NeronSoundCube": "Neron Sound ×8 / Звук ×8"}

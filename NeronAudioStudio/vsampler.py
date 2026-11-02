@@ -48,7 +48,7 @@ TRANS = {
 # reveal: P goes 1→0; dark parts of the new frame come first, soft edge 0.25
 REVEAL_EXPR = "A*(1-st(0,clip((1.25*(1-P)-B/255)/0.25,0,1)))+B*ld(0)"
 
-MAX_SRC = 3
+MAX_SRC = 24             # столько роликов даёт «Видео ×24» / as many clips as the Video cube gives
 MAX_PIECES = 200
 EDIT_SUB = "Neron_Videos/_edits"
 

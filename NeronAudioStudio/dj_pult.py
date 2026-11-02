@@ -260,8 +260,14 @@ class NeronDJPult:
         if mix is None:
             mix = auto_mix(a, b, st["xfade"])
             if mix is None or len(mix) == 0:
-                raise RuntimeError("[Neron DJ] Нет звука: подключите трек к deck_a или deck_b, или запишите сет кнопкой ⏺ / "
-                                   "No sound: wire a track to deck_a or deck_b, or record a set with ⏺")
+                # Пустой пульт не должен ронять весь процесс: отдаём тишину нулевой длины,
+                # Пульт/микшер такой канал просто пропускает.
+                # An empty DJ must not stop the whole run: return zero-length silence,
+                # the Pult/mixer simply skips such a channel.
+                print(f"{TAG} треков нет — канал пропущен (тишина) / no tracks — channel skipped (silence)")
+                empty = torch.zeros((1, 2, 0), dtype=torch.float32)
+                return {"ui": {"neron_dj": ui_decks},
+                        "result": ({"waveform": empty, "sample_rate": SAMPLE_RATE}, "")}
             out_dir = os.path.join(folder_paths.get_output_directory(), REC_DIR)
             os.makedirs(out_dir, exist_ok=True)
             path = os.path.join(out_dir, _clean_name(save_name, "neron_dj_set") + "_auto.wav")
