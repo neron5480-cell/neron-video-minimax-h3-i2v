@@ -1,0 +1,23 @@
+{
+  "_comment": "Пакеты моделей для 🎬 Neron LTX Engine. Чтобы добавить пакет — допиши его сюда, код трогать не нужно. Model packs: add a pack here, no code changes needed.",
+  "default": "standard",
+  "packs": {
+    "standard": {
+      "title": "Стандарт · LTX 2.5 / Standard · LTX 2.5",
+      "description": "Самый распространённый набор: быстрая (distilled) LTX 2.5 в сжатии int8 — то, на чём собран процесс Neron. Плюс модель плавности RIFE для 48 к/с.\n\nEN: The most common set: distilled LTX 2.5 in int8 — what the Neron workflow is built on. Plus the RIFE smoothness model for 48 fps.",
+      "known_size_note": "больше 37 ГБ (модель ~21,5 ГБ + энкодер ~15,4 ГБ + VAE и RIFE) / over 37 GB",
+      "files": [
+        {"role": "unet", "kind": "diffusion_models", "repo": "Lightricks/LTX-2.5", "gated": true,
+         "path": "diffusion_models/ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors"},
+        {"role": "clip", "kind": "text_encoders", "repo": "Lightricks/LTX-2.5", "gated": true,
+         "path": "text_encoders/gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors"},
+        {"role": "vae_video", "kind": "vae", "repo": "Lightricks/LTX-2.5", "gated": true,
+         "path": "vae/ltx-2.5-video-vae-bf16.safetensors"},
+        {"role": "vae_audio", "kind": "vae", "repo": "Lightricks/LTX-2.5", "gated": true,
+         "path": "vae/ltx-2.5-audio-vae-bf16.safetensors"},
+        {"role": "interp", "kind": "frame_interpolation", "repo": "Comfy-Org/Frame-Interpolation", "gated": false,
+         "path": "frame_interpolation/rife_v4.26.safetensors"}
+      ]
+    }
+  }
+}
