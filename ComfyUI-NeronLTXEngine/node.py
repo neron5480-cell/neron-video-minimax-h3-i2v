@@ -13,6 +13,7 @@ log = logging.getLogger("Neron.LTX.Engine")
 NO_LORA = "— нет / none —"
 NO_UPSCALE = "— нет / none —"
 NOT_FOUND = "__not_found__"
+AUTO_MODEL = "🤖 авто — из пакета / auto — from pack"
 
 
 def _files(kind, extra_first=None):
@@ -76,12 +77,13 @@ class NeronLTXEngine:
 
     @classmethod
     def _input_types_raw(cls):
-        unets, clips, vaes = _files("diffusion_models"), _files("text_encoders"), _files("vae")
+        unets, clips, vaes = _files("diffusion_models", AUTO_MODEL), _files("text_encoders", AUTO_MODEL), \
+            _files("vae", AUTO_MODEL)
         loras = _files("loras", NO_LORA)
         ups = _files("upscale_models", NO_UPSCALE)
         if ups == [NOT_FOUND]:
             ups = [NO_UPSCALE]
-        interps = _files("frame_interpolation")
+        interps = _files("frame_interpolation", AUTO_MODEL)
         return {
             "required": {
                 "expert": ("BOOLEAN", _main("⚙ эксперт / expert", default=False,
@@ -155,12 +157,14 @@ class NeronLTXEngine:
                 "lora_1_strength": ("FLOAT", _exp("LoRA 1 · сила / strength", default=1.0, min=-2.0, max=2.0, step=0.05)),
                 "lora_2": (loras, _exp("LoRA 2", default=NO_LORA)),
                 "lora_2_strength": ("FLOAT", _exp("LoRA 2 · сила / strength", default=1.0, min=-2.0, max=2.0, step=0.05)),
-                "unet_model": (unets, _exp("модель / model", default=_pick(unets, engine.UNET_NAME))),
-                "clip_model": (clips, _exp("текстовый энкодер / text encoder", default=_pick(clips, engine.CLIP_NAME))),
-                "vae_video_model": (vaes, _exp("VAE видео / video VAE", default=_pick(vaes, engine.VAE_VIDEO_NAME))),
-                "vae_audio_model": (vaes, _exp("VAE звука / audio VAE", default=_pick(vaes, engine.VAE_AUDIO_NAME))),
-                "interp_model": (interps, _exp("модель плавности / smoothness model",
-                                 default=_pick(interps, engine.INTERP_NAME))),
+                "unet_model": (unets, _exp("модель / model", default=AUTO_MODEL,
+                               tooltip="Авто — нода сама берёт файл из пакета 📥 (даже если его скачали после запуска ComfyUI). "
+                                       "Свой файл — выбери из списка.\n\nEN: Auto takes the file from the 📥 pack "
+                                       "(even if downloaded after ComfyUI started). Or pick your own file.")),
+                "clip_model": (clips, _exp("текстовый энкодер / text encoder", default=AUTO_MODEL)),
+                "vae_video_model": (vaes, _exp("VAE видео / video VAE", default=AUTO_MODEL)),
+                "vae_audio_model": (vaes, _exp("VAE звука / audio VAE", default=AUTO_MODEL)),
+                "interp_model": (interps, _exp("модель плавности / smoothness model", default=AUTO_MODEL)),
                 "seed": ("INT", _exp("сид / seed", default=1, min=0, max=0xFFFFFFFFFFFF)),
             },
             "optional": {
@@ -186,9 +190,18 @@ class NeronLTXEngine:
             raise ValueError("[LTX Engine] Нет промпта: подключи вход prompt (например, текстовую ноду или "
                              "автопромтер).\n\nEN: No prompt: connect the prompt input.")
 
+        notes = []
+
         def model(v, kind, default):
-            name = default if not v or v == NOT_FOUND else v
-            return engine.find_file(kind, name.replace("\\", "/").split("/")[-1]) or (name if v and v != NOT_FOUND else None)
+            # авто (или пусто) — файл из пакета, ищем прямо сейчас, а не по списку со старта ComfyUI
+            if not v or v in (AUTO_MODEL, NOT_FOUND):
+                return engine.find_file(kind, default)
+            found = engine.find_file(kind, v.replace("\\", "/").split("/")[-1]) or v
+            if kind in ("diffusion_models", "text_encoders", "vae") and "ltx" not in found.lower() \
+                    and "gemma" not in found.lower():
+                notes.append(f"⚠ Выбран свой файл «{found}» — по имени не похож на LTX 2.5. Если будет ошибка, "
+                             f"поставь «авто». EN: «{found}» doesn't look like LTX 2.5 by name; use auto on error.")
+            return found
 
         models = {"unet": model(unet_model, "diffusion_models", engine.UNET_NAME),
                   "clip": model(clip_model, "text_encoders", engine.CLIP_NAME),
@@ -216,6 +229,7 @@ class NeronLTXEngine:
         except Exception:
             engine.free("после ошибки / after error")
             raise
+        report = notes + report
         for line in report:
             log.info("[LTX Engine] %s", line)
         return {"ui": {"text": ["\n".join(report)]}, "result": (video, audio, imgs, out_fps)}

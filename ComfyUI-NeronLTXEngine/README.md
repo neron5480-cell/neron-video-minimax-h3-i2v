@@ -7,10 +7,10 @@
 ## Первый запуск / First run
 
 1. Открой `workflows/Neron_LTX_Engine.json`.
-2. Моделей нет — окно **📥 Модели** откроется само. Один раз: прими лицензию LTX 2.5 на Hugging Face и вставь токен (окно ведёт по шагам). Дальше нода сама скачает пакет (больше 37 ГБ) с прогрессом и докачкой, и разложит файлы по папкам.
+2. Моделей нет — окно **📥 Модели** откроется само. Один раз: прими лицензию LTX 2.5 на Hugging Face и вставь токен (окно ведёт по шагам). Дальше нода сама скачает пакет (≈ 36 ГБ) с прогрессом и докачкой, и разложит файлы по папкам.
 3. Подключи картинку, промпт — и **Run**.
 
-EN: open the workflow; the **📥 Models** window opens by itself, accept the LTX 2.5 license once and paste a Hugging Face token; the node downloads the pack (over 37 GB, resumable) into the right folders.
+EN: open the workflow; the **📥 Models** window opens by itself, accept the LTX 2.5 license once and paste a Hugging Face token; the node downloads the pack (≈ 36 GB, resumable) into the right folders.
 
 ## Входы и выходы / Inputs & outputs
 

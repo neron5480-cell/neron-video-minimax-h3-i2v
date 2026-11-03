@@ -273,7 +273,11 @@ function hookDownload() {
     api.addEventListener("neron_ltx.download", (e) => {
         if (DL.status) DL.status.download = e.detail || {};
         const st = e.detail?.state;
-        if (st === "done") fetchStatus().then(() => DL.dialog?.render());
+        if (st === "done") {
+            // новые файлы — сразу в списки моделей, без перезапуска ComfyUI
+            try { app.refreshComboInNodes?.(); } catch (_) {}
+            fetchStatus().then(() => DL.dialog?.render());
+        }
         else { refreshButtons(); DL.dialog?.render(); }
     });
 }
@@ -607,7 +611,7 @@ function showHelpDialog() {
 function resetAll(node, specs) {
     for (const w of node.widgets || []) {
         const o = specs[w.name];
-        if (!o || w.name.endsWith("_model") || w.name === "input_upscale" || !("default" in o)) continue;
+        if (!o || w.name === "input_upscale" || !("default" in o)) continue;
         w.value = o.default;
         try { w.callback?.(w.value, app.canvas, node, [0, 0], null); } catch (_) {}
     }

@@ -5,7 +5,7 @@
     "standard": {
       "title": "Стандарт · LTX 2.5 / Standard · LTX 2.5",
       "description": "Самый распространённый набор: быстрая (distilled) LTX 2.5 в сжатии int8 — то, на чём собран процесс Neron. Плюс модель плавности RIFE для 48 к/с.\n\nEN: The most common set: distilled LTX 2.5 in int8 — what the Neron workflow is built on. Plus the RIFE smoothness model for 48 fps.",
-      "known_size_note": "больше 37 ГБ (модель ~21,5 ГБ + энкодер ~15,4 ГБ + VAE и RIFE) / over 37 GB",
+      "known_size_note": "≈ 36 ГБ (точный размер окно узнаёт у сервера) / ≈ 36 GB",
       "files": [
         {"role": "unet", "kind": "diffusion_models", "repo": "Lightricks/LTX-2.5", "gated": true,
          "path": "diffusion_models/ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors"},
