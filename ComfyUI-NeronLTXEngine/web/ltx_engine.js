@@ -15,7 +15,7 @@ const GROUPS = [
       fill: "rgba(255, 200, 100, 0.22)", border: "rgba(255, 200, 100, 0.95)", label: "rgba(255, 235, 160, 1.0)", thick: 2.5 },
     { name: "ГЛАВНОЕ / MAIN", widgets: ["mode", "seconds", "gpu"],
       fill: "rgba( 90, 170, 200, 0.15)", border: "rgba( 90, 170, 200, 0.75)", label: "rgba(180, 230, 255, 1.0)" },
-    { name: "РАЗМЕР / SIZE", widgets: ["megapixels", "fps", "t2v_aspect"],
+    { name: "РАЗМЕР / SIZE", widgets: ["size", "manual_width", "manual_height", "megapixels", "fps", "t2v_aspect"],
       fill: "rgba(200, 160,  90, 0.15)", border: "rgba(200, 160,  90, 0.75)", label: "rgba(255, 225, 170, 1.0)" },
     { name: "КАДРЫ / FRAMES", widgets: ["first_strength", "mid_strength", "last_strength", "mid1_sec", "mid2_sec"],
       fill: "rgba(120, 200, 160, 0.15)", border: "rgba(120, 200, 160, 0.75)", label: "rgba(190, 255, 220, 1.0)" },
@@ -125,6 +125,7 @@ function drawGroupLabels(node, ctx) {
 // ---------- эксперт ----------
 function applyExpert(node, specs) {
     const ex = wv(node, "expert") === true;
+    const size = String(wv(node, "size") || "");
     let prevHidden = false;
     for (const w of node.widgets || []) {
         if (w.name === "control_after_generate" || w.name === "control_before_generate") {
@@ -133,7 +134,10 @@ function applyExpert(node, specs) {
         }
         const o = specs[w.name];
         if (!o) { prevHidden = false; continue; }
-        const hide = !ex && !o.ltx_main;
+        let hide = !ex && !o.ltx_main;
+        // ширина/высота — только при «Ручной», площадь — только при «По площади» (даже без эксперта)
+        if (w.name === "manual_width" || w.name === "manual_height") hide = !size.startsWith("Ручной");
+        if (w.name === "megapixels") hide = !size.startsWith("По площади");
         if (w.hidden !== hide) w.hidden = hide;
         prevHidden = hide;
     }
@@ -486,7 +490,11 @@ GPU     Auto detects your VRAM and picks the frame size.
         at 0.9 MP so ComfyUI does not swap.
 
 📌 EXPERT 📌
-Size: own megapixels, fps, shape for text-to-video.
+Size (main): Auto by GPU, presets 16:9 / 9:16 / 1:1 /
+      4:3 / 3:4 / 21:9, By area (MP) or Manual
+      width × height. Wired width/height inputs (e.g.
+      from an image processor) override all of it.
+Expert size: fps, shape for text-to-video.
 Frames: strength of first / middle / last, middle
         positions in seconds.
 Quality: input upscale (Swin2SR is picked up by
@@ -563,7 +571,11 @@ fps    — частота кадров (48 с плавностью).
           чтобы ComfyUI не ушёл в своп.
 
 📌 ЭКСПЕРТ 📌
-Размер: своя площадь, к/с, форма для «текст → видео».
+Размер (главное): Авто по видеокарте, пресеты 16:9 /
+       9:16 / 1:1 / 4:3 / 3:4 / 21:9, По площади (Мп)
+       или Ручной — ширина × высота. Провода width/height
+       (например, от процессора картинки) главнее всего.
+Эксперт: к/с, форма для «текст → видео».
 Кадры: сила первого / промежуточных / последнего,
        секунды промежуточных.
 Качество: апскейл входа (Swin2SR подхватывается сам,
@@ -646,10 +658,10 @@ app.registerExtension({
             spacer.computeSize = () => [0, 40];
             node.widgets.splice(node.widgets.indexOf(spacer), 1);
             node.widgets.unshift(spacer);
-            const ex = node.widgets.find((w) => w.name === "expert");
-            if (ex) {
-                const cb = ex.callback;
-                ex.callback = function () { const rr = cb?.apply(this, arguments); applyExpert(node, specs); return rr; };
+            for (const w of node.widgets || []) {
+                if (w.name !== "expert" && w.name !== "size") continue;
+                const cb = w.callback;
+                w.callback = function () { const rr = cb?.apply(this, arguments); applyExpert(node, specs); return rr; };
             }
             node.__ltxModelsBtn = node.addWidget("button", MODELS_BTN, null, () => openModelsDialog(false));
             node.addWidget("button", "🔄 Reset to Defaults / Сброс", null, () => resetAll(node, specs));

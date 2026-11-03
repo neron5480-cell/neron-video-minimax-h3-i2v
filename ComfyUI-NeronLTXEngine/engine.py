@@ -247,13 +247,24 @@ def generate(prompt, camera_prompt, frames, s, models, user_loras=()):
                 notes.append(f"⚠ Кадр «{k}» другой формы, чем первый — он будет подогнан (обрезан по центру). "
                              f"EN: frame «{k}» has a different shape and will be center-cropped.")
     vram, ram = system_memory()
-    if s["megapixels"] and s["megapixels"] > 0:
-        mp, tier_note = float(s["megapixels"]), f"площадь задана вручную: {s['megapixels']:.2f} Мп"
+    fixed = s.get("fixed_size")
+    if fixed:
+        w, h, size_note = fixed
+        report.append("Размер: " + size_note)
+        if shape_src is not None and sizing.aspect_mismatch(w / float(h), aspect):
+            notes.append(f"⚠ Форма {w}×{h} не совпадает с формой кадра — кадры будут обрезаны по центру. "
+                         f"EN: {w}×{h} differs from the frame shape — frames will be center-cropped.")
+        if w * h / 1e6 > sizing.BIG_AREA_MP:
+            notes.append(f"⚠ {w}×{h} — это {w * h / 1e6:.1f} Мп. Может не хватить видеопамяти. "
+                         f"EN: {w * h / 1e6:.1f} MP may run out of VRAM.")
     else:
-        mp, label, tier_note = sizing.megapixels_for(s["gpu"], vram, ram)
-    if tier_note:
-        report.append("Видеокарта: " + tier_note)
-    w, h = sizing.size_for(aspect, mp)
+        if s["megapixels"] and s["megapixels"] > 0:
+            mp, tier_note = float(s["megapixels"]), f"по площади: {s['megapixels']:.2f} Мп"
+        else:
+            mp, label, tier_note = sizing.megapixels_for(s["gpu"], vram, ram)
+        if tier_note:
+            report.append("Видеокарта: " + tier_note)
+        w, h = sizing.size_for(aspect, mp)
     n = sizing.frames_for(s["seconds"], fps)
     report.append(f"Размер {w}×{h}, {n} кадров ({(n - 1) / fps:.2f} с при {fps:g} к/с)")
     mids = sizing.guide_frames(n, fps, (s["mid1_sec"], s["mid2_sec"]),

@@ -113,3 +113,50 @@ def aspect_mismatch(a, b, tolerance=0.25):
     if not a or not b:
         return False
     return abs(math.log(a / b)) > tolerance
+
+
+# ---------------- выбор размера ----------------
+# Пресеты — стороны кратны 32. «Авто» — по видеокарте и форме первого кадра.
+SIZE_AUTO = "Авто — по видеокарте / Auto — by GPU"
+SIZE_AREA = "По площади (Мп) / By area (MP)"
+SIZE_MANUAL = "Ручной / Manual"
+SIZE_PRESETS = {
+    "16:9 · 960×544": (960, 544),
+    "16:9 · 1280×704": (1280, 704),
+    "16:9 · 1536×864": (1536, 864),
+    "16:9 · 1920×1088": (1920, 1088),
+    "9:16 · 544×960": (544, 960),
+    "9:16 · 704×1280": (704, 1280),
+    "9:16 · 864×1536": (864, 1536),
+    "9:16 · 1088×1920": (1088, 1920),
+    "1:1 · 768×768": (768, 768),
+    "1:1 · 1024×1024": (1024, 1024),
+    "1:1 · 1280×1280": (1280, 1280),
+    "4:3 · 1024×768": (1024, 768),
+    "4:3 · 1280×960": (1280, 960),
+    "3:4 · 768×1024": (768, 1024),
+    "3:4 · 960×1280": (960, 1280),
+    "21:9 · 1536×640": (1536, 640),
+}
+SIZE_CHOICES = [SIZE_AUTO] + list(SIZE_PRESETS) + [SIZE_AREA, SIZE_MANUAL]
+BIG_AREA_MP = 2.5        # больше — предупреждаем про память (не режем: внешнее управление — осознанный выбор)
+
+
+def fixed_size(choice, manual_w, manual_h, ext_w=None, ext_h=None):
+    """Размер, заданный явно → (w, h, заметка) или None, если размер считать по видеокарте/площади.
+
+    Порядок: провода width/height (внутренние настройки отключаются) → пресет → ручной.
+    """
+    if ext_w is not None and ext_h is not None:
+        w, h = round32(max(MIN_SIDE, int(ext_w))), round32(max(MIN_SIDE, int(ext_h)))
+        note = f"размер с проводов width/height: {w}×{h} (внутренний выбор размера отключён)"
+        if (w, h) != (int(ext_w), int(ext_h)):
+            note += f"; подогнано к кратности 32 из {int(ext_w)}×{int(ext_h)}"
+        return w, h, note
+    if choice in SIZE_PRESETS:
+        w, h = SIZE_PRESETS[choice]
+        return w, h, f"пресет {choice}"
+    if choice == SIZE_MANUAL:
+        w, h = round32(max(MIN_SIDE, int(manual_w))), round32(max(MIN_SIDE, int(manual_h)))
+        return w, h, f"ручной размер {w}×{h}"
+    return None

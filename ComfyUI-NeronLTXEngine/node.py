@@ -60,7 +60,7 @@ class NeronLTXEngine:
 
     ORDER = ["expert",
              "mode", "seconds", "gpu",                                                  # ГЛАВНОЕ / MAIN
-             "megapixels", "fps", "t2v_aspect",                                         # РАЗМЕР / SIZE
+             "size", "manual_width", "manual_height", "megapixels", "fps", "t2v_aspect",  # РАЗМЕР / SIZE
              "first_strength", "mid_strength", "last_strength", "mid1_sec", "mid2_sec",  # КАДРЫ / FRAMES
              "input_upscale", "input_sharpen", "img_compression", "output_sharpen", "smooth",  # КАЧЕСТВО
              "lora_1", "lora_1_strength", "lora_2", "lora_2_strength",                  # LORA
@@ -104,11 +104,21 @@ class NeronLTXEngine:
                         tooltip="Авто — нода сама узнаёт, сколько памяти у видеокарты, и подбирает размер кадра. "
                                 "Если не хватает памяти — выбери ступень пониже.\n\nEN: Auto detects your VRAM and "
                                 "picks the frame size. Out of memory? Pick a lower tier.")),
-                "megapixels": ("FLOAT", _exp("площадь кадра, Мп (0 = по видеокарте) / megapixels (0 = by GPU)",
-                               default=0.0, min=0.0, max=4.0, step=0.05,
-                               tooltip="0 — размер выбирается по видеокарте. Иначе — своя площадь; форма берётся "
-                                       "из первого кадра, стороны кратны 32.\n\nEN: 0 = by GPU tier. Otherwise your "
-                                       "own area; shape from the first frame, sides multiple of 32.")),
+                "size": (sizing.SIZE_CHOICES, _main("размер / size", default=sizing.SIZE_AUTO,
+                         tooltip="Авто — по видеокарте, форма как у первого кадра. Пресеты — готовые размеры "
+                                 "(стороны кратны 32). По площади — свои мегапиксели, форма от кадра. Ручной — своя "
+                                 "ширина и высота. Если подключены провода width/height — главнее всего этого.\n\n"
+                                 "EN: Auto = by GPU, shape of the first frame. Presets = ready sizes. By area = your "
+                                 "megapixels. Manual = your width and height. Wired width/height override all of it.")),
+                "manual_width": ("INT", _exp("ручной · ширина / manual width", default=1280, min=256, max=4096,
+                                 step=32, tooltip="Только при размере «Ручной». Кратно 32.\n\nEN: Only with size = "
+                                                  "Manual. Multiple of 32.")),
+                "manual_height": ("INT", _exp("ручной · высота / manual height", default=704, min=256, max=4096,
+                                  step=32, tooltip="Только при размере «Ручной». Кратно 32.\n\nEN: Only with size = "
+                                                   "Manual. Multiple of 32.")),
+                "megapixels": ("FLOAT", _exp("площадь, Мп / megapixels", default=1.0, min=0.2, max=4.0, step=0.05,
+                               tooltip="Только при размере «По площади». Форма берётся из первого кадра, стороны "
+                                       "кратны 32.\n\nEN: Only with size = By area. Shape from the first frame.")),
                 "fps": ("FLOAT", _exp("кадров в секунду / fps", default=24.0, min=8.0, max=60.0, step=1.0,
                         tooltip="Для диалогов и кино — 24 или 25. Плавность ×2 удвоит эту цифру на выходе.\n\nEN: "
                                 "24 or 25 for film and dialogue. Smoothness ×2 doubles it at the output.")),
@@ -176,16 +186,22 @@ class NeronLTXEngine:
                 "mid_frame_1": ("IMAGE", {"tooltip": "Промежуточный кадр 1. EN: middle frame 1."}),
                 "mid_frame_2": ("IMAGE", {"tooltip": "Промежуточный кадр 2. EN: middle frame 2."}),
                 "last_frame": ("IMAGE", {"tooltip": "Последний кадр. EN: last frame."}),
+                "width": ("INT", {"forceInput": True, "tooltip": "Внешняя ширина (например, от процессора картинки). "
+                                                                 "Подключены width и height — внутренний выбор размера "
+                                                                 "отключается. EN: external width; wired width+height "
+                                                                 "override the internal size."}),
+                "height": ("INT", {"forceInput": True, "tooltip": "Внешняя высота. EN: external height."}),
             },
         }
 
-    def generate(self, expert=False, mode=None, seconds=5.0, gpu=sizing.AUTO, megapixels=0.0, fps=24.0,
+    def generate(self, expert=False, mode=None, seconds=5.0, gpu=sizing.AUTO, size=sizing.SIZE_AUTO,
+                 manual_width=1280, manual_height=704, megapixels=1.0, fps=24.0,
                  t2v_aspect="16:9", first_strength=0.7, mid_strength=1.0, last_strength=1.0, mid1_sec=0.0,
                  mid2_sec=0.0, input_upscale=NO_UPSCALE, input_sharpen=0.5, img_compression=0, output_sharpen=0.1,
                  smooth=True, lora_1=NO_LORA, lora_1_strength=1.0, lora_2=NO_LORA, lora_2_strength=1.0,
                  unet_model=None, clip_model=None, vae_video_model=None, vae_audio_model=None, interp_model=None,
                  seed=1, prompt=None, camera_prompt=None, first_frame=None, mid_frame_1=None, mid_frame_2=None,
-                 last_frame=None):
+                 last_frame=None, width=None, height=None):
         if not (prompt or "").strip():
             raise ValueError("[LTX Engine] Нет промпта: подключи вход prompt (например, текстовую ноду или "
                              "автопромтер).\n\nEN: No prompt: connect the prompt input.")
@@ -217,7 +233,9 @@ class NeronLTXEngine:
         loras = [(nm, st) for nm, st in ((lora_1, lora_1_strength), (lora_2, lora_2_strength))
                  if nm and nm not in (NO_LORA, NOT_FOUND) and abs(float(st)) > 1e-6]
         settings = {"mode": mode if mode in engine.MODES else engine.MODES[0], "seconds": float(seconds),
-                    "gpu": gpu, "megapixels": float(megapixels), "fps": float(fps), "t2v_aspect": t2v_aspect,
+                    "gpu": gpu, "fixed_size": sizing.fixed_size(size, manual_width, manual_height, width, height),
+                    "megapixels": float(megapixels) if size == sizing.SIZE_AREA else 0.0,
+                    "fps": float(fps), "t2v_aspect": t2v_aspect,
                     "first_strength": float(first_strength), "mid_strength": float(mid_strength),
                     "last_strength": float(last_strength), "mid1_sec": float(mid1_sec), "mid2_sec": float(mid2_sec),
                     "input_upscale": None if input_upscale in (NO_UPSCALE, NOT_FOUND, None) else input_upscale,
