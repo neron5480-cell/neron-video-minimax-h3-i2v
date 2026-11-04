@@ -215,7 +215,7 @@ def first_frame(img):
 
 def generate(prompt, camera_prompt, frames, s, models, user_loras=()):
     """frames: {"first","mid1","mid2","last"} → IMAGE или None.
-    s: настройки (dict). → (video, audio, кадры, fps, отчёт)."""
+    s: настройки (dict). → (video, audio, кадры, fps, отчёт, итоговый промпт)."""
     t0 = time.time()
     report, notes = [], []
     quality = s["mode"] != MODES[1]
@@ -432,4 +432,4 @@ def generate(prompt, camera_prompt, frames, s, models, user_loras=()):
     vid = node("CreateVideo", images=video, fps=float(out_fps), audio=audio)[0]
     report.append(f"Готово: {int(video.shape[0])} кадров, {out_fps:g} к/с, за {time.time() - t0:.0f} с")
     send("Готово / Done", 1, 1)
-    return vid, audio, video, float(out_fps), notes + report
+    return vid, audio, video, float(out_fps), notes + report, text

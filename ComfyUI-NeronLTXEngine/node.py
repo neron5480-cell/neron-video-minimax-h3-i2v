@@ -53,8 +53,12 @@ def _exp(label, **o):
 class NeronLTXEngine:
     CATEGORY = "Neron/LTX"
     FUNCTION = "generate"
-    RETURN_TYPES = ("VIDEO", "AUDIO", "IMAGE", "FLOAT")
-    RETURN_NAMES = ("video", "audio", "frames", "fps")
+    RETURN_TYPES = ("VIDEO", "AUDIO", "IMAGE", "FLOAT", "STRING")
+    RETURN_NAMES = ("video", "audio", "frames", "fps", "prompt_used")
+    OUTPUT_TOOLTIPS = ("Готовое видео со звуком / ready video with sound", "Звук отдельно / audio",
+                       "Кадры картинками / frames", "Частота кадров / fps",
+                       "Текст, который ушёл в модель: промпт + камера в начале и в конце. "
+                       "EN: the exact text sent to the model, with the camera sentence.")
     DESCRIPTION = ("Генератор LTX 2.5 одной нодой: первый, промежуточные и последний кадр, звук, плавность. "
                    "LTX 2.5 generator in one node: first, middle and last frames, audio, smoothness.")
 
@@ -243,14 +247,15 @@ class NeronLTXEngine:
                     "output_sharpen": float(output_sharpen), "smooth": bool(smooth), "seed": int(seed)}
         frames = {"first": first_frame, "mid1": mid_frame_1, "mid2": mid_frame_2, "last": last_frame}
         try:
-            video, audio, imgs, out_fps, report = engine.generate(prompt, camera_prompt, frames, settings, models, loras)
+            video, audio, imgs, out_fps, report, used = engine.generate(prompt, camera_prompt, frames, settings, models,
+                                                                         loras)
         except Exception:
             engine.free("после ошибки / after error")
             raise
         report = notes + report
         for line in report:
             log.info("[LTX Engine] %s", line)
-        return {"ui": {"text": ["\n".join(report)]}, "result": (video, audio, imgs, out_fps)}
+        return {"ui": {"text": ["\n".join(report)]}, "result": (video, audio, imgs, out_fps, used)}
 
 
 NODE_CLASS_MAPPINGS = {"NeronLTXEngine": NeronLTXEngine}
