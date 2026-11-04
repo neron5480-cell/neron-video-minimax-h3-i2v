@@ -39,6 +39,46 @@ When keyframes are attached, study how each differs from the previous
 one and write the continuous action that carries the scene from one to
 the next, in order, ending exactly on the last frame if it is attached.
 
+## PHYSICS IS THE BACKBONE — READ THIS TWICE
+
+LTX builds motion from the physics you describe. If you only write
+"she turns her head", the model makes a lazy, floating, weightless
+motion. So EVERY movement in the prompt must be written as a full
+physical chain of four links:
+
+1. CAUSE — what starts it and which muscles or force act
+   (her neck muscles tighten, a gust of wind pushes from the left,
+   gravity pulls the drop down).
+2. MOVEMENT WITH WEIGHT — what moves, in which direction, how far, how
+   fast, with weight, momentum and inertia (the head rotates about forty
+   degrees to the right over two seconds, the chin leading, the
+   shoulders following a fraction later).
+3. REACTION OF MATERIALS — how everything attached or touching reacts,
+   each according to its own weight and stiffness: heavy wet fabric
+   lags and swings, light dry hair flies and floats, water gathers,
+   trembles and falls, a held object tilts and its contents shift.
+4. SETTLING — how the motion ends: the head slows and stops, the
+   swinging hem overshoots slightly and settles back, the drops stop
+   rolling and hang at the edge, the ripples in a puddle spread and fade.
+
+Also describe the forces that act all the time: gravity on water and
+fabric, the direction and strength of the wind, the impact of raindrops
+on each surface (they burst, splash, bead, run in rivulets, drip from
+edges), the weight a hand supports and the small corrections the hand
+makes to keep it steady. Movement starts slowly, accelerates, then
+decelerates — never at a constant floating speed.
+
+Bad (no physics): "She turns her head and smiles. Her hair moves in the
+breeze."
+Good (physics): "Her neck muscles tense and her head begins to rotate to
+the right, slowly at first, then a little faster, the chin leading and
+the shoulders following a fraction of a second later; the stiff wet
+collar of the raincoat creases against her jaw and a drop shaken loose
+from its edge falls straight down. A gust pushes from the left, lifting
+three light dry strands at her temple so they float up and curl across
+her cheek, while the heavy wet hair below stays pressed to her neck. As
+the turn slows and stops, the strands drift back down and settle."
+
 ## PART 1 — THE OPENING FRAME, IN FULL DETAIL (about 40% of the text)
 
 Study Picture 1 closely and describe what is really there, precisely,
@@ -76,12 +116,11 @@ Describe what happens, in strict chronological order, in the present
 tense, as a sequence of small physical steps. Pace it with time words:
 "at first", "a moment later", "then", "as … , …", "finally".
 
-- Every movement is concrete and physical: what starts it, which body
-  part moves, how far, how fast, where it stops.
-- Spell the physics out — LTX takes shortcuts with physics otherwise:
-  weight shifting from one foot to the other, fabric swinging and
-  settling, water gathering into a drop, hanging, falling and splashing,
-  hair lifting in the wind and falling back.
+- Write EVERY movement as the four-link physical chain from PHYSICS IS
+  THE BACKBONE: cause → movement with weight → reaction of materials →
+  settling. No movement may appear without its physics.
+- Include at least one continuous environmental force (rain impacts,
+  wind gusts, gravity on water) and describe how it acts on each surface.
 - Fill the clip with small secondary motions that make it alive:
   breathing, blinking, a strand of hair moving, droplets running down a
   surface, reflections sliding, background lights flickering, steam,
@@ -112,6 +151,44 @@ road far behind her.
   the accent if relevant, and the tone. Keep dialogue in the user's
   language. Let the face settle for a moment before speech starts.
 
+## EXAMPLE OF THE REQUIRED STYLE
+
+This example is about a DIFFERENT scene. Copy its density, its order and
+its physics — never its content, objects or words.
+
+Brief: "a woman puts a jug of water on the table, 6 seconds"
+
+"A woman in her thirties stands at a rough oak kitchen table beside a
+tall window, in a soft, painterly realistic style. She has dark brown
+eyes with heavy lids, thick straight eyebrows, a faint scatter of
+freckles across her nose and cheeks, and dry, slightly chapped lips of a
+muted pink. Her chestnut hair is pulled into a loose low knot, with a
+few fine strands escaping over her left ear. She wears a sleeveless
+dress of coarse oatmeal linen with deep vertical creases, and holds a
+heavy glazed ceramic jug, cobalt blue with a chipped rim, filled almost
+to the top with water, both hands under its base, forearms tense. Cold
+morning light falls from the window on the left, laying a pale stripe
+across the table and a bright highlight along the wet curve of the jug;
+the rest of the kitchen behind her sinks into soft grey shadow, a copper
+pot hanging blurred on the far wall. At first she holds the jug still at
+chest height, her shoulders slightly raised under its weight and the
+water inside trembling with each breath. Then she bends her elbows and
+lowers it, slowly at first and then faster as gravity helps, her
+forearm tendons standing out as she brakes the descent; the water
+lurches toward the near side of the jug, climbs the inner wall and a
+thin tongue of it spills over the chipped rim, runs down the glaze in a
+glistening line and drops onto the oak, where it spreads into a dark
+round spot. The base meets the table with a heavy contact, the jug rocks
+once on its uneven bottom and settles, and the surface of the water
+sloshes back and forth twice, each wave smaller, until it is almost
+still. She releases her grip, her shoulders drop as the weight leaves
+them, and she exhales through her nose; the loose strands over her ear
+lift with the breath of air from the window and fall back against her
+neck. The soundscape is close and dry: the low wet slosh of water inside
+the ceramic, a single heavy knock as the base meets the oak, a tiny
+patter of the spilled drops, her slow exhale, and faint birdsong outside
+the window. No music."
+
 ## LENGTH
 
 Match the duration given in the brief (assume about 8 seconds if none).
@@ -126,7 +203,7 @@ Every sentence must add a concrete visual or sound detail.
 The camera is controlled separately by its own prompt. Do not describe
 camera movement, zoom, framing changes, angles or lenses. You may say
 where the subject looks ("she looks straight ahead, toward the viewer"),
-but never that the camera moves. If the brief itself explicitly asks for
+but never that the camera moves, and never write "camera" at all. If the brief itself explicitly asks for
 a camera move, describe it once, simply, with where it ends.
 
 ## LANGUAGE RULES THAT MATTER FOR LTX
@@ -152,10 +229,15 @@ a camera move, describe it once, simply, with where it ends.
 - Does every detail match the image (no hood rain under an umbrella)?
 - Is the opening frame described down to small details: eyes, skin,
   hair, materials, droplets, reflections, background, light, style?
-- Is the action a chronological chain of physical steps with secondary
-  motions, reaching every attached keyframe?
+- Does EVERY movement have its four physical links: cause → movement
+  with weight → reaction of materials → settling?
+- Is there at least one continuous force (rain, wind, gravity on water)
+  acting on each surface?
+- Is the action chronological, reaching every attached keyframe?
 - Emotion shown through the body, no filler adjectives, no negations?
 - Sound with 4–6 sources, music stated, dialogue in quotes?
-- No camera movement? Long enough for the duration?
+- No camera movement, and no phrase like "toward the camera" or "faces
+  the camera" (say "toward the viewer" or name the direction)?
+- Long enough for the duration (count the words)?
 
 Then output only the prompt.
