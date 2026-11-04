@@ -203,6 +203,13 @@ class NeronLTXEngine:
             },
         }
 
+    @classmethod
+    def VALIDATE_INPUTS(cls, unet_model, clip_model, vae_video_model, vae_audio_model, interp_model, input_upscale,
+                        lora_1, lora_2):
+        # Файла из чужой схемы здесь нет — не красное окно: модели уходят на «авто», остальное отключается.
+        # A saved file that doesn't exist here is not a red error: models fall back to auto, the rest is skipped.
+        return True
+
     def generate(self, expert=False, mode=None, seconds=5.0, gpu=sizing.AUTO, size=sizing.SIZE_AUTO,
                  manual_width=1280, manual_height=704, megapixels=1.0, fps=24.0,
                  t2v_aspect="16:9", first_strength=0.7, mid_strength=1.0, last_strength=1.0, mid1_sec=0.0,
@@ -221,7 +228,10 @@ class NeronLTXEngine:
             # авто (или пусто) — файл из пакета, ищем прямо сейчас, а не по списку со старта ComfyUI
             if not v or v in (AUTO_MODEL, NOT_FOUND):
                 return engine.find_file(kind, default)
-            found = engine.find_file(kind, v.replace("\\", "/").split("/")[-1]) or v
+            found = engine.find_file(kind, v.replace("\\", "/").split("/")[-1])
+            if not found:
+                notes.append(f"⚠ Файла «{v}» нет — взят «авто». EN: «{v}» not found, using auto.")
+                return engine.find_file(kind, default)
             if kind in ("diffusion_models", "text_encoders", "vae") and "ltx" not in found.lower() \
                     and "gemma" not in found.lower():
                 notes.append(f"⚠ Выбран свой файл «{found}» — по имени не похож на LTX 2.5. Если будет ошибка, "
@@ -239,8 +249,18 @@ class NeronLTXEngine:
                 "[LTX Engine] Моделей LTX 2.5 нет. Нажми на ноде кнопку «📥 Модели / Models» — она скачает всё сама "
                 "и разложит по папкам.\n\nEN: No LTX 2.5 models found. Press «📥 Модели / Models» on the node — it "
                 "downloads everything and puts it in the right folders.")
-        loras = [(nm, st) for nm, st in ((lora_1, lora_1_strength), (lora_2, lora_2_strength))
-                 if nm and nm not in (NO_LORA, NOT_FOUND) and abs(float(st)) > 1e-6]
+        loras = []
+        for nm, st in ((lora_1, lora_1_strength), (lora_2, lora_2_strength)):
+            if not nm or nm in (NO_LORA, NOT_FOUND) or abs(float(st)) <= 1e-6:
+                continue
+            if engine.find_file("loras", nm.replace("\\", "/").split("/")[-1]):
+                loras.append((nm, st))
+            else:
+                notes.append(f"⚠ LoRA «{nm}» нет — пропущена. EN: LoRA «{nm}» not found, skipped.")
+        if input_upscale not in (NO_UPSCALE, NOT_FOUND, None) and not engine.find_file(
+                "upscale_models", input_upscale.replace("\\", "/").split("/")[-1]):
+            notes.append(f"⚠ Апскейла «{input_upscale}» нет — вход без апскейла. EN: upscale model not found, skipped.")
+            input_upscale = NO_UPSCALE
         if seconds_in is not None:
             seconds = max(1.0, min(float(seconds_in), sizing.MAX_SECONDS))
             notes.append(f"Длительность с провода seconds_in: {seconds:g} с (ползунок не используется)")

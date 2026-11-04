@@ -10,9 +10,10 @@ const GROUP_GAP = 18;
 const GROUPS = [
     { name: "⚙️ EXPERT MODE / ЭКСПЕРТ", widgets: ["expert"],
       fill: "rgba(255, 200, 100, 0.22)", border: "rgba(255, 200, 100, 0.95)", label: "rgba(255, 235, 160, 1.0)", thick: 2.5 },
-    { name: "ГЛАВНОЕ / MAIN", widgets: ["seconds", "model", "mmproj"],
+    { name: "ГЛАВНОЕ / MAIN", widgets: ["seconds"],
       fill: "rgba(200, 150,  90, 0.15)", border: "rgba(200, 150,  90, 0.75)", label: "rgba(255, 220, 170, 1.0)" },
-    { name: "LLM", widgets: ["system_prompt", "max_tokens", "temperature", "n_ctx", "n_gpu_layers", "unload_after"],
+    { name: "LLM", widgets: ["model", "mmproj", "auto_download", "system_prompt", "max_tokens", "temperature",
+                             "n_ctx", "n_gpu_layers", "unload_after"],
       fill: "rgba(120, 200, 160, 0.15)", border: "rgba(120, 200, 160, 0.75)", label: "rgba(190, 255, 220, 1.0)" },
     { name: "ПРЕДПРОСМОТР / PREVIEW", widgets: ["_ltx_preview"],
       fill: "rgba( 90, 140, 200, 0.15)", border: "rgba( 90, 140, 200, 0.75)", label: "rgba(180, 215, 255, 1.0)" },
@@ -180,8 +181,18 @@ has text, it goes to the engine as is and the LLM does
 not run — fix a word and generate again.
 "🗑 Clear edit" — back to writing a new prompt.
 
+📌 FIRST RUN 📌
+Nothing to set up. Everything is on "auto": the node
+finds a Qwen 3.5 9B class LLM and its vision file in
+models/LLM, or downloads them itself (Qwen 3.5 9B
+Q4_K_M ~5.7 GB + vision ~0.9 GB, unsloth on Hugging Face,
+Apache 2.0, no login) with progress on the node; an
+interrupted download resumes. The llama-server program
+is downloaded by itself too.
+
 📌 EXPERT 📌
-system prompt, max_tokens (6144 — Qwen 3.5 thinks first
+LLM model and vision (auto by default), auto download,
+system prompt (only LTX ones are listed), max_tokens (6144 — Qwen 3.5 thinks first
 and LTX prompts are long), temperature, n_ctx, GPU layers,
 unload the LLM after the prompt (frees VRAM for LTX).
 
@@ -231,8 +242,18 @@ prompt → prompt, seconds → seconds_in, кадры → кадры.
 запускается — поправил слово и генерируй снова.
 «🗑 Очистить правку» — снова писать новый промпт.
 
+📌 ПЕРВЫЙ ЗАПУСК 📌
+Настраивать ничего не надо. Всё на «авто»: нода сама
+находит в models/LLM модель класса Qwen 3.5 9B и её
+зрение, а если их нет — скачивает сама (Qwen 3.5 9B
+Q4_K_M ~5,7 ГБ + зрение ~0,9 ГБ, unsloth на Hugging Face,
+Apache 2.0, без регистрации), прогресс — на ноде,
+оборвалось — докачает. Программу llama-server нода тоже
+скачивает сама.
+
 📌 ЭКСПЕРТ 📌
-системник, лимит ответа (6144 — Qwen 3.5 сначала думает,
+модель LLM и зрение (по умолчанию авто), скачивание,
+системник (в списке только LTX-шные), лимит ответа (6144 — Qwen 3.5 сначала думает,
 а промпты LTX длинные), температура, окно памяти, слои на
 видеокарте, выгрузка LLM после промпта (освобождает
 видеопамять под LTX).

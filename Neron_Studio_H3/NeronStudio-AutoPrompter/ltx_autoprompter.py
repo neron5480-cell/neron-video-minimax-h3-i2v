@@ -12,14 +12,17 @@
 Сервер LLM, модели и надёжный повтор — общие с H3 AutoPrompter (dialog_node, multi_llm).
 """
 import logging
+import os
 import time
 
 from .multi_llm import NeronMultiImageLLM, _ask_reliably, _image_to_data_uri_small, _stop_llama_server
-from .dialog_node import _find_llama_server, _ensure_server_running
+from .dialog_node import _find_llama_server, _ensure_server_running, _llm_list, _llm_roots, _PROMPTS_DIR
+from . import llm_pack
 
 log = logging.getLogger("Neron.LTX.AutoPrompter")
 TAG = "[LTX AutoPrompter]"
 DEFAULT_PROMPT_FILE = "LTX25_Director_EN.txt"
+AUTO = "🤖 авто / auto"
 
 # подписи картинок для LLM — совпадают с системником LTX25_Director_EN.txt
 SLOTS = [
@@ -75,33 +78,48 @@ class NeronLTXAutoPrompter:
     DESCRIPTION = ("Автопромтер для LTX 2.5: бриф + камера + кадры → подробный промпт с физикой и звуком. "
                    "AutoPrompter for LTX 2.5: brief + camera + frames → a detailed prompt with physics and sound.")
 
-    ORDER = ["expert", "seconds", "model", "mmproj", "system_prompt",
+    ORDER = ["expert", "seconds", "model", "mmproj", "auto_download", "system_prompt",
              "max_tokens", "temperature", "n_ctx", "n_gpu_layers", "unload_after", "edited_prompt"]
 
     @classmethod
     def INPUT_TYPES(cls):
-        base = NeronMultiImageLLM.INPUT_TYPES()["required"]
-        models, mmprojs, prompts = base["model"], base["mmproj"], base["system_prompt"]
-        prompt_list = prompts[0]
-        default_prompt = DEFAULT_PROMPT_FILE if DEFAULT_PROMPT_FILE in prompt_list else prompts[1].get("default")
+        try:
+            ggufs = _llm_list()
+        except Exception:
+            ggufs = []
+        models = [AUTO] + [m for m in ggufs if "mmproj" not in m.lower()]
+        mmprojs = [AUTO] + [m for m in ggufs if "mmproj" in m.lower()]
+        try:
+            prompt_list = sorted(f for f in os.listdir(_PROMPTS_DIR) if f.endswith(".txt") and "ltx" in f.lower())
+        except Exception:
+            prompt_list = []
+        if DEFAULT_PROMPT_FILE not in prompt_list:
+            prompt_list.insert(0, DEFAULT_PROMPT_FILE)
         req = {
             "expert": ("BOOLEAN", _main("⚙ эксперт / expert", default=False,
-                       tooltip="Показать параметры LLM. Скрытое всё равно работает.\n\nEN: Show LLM parameters. "
-                               "Hidden settings still work.")),
+                       tooltip="Показать выбор LLM и её параметры. Скрытое всё равно работает — на «авто».\n\nEN: "
+                               "Show the LLM choice and parameters. Hidden settings still work, on auto.")),
             "seconds": ("FLOAT", _main("длительность, с / seconds", default=8.0, min=1.0, max=20.0, step=0.5,
                         display="slider",
-                        tooltip="Под неё модель подбирает длину промпта. Подключи выход seconds к движку (вход "
-                                "seconds_in) — тогда длительность задаётся только здесь.\n\nEN: The prompt length "
-                                "follows it. Wire the seconds output to the engine's seconds_in.")),
-            "model": (models[0], _main("модель LLM / LLM model", **{k: v for k, v in models[1].items()
-                                                                    if k == "default"},
-                      tooltip="Системник написан под Qwen 3.5 9B с картинками (mmproj).\n\nEN: The system prompt "
-                              "is written for Qwen 3.5 9B with vision (mmproj).")),
-            "mmproj": (mmprojs[0], _main("зрение LLM (mmproj) / vision (mmproj)",
-                                         **{k: v for k, v in mmprojs[1].items() if k == "default"},
-                       tooltip="Без него модель не видит кадры и пишет вслепую.\n\nEN: Without it the model "
-                               "cannot see the frames.")),
-            "system_prompt": (prompt_list, _exp("системник / system prompt", default=default_prompt)),
+                        tooltip="Встаёт первой строкой промпта, и под неё модель расставляет действия по секундам. "
+                                "Подключи выход seconds к движку (вход seconds_in).\n\nEN: Goes on the first line "
+                                "of the prompt; actions are timed to it. Wire seconds to the engine's seconds_in.")),
+            "model": (models, _exp("модель LLM / LLM model", default=AUTO,
+                      tooltip="Авто — нода сама берёт модель класса Qwen 3.5 9B (под неё написан системник). Нет "
+                              "такой — скачает сама (если включено «скачивать LLM сама»).\n\nEN: Auto picks a Qwen "
+                              "3.5 9B class model; if none, downloads it (when auto download is on).")),
+            "mmproj": (mmprojs, _exp("зрение LLM (mmproj) / vision (mmproj)", default=AUTO,
+                       tooltip="Авто — зрение из той же папки, что и модель (чужое зрение к модели не подходит). "
+                               "Нет — скачает из пакета.\n\nEN: Auto takes the vision file from the model's folder; "
+                               "none — downloads it from the pack.")),
+            "auto_download": ("BOOLEAN", _exp("скачивать LLM сама / auto download", default=True,
+                              tooltip="Нет подходящей LLM — нода скачает Qwen 3.5 9B (Q4_K_M, ~5,7 ГБ) и зрение к "
+                                      "ней (~0,9 ГБ) в models/LLM/Qwen3.5-9B. Без регистрации, лицензия Apache 2.0, "
+                                      "прогресс на ноде, докачка после обрыва.\n\nEN: No suitable LLM — downloads "
+                                      "Qwen 3.5 9B (Q4_K_M, ~5.7 GB) + vision (~0.9 GB). No login, Apache 2.0.")),
+            "system_prompt": (prompt_list, _exp("системник / system prompt", default=DEFAULT_PROMPT_FILE,
+                              tooltip="Здесь только системники LTX (в имени файла есть «ltx»).\n\nEN: Only LTX "
+                                      "system prompts (file name contains «ltx»).")),
             "max_tokens": ("INT", _exp("лимит ответа / max_tokens", default=6144, min=512, max=32768,
                            tooltip="Промпт для LTX длинный, а Qwen 3.5 ещё и думает про себя. 6144 — с запасом. "
                                    "Если модель «не отвечает» — увеличь.\n\nEN: LTX prompts are long and Qwen 3.5 "
@@ -133,7 +151,14 @@ class NeronLTXAutoPrompter:
             },
         }
 
-    def generate(self, expert=False, seconds=8.0, model=None, mmproj=None, system_prompt=None, max_tokens=6144,
+    @classmethod
+    def VALIDATE_INPUTS(cls, model, mmproj, system_prompt):
+        # Имя модели/системника из чужой схемы, которого здесь нет, — не красное окно, а «авто» внутри ноды.
+        # A saved name that doesn't exist here is not a red error: the node falls back to auto.
+        return True
+
+    def generate(self, expert=False, seconds=8.0, model=AUTO, mmproj=AUTO, auto_download=True, system_prompt=None,
+                 max_tokens=6144,
                  temperature=0.7, n_ctx=16384, n_gpu_layers=-1, unload_after=False, edited_prompt="",
                  brief=None, camera_prompt=None, first_frame=None, mid_frame_1=None, mid_frame_2=None,
                  last_frame=None):
@@ -151,8 +176,11 @@ class NeronLTXAutoPrompter:
             raise RuntimeError(f"{TAG} Нет брифа: подключи вход brief (текстовая нода) или впиши текст в «своя "
                                f"правка».\n\nEN: No brief: connect the brief input or type your own text.")
         try:
+            model, mmproj, picked = self._resolve_llm(model, mmproj, bool(auto_download))
             text, note = self._ask_llm(model, mmproj, system_prompt, max_tokens, temperature, n_ctx, n_gpu_layers,
                                        brief, camera, float(seconds), frames)
+            if picked:
+                note += "; " + picked
         finally:
             if unload_after:
                 _stop_llama_server()
@@ -162,6 +190,36 @@ class NeronLTXAutoPrompter:
         note = "; ".join([note] + extra)
         log.info("%s %s (%s символов)", TAG, note, len(text))
         return {"ui": {"text": [text], "note": [note]}, "result": (text, float(seconds)) + frames}
+
+    # ------------------------------------------------------------------
+    def _resolve_llm(self, model, mmproj, auto_download):
+        """«Авто» → подходящая модель и зрение к ней; нет — скачать пакет. Ищем по папкам ПРЯМО СЕЙЧАС."""
+        ggufs = _llm_list()
+        models = [m for m in ggufs if "mmproj" not in m.lower()]
+        mmprojs = [m for m in ggufs if "mmproj" in m.lower()]
+        picked = []
+        if not model or model == AUTO or model not in models:
+            if model and model != AUTO:
+                picked.append(f"«{model}» не найдена — взял авто / not found, using auto")
+            model = llm_pack.best_model(models)
+            if model is None:
+                if not auto_download:
+                    raise RuntimeError(f"{TAG} Нет LLM класса Qwen 3.5 9B в models/LLM. Включи в эксперте «скачивать "
+                                       f"LLM сама» или выбери свою модель.\n\nEN: No Qwen 3.5 9B class LLM in "
+                                       f"models/LLM. Turn on auto download in expert mode or pick your model.")
+                model, pack_mm = llm_pack.ensure_pack(_llm_roots()[0], need_model=True, need_mmproj=True)
+                picked.append("📥 скачана Qwen 3.5 9B / downloaded")
+                if not mmproj or mmproj == AUTO:
+                    mmproj = pack_mm
+            else:
+                picked.append(f"авто: {model.split('/')[-1]}")
+        if not mmproj or mmproj == AUTO or mmproj not in mmprojs + [f"{llm_pack.PACK_DIR}/{llm_pack.PACK_MMPROJ}"]:
+            mm = llm_pack.mmproj_for(model, mmprojs)
+            if mm is None and auto_download:
+                _, mm = llm_pack.ensure_pack(_llm_roots()[0], need_model=False, need_mmproj=True)
+                picked.append("📥 скачано зрение / vision downloaded")
+            mmproj = mm or "No_mmproj_Found"
+        return model, mmproj, ", ".join(picked)
 
     # ------------------------------------------------------------------
     def _ask_llm(self, model, mmproj, system_prompt, max_tokens, temperature, n_ctx, n_gpu_layers,
@@ -183,7 +241,11 @@ class NeronLTXAutoPrompter:
             _ensure_server_running(server, model_path, mmproj_path, n_gpu_layers, n_ctx)
         except Exception as e:
             raise RuntimeError(f"{TAG} LLM не запустилась: {e}\n\nEN: The LLM failed to start: {e}") from None
+        if not mmproj_path:
+            log.warning("%s зрения (mmproj) нет — модель не увидит кадры / no mmproj, frames unseen", TAG)
 
+        if not system_prompt or not (_PROMPTS_DIR / system_prompt).is_file():
+            system_prompt = DEFAULT_PROMPT_FILE
         system_text = helper._load_system_text(system_prompt)
         messages = [{"role": "system", "content": system_text}]
         attached = []

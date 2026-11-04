@@ -1,5 +1,21 @@
 # Changelog / История изменений
 
+## 🤖 LTX AutoPrompter сам по себе / self-sufficient LTX AutoPrompter (dev, 04.11.2026)
+
+**RU:**
+- Новичок видит только длительность, предпросмотр и правку. Модель, зрение и системник — под экспертом, по умолчанию **«🤖 авто»**.
+- Авто ищет LLM класса **Qwen 3.5 9B** и **зрение из той же папки** (чужое зрение к модели не подходит). Нет — **скачивает сама**: Qwen 3.5 9B Q4_K_M (~5,7 ГБ) и mmproj-F16 (~0,9 ГБ) от unsloth на Hugging Face в `models/LLM/Qwen3.5-9B`. Без регистрации (Apache 2.0), прогресс на ноде, докачка, проверка места, проверка GGUF. llama-server тоже ставится сам (как в H3).
+- В списке системников — только LTX-шные.
+- Первой строкой промпта — длина ролика с ползунка («A N-second single continuous shot.»), действия по секундам.
+- **Нет красного окна** из-за чужой схемы: если сохранённого файла модели/системника/LoRA/апскейла нет, нода берёт «авто» или пропускает и пишет об этом (и в AutoPrompter, и в движке).
+- Окна предпросмотра и правки растягиваются с нодой, рамки не налезают. Правило «хочешь хорошо — ставь кадры» в справке и подсказках.
+- Системник: подробная концовка, предметы сохраняют форму, точные позы, препятствия, только то, что на картинке.
+
+**EN:**
+- Beginners see only seconds, preview and edit; LLM, vision and system prompt are under expert, on **auto**.
+- Auto finds a Qwen 3.5 9B class LLM and the vision file from the same folder, or downloads Qwen 3.5 9B Q4_K_M + mmproj-F16 (unsloth, Apache 2.0, no login) with progress and resume. llama-server installs itself.
+- Only LTX system prompts listed; clip length on the first line; no red errors from missing saved files (auto fallback) in both nodes.
+
 ## 🎬 Neron LTX AutoPrompter — автопромтер под LTX 2.5 / AutoPrompter for LTX 2.5 (dev, 04.11.2026)
 
 **RU:**
