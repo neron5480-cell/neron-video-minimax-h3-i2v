@@ -1,5 +1,23 @@
 # Changelog / История изменений
 
+## 🎬 Neron LTX AutoPrompter — автопромтер под LTX 2.5 / AutoPrompter for LTX 2.5 (dev, 04.11.2026)
+
+**RU:**
+- Новая нода рядом с H3 AutoPrompter (тот же сервер LLM, модели и надёжный повтор). Входы как у движка: бриф, камера, первый / промежуточные 1–2 / последний кадр. H3-камеры нет.
+- **Камера идёт прямо в LLM:** модель ставит её первой фразой (по-английски, без отрицаний) и коротко повторяет в конце; забыла — нода сама подставляет фразу.
+- Выходы прямо в движок: prompt, seconds (новый вход движка **seconds_in** — длительность задаётся в одном месте), кадры насквозь.
+- **Окно предпросмотра** ответа в ноде, кнопка «✏ В правку»: пока в «своей правке» есть текст, он идёт в движок как есть, LLM не запускается.
+- Системник LTX: физика как цепочка «причина → вес и путь → ответ материалов → затухание», **препятствия** (ничто не проходит сквозь ничто), **точные позы** (стойка — стоя, без «low/sinks»), **только то, что есть на картинке**, звуки под эпоху, без «или».
+- Движок: выход **prompt_used** (что реально ушло в модель); камера из camera_prompt — в начало и конец промпта.
+- Новый процесс `workflows/Neron_LTX_AutoPrompter.json`.
+
+**EN:**
+- New node next to the H3 AutoPrompter (same LLM server, models and retries), inputs matching the engine, no H3 camera.
+- The camera goes into the LLM: first sentence (positive English) + short repeat at the end; a safety net adds it if forgotten.
+- Outputs wire straight into the engine (new **seconds_in** input), in-node preview and "✏ To edit".
+- LTX system prompt: physics chain, obstacles, exact poses, only what is in the picture.
+- Engine: **prompt_used** output; camera_prompt at the start and end. New workflow.
+
 ## ✍️ AutoPrompter для LTX 2.5 + надёжный ответ модели / AutoPrompter for LTX 2.5 + reliable answers (dev, 04.11.2026)
 
 **RU:**

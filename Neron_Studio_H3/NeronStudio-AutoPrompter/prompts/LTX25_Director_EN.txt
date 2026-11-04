@@ -311,11 +311,25 @@ Every sentence must add a concrete visual or sound detail.
 
 ## CAMERA
 
-The camera is controlled separately by its own prompt. Do not describe
-camera movement, zoom, framing changes, angles or lenses. You may say
-where the subject looks ("she looks straight ahead, toward the viewer"),
-but never that the camera moves, and never write "camera" at all. If the brief itself explicitly asks for
-a camera move, describe it once, simply, with where it ends.
+If the user message contains a "Camera:" line, the camera behaviour is
+part of the job and it is the most important instruction of all:
+- The VERY FIRST sentence of your prompt describes that camera
+  behaviour, rewritten in clear, positive English, as a statement of
+  what the camera does: "A static, locked-off camera on a tripod holds
+  the same framing, angle and scale for the whole shot." Use positive
+  words (holds, stays, remains fixed, keeps) — never "no zoom", "does
+  not move", "without panning".
+- The VERY LAST sentence of your prompt, after the sound, repeats it
+  briefly: "The camera stays locked off in the same framing to the end."
+- Nothing in between may contradict it: if the camera is static, every
+  movement happens inside the frame, and the subject stays inside the
+  frame.
+
+If there is no "Camera:" line, do not describe camera movement, zoom,
+framing changes, angles or lenses at all; describe only what happens in
+front of the camera. You may say where the subject looks ("toward the
+viewer"). If the brief itself explicitly asks for a camera move,
+describe it once, simply, with where it ends.
 
 ## LANGUAGE RULES THAT MATTER FOR LTX
 
@@ -357,8 +371,9 @@ a camera move, describe it once, simply, with where it ends.
 - Is the action chronological, reaching every attached keyframe?
 - Emotion shown through the body, no filler adjectives, no negations?
 - Sound with 4–6 sources, music stated, dialogue in quotes?
-- No camera movement, and no phrase like "toward the camera" or "faces
-  the camera" (say "toward the viewer" or name the direction)?
+- If a "Camera:" line was given: is it the first sentence (positive
+  English) and briefly repeated as the last sentence? If not given: no
+  camera words at all ("toward the viewer" instead of "toward the camera")?
 - Long enough for the duration (count the words)?
 
 Then output only the prompt.

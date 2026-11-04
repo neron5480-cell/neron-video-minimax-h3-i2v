@@ -195,6 +195,9 @@ class NeronLTXEngine:
                                                                  "отключается. EN: external width; wired width+height "
                                                                  "override the internal size."}),
                 "height": ("INT", {"forceInput": True, "tooltip": "Внешняя высота. EN: external height."}),
+                "seconds_in": ("FLOAT", {"forceInput": True, "tooltip": "Длительность с провода (например, от "
+                                                                       "LTX AutoPrompter) — главнее ползунка. "
+                                                                       "EN: wired duration, overrides the slider."}),
             },
         }
 
@@ -205,7 +208,7 @@ class NeronLTXEngine:
                  smooth=True, lora_1=NO_LORA, lora_1_strength=1.0, lora_2=NO_LORA, lora_2_strength=1.0,
                  unet_model=None, clip_model=None, vae_video_model=None, vae_audio_model=None, interp_model=None,
                  seed=1, prompt=None, camera_prompt=None, first_frame=None, mid_frame_1=None, mid_frame_2=None,
-                 last_frame=None, width=None, height=None):
+                 last_frame=None, width=None, height=None, seconds_in=None):
         if not (prompt or "").strip():
             raise ValueError("[LTX Engine] Нет промпта: подключи вход prompt (например, текстовую ноду или "
                              "автопромтер).\n\nEN: No prompt: connect the prompt input.")
@@ -236,6 +239,9 @@ class NeronLTXEngine:
                 "downloads everything and puts it in the right folders.")
         loras = [(nm, st) for nm, st in ((lora_1, lora_1_strength), (lora_2, lora_2_strength))
                  if nm and nm not in (NO_LORA, NOT_FOUND) and abs(float(st)) > 1e-6]
+        if seconds_in is not None:
+            seconds = max(1.0, min(float(seconds_in), sizing.MAX_SECONDS))
+            notes.append(f"Длительность с провода seconds_in: {seconds:g} с (ползунок не используется)")
         settings = {"mode": mode if mode in engine.MODES else engine.MODES[0], "seconds": float(seconds),
                     "gpu": gpu, "fixed_size": sizing.fixed_size(size, manual_width, manual_height, width, height),
                     "megapixels": float(megapixels) if size == sizing.SIZE_AREA else 0.0,
