@@ -835,13 +835,15 @@ def _ensure_server_running(server_exe, model_path, mmproj_path, n_gpu_layers, n_
         _stop_server()
     _start_server(server_exe, model_path, mmproj_path, n_gpu_layers, n_ctx)
 
-def _chat_completion(messages, max_tokens, temperature, port=8765):
+def _chat_completion(messages, max_tokens, temperature, port=8765, extra=None):
     url = f"http://127.0.0.1:{port}/v1/chat/completions"
     payload = {
         "messages": messages,
         "max_tokens": max_tokens,
         "temperature": temperature,
     }
+    if extra:
+        payload.update(extra)
     body = json.dumps(payload).encode("utf-8")
 
     print(f"[Neron Dialog] Размер запроса: {len(body) / 1024 / 1024:.2f} МБ")

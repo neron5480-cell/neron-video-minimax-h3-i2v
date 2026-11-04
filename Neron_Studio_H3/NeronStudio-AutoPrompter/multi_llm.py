@@ -1,4 +1,5 @@
 import os
+import re
 import time
 import subprocess
 from pathlib import Path
@@ -57,6 +58,61 @@ def _image_to_data_uri_small(tensor, max_size: int = 512, quality: int = 80) -> 
     print(f"[Neron MultiLLM]   картинка: {pil.size[0]}x{pil.size[1]}, "
           f"{len(buf.getvalue()) / 1024:.0f} КБ → base64 {len(b64) / 1024:.0f} КБ")
     return f"data:image/jpeg;base64,{b64}"
+
+
+# ---------- надёжный ответ модели / reliable model answer ----------
+# «Думающие» модели (Qwen 3.5 и др.) сначала рассуждают про себя, потом пишут ответ. Если рассуждения съели весь
+# лимит max_tokens, ответа нет — раньше это и было «модель ответила пусто». Теперь: повтор, а со второй попытки
+# модель просят ответить сразу, без рассуждений.
+_NO_THINK = {"chat_template_kwargs": {"enable_thinking": False}}
+
+
+def _extract_answer(response):
+    """→ (текст ответа, были ли рассуждения, причина остановки)."""
+    try:
+        choice = (response.get("choices") or [{}])[0]
+    except Exception:
+        return "", False, None
+    msg = choice.get("message") or {}
+    content = msg.get("content") or ""
+    if isinstance(content, list):
+        content = "".join(p.get("text", "") for p in content if isinstance(p, dict))
+    content = str(content)
+    thought = bool(msg.get("reasoning_content")) or "<think>" in content
+    content = re.sub(r"<think>.*?</think>", "", content, flags=re.S)
+    if "<think>" in content:                      # рассуждение не закончилось — ответа в нём нет
+        content = content.split("<think>")[0]
+    return content.strip(), thought, choice.get("finish_reason")
+
+
+def _ask_reliably(messages, max_tokens, temperature):
+    """До трёх попыток. → (ответ или "", отчёт о попытках)."""
+    tries = [
+        ("обычная / normal", None, max_tokens),
+        ("без рассуждений / no thinking", _NO_THINK, max_tokens),
+        ("без рассуждений, лимит ×2 / no thinking, 2× limit", _NO_THINK, min(32768, max_tokens * 2)),
+    ]
+    log = []
+    for i, (label, extra, limit) in enumerate(tries, 1):
+        try:
+            resp = _chat_completion(messages, limit, temperature, _SERVER_PORT, extra=extra)
+        except Exception as e:
+            log.append(f"попытка {i} ({label}): ошибка запроса — {e}")
+            print(f"[Neron MultiLLM] попытка {i}: ошибка запроса — {e}")
+            if i == 1:
+                continue                         # сервер мог поперхнуться — пробуем ещё
+            break
+        answer, thought, finish = _extract_answer(resp)
+        if answer:
+            if i > 1:
+                print(f"[Neron MultiLLM] ✅ ответ получен с попытки {i} ({label})")
+            return answer, log
+        why = ("рассуждения съели лимит" if thought and finish == "length" else
+               "упёрлась в лимит" if finish == "length" else
+               "рассуждала, но ответа не написала" if thought else "пустой ответ")
+        log.append(f"попытка {i} ({label}): {why}")
+        print(f"[Neron MultiLLM] ⚠ попытка {i}: {why} — пробую ещё")
+    return "", log
 
 
 class NeronMultiImageLLM:
@@ -311,12 +367,16 @@ class NeronMultiImageLLM:
         print(f"[Neron MultiLLM] Отправка. Модель: {model}")
         t0 = time.time()
         try:
-            response = _chat_completion(messages, max_tokens, temperature, _SERVER_PORT)
-            answer = response["choices"][0]["message"]["content"]
+            answer, tries_log = _ask_reliably(messages, max_tokens, temperature)
             gen_time = time.time() - t0
 
-            if not answer or not answer.strip():
-                answer = "⚠ МОДЕЛЬ ОТВЕТИЛА ПУСТО"
+            if not answer:
+                answer = ("⚠ Модель не ответила и после трёх попыток / The model gave no answer after 3 tries.\n"
+                          + "\n".join(tries_log) + "\n\n"
+                          "Что сделать: увеличь max_tokens (например, до 8192) или n_ctx, либо возьми модель побольше. "
+                          "Если пишет «ошибка запроса» — перезапусти ComfyUI.\n"
+                          "EN: raise max_tokens (e.g. 8192) or n_ctx, or use a bigger model. "
+                          "On «request error» restart ComfyUI.")
 
             print(f"[Neron MultiLLM] Готово за {gen_time:.2f} сек")
             print(f"[Neron MultiLLM] === ОТВЕТ ===")

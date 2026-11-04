@@ -189,6 +189,12 @@ class NeronAutoPrompter:
             seconds, fps, total_frames,
         )
 
+        # Системник LTX: длительность — модели в бриф, камеру H3 не подмешиваем (у LTX Engine своё окно камеры)
+        # LTX system prompt: tell the LLM the duration, skip the H3 camera block (LTX Engine has its own camera input)
+        is_ltx = "ltx" in str(system_prompt or "").lower()
+        if is_ltx:
+            total_frames = 1 + int(seconds * fps // 8) * 8          # правило LTX: 8·n + 1 кадров
+
         is_llm = "[LLM]" in workflow_mode
         is_text_only = (
             "Text Only" in workflow_mode
@@ -203,6 +209,8 @@ class NeronAutoPrompter:
             user_prompt = ""
             if prompt_in is not None and str(prompt_in).strip():
                 user_prompt = str(prompt_in).strip()
+            if is_ltx and user_prompt:
+                user_prompt += f"\n\nDuration: {seconds:g} seconds."
 
             log.info(
                 "[AutoPrompter] Промпт (%s символов): %s",
@@ -257,6 +265,13 @@ class NeronAutoPrompter:
         else:
             log.info("[AutoPrompter] Режим Manual. LLM не запускается.")
             autoprompt_text = ""
+
+        if is_ltx:
+            text = autoprompt_text if is_llm else manual_prompt
+            if subject_details.strip():
+                text = (text.rstrip() + " " + subject_details.strip()).strip()
+            log.info("[AutoPrompter] LTX: камера H3 пропущена, %s кадров (8·n+1).", total_frames)
+            return (text, int(total_frames), "", image_0, image_1, image_2, last_frame)
 
         log.info("[AutoPrompter] Camera Operator.")
 

@@ -178,6 +178,7 @@
 |---|---|---|
 | Подготовить первый кадр | **🖼 Neron Studio Image Processor** — пресеты подрезаются по центру, Сброс и Справка | Interactive Image Processor (пресеты растягивают картинку); Smart Load & Resize Image и Manual Color & Upscale Panel — *legacy*, тот же код |
 | Сгенерировать видео H3 | **🎬 Neron H3 Engine** — качество; **⚡ Neron H3 Engine Fast** — скорость (тест, ветка dev) | 🎥 Neron MiniMax H3 Generator (Lite) — для воркфлоу Neron Studio H3 |
+| Сгенерировать видео LTX 2.5 | **🎬 Neron LTX Engine** — первый / промежуточные / последний кадр, звук, модели качает сам; **🎬 Neron LTX AutoPrompter** — промпт под LTX с физикой и камерой, LLM качает сам | — |
 | Написать промпт | **🎬 Neron AutoPrompter** — промпт под H3 по картинке и брифу | 🎬 Neron Dialog Autoprompter и 🧠 Multi-Image LLM — диалоговый режим |
 | Камера H3 | **⚡ Fixed Camera H3** | — |
 | Тема оформления | **Neron Theme 🎨 / Темы ComfyUI** | «Тема Audio Studio (legacy)» — чтобы открывались старые схемы студии |
@@ -378,6 +379,7 @@ Details in the **[README inside NeronTheme](NeronTheme/README.md)**.
 |---|---|---|
 | Prepare the first frame | **🖼 Neron Studio Image Processor** — presets are center-cropped, Reset and Help | Interactive Image Processor (presets stretch the picture); Smart Load & Resize Image and Manual Color & Upscale Panel — *legacy*, same code |
 | Generate H3 video | **🎬 Neron H3 Engine** — quality; **⚡ Neron H3 Engine Fast** — speed (test, dev branch) | 🎥 Neron MiniMax H3 Generator (Lite) — for the Neron Studio H3 workflows |
+| Generate LTX 2.5 video | **🎬 Neron LTX Engine** — first / middle / last frames, audio, downloads its models; **🎬 Neron LTX AutoPrompter** — an LTX prompt with physics and camera, downloads its LLM | — |
 | Write the prompt | **🎬 Neron AutoPrompter** — an H3 prompt from a picture and a brief | 🎬 Neron Dialog Autoprompter and 🧠 Multi-Image LLM — dialog mode |
 | H3 camera | **⚡ Fixed Camera H3** | — |
 | UI theme | **Neron Theme 🎨 / Темы ComfyUI** | "Old Audio Studio theme (legacy)" — so old studio workflows open |
