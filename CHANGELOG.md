@@ -1,5 +1,19 @@
 # Changelog / История изменений
 
+## ✍️ AutoPrompter для LTX 2.5 + надёжный ответ модели / AutoPrompter for LTX 2.5 + reliable answers (dev, 04.11.2026)
+
+**RU:**
+- Новый системный промпт **LTX25_Director_EN.txt** по официальным правилам LTX 2.5: проза в настоящем времени, детали — в движении и материалах (а не пересказ картинки), физика по шагам, эмоции через тело, обязательный звук с источниками, реплики в кавычках. Промежуточные и последний кадр — ключевые кадры, к которым идёт действие. Камеру не описывает: у Neron LTX Engine для неё своё окно.
+- С LTX-системником AutoPrompter сам сообщает модели длительность, не подмешивает H3-камеру и считает кадры по правилу LTX (8·n+1).
+- «Модель ответила пусто» почти исчезает: думающие модели (Qwen 3.5) тратили весь лимит на рассуждения. Теперь — повтор, со второй попытки модель отвечает сразу без рассуждений, с третьей — без рассуждений и с двойным лимитом. Если не помогло — понятная ошибка, что именно случилось и что сделать.
+- LTX Engine: «форма без картинок» видна, только когда влияет (размер «Авто» или «По площади»).
+
+**EN:**
+- New system prompt **LTX25_Director_EN.txt** following the official LTX 2.5 rules: present-tense prose, detail placed in motion and materials, step-by-step physics, body-language emotion, mandatory sound with sources, quoted dialogue; middle/last frames as keyframes; no camera (LTX Engine has its own camera input).
+- With the LTX prompt the AutoPrompter passes the duration, skips the H3 camera block and counts frames as 8·n+1.
+- "Model answered empty" is mostly gone: retries, then no-thinking, then no-thinking with 2× limit; otherwise a clear error.
+- LTX Engine: "shape without images" shows only when it matters.
+
 ## 🎬 Neron LTX Engine v0.1 — генератор LTX 2.5 одной нодой / LTX 2.5 generator in one node (dev, 03.11.2026)
 
 **RU:**

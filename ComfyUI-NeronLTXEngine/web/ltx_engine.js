@@ -138,6 +138,8 @@ function applyExpert(node, specs) {
         // ширина/высота — только при «Ручной», площадь — только при «По площади» (даже без эксперта)
         if (w.name === "manual_width" || w.name === "manual_height") hide = !size.startsWith("Ручной");
         if (w.name === "megapixels") hide = !size.startsWith("По площади");
+        // форма нужна, только когда размер считается сам (Авто / По площади); при пресете и ручном — не влияет
+        if (w.name === "t2v_aspect") hide = hide || !(size.startsWith("Авто") || size.startsWith("По площади"));
         if (w.hidden !== hide) w.hidden = hide;
         prevHidden = hide;
     }
