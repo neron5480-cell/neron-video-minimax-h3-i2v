@@ -1,5 +1,22 @@
 # Changelog / История изменений
 
+## 🎬 LTX 2.5 v2.0 — Neron LTX Engine + Neron LTX AutoPrompter (main, 04.11.2026)
+
+**RU:**
+- **🎬 Neron LTX Engine** — генератор LTX 2.5 одной нодой по процессу Neron «LTX 2.5 Pure 2K/3K»: два прохода, плавность ×2 встроенной нодой ComfyUI, только встроенные ноды. Входы: промпт, камера, первый / два промежуточных / последний кадр, width/height и seconds_in с проводов. Выходы: видео со звуком, звук, кадры, к/с, prompt_used.
+- **📥 Модели качает сам:** окно открывается само, токен Hugging Face по шагам, прогресс, докачка, проверка места, раскладка по папкам. Модели на «авто».
+- Размер: Авто по видеокарте, 16 пресетов, по площади, ручной. Камера из camera_prompt — в начало и конец промпта.
+- **🎬 Neron LTX AutoPrompter** — промпт под LTX: кадр до мелочей, физика каждого движения, препятствия, точные позы, подробная концовка, звук; камеру модель ставит первой фразой, длину ролика нода пишет первой строкой. Предпросмотр и своя правка в ноде. LLM (Qwen 3.5 9B + зрение) и llama-server находит или качает сам.
+- AutoPrompter: «модель ответила пусто» почти исчезло — повтор без раздумий и с двойным лимитом; с LTX-системником H3-камера не подмешивается.
+- Нет красного окна из-за чужой схемы: отсутствующие файлы → «авто» или пропуск, с сообщением.
+- Понятные ошибки на двух языках. 💡 Хочешь хорошо — ставь промежуточные и последний кадр.
+- Процессы: `ComfyUI-NeronLTXEngine/workflows/Neron_LTX_AutoPrompter.json` и `Neron_LTX_Engine.json`.
+
+**EN:**
+- **🎬 Neron LTX Engine** — LTX 2.5 in one node (Neron two-pass recipe, built-in ×2 smoothness), first / middle / last frames, wired size and seconds, video + audio + frames + prompt_used; downloads its models (HF token steps, resume, disk check); size presets; camera at the start and end.
+- **🎬 Neron LTX AutoPrompter** — detailed LTX prompts with physics, obstacles, exact poses and sound; camera as the first sentence, clip length on the first line; in-node preview and edit; finds or downloads its LLM and llama-server.
+- AutoPrompter retries empty answers; no red errors from missing saved files; clear bilingual errors.
+
 ## 🤖 LTX AutoPrompter сам по себе / self-sufficient LTX AutoPrompter (dev, 04.11.2026)
 
 **RU:**
