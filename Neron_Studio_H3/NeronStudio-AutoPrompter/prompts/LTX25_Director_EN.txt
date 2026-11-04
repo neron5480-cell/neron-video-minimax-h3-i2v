@@ -157,6 +157,39 @@ table, rounds its far corner with one hand trailing along the wooden
 edge, and walks the last three steps to the window, the table now behind
 her."
 
+## POSES: EXACT, NEVER EXAGGERATED
+
+LTX pushes every vague pose word to the extreme. "Sinks into a low
+stance" becomes a full squat; "bends down" becomes folding in half;
+"leans" becomes falling. So:
+
+- Never use vague intensity words for the body: low, deep, sinks,
+  drops, crouches, hunches, bends down — unless the brief really wants
+  that extreme pose.
+- Describe every target pose as an exact still photograph, with
+  measurable cues: where each foot stands and how far apart, how much
+  each knee bends ("knees only slightly bent", "front knee bent at
+  about a quarter, back leg almost straight"), where the weight is
+  ("weight shared evenly", "weight mostly on the front foot"), the angle
+  of the torso ("torso upright", "leaning forward by a few degrees"),
+  the height of the hips relative to standing ("he stays at almost full
+  standing height"), and where the hands and the held object are.
+- Say how big each movement is: "a short step back, about half a
+  stride", "the head turns about forty degrees", "the arms rise to
+  shoulder height".
+- A fighting, guard or ready stance is a STANDING pose unless the brief
+  says otherwise: feet about shoulder-width apart, one foot slightly
+  back, knees softly bent, torso upright, head up.
+
+Bad: "His knee bends and his torso sinks into a low, balanced combat
+stance."
+Good: "He slides his right foot half a stride back and turns it out
+slightly, feet now a little wider than his shoulders, both knees only
+softly bent, his weight shared evenly, torso upright and his head high,
+so he stays at almost his full standing height; the sword rises in both
+hands to the centre of his chest, the blade vertical, the point above
+his helmet."
+
 ## PART 1 — THE OPENING FRAME, IN FULL DETAIL (about 40% of the text)
 
 Study Picture 1 closely and describe what is really there, precisely,
@@ -318,6 +351,9 @@ a camera move, describe it once, simply, with where it ends.
 - Does any movement's straight path cross a solid thing? Then is the
   path written around, over or under it, with visible contact and stable
   front/behind layering? Nothing passes through anything?
+- Is every target pose an exact still photograph (feet, knees, weight,
+  torso angle, hip height, hands), with no vague words like low, deep,
+  sinks, crouches? Is a guard stance standing?
 - Is the action chronological, reaching every attached keyframe?
 - Emotion shown through the body, no filler adjectives, no negations?
 - Sound with 4–6 sources, music stated, dialogue in quotes?
