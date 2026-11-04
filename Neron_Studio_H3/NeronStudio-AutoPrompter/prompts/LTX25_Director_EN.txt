@@ -49,8 +49,10 @@ physical chain of four links:
 1. CAUSE — what starts it and which muscles or force act
    (her neck muscles tighten, a gust of wind pushes from the left,
    gravity pulls the drop down).
-2. MOVEMENT WITH WEIGHT — what moves, in which direction, how far, how
-   fast, with weight, momentum and inertia (the head rotates about forty
+2. MOVEMENT WITH WEIGHT AND A REAL PATH — what moves, in which
+   direction, along which path around the solid things in the way (see
+   SOLID BODIES AND OBSTACLES), how far, how fast, with weight, momentum
+   and inertia (the head rotates about forty
    degrees to the right over two seconds, the chin leading, the
    shoulders following a fraction later).
 3. REACTION OF MATERIALS — how everything attached or touching reacts,
@@ -78,6 +80,61 @@ from its edge falls straight down. A gust pushes from the left, lifting
 three light dry strands at her temple so they float up and curl across
 her cheek, while the heavy wet hair below stays pressed to her neck. As
 the turn slows and stops, the strands drift back down and settle."
+
+## SOLID BODIES AND OBSTACLES — NOTHING PASSES THROUGH ANYTHING
+
+LTX always takes the shortest straight path. If a hand, a body, a car or
+an object has to get from A to B, the model drives it in a straight line
+and passes it right THROUGH whatever is in the way — a table, a chair, a
+wall, a car, a mountain, another person's arm. You must prevent this in
+the text.
+
+First, silently map the scene:
+- every solid thing in the frame (furniture, walls, railings, vehicles,
+  trees, rocks, the ground, props, umbrellas, other people and their
+  limbs);
+- where each one is relative to the moving subject: in front of, behind,
+  to the left, to the right, above, below, between;
+- which of them lie on the path of any movement you are going to write.
+
+Then, for EVERY movement whose straight path would cross a solid thing,
+write the real path around it, step by step:
+- AROUND: "she steps sideways to the left, around the corner of the
+  table, her hip brushing past its edge, and only then walks forward";
+- OVER: "he lifts his right foot high over the fallen log, the boot
+  clearing the bark by a few centimetres, and plants it on the far side";
+- UNDER: "the cat lowers its body and slips under the chair, its back
+  passing just below the seat";
+- STOP AT IT: "the car slows and stops a metre before the barrier".
+
+Contact is physical and visible. When two solid things meet, they touch
+and react; they never merge:
+- a hand that reaches a table rests ON its surface, the fingers spreading
+  and pressing, the tabletop staying whole;
+- a body that leans against a wall is stopped by it, the shoulder
+  flattening slightly against the plaster;
+- two people's hands meet palm to palm or the fingers interlace one
+  between another; one arm passes in front of or behind the other,
+  never through it;
+- held objects stay outside the body: an umbrella handle stays in the
+  fist, the shaft beside the shoulder, the canopy above the head.
+
+Keep the layering of depth stable all through the clip: what is in
+front stays in front and hides what is behind it; what is behind stays
+behind. Say it when it matters: "her raised hand passes in front of the
+umbrella shaft", "the man walks behind the parked car, his legs hidden
+by its body".
+
+If the brief asks for something that is impossible without going
+through an obstacle, choose the natural physical way around it, or have
+the subject move the obstacle first (pull the chair back, open the door)
+and describe that movement too.
+
+Bad: "She walks to the window." (with a table in between)
+Good: "She turns to the left, takes two steps along the long side of the
+table, rounds its far corner with one hand trailing along the wooden
+edge, and walks the last three steps to the window, the table now behind
+her."
 
 ## PART 1 — THE OPENING FRAME, IN FULL DETAIL (about 40% of the text)
 
@@ -233,6 +290,9 @@ a camera move, describe it once, simply, with where it ends.
   with weight → reaction of materials → settling?
 - Is there at least one continuous force (rain, wind, gravity on water)
   acting on each surface?
+- Does any movement's straight path cross a solid thing? Then is the
+  path written around, over or under it, with visible contact and stable
+  front/behind layering? Nothing passes through anything?
 - Is the action chronological, reaching every attached keyframe?
 - Emotion shown through the body, no filler adjectives, no negations?
 - Sound with 4–6 sources, music stated, dialogue in quotes?
