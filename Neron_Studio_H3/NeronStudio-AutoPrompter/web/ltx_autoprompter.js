@@ -68,7 +68,10 @@ function groupRect(node, g) {
         y0 = Math.min(y0, w.last_y); y1 = Math.max(y1, w.last_y + h);
     }
     if (!isFinite(y0) || y1 <= y0) return null;
-    return { x: 10, y: y0 - 16, w: node.size[0] - 20, h: (y1 - y0) + 16 };
+    // Текстовые поля ComfyUI рисует почти до края ноды — рамку делаем шире, чтобы поле было ВНУТРИ неё
+    const flex = g.widgets.some((n) => { const w = node.widgets?.find((x) => x.name === n); return isFlexible(w); });
+    const padX = flex ? 4 : 10;
+    return { x: padX, y: y0 - 16, w: node.size[0] - padX * 2, h: (y1 - y0) + 16 };
 }
 
 // Окна, которые растягиваются вместе с нодой (предпросмотр, правка), нельзя трогать отступом:
@@ -120,7 +123,7 @@ function makePreview(node) {
     box.readOnly = true;
     box.placeholder = "Здесь появится промпт, который написала модель.\nEN: The prompt written by the model appears here.";
     box.style.cssText = "width:100%;height:100%;box-sizing:border-box;resize:none;background:#0e1418;color:#d8e6ee;" +
-        "border:1px solid #2f4a5a;border-radius:6px;padding:6px 8px;font:11px/1.45 monospace;";
+        "margin:0;border:1px solid #2f4a5a;border-radius:6px;padding:6px 8px;font:11px/1.45 monospace;";
     const w = node.addDOMWidget("_ltx_preview", "ltx_preview", box,
                                 { serialize: false, hideOnZoom: false, getMinHeight: () => 120 });
     w.serialize = false;
