@@ -231,8 +231,13 @@ def generate(prompt, camera_prompt, frames, s, models, user_loras=()):
     text = (prompt or "").strip()
     cam = (camera_prompt or "").strip()
     if cam:
-        text = (text.rstrip(". ") + ". " + cam) if text else cam
-        report.append("Камера: фраза из входа camera_prompt добавлена в конец промпта")
+        # Камера — в начало (официальное правило LTX: сначала план, потом всё остальное) и короткий повтор в конце:
+        # в длинном промпте фраза только в хвосте тонет, и камера начинает «плыть».
+        cam = cam.rstrip()
+        if cam[-1:] not in ".!?":
+            cam += "."
+        text = f"{cam}\n\n{text}\n\n{cam}" if text else cam
+        report.append("Камера: фраза из camera_prompt поставлена в начало промпта и повторена в конце")
 
     # --- кадры, форма и размер ---
     imgs = {k: first_frame(v) for k, v in frames.items()}

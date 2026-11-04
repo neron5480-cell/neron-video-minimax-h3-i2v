@@ -17,7 +17,7 @@ EN: open the workflow; the **📥 Models** window opens by itself, accept the LT
 | Вход / input | |
 |---|---|
 | `prompt` | что происходит — прозой, со звуком / what happens, as prose, with sound |
-| `camera_prompt` | поведение камеры одной фразой (пока добавляется в конец промпта) / camera sentence |
+| `camera_prompt` | поведение камеры одной фразой (в начало промпта + повтор в конце) / camera sentence (start + end) |
 | `first_frame` | первый кадр; нет — «текст → видео» / first frame; none = text to video |
 | `mid_frame_1`, `mid_frame_2` | промежуточные кадры (сами — на 1/3 и 2/3) / middle frames (auto at 1/3, 2/3) |
 | `last_frame` | последний кадр / last frame |

@@ -464,9 +464,11 @@ it resumes where it stopped.
 📌 INPUTS (wires) 📌
 prompt        — what happens. Prose, present tense,
                 with sound (see tips below).
-camera_prompt — camera behaviour as one sentence.
-                For now it is added to the end of the
-                prompt; full camera control comes next.
+camera_prompt — camera behaviour as one sentence. It is
+                put at the START of the prompt and repeated
+                at the end. Write it positively, in English:
+                "Static locked-off camera on a tripod, the
+                framing stays exactly the same."
 first_frame   — first frame. None = text to video.
 mid_frame_1/2 — middle keyframes. Auto: at 1/3 and 2/3
                 of the clip (expert: your own second).
@@ -543,9 +545,11 @@ LTX 2.5 закрыта регистрацией на Hugging Face: один ра
 📌 ВХОДЫ (провода) 📌
 prompt        — что происходит. Прозой, в настоящем
                 времени, со звуком (советы ниже).
-camera_prompt — поведение камеры одной фразой. Пока
-                просто добавляется в конец промпта;
-                полный контроль камеры — следующим шагом.
+camera_prompt — поведение камеры одной фразой. Ставится
+                в НАЧАЛО промпта и повторяется в конце.
+                Пиши без отрицаний, лучше по-английски:
+                "Static locked-off camera on a tripod, the
+                framing stays exactly the same."
 first_frame   — первый кадр. Нет — «текст → видео».
 mid_frame_1/2 — промежуточные кадры. Сами встают на
                 треть и две трети ролика (в эксперте —
