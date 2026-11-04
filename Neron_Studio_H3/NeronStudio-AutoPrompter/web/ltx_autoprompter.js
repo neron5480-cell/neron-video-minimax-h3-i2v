@@ -49,6 +49,8 @@ function clearBottomPadding(widget) {
 }
 
 function widgetHeight(w, nodeWidth) {
+    // растягивающиеся окна: реальная высота, которую им выдал ComfyUI при раскладке
+    if (!w.computeSize && w.computedHeight > 0) return w.computedHeight - 4;
     try {
         if (w.computeSize) {
             const s = w.computeSize(nodeWidth);
@@ -69,13 +71,30 @@ function groupRect(node, g) {
     return { x: 10, y: y0 - 16, w: node.size[0] - 20, h: (y1 - y0) + 16 };
 }
 
+// Окна, которые растягиваются вместе с нодой (предпросмотр, правка), нельзя трогать отступом:
+// ComfyUI растягивает только виджеты БЕЗ computeSize. Им отступ дают отдельные распорки.
+function isFlexible(w) {
+    return !!w && (typeof w.computeLayoutSize === "function" || !!w.element) && !w.__neronOrigSize;
+}
+
 function applyGroupGaps(node) {
     for (const w of node.widgets || []) clearBottomPadding(w);
     for (const g of GROUPS) {
         let last = null;
         for (const w of node.widgets || []) if (g.widgets.includes(w.name) && !isHidden(w)) last = w;
-        if (last) setBottomPadding(last, GROUP_GAP);
+        if (last && !isFlexible(last)) setBottomPadding(last, GROUP_GAP);
     }
+}
+
+function addGap(node, name, beforeName) {
+    const gap = node.addWidget("text", name, "", () => {});
+    gap.serialize = false;
+    gap.draw = function () {};
+    gap.computeSize = () => [0, GROUP_GAP + 6];
+    node.widgets.splice(node.widgets.indexOf(gap), 1);
+    const i = node.widgets.findIndex((w) => w.name === beforeName);
+    node.widgets.splice(i >= 0 ? i : node.widgets.length, 0, gap);
+    return gap;
 }
 
 function applyExpert(node, specs) {
@@ -90,6 +109,7 @@ function applyExpert(node, specs) {
     try {
         const sz = node.computeSize();
         node.setSize([Math.max(node.size[0], sz[0]), Math.max(node.size[1], sz[1])]);
+        node.setDirtyCanvas?.(true, true);
     } catch (_) {}
     app.graph?.setDirtyCanvas(true, true);
 }
@@ -101,8 +121,9 @@ function makePreview(node) {
     box.placeholder = "Здесь появится промпт, который написала модель.\nEN: The prompt written by the model appears here.";
     box.style.cssText = "width:100%;height:100%;box-sizing:border-box;resize:none;background:#0e1418;color:#d8e6ee;" +
         "border:1px solid #2f4a5a;border-radius:6px;padding:6px 8px;font:11px/1.45 monospace;";
-    const w = node.addDOMWidget("_ltx_preview", "ltx_preview", box, { serialize: false, hideOnZoom: false });
-    w.computeSize = (width) => [width, 190];
+    const w = node.addDOMWidget("_ltx_preview", "ltx_preview", box,
+                                { serialize: false, hideOnZoom: false, getMinHeight: () => 120 });
+    w.serialize = false;
     node.__ltxPreview = box;
     node.__ltxNote = "";
     return w;
@@ -241,6 +262,7 @@ app.registerExtension({
             const node = this;
             node.color = NODE_COLOR; node.bgcolor = NODE_BGCOLOR; node.resizable = true;
             const spacer = node.addWidget("text", "_spacer", "", () => {});
+            spacer.serialize = false;
             spacer.draw = function () {}; spacer.computeSize = () => [0, 20];
             node.widgets.splice(node.widgets.indexOf(spacer), 1); node.widgets.unshift(spacer);
             const ex = node.widgets.find((w) => w.name === "expert");
@@ -252,6 +274,7 @@ app.registerExtension({
             const prev = makePreview(node);
             const ei = node.widgets.findIndex((w) => w.name === "edited_prompt");
             if (ei >= 0) { node.widgets.splice(node.widgets.indexOf(prev), 1); node.widgets.splice(ei, 0, prev); }
+            addGap(node, "_gap_edit", "edited_prompt");      // подпись «ПРАВКА» больше не налезает на окно
             node.addWidget("button", "✏ В правку / To edit", null, () => {
                 const w = node.widgets.find((x) => x.name === "edited_prompt");
                 if (w && node.__ltxLast) { w.value = node.__ltxLast; app.graph?.setDirtyCanvas(true, true); }

@@ -224,8 +224,17 @@ yourself from the brief, with the same density.
 ## PART 2 — THE ACTION, MOMENT BY MOMENT (about 45% of the text)
 
 Describe what happens, in strict chronological order, in the present
-tense, as a sequence of small physical steps. Pace it with time words:
-"at first", "a moment later", "then", "as … , …", "finally".
+tense, as a sequence of small physical steps.
+
+TIMING — the user message gives "Duration: N seconds". The node itself
+puts "A N-second single continuous shot." on the first line, so do not
+write it yourself. But spread the action over the whole duration and
+anchor every beat to approximate seconds, so the model knows when each
+thing happens: "During the first two seconds…", "Around the third
+second…", "From the fifth to the seventh second…", "In the final second…".
+The beats must fill the clip from 0 to N with no empty gap and must not
+run past N. Short clips get fewer, smaller beats; long clips get more
+beats, not faster ones.
 
 - Write EVERY movement as the four-link physical chain from PHYSICS IS
   THE BACKBONE: cause → movement with weight → reaction of materials →
@@ -368,6 +377,7 @@ describe it once, simply, with where it ends.
 - Is every target pose an exact still photograph (feet, knees, weight,
   torso angle, hip height, hands), with no vague words like low, deep,
   sinks, crouches? Is a guard stance standing?
+- Is every beat anchored to approximate seconds, filling 0 to N exactly?
 - Is the action chronological, reaching every attached keyframe?
 - Emotion shown through the body, no filler adjectives, no negations?
 - Sound with 4–6 sources, music stated, dialogue in quotes?

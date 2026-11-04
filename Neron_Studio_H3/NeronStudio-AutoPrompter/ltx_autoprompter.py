@@ -38,17 +38,30 @@ def _main(label, **o):
     return dict(o, ltx_main=True, display_name=label)
 
 
-def _ensure_camera(text, camera):
-    """Страховка: модель забыла камеру — ставим фразу пользователя в начало и в конец."""
-    if not camera:
-        return text, False
-    head = text[:300].lower()
-    if "camera" in head:
-        return text, False
-    cam = camera.rstrip()
-    if cam[-1:] not in ".!?":
-        cam += "."
-    return f"{cam}\n\n{text}\n\n{cam}", True
+def _duration_line(seconds):
+    s = f"{seconds:g}"
+    return f"A {s}-second single continuous shot."
+
+
+def _finalize(text, camera, seconds):
+    """Гарантии кодом, а не надеждой на модель:
+    • первой строкой — длина ролика (по ползунку ноды), чтобы LTX расставил действия по времени;
+    • камера в начале и в конце (если модель забыла — фраза пользователя).
+    → (текст, заметки)."""
+    notes = []
+    body = text.strip()
+    head = body[:200].lower()
+    # длительность: убираем то, что модель могла написать сама в первой строке, и ставим точную
+    first, _, rest = body.partition("\n")
+    if "-second" in first.lower() and len(first) < 120:
+        body = rest.strip()
+    if camera and "camera" not in head:
+        cam = camera.rstrip()
+        if cam[-1:] not in ".!?":
+            cam += "."
+        body = f"{cam}\n\n{body}\n\n{cam}"
+        notes.append("модель забыла камеру — фраза поставлена в начало и конец / camera sentence added")
+    return f"{_duration_line(seconds)}\n{body}", notes
 
 
 class NeronLTXAutoPrompter:
@@ -128,10 +141,8 @@ class NeronLTXAutoPrompter:
         camera = (camera_prompt or "").strip()
         edited = (edited_prompt or "").strip()
         if edited:
-            text, added = _ensure_camera(edited, camera)
-            note = "✏ своя правка — LLM не запускался / your edit, LLM skipped"
-            if added:
-                note += "; камера добавлена / camera added"
+            text, extra = _finalize(edited, camera, float(seconds))
+            note = "; ".join(["✏ своя правка — LLM не запускался / your edit, LLM skipped"] + extra)
             log.info("%s %s", TAG, note)
             return {"ui": {"text": [text], "note": [note]}, "result": (text, float(seconds)) + frames}
 
@@ -145,9 +156,8 @@ class NeronLTXAutoPrompter:
         finally:
             if unload_after:
                 _stop_llama_server()
-        text, added = _ensure_camera(text, camera)
-        if added:
-            note += "; модель забыла камеру — фраза поставлена в начало и конец / camera sentence added"
+        text, extra = _finalize(text, camera, float(seconds))
+        note = "; ".join([note] + extra)
         log.info("%s %s (%s символов)", TAG, note, len(text))
         return {"ui": {"text": [text], "note": [note]}, "result": (text, float(seconds)) + frames}
 
