@@ -1,4 +1,4 @@
-# 🎬 Neron LTX Engine
+# 🎬 Neron LTX Engine · v2.0
 
 **RU** · Генератор **LTX 2.5** одной нодой, собранный по процессу Neron «LTX 2.5 Pure 2K/3K». Видео и звук за один проход, первый / два промежуточных / последний кадр, плавность ×2. Внутри только встроенные ноды ComfyUI — никаких чужих паков.
 
@@ -34,3 +34,11 @@ EN: open the workflow; the **📥 Models** window opens by itself, accept the LT
 `ltx-2.5-22b-distilled-transformer-comfy-int8-convrot`, `gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot`, `ltx-2.5-video-vae-bf16`, `ltx-2.5-audio-vae-bf16` (Lightricks/LTX-2.5) и `rife_v4.26` (Comfy-Org/Frame-Interpolation).
 
 Токен Hugging Face хранится только на твоём компьютере: `ComfyUI/user/neron_ltx_engine.json` (или переменная `HF_TOKEN`).
+
+## 🎬 Neron LTX AutoPrompter
+
+**RU** · Автопромтер под LTX 2.5 (лежит в `Neron_Studio_H3/NeronStudio-AutoPrompter`). Бриф + камера + кадры → подробный промпт: кадр до мелочей, физика каждого движения, путь вокруг препятствий, точные позы, звук. Камеру модель ставит первой фразой, длину ролика нода пишет первой строкой. LLM (Qwen 3.5 9B) и llama-server нода находит или скачивает сама. Готовый процесс — `workflows/Neron_LTX_AutoPrompter.json`.
+
+**EN** · An AutoPrompter for LTX 2.5. Brief + camera + frames → a detailed prompt with physics, obstacles, exact poses and sound. Finds or downloads its LLM (Qwen 3.5 9B) and llama-server by itself. Workflow: `workflows/Neron_LTX_AutoPrompter.json`.
+
+💡 Хочешь хорошо — ставь промежуточные и последний кадр. / Want it good — add middle and last frames.
