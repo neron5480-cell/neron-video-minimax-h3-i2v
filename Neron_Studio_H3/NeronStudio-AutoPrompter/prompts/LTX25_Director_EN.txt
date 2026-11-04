@@ -255,6 +255,43 @@ beats, not faster ones.
 - Light stays one coherent logic for the whole clip; describe how it
   plays on moving surfaces.
 
+## PART 2b — THE FINAL STATE, AS DETAILED AS THE OPENING
+
+The end of the clip is where LTX invents the most, because prompts get
+vague at the end. Detail must NOT fade toward the end: the last third of
+the action gets as much precise description as the first third.
+
+Finish the action with a full description of the final frame, as exact
+as a photograph, as if you were describing a second opening frame:
+- the whole pose: feet, knees, hips, torso, shoulders, head, gaze;
+- EACH hand separately: which hand holds what, and where it is
+  (height, in front of which part of the body);
+- every held object as precise geometry: which end is where, which way
+  it points, how long it is relative to the body, what it covers and
+  what it is behind or in front of. For a sword: "both hands hold the
+  grip at the height of his belt, the crossguard just above his fists,
+  the single blade rising straight up from the guard in front of his
+  chest, its point level with the top of his helmet; the pommel below
+  his fists ends a hand's width above his belt buckle";
+- the cloak, hair and clothing at rest; the light and the background
+  as they are at the end.
+If a last frame is attached, this final description must match it.
+
+## OBJECTS KEEP THEIR SHAPE
+
+Every object stays the same object from the first frame to the last:
+same size, same length, same number of parts, same proportions.
+- A sword has one blade on one side of the crossguard and the grip and
+  pommel on the other side. It never grows, shrinks, bends or splits,
+  and a blade never appears on both sides of the hands.
+- Hands keep five fingers; people keep two arms and two legs.
+- When an object turns or moves, say how it turns (around which axis)
+  and where each end ends up, so its shape stays readable.
+
+Never give contradictory directions in one phrase ("vertical and
+pointing forward", "raised and lowered"). One direction per object per
+moment.
+
 ## PART 3 — SOUND (about 15% of the text, MANDATORY)
 
 LTX writes the soundtrack in the same pass; anything not described is
@@ -314,7 +351,7 @@ the window. No music."
 Match the duration given in the brief (assume about 8 seconds if none).
 Write at least:
 - up to 5 s — 180–250 words;
-- 6–10 s — 250–350 words;
+- 6–10 s — 280–380 words;
 - 11–20 s — 350–450 words, with more steps of action, not more adjectives.
 Every sentence must add a concrete visual or sound detail.
 
@@ -378,6 +415,11 @@ describe it once, simply, with where it ends.
   torso angle, hip height, hands), with no vague words like low, deep,
   sinks, crouches? Is a guard stance standing?
 - Is every beat anchored to approximate seconds, filling 0 to N exactly?
+- Is the last third as detailed as the first? Is the final frame
+  described like a photograph: pose, each hand, every held object as
+  geometry (which end where, length, what it covers)?
+- Do objects keep their shape (one blade on one side of the guard,
+  same length), with no contradictory directions?
 - Is the action chronological, reaching every attached keyframe?
 - Emotion shown through the body, no filler adjectives, no negations?
 - Sound with 4–6 sources, music stated, dialogue in quotes?
