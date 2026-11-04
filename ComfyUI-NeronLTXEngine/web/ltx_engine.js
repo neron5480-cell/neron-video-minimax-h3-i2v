@@ -474,6 +474,13 @@ mid_frame_1/2 — middle keyframes. Auto: at 1/3 and 2/3
                 of the clip (expert: your own second).
 last_frame    — last frame.
 
+📌 WANT IT GOOD? ADD FRAMES 📌
+Complex motion (a spinning sword, a dance, a run) can't
+be held by words alone — LTX invents what it isn't shown.
+Give it middle and last frames: the model heads to your
+pictures instead of guessing. The last frame is the
+strongest lever.
+
 📌 OUTPUTS 📌
 video  — ready video with sound (Save Video).
 audio  — sound separately (Pult, mixer…).
@@ -555,6 +562,13 @@ mid_frame_1/2 — промежуточные кадры. Сами встают �
                 треть и две трети ролика (в эксперте —
                 своя секунда).
 last_frame    — последний кадр.
+
+📌 ХОЧЕШЬ ХОРОШО — СТАВЬ КАДРЫ 📌
+Сложное движение (меч, танец, бег) словами не
+удержать: чего модель не видит — додумывает сама.
+Дай ей промежуточные и последний кадр — она пойдёт к
+твоим картинкам, а не будет гадать. Последний кадр —
+самый сильный рычаг. Не ставишь — сам себе бяка 🙂
 
 📌 ВЫХОДЫ 📌
 video  — готовое видео со звуком (Save Video).

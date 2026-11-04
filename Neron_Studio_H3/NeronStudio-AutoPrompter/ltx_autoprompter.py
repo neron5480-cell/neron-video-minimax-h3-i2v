@@ -127,9 +127,9 @@ class NeronLTXAutoPrompter:
                 "camera_prompt": ("STRING", {"forceInput": True, "tooltip": "Как ведёт себя камера. Модель поставит "
                                                                             "это первой фразой. EN: camera behaviour."}),
                 "first_frame": ("IMAGE",),
-                "mid_frame_1": ("IMAGE",),
-                "mid_frame_2": ("IMAGE",),
-                "last_frame": ("IMAGE",),
+                "mid_frame_1": ("IMAGE", {"tooltip": "Промежуточный кадр — ориентир для модели посреди ролика. Сложное движение (меч, танец, бег) без ориентиров LTX додумывает сам. EN: a middle keyframe — a guide for complex motion."}),
+                "mid_frame_2": ("IMAGE", {"tooltip": "Промежуточный кадр — ориентир для модели посреди ролика. Сложное движение (меч, танец, бег) без ориентиров LTX додумывает сам. EN: a middle keyframe — a guide for complex motion."}),
+                "last_frame": ("IMAGE", {"tooltip": "Последний кадр — самый сильный рычаг: модель ведёт к готовой картинке, а не выдумывает концовку. Хочешь хорошо — ставь промежуточные и последний кадр. EN: the strongest lever — the model heads to your picture instead of inventing the ending."}),
             },
         }
 
@@ -157,6 +157,8 @@ class NeronLTXAutoPrompter:
             if unload_after:
                 _stop_llama_server()
         text, extra = _finalize(text, camera, float(seconds))
+        if last_frame is None:
+            extra.append("💡 хочешь точно — добавь последний кадр / want it exact? add a last frame")
         note = "; ".join([note] + extra)
         log.info("%s %s (%s символов)", TAG, note, len(text))
         return {"ui": {"text": [text], "note": [note]}, "result": (text, float(seconds)) + frames}

@@ -189,7 +189,9 @@ class NeronLTXEngine:
                 "first_frame": ("IMAGE", {"tooltip": "Первый кадр. Нет — «текст → видео». EN: first frame; none = text to video."}),
                 "mid_frame_1": ("IMAGE", {"tooltip": "Промежуточный кадр 1. EN: middle frame 1."}),
                 "mid_frame_2": ("IMAGE", {"tooltip": "Промежуточный кадр 2. EN: middle frame 2."}),
-                "last_frame": ("IMAGE", {"tooltip": "Последний кадр. EN: last frame."}),
+                "last_frame": ("IMAGE", {"tooltip": "Последний кадр — самый сильный рычаг: модель ведёт к твоей "
+                                                     "картинке, а не выдумывает концовку. EN: last frame — "
+                                                     "the strongest lever."}),
                 "width": ("INT", {"forceInput": True, "tooltip": "Внешняя ширина (например, от процессора картинки). "
                                                                  "Подключены width и height — внутренний выбор размера "
                                                                  "отключается. EN: external width; wired width+height "

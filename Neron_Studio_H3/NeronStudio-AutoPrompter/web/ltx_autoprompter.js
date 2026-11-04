@@ -163,6 +163,16 @@ prompt → prompt, seconds → seconds_in, frames → frames.
 (Don't wire camera_prompt to the engine as well — it is
 already inside the prompt.)
 
+📌 WANT IT GOOD? ADD FRAMES 📌
+Words alone can't hold complex motion: a spinning sword,
+a dance, a run, hands working with objects. LTX invents
+whatever you didn't show it — and gets it wrong.
+The rule: want it good — give middle and last frames.
+Make the final pose as a picture (edit the first frame
+in any image model) and wire it into last_frame. The
+model then heads to your picture instead of guessing.
+No frames — you're on your own.
+
 📌 PREVIEW AND EDIT 📌
 The preview shows what the model wrote.
 "✏ To edit" copies it into "your edit". While "your edit"
@@ -203,6 +213,16 @@ camera_prompt ← текстовая нода: как ведёт себя кам
 prompt → prompt, seconds → seconds_in, кадры → кадры.
 (camera_prompt в движок второй раз не подключай — он
 уже внутри промпта.)
+
+📌 ХОЧЕШЬ ХОРОШО — СТАВЬ КАДРЫ 📌
+Словами сложное движение не удержать: вращение меча,
+танец, бег, руки с предметами. Что ты модели не
+показал — она додумает сама, и обычно криво.
+Правило: хочешь хорошо — ставь промежуточные и
+последний кадр. Сделай финальную позу картинкой
+(правкой первого кадра в любой модели картинок) и
+подай в last_frame. Тогда модель ведёт к твоей
+картинке, а не гадает. Не ставишь — сам себе бяка 🙂
 
 📌 ПРЕДПРОСМОТР И ПРАВКА 📌
 В окне — то, что написала модель.
