@@ -12,6 +12,8 @@ const GROUPS = [
       fill: "rgba(255, 200, 100, 0.22)", border: "rgba(255, 200, 100, 0.95)", label: "rgba(255, 235, 160, 1.0)", thick: 2.5 },
     { name: "ГЛАВНОЕ / MAIN", widgets: ["total_seconds", "block_seconds"],
       fill: "rgba(200, 150,  90, 0.15)", border: "rgba(200, 150,  90, 0.75)", label: "rgba(255, 220, 170, 1.0)" },
+    { name: "🎥 КАМЕРА / CAMERA", widgets: ["camera_mode", "framing", "camera_distance"],
+      fill: "rgba( 90, 200, 200, 0.15)", border: "rgba( 90, 200, 200, 0.75)", label: "rgba(180, 255, 255, 1.0)" },
     { name: "LLM", widgets: ["model", "mmproj", "auto_download", "system_prompt", "max_tokens", "temperature",
                              "n_ctx", "n_gpu_layers", "unload_after"],
       fill: "rgba(120, 200, 160, 0.15)", border: "rgba(120, 200, 160, 0.75)", label: "rgba(190, 255, 220, 1.0)" },
@@ -222,6 +224,15 @@ story  → the engine's 'story' input. That's all: the
          engine then shows only story → video.
 prompts → (optional) all block prompts as text.
 
+📌 CAMERA 📌
+Same as our ⚡ Fixed Camera H3 node (its code is used):
+AUTO picks the angle from words in the scenario ("left",
+"behind", "from above"…), otherwise front. The program
+puts ONE fixed camera header at the start of EVERY
+block — the camera never changes between blocks.
+Framing "as in the first frame" — safest for a chain.
+The LLM is told not to describe camera moves.
+
 📌 LENGTH 📌
 Video 5–45 s and block 5–15 s (maximum) are set HERE.
 The plan is shown live on the node, e.g.
@@ -237,7 +248,8 @@ block is pinned by the engine itself.
 
 📌 PREVIEW AND EDIT 📌
 The preview shows all prompts, split by
-"### БЛОК k ###" lines, with the plan line.
+"### БЛОК k ###" lines. The "💬" line is a short
+summary for you — it is NOT sent to the model.
 "✏ To edit" copies it into "your edit". While it has
 text, it goes to the engine as is (LLM skipped) —
 fix a block and run again. Keep the ### lines.
@@ -279,6 +291,15 @@ story  → вход 'story' движка. И всё: на движке тогд�
          видно только story → video.
 prompts → (по желанию) все промпты текстом.
 
+📌 КАМЕРА 📌
+Как в нашей ноде ⚡ Fixed Camera H3 (её код и работает):
+АВТО берёт ракурс по словам сценария («слева»,
+«сзади», «сверху»…), иначе фронт. Программа ставит
+ОДНУ неподвижную шапку камеры в начало КАЖДОГО блока —
+камера между блоками не меняется. План «как на первом
+кадре» — самый надёжный для цепочки. LLM запрещено
+описывать движения камеры.
+
 📌 ДЛИНА 📌
 Ролик 5–45 с и блок 5–15 с (максимум) задаются ЗДЕСЬ.
 План виден на ноде сразу, например «30 с = 4 блока по
@@ -293,7 +314,8 @@ LLM видит первый кадр и картинки каждого блок
 
 📌 ПРЕДПРОСМОТР И ПРАВКА 📌
 В окне — все промпты, разделённые строками
-«### БЛОК k ###», и строка плана.
+«### БЛОК k ###». Строка «💬» — краткий пересказ
+для тебя, в модель она НЕ идёт.
 «✏ В правку» копирует их в «свою правку». Пока там
 есть текст, он идёт в движок как есть (LLM не
 запускается) — поправил блок и запустил снова.

@@ -42,6 +42,11 @@ def _ap():
         for name in NEEDED:
             if name not in got and hasattr(m, name):
                 got[name] = getattr(m, name)
+    for m in list(sys.modules.values()):                     # камера H3 — нода Fixed Camera H3 (одна копия в пакете)
+        f = str(getattr(m, "__file__", "") or "").replace("\\", "/")
+        if "camera" not in got and ("/ComfyUI-H3-Static-Camera/" in f or "/NeronStudio-AutoPrompter/" in f) \
+                and hasattr(m, "MyH3StaticCamera"):
+            got["camera"] = m.MyH3StaticCamera
     _AP_MISSING[:] = [n for n in NEEDED if n not in got]
     if _AP_MISSING:
         return None
@@ -97,6 +102,31 @@ def plan(total_seconds, block_seconds, seam=SEAM):
     return blocks, min(_grid(max(MIN_TRAINED, math.ceil((T + (blocks - 1) * seam) / blocks))), n_max), T
 
 
+CAM_MODES = ["AUTO (Listen to autoprompter) / АВТО", "FRONT (Straight view) / ФРОНТ", "LEFT (Side view) / СЛЕВА",
+             "RIGHT (Side view) / СПРАВА", "BACK (From behind) / СЗАДИ", "TOP (High angle) / СВЕРХУ",
+             "BOTTOM (Low angle) / СНИЗУ"]
+FRAMING_AS_FIRST = "🖼 как на первом кадре / as in the first frame"
+FRAMINGS = [FRAMING_AS_FIRST, "wide shot", "medium shot", "close-up"]
+
+
+def camera_header(ap, scenario, mode, framing, distance, frames):
+    """Жёсткая шапка камеры — та же, что делает наша нода ⚡ Fixed Camera H3 (её код и берём).
+    «Как на первом кадре» — Story-вариант: крупность и дистанция не меняются от блока к блоку."""
+    cls = getattr(ap, "camera", None) if ap else None
+    fr = "medium shot" if framing == FRAMING_AS_FIRST else framing
+    if cls is not None:
+        head = cls().generate_static_data("[LLM] Autoprompter (Naxdy Brief) / Автопромтер", mode, fr, int(frames), FPS,
+                                          float(distance), autoprompt_text="", subject_details=scenario or "")[0]
+    else:   # запасной текст, если ноды камеры в этой установке нет
+        head = ("[CAMERA] [Static shot] A completely locked-off camera remains fixed in a front view. The framing is a "
+                f"rigid {fr} at distance {float(distance):g}. Absolutely no zoom, no camera parallax, no dolly, and no "
+                "tracking. All background elements and furniture are anchored and perfectly rigid.")
+    if framing == FRAMING_AS_FIRST:
+        head = re.sub(r"The framing is a rigid [^.]*\.", "The framing stays exactly as in the opening frame, at the same "
+                      "distance and height, for the whole video.", head)
+    return head.strip()
+
+
 def _main(label, **o):
     return dict(o, story_main=True, display_name=label)
 
@@ -138,7 +168,8 @@ def _split_edit(text):
         end = marks[i + 1].start() if i + 1 < len(marks) else len(text)
         body = text[m.end():end].strip()
         # строку «план: …» (для глаз) в промпт не берём
-        body = "\n".join(l for l in body.splitlines() if not l.strip().lower().startswith(("план:", "plan:"))).strip()
+        body = "\n".join(l for l in body.splitlines()
+                         if not l.strip().lower().startswith(("план:", "plan:", "💬"))).strip()
         out[int(m.group(1))] = body
     return [out.get(k, "") for k in range(1, max(out) + 1)]
 
@@ -150,7 +181,7 @@ def _join(prompts, summaries, n):
         a, b = k * (n - SEAM) / FPS, k * (n - SEAM) / FPS + secs
         head = f"### БЛОК {k + 1} / BLOCK {k + 1} · {a:.1f}–{b:.1f} с ###"
         ru = summaries[k] if k < len(summaries) and summaries[k] else ""
-        parts.append(head + (f"\nплан: {ru}" if ru else "") + "\n" + p.strip())
+        parts.append(head + (f"\n💬 для тебя, в модель не идёт / for you, not sent: {ru}" if ru else "") + "\n" + p.strip())
     return "\n\n".join(parts)
 
 
@@ -166,7 +197,7 @@ class NeronH3StoryAutoPrompter:
                    "промпт каждого блока. AutoPrompter for Neron H3 Story: scenario + block pictures → a plan with "
                    "exact seams and a detailed prompt per block.")
 
-    ORDER = ["expert", "total_seconds", "block_seconds", "model", "mmproj", "auto_download", "system_prompt",
+    ORDER = ["expert", "total_seconds", "block_seconds", "camera_mode", "framing", "camera_distance", "model", "mmproj", "auto_download", "system_prompt",
              "max_tokens", "temperature", "n_ctx", "n_gpu_layers", "unload_after", "edited_prompt"]
 
     @classmethod
@@ -197,6 +228,16 @@ class NeronH3StoryAutoPrompter:
                               step=0.5, display="slider",
                               tooltip="Максимум одного блока. Ролик делится на ровные блоки не длиннее него.\n\nEN: "
                                       "Maximum block length; the video is split into equal blocks.")),
+            "camera_mode": (CAM_MODES, _main("🎥 ракурс / camera", default=CAM_MODES[0],
+                            tooltip="Как в ноде ⚡ Fixed Camera H3. АВТО — ракурс по словам сценария («слева», «сзади», "
+                                    "«сверху»…), иначе фронт. Камера стоит неподвижно ВЕСЬ ролик: одна и та же шапка "
+                                    "камеры ставится в начало каждого блока.\n\nEN: Same as Fixed Camera H3. The camera "
+                                    "stays locked for the whole video: one camera header starts every block.")),
+            "framing": (FRAMINGS, _main("🎥 план / framing", default=FRAMING_AS_FIRST,
+                        tooltip="«Как на первом кадре» — крупность и дистанция не меняются от блока к блоку (надёжнее "
+                                "всего для цепочки). Или общий / средний / крупный план.\n\nEN: As in the first frame "
+                                "keeps the same framing across blocks; or wide / medium / close-up.")),
+            "camera_distance": ("FLOAT", _exp("🎥 дистанция / distance", default=1.0, min=0.1, max=3.0, step=0.05)),
             "model": (models, _exp("модель LLM / LLM model", default=AUTO,
                       tooltip="Авто — модель класса Qwen 3.5 9B; нет — скачает сама.\n\nEN: Auto — a Qwen 3.5 9B class "
                               "model; downloads it if missing.")),
@@ -237,7 +278,8 @@ class NeronH3StoryAutoPrompter:
         return True
 
     # ------------------------------------------------------------------
-    def generate(self, expert=False, total_seconds=30.0, block_seconds=10.0, model=AUTO, mmproj=AUTO,
+    def generate(self, expert=False, total_seconds=30.0, block_seconds=10.0, camera_mode=CAM_MODES[0],
+                 framing=FRAMING_AS_FIRST, camera_distance=1.0, model=AUTO, mmproj=AUTO,
                  auto_download=True, system_prompt=None, max_tokens=6144, temperature=0.7, n_ctx=16384,
                  n_gpu_layers=-1, unload_after=True, edited_prompt="", scenario=None, first_frame=None,
                  lora_all=None, **kw):
@@ -250,6 +292,7 @@ class NeronH3StoryAutoPrompter:
         if extra:
             notes.append(f"блоки {', '.join(map(str, extra))} не влезли в {T / FPS:g} с — увеличь длину ролика")
 
+        cam = camera_header(_ap(), scenario, camera_mode, framing, camera_distance, n)
         edited = (edited_prompt or "").strip()
         if edited:
             prompts = _split_edit(edited)
@@ -265,7 +308,8 @@ class NeronH3StoryAutoPrompter:
                 llm_model, llm_mm, picked = ap.LTX._resolve_llm(self, model, mmproj, bool(auto_download))
                 prompts, summaries, note = self._write(llm_model, llm_mm, system_prompt, int(max_tokens),
                                                        float(temperature), int(n_ctx), int(n_gpu_layers), scenario,
-                                                       opening, given[:blocks], blocks, n)
+                                                       opening, given[:blocks], blocks, n, cam)
+                prompts = [f"{cam}\n\n{p.strip()}" for p in prompts]   # камера — кодом, одинаково в каждом блоке
                 notes.append(note + (f"; {picked}" if picked else ""))
             finally:
                 if unload_after:
@@ -285,7 +329,7 @@ class NeronH3StoryAutoPrompter:
 
     # ------------------------------------------------------------------
     def _write(self, model, mmproj, system_prompt, max_tokens, temperature, n_ctx, n_gpu_layers, scenario,
-               opening, given, blocks, n):
+               opening, given, blocks, n, cam=""):
         ap = _need_ap()
         helper = ap.NeronMultiImageLLM()
         model_path = helper._resolve_model_path(model)
@@ -313,7 +357,7 @@ class NeronH3StoryAutoPrompter:
             for label, img in items:
                 msgs.append({"role": "user", "content": [
                     {"type": "text", "text": label},
-                    {"type": "image_url", "image_url": {"url": ap._image_to_data_uri_small(img)}}]})
+                    {"type": "image_url", "image_url": {"url": ap._image_to_data_uri_small(img, max_size=768)}}]})
                 msgs.append({"role": "assistant", "content": "I see it."})
             return msgs
 
@@ -345,6 +389,7 @@ class NeronH3StoryAutoPrompter:
             block_lines.append("; ".join(desc))
         user = ["TASK \"PLAN\".", f"The video is {blocks} block(s), each {secs:.1f} seconds; every block after the "
                 f"first begins with ~1 second that repeats the previous block's ending."]
+        user.append(f"Camera for the whole video (fixed, already decided): {cam}")
         user.append(f"Scenario for the whole video: {scenario}" if scenario else
                     "No overall scenario: build the story from the block notes and the pictures.")
         user += block_lines
@@ -354,6 +399,7 @@ class NeronH3StoryAutoPrompter:
                    [{"role": "user", "content": "\n".join(user)}]
         plan_text = ask(messages, "план / plan")
         steps = _parse_plan(plan_text, blocks)
+        look = (re.search(r"^\s*LOOK\s*:\s*(.+)$", plan_text, re.M | re.I) or [None, ""])[1].strip()
         for k, st in enumerate(steps):              # подстраховка: пустой пункт плана — из заметки или сценария
             if not st["block"]:
                 st["block"] = given[k].get("text") or (scenario if k == 0 else "The story continues naturally.")
@@ -372,7 +418,12 @@ class NeronH3StoryAutoPrompter:
             tags += [f"{tag} = {role}" for tag, role, _ in pics]
             u = ["TASK \"BLOCK\".", f"Whole plan:\n{whole}", "",
                  f"Write block {k + 1} of {blocks}: {steps[k]['block']}",
-                 f"It lasts {secs:.1f} seconds; time the actions from 0 to {secs:.0f}."]
+                 f"It lasts {secs:.1f} seconds; time the actions from 0 to {secs:.1f} s and not beyond."]
+            if look:
+                u.append(f"Exact look (keep it, never change it): {look}")
+            if cam:
+                u.append("The camera is fixed by this header that will precede your text — do not describe camera "
+                         f"moves, zoom, reframing or a new shot: {cam}")
             if k > 0:
                 u.append(f"It starts exactly from the end of block {k}: {steps[k - 1]['end'] or 'as block ' + str(k) + ' ended'}. "
                          f"The first second repeats that moment; the new action starts after it.")
