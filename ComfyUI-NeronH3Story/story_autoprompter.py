@@ -8,7 +8,8 @@
   2. БЛОК — подробный промпт каждого блока отдельно: продолжение стыка, действия по секундам, физика, звук,
      ссылки на картинки <Picture N> — ровно в той нумерации, которую соберёт движок.
 Выход story — шина в движок (план, промпты, картинки, LoRA). Выход prompts — текст для глаз.
-Сервер LLM, модели, скачивание и надёжный повтор — общие с LTX AutoPrompter.
+Сервер LLM, модели, скачивание и надёжный повтор — от нашего 🎬 Neron AutoPrompter (папка NeronStudio-AutoPrompter):
+Story ничего в нём не меняет, только пользуется.
 """
 import logging
 import math
@@ -16,9 +17,46 @@ import os
 import re
 import time
 
-from .multi_llm import NeronMultiImageLLM, _ask_reliably, _image_to_data_uri_small, _stop_llama_server
-from .dialog_node import _find_llama_server, _ensure_server_running, _llm_list, _PROMPTS_DIR
-from .ltx_autoprompter import NeronLTXAutoPrompter
+import sys
+from pathlib import Path
+from types import SimpleNamespace
+
+PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
+
+
+def _ap():
+    """Код нашего 🎬 Neron AutoPrompter (папка NeronStudio-AutoPrompter), уже загруженный ComfyUI.
+    Своей копии сервера LLM у Story нет — иначе два llama-server спорили бы за один порт.
+    Ищем по содержимому модулей (имя пакета зависит от способа установки)."""
+    found = {}
+    for m in list(sys.modules.values()):
+        f = str(getattr(m, "__file__", "") or "").replace("\\", "/")
+        if "NeronStudio-AutoPrompter" not in f:
+            continue
+        if hasattr(m, "_ask_reliably") and hasattr(m, "NeronMultiImageLLM"):
+            found["ml"] = m
+        elif hasattr(m, "_ensure_server_running") and hasattr(m, "_find_llama_server"):
+            found["dn"] = m
+        elif hasattr(m, "NeronLTXAutoPrompter") and hasattr(m, "_finalize"):
+            found["ltx"] = m
+    if len(found) < 3:
+        return None
+    return SimpleNamespace(
+        NeronMultiImageLLM=found["ml"].NeronMultiImageLLM, _ask_reliably=found["ml"]._ask_reliably,
+        _image_to_data_uri_small=found["ml"]._image_to_data_uri_small, _stop_llama_server=found["ml"]._stop_llama_server,
+        _find_llama_server=found["dn"]._find_llama_server, _ensure_server_running=found["dn"]._ensure_server_running,
+        _llm_list=found["dn"]._llm_list, LTX=found["ltx"].NeronLTXAutoPrompter)
+
+
+def _need_ap():
+    ap = _ap()
+    if ap is None:
+        raise RuntimeError("[H3 Story AutoPrompter] Не найден 🎬 Neron AutoPrompter (папка NeronStudio-AutoPrompter): "
+                           "Story AutoPrompter пользуется его сервером LLM и моделями. Поставь пакет Neron целиком "
+                           "(Manager → Install via Git URL) или папку NeronStudio-AutoPrompter в custom_nodes и "
+                           "перезапусти ComfyUI.\n\nEN: 🎬 Neron AutoPrompter (NeronStudio-AutoPrompter folder) not "
+                           "found — the Story AutoPrompter uses its LLM server. Install the Neron pack and restart.")
+    return ap
 
 log = logging.getLogger("Neron.H3.StoryAutoPrompter")
 TAG = "[H3 Story AutoPrompter]"
@@ -112,7 +150,7 @@ def _join(prompts, summaries, n):
     return "\n\n".join(parts)
 
 
-class NeronH3StoryAutoPrompter(NeronLTXAutoPrompter):
+class NeronH3StoryAutoPrompter:
     CATEGORY = "Neron/H3"
     FUNCTION = "generate"
     RETURN_TYPES = (STORY_TYPE, "STRING")
@@ -129,14 +167,15 @@ class NeronH3StoryAutoPrompter(NeronLTXAutoPrompter):
 
     @classmethod
     def INPUT_TYPES(cls):
+        ap = _ap()
         try:
-            ggufs = _llm_list()
+            ggufs = ap._llm_list() if ap else []
         except Exception:
             ggufs = []
         models = [AUTO] + [m for m in ggufs if "mmproj" not in m.lower()]
         mmprojs = [AUTO] + [m for m in ggufs if "mmproj" in m.lower()]
         try:
-            prompt_list = sorted(f for f in os.listdir(_PROMPTS_DIR) if f.endswith(".txt") and "story" in f.lower())
+            prompt_list = sorted(f for f in os.listdir(PROMPTS_DIR) if f.endswith(".txt"))
         except Exception:
             prompt_list = []
         if DEFAULT_PROMPT_FILE not in prompt_list:
@@ -160,8 +199,8 @@ class NeronH3StoryAutoPrompter(NeronLTXAutoPrompter):
             "mmproj": (mmprojs, _exp("зрение LLM (mmproj) / vision (mmproj)", default=AUTO)),
             "auto_download": ("BOOLEAN", _exp("скачивать LLM сама / auto download", default=True)),
             "system_prompt": (prompt_list, _exp("системник / system prompt", default=DEFAULT_PROMPT_FILE,
-                              tooltip="Только системники Story (в имени файла есть «story»).\n\nEN: Only Story system "
-                                      "prompts.")),
+                              tooltip="Системники из папки prompts этой ноды.\n\nEN: System prompts from this "
+                                      "node's prompts folder.")),
             "max_tokens": ("INT", _exp("лимит ответа / max_tokens", default=6144, min=512, max=32768)),
             "temperature": ("FLOAT", _exp("температура / temperature", default=0.7, min=0.0, max=2.0, step=0.05)),
             "n_ctx": ("INT", _exp("окно памяти / n_ctx", default=16384, min=4096, max=65536,
@@ -217,15 +256,16 @@ class NeronH3StoryAutoPrompter(NeronLTXAutoPrompter):
                 raise RuntimeError(f"{TAG} Нет ни сценария, ни текста в блоках. Подключи вход scenario (текстовая нода) "
                                    f"или напиши, что происходит, в нодах 🎞 Блок.\n\nEN: No scenario and no block text. "
                                    f"Connect the scenario input or write in the 🎞 Block nodes.")
+            ap = _need_ap()
             try:
-                llm_model, llm_mm, picked = self._resolve_llm(model, mmproj, bool(auto_download))
+                llm_model, llm_mm, picked = ap.LTX._resolve_llm(self, model, mmproj, bool(auto_download))
                 prompts, summaries, note = self._write(llm_model, llm_mm, system_prompt, int(max_tokens),
                                                        float(temperature), int(n_ctx), int(n_gpu_layers), scenario,
                                                        opening, given[:blocks], blocks, n)
                 notes.append(note + (f"; {picked}" if picked else ""))
             finally:
                 if unload_after:
-                    _stop_llama_server()
+                    ap._stop_llama_server()
         story = {"total_seconds": float(total_seconds), "block_seconds": float(block_seconds),
                  "first_frame": opening, "appearance": None, "lora_all": list(lora_all or []), "blocks": []}
         for k in range(blocks):
@@ -242,21 +282,22 @@ class NeronH3StoryAutoPrompter(NeronLTXAutoPrompter):
     # ------------------------------------------------------------------
     def _write(self, model, mmproj, system_prompt, max_tokens, temperature, n_ctx, n_gpu_layers, scenario,
                opening, given, blocks, n):
-        helper = NeronMultiImageLLM()
+        ap = _need_ap()
+        helper = ap.NeronMultiImageLLM()
         model_path = helper._resolve_model_path(model)
         mmproj_path = helper._resolve_mmproj_path(mmproj)
-        server = _find_llama_server()
+        server = ap._find_llama_server()
         if server is None:
             raise RuntimeError(f"{TAG} Не найден llama-server (программа, которая запускает LLM). Нода пробует скачать "
                                f"его сама — причина неудачи в консоли ComfyUI.\n\nEN: llama-server not found; see the "
                                f"ComfyUI console.")
         try:
-            _ensure_server_running(server, model_path, mmproj_path, n_gpu_layers, n_ctx)
+            ap._ensure_server_running(server, model_path, mmproj_path, n_gpu_layers, n_ctx)
         except Exception as e:
             raise RuntimeError(f"{TAG} LLM не запустилась: {e}\n\nEN: The LLM failed to start: {e}") from None
-        if not system_prompt or not (_PROMPTS_DIR / system_prompt).is_file():
+        if not system_prompt or not (PROMPTS_DIR / system_prompt).is_file():
             system_prompt = DEFAULT_PROMPT_FILE
-        system_text = helper._load_system_text(system_prompt)
+        system_text = (PROMPTS_DIR / system_prompt).read_text(encoding="utf-8")
         see = bool(mmproj_path)
         secs = n / FPS
         t0 = time.time()
@@ -268,12 +309,12 @@ class NeronH3StoryAutoPrompter(NeronLTXAutoPrompter):
             for label, img in items:
                 msgs.append({"role": "user", "content": [
                     {"type": "text", "text": label},
-                    {"type": "image_url", "image_url": {"url": _image_to_data_uri_small(img)}}]})
+                    {"type": "image_url", "image_url": {"url": ap._image_to_data_uri_small(img)}}]})
                 msgs.append({"role": "assistant", "content": "I see it."})
             return msgs
 
         def ask(messages, what):
-            answer, tries = _ask_reliably(messages, max_tokens, temperature)
+            answer, tries = ap._ask_reliably(messages, max_tokens, temperature)
             if not answer:
                 raise RuntimeError(f"{TAG} Модель не ответила ({what}) и после трёх попыток:\n" + "\n".join(tries) +
                                    "\n\nЧто сделать: в эксперте увеличь «лимит ответа» или «окно памяти».\n\nEN: The "
