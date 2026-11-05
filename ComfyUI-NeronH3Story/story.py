@@ -34,6 +34,13 @@ QUALITY_STEPS = 40
 MAX_STEPS = 50
 TURBO_STEPS = 12
 TURBO_STRENGTH = 0.8
+# 🚀 Быстро — 4-шаговая LoRA lightx2v, настройки авторов: euler, сдвиг 6/3, сила 1.0
+FAST_STEPS = [4, 6, 8]
+FAST_STRENGTH = 1.0
+FAST_SAMPLER = "euler"
+FAST_SHIFT_VIDEO = 6.0
+FAST_SHIFT_AUDIO = 3.0
+REF_AUDIO_MAX_SEC = 15.0
 
 UNET_NAME = "minimax_h3_fl2va_pruned_int8_convrot.safetensors"
 UNET_BF16 = "minimax_h3_fl2va_pruned_bf16.safetensors"
@@ -42,11 +49,13 @@ CLIP_TYPE = "minimax"
 VAE_VIDEO_NAME = "minimax_h3_video_vae_fp16.safetensors"
 VAE_AUDIO_NAME = "minimax_h3_audio_vae_fp32.safetensors"
 TURBO_LORA_NAME = "minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors"
+FAST_LORA_NAME = "minimax_h3_fl2v_turbo_4step_v1.3_768p_comfyui_bf16.safetensors"
 
 ATTN_FULL = "pytorch attention"
 ATTN_FAST = "comfy kitchen attention"
 
-MODES = ["⚡ Турбо / Turbo", "Качество / Quality", "Максимум / Maximum"]
+MODES = ["🚀 Быстро / Fast", "⚡ Турбо / Turbo", "Качество / Quality", "Максимум / Maximum"]
+FAST, TURBO, QUALITY, BEST = MODES
 SEAMS = ["🎬 кусок + звук / clip + sound", "🖼 один кадр / single frame"]
 SEAM_FRAMES = [22, 5, 39]          # сетка модели для клипа-якоря: 5, 22, 39… (17k + 5)
 
@@ -243,6 +252,13 @@ def with_appearance(prompt):
     return prompt if "<Picture" in prompt else prompt.rstrip() + APPEARANCE_LINE
 
 
+def with_audio_refs(prompt, n):
+    """Звуковые образцы без упоминания в промпте модель может не заметить — называем их сами."""
+    tags = ", ".join(f"<Audio {i + 1}>" for i in range(n))
+    return (prompt.rstrip() + f" The sound of this video follows {tags}: keep the same voice, music and ambience "
+            f"as in {'this reference' if n == 1 else 'these references'}.")
+
+
 def with_continuity(prompt, k):
     """Первая строка: один непрерывный кадр; для блоков 2+ — продолжение прикреплённого хвоста."""
     line = FIRST_LINE if k == 0 else NEXT_LINE
@@ -266,20 +282,33 @@ def block_refs_prompt(prompt, start_no, who, mids):
 
 def generate(prompts, width, height, length, mode, seed, models, first_frame=None, appearance=None,
              keep_appearance=True, seam=SEAMS[0], seam_frames=22, ref_quality="auto", fast_attention=False,
-             global_loras=(), block_loras=None, total_frames=None, block_images=None):
+             global_loras=(), block_loras=None, total_frames=None, block_images=None, fast_steps=4, ref_audios=()):
     """→ (видео [T,H,W,3] float32, звук, последний кадр, число кадров, отчёт-строки).
     global_loras — [(имя, сила)] на весь ролик; block_loras[k] — [(имя, сила)] только для блока k;
     total_frames — обрезать готовый ролик ровно до этой длины;
-    block_images[k] — {"who": образец «кто/где» (только блоки 2+), "mid": [навигаторы], "last": кадр конца}."""
+    block_images[k] — {"who": образец «кто/где» (только блоки 2+), "mid": [навигаторы], "last": кадр конца};
+    ref_audios — до 3 звуковых образцов (голос, музыка, фон) → <Audio 1..3> в КАЖДЫЙ блок."""
     check_comfy()
     t0 = time.time()
     report = []
     blocks = len(prompts)
-    turbo = mode == MODES[0]
-    best = mode == MODES[2]
-    steps = TURBO_STEPS if turbo else MAX_STEPS if best else QUALITY_STEPS
+    fast = mode == FAST
+    turbo = mode == TURBO
+    best = mode == BEST
+    fast_steps = int(fast_steps) if int(fast_steps or 0) in FAST_STEPS else FAST_STEPS[0]
+    steps = fast_steps if fast else TURBO_STEPS if turbo else MAX_STEPS if best else QUALITY_STEPS
     if ref_quality == "auto":
-        ref_quality = "match" if turbo else "max"
+        ref_quality = "match" if (turbo or fast) else "max"
+    auds = []
+    for a in ref_audios or ():
+        if a is None:
+            continue
+        sr = int(a["sample_rate"])
+        w = a["waveform"][:1]
+        if w.shape[-1] > REF_AUDIO_MAX_SEC * sr:
+            w = w[..., :int(REF_AUDIO_MAX_SEC * sr)]
+            report.append(f"Звуковой образец {len(auds) + 1}: длиннее {REF_AUDIO_MAX_SEC:g} с — взято начало")
+        auds.append({"waveform": w, "sample_rate": sr})
     clip_seam = seam == SEAMS[0]
     S = int(seam_frames) if clip_seam else 1
     if S >= length:
@@ -288,7 +317,12 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
     ref = appearance if appearance is not None else first_frame
     use_ref = bool(keep_appearance) and ref is not None
     report.append(f"Ролик: {blocks} блок(а) по {length} кадров ({length / 24:.2f} с), {width}×{height}")
-    report.append(f"Режим: {mode.split(' / ')[0]} — {steps} шагов" + (f", турбо-LoRA ×{TURBO_STRENGTH}" if turbo else ""))
+    report.append(f"Режим: {mode.split(' / ')[0]} — {steps} шагов" + (f", турбо-LoRA ×{TURBO_STRENGTH}" if turbo else "")
+                  + (f", быстрая LoRA ×{FAST_STRENGTH:g}, {FAST_SAMPLER}, сдвиг {FAST_SHIFT_VIDEO:g}/{FAST_SHIFT_AUDIO:g}"
+                     if fast else ""))
+    if auds:
+        report.append("🔊 Звуковые образцы: " + ", ".join(f"<Audio {i + 1}>" for i in range(len(auds)))
+                      + " — в каждый блок")
     report.append("Стык: " + (f"кусок {S} кадров ({S / 24:.2f} с) + его звук" if clip_seam else "один кадр"))
     if keep_appearance and ref is None:
         report.append("🔒 Внешний вид: картинки нет — нечего сохранять, блоки идут по тексту")
@@ -314,6 +348,8 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
         p = with_continuity(p, k)
         if use_ref:
             p = with_appearance(p)
+        if auds and "<Audio" not in p:
+            p = with_audio_refs(p, len(auds))
         if who is not None or mids:
             p = block_refs_prompt(p, 2 if use_ref else 1, who, mids)
             tags, no = [], 1
@@ -324,11 +360,17 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
             for i in range(len(mids)):
                 tags.append(f"<Picture {no}> навигатор {i + 1}"); no += 1
             report.append(f"Блок {k + 1}: " + ", ".join(tags))
-        if refs:
+        if refs or auds:
+            kw = {}
+            if refs:
+                kw["ref_images"] = {f"ref_image_{i}": im for i, im in enumerate(refs)}
+            if auds:
+                kw["ref_audios"] = {f"ref_audio_{i}": a for i, a in enumerate(auds)}
+                kw["audio_vae"] = node("VAELoader", vae_name=models["vae_audio"])[0]
             positive, latent = node("MiniMaxH3ReferenceToVideo", clip=clip, vae=vae, prompt=p,
                                     width=int(width), height=int(height), length=int(length),
-                                    ref_image_size=ref_quality,
-                                    ref_images={f"ref_image_{i}": im for i, im in enumerate(refs)})
+                                    ref_image_size=ref_quality, **kw)
+            del kw
         else:
             positive, latent = node("MiniMaxH3ImageToVideo", clip=clip, vae=vae, prompt=p, width=int(width),
                                     height=int(height), length=int(length))
@@ -362,9 +404,12 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
         m = base_model
         if turbo:
             m = lora(m, models["turbo_lora"], TURBO_STRENGTH)
+        if fast:
+            m = lora(m, models["fast_lora"], FAST_STRENGTH)
         for name, st in global_loras + list(extra):
             m = lora(m, name, float(st))
-        m = node("MiniMaxH3SigmaShift", model=m, shift_video=SHIFT_VIDEO, shift_audio=SHIFT_AUDIO)[0]
+        m = node("MiniMaxH3SigmaShift", model=m, shift_video=FAST_SHIFT_VIDEO if fast else SHIFT_VIDEO,
+                 shift_audio=FAST_SHIFT_AUDIO if fast else SHIFT_AUDIO)[0]
         if has_node("ModelAttentionBackend"):
             try:
                 m = node("ModelAttentionBackend", model=m, attention=attn)[0]
@@ -421,7 +466,7 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
             if block_loras[k]:
                 report.append(f"{label} LoRA: " + ", ".join(f"{base(n)} ×{st:g}" for n, st in block_loras[k]))
         send(f"{label}: генерация / generating", 0, steps)
-        sampler = node("KSamplerSelect", sampler_name=SAMPLER)[0]
+        sampler = node("KSamplerSelect", sampler_name=FAST_SAMPLER if fast else SAMPLER)[0]
         noise = node("RandomNoise", noise_seed=int(seed) + k)[0]
         sigmas = node("BasicScheduler", model=model, scheduler=SCHEDULER, steps=int(steps), denoise=1.0)[0]
         guider = node("BasicGuider", model=model, conditioning=positive)[0]

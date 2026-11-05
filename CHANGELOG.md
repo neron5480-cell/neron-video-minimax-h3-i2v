@@ -3,6 +3,11 @@
 ## 🎬 Neron H3 Story — прототип длинного ролика / long-video prototype (dev, 05.11.2026)
 
 **RU:**
+- **📥 Модели качает сам** (как Neron LTX Engine): окно открывается само, если чего-то не хватает; прогресс, докачка после обрыва, проверка места, раскладка по папкам. Модель H3 — с официальной Comfy-Org, турбо- и быстрая LoRA — от авторов lightx2v. Другая версия уже лежит (например, модель bf16 или LoRA v1.1) — не качает. Токен Hugging Face спрашивает только если сайт попросит; токен от LTX Engine подхватывается. Все модели на «🤖 авто», чужое имя из схемы — не красная ошибка, а «авто» с запиской.
+- **🚀 Быстро:** 4-шаговая турбо-LoRA lightx2v (v1.3, 768p) с настройками авторов — euler, сдвиг 6/3, сила 1.0. Для мультиков, 3D и пробы сюжета. В эксперте — 4 / 6 / 8 шагов (группа «🚀 БЫСТРО»). ⚡ Турбо — по-прежнему основной и по умолчанию. *На настоящей H3 ещё не проверено.*
+- **🔊 Звуковые образцы (эксперт):** ref_audio_1…3 (голос, музыка, фон) — <Audio 1…3> в каждый блок, до 15 с; нет <Audio 1> в промпте — движок допишет сам. AutoPrompter не участвует. *Не проверено на H3.*
+- **📖 Справка переписана:** что такое блок, как склеиваются (кусок + звук), звук, внешность, LoRA, режимы с реальными замерами, первый запуск.
+- Новые настройки добавлены в конец ноды — старые сохранённые схемы открываются без сдвига значений.
 - Новая нода **🎬 Neron H3 Story**: ролик MiniMax H3 цепочкой до 4 блоков по 3–15 с (по умолчанию 10 с). Промпты блоков — проводами prompt_1…prompt_4.
 - **Стык без рывка:** блоки 2+ начинаются не с картинки, а с хвоста прошлого блока (22 кадра ≈ 0,9 с) **вместе с его звуком** — родная нода ComfyUI «Add Guide for MiniMax H3». Перехлёст при склейке убирается, звук на нём плавно сводится. В эксперте — стык «один кадр» и длина стыка 5 / 22 / 39.
 - **🔒 Сохранить внешний вид** (вкл. по умолчанию): первый кадр (или вход appearance) — образец <Picture 1> в каждом блоке; объясняется в 📖 Справке.
@@ -17,6 +22,7 @@
 - Логика проверена на макете ComfyUI (длины, стыки, звук, LoRA, картинки блоков, шина, AutoPrompter → движок). План: `docs/PLAN_Neron_H3_Story.md`.
 
 **EN:**
+- 📥 Downloads missing models itself (Comfy-Org H3 + lightx2v LoRAs), skips other versions you have; models on auto. 🚀 Fast mode: lightx2v 4-step LoRA (euler, shift 6/3), 4/6/8 steps in expert. Expert sound references ref_audio_1…3 → <Audio N> in every block. Rewritten help. Fast and sound refs not yet run on real H3.
 - New **🎬 Neron H3 Story** node: MiniMax H3 video as a chain of up to 4 blocks (3–15 s each), one prompt wire per block.
 - Seamless joins: blocks 2+ continue the previous tail (22 frames ≈ 0.9 s) with its sound via the native "Add Guide for MiniMax H3" node; overlap removed, audio crossfaded.
 - Keep appearance (on by default): first frame as <Picture 1> in every block. One model load per video.

@@ -9,13 +9,38 @@
 """
 import logging
 
-from . import bus, passport
+from . import bus, downloader, passport
 from . import story as story_mod
 
 log = logging.getLogger("Neron.H3.Story")
 NOT_FOUND = "__not_found__"
 NO_LORA = "— нет / none —"
 AUTO_SIZE = "Авто — по первому кадру / Auto — from first frame"
+AUTO_MODEL = "🤖 авто — из пакета / auto — from pack"
+# роль в packs.json → вид папки, имя по умолчанию
+ROLES = {"unet": ("diffusion_models", story_mod.UNET_NAME), "clip": ("text_encoders", story_mod.CLIP_NAME),
+         "vae_video": ("vae", story_mod.VAE_VIDEO_NAME), "vae_audio": ("vae", story_mod.VAE_AUDIO_NAME),
+         "turbo_lora": ("loras", story_mod.TURBO_LORA_NAME), "fast_lora": ("loras", story_mod.FAST_LORA_NAME)}
+
+
+def auto_file(role):
+    """Файл для роли прямо сейчас: из пакета или любая его замена (alternatives), что уже лежит.
+    Для модели bf16 — она первая, если скачана (качество лучше, а нода сама по себе тяжёлая)."""
+    kind, default = ROLES[role]
+    names = [default]
+    try:
+        for e in downloader.default_pack()[1]["files"]:
+            if e["role"] == role:
+                names = [downloader.file_name(e)] + list(e.get("alternatives") or [])
+    except Exception:
+        pass
+    if role == "unet":
+        names = [story_mod.UNET_BF16] + [n for n in names if n != story_mod.UNET_BF16]
+    for n in names:
+        f = story_mod.find_file(kind, n)
+        if f:
+            return f
+    return None
 MAX_BLOCKS = bus.MAX_BLOCKS
 TOTAL_MIN, TOTAL_MAX = bus.TOTAL_MIN, bus.TOTAL_MAX
 FPS = bus.FPS
@@ -44,6 +69,10 @@ def _has(files, name):
     return any(f.replace("\\", "/").split("/")[-1] == name for f in files)
 
 
+AUTO_TIP = ("🤖 авто — файл из пакета (или его другая версия, что уже лежит). Нет файла — нажми «📥 Модели».\n\n"
+            "EN: auto — the pack's file (or another version you have). Missing — press «📥 Models».")
+
+
 def _main(label, **o):
     return dict(o, h3_main=True, display_name=label)
 
@@ -67,7 +96,9 @@ class NeronH3Story:
              "size", "manual_width", "manual_height",                       # РАЗМЕР / SIZE
              "seam", "seam_frames",                                         # СТЫК / SEAM
              "unet_model", "clip_model", "vae_video_model", "vae_audio_model", "turbo_lora_model",
-             "seed", "ref_quality", "fast_attention"]
+             "seed", "ref_quality", "fast_attention",
+             # новое — строго в конец: старые сохранённые схемы хранят значения по порядку
+             "fast_steps", "fast_lora_model"]                               # 🚀 БЫСТРО / FAST
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -79,17 +110,20 @@ class NeronH3Story:
 
     @classmethod
     def _raw(cls):
-        unets, clips, vaes = _files("diffusion_models"), _files("text_encoders"), _files("vae")
+        unets, clips, vaes = (_files("diffusion_models", AUTO_MODEL), _files("text_encoders", AUTO_MODEL),
+                              _files("vae", AUTO_MODEL))
+        loras = _files("loras", AUTO_MODEL)
         sizes = [AUTO_SIZE] + list(passport.PRESETS)
         return {
             "required": {
                 "expert": ("BOOLEAN", _main("⚙ эксперт / expert", default=False,
                            tooltip="Показать стык, модели, LoRA, ручной размер и сид. Скрытое всё равно работает.\n\n"
                                    "EN: Show seam, models, LoRA, manual size and seed. Hidden settings still work.")),
-                "mode": (story_mod.MODES, _main("режим / mode", default=story_mod.MODES[0],
-                         tooltip="⚡ Турбо — 12 шагов, черновик. Качество — 40 шагов, ~3× дольше. Максимум — 50 шагов + "
-                                 "bf16, если скачана. Время умножается на число блоков.\n\nEN: Turbo 12 steps · Quality "
-                                 "40 · Maximum 50 + bf16. Time is multiplied by the number of blocks.")),
+                "mode": (story_mod.MODES, _main("режим / mode", default=story_mod.TURBO,
+                         tooltip="🚀 Быстро — 4 шага на быстрой LoRA: мультики, 3D, проба сюжета. ⚡ Турбо — 12 шагов, "
+                                 "основной режим. Качество — 40 шагов, ~3× дольше. Максимум — 50 шагов + bf16, если "
+                                 "скачана. Время умножается на число блоков.\n\nEN: Fast 4 steps (cartoons, 3D, story "
+                                 "drafts) · Turbo 12 · Quality 40 · Maximum 50 + bf16. Time × number of blocks.")),
                 "total_seconds": ("FLOAT", _main("длина ролика, с / video seconds", default=30.0, min=TOTAL_MIN,
                                   max=TOTAL_MAX, step=0.5, display="slider",
                                   tooltip="Сколько секунд будет весь ролик (5–45). Блоков нода насчитает сама: ролик "
@@ -124,13 +158,16 @@ class NeronH3Story:
                                 tooltip="22 кадра ≈ 0,9 с — по умолчанию. 5 — короче, 39 ≈ 1,6 с — больше «памяти» о "
                                         "движении. Только сетка модели.\n\nEN: 22 ≈ 0.9 s default; 5 shorter; "
                                         "39 ≈ 1.6 s more motion memory.")),
-                "unet_model": (unets, _exp("модель / model",
-                               default=_pick(unets, story_mod.UNET_BF16 if _has(unets, story_mod.UNET_BF16) else story_mod.UNET_NAME))),
-                "clip_model": (clips, _exp("текстовый энкодер / text encoder", default=_pick(clips, story_mod.CLIP_NAME))),
-                "vae_video_model": (vaes, _exp("VAE видео / video VAE", default=_pick(vaes, story_mod.VAE_VIDEO_NAME))),
-                "vae_audio_model": (vaes, _exp("VAE звука / audio VAE", default=_pick(vaes, story_mod.VAE_AUDIO_NAME))),
-                "turbo_lora_model": (_files("loras"), _exp("турбо-LoRA / turbo LoRA",
-                                     default=_pick(_files("loras"), story_mod.TURBO_LORA_NAME))),
+                "fast_steps": (["4", "6", "8"], _exp("🚀 шаги «Быстро» / Fast steps", default="4",
+                               tooltip="Сколько шагов в режиме 🚀 Быстро. 4 — как задумано авторами LoRA, 6–8 — "
+                                       "чуть чище детали, дольше.\n\nEN: Steps in 🚀 Fast mode. 4 is what the LoRA "
+                                       "was made for; 6–8 a bit cleaner, slower.")),
+                "unet_model": (unets, _exp("модель / model", default=AUTO_MODEL, tooltip=AUTO_TIP)),
+                "clip_model": (clips, _exp("текстовый энкодер / text encoder", default=AUTO_MODEL, tooltip=AUTO_TIP)),
+                "vae_video_model": (vaes, _exp("VAE видео / video VAE", default=AUTO_MODEL, tooltip=AUTO_TIP)),
+                "vae_audio_model": (vaes, _exp("VAE звука / audio VAE", default=AUTO_MODEL, tooltip=AUTO_TIP)),
+                "turbo_lora_model": (loras, _exp("⚡ турбо-LoRA / turbo LoRA", default=AUTO_MODEL, tooltip=AUTO_TIP)),
+                "fast_lora_model": (loras, _exp("🚀 быстрая LoRA / fast LoRA", default=AUTO_MODEL, tooltip=AUTO_TIP)),
                 "seed": ("INT", _exp("сид / seed", default=1, min=0, max=0xFFFFFFFFFFFFFFFF)),
                 "ref_quality": (["auto", "max", "match"], _exp("качество образца / reference quality",
                                 default="auto", tooltip="auto: Турбо — match, Качество/Максимум — max.")),
@@ -183,14 +220,29 @@ class NeronH3Story:
                 "prompt_12": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 12 — как есть, в модель. / Block 12 prompt, as is."}),
                 "block_12": (bus.BLOCK_TYPE, {"tooltip": "🎞 Блок 12: картинки, текст и LoRA блока. / Block 12 node."}),
                 "lora_12": (bus.LORA_TYPE, {"tooltip": "LoRA блока 12 (старый вход; теперь — через 🎞 Блок). / Block 12 LoRAs (legacy)."}),
+                "ref_audio_1": ("AUDIO", {"tooltip": "⚙ Звуковой образец <Audio 1> — голос, музыка или фон (LoadAudio). Идёт "
+                                                     "в КАЖДЫЙ блок, до 15 с. AutoPrompter про него не знает — если "
+                                                     "в промпте нет <Audio 1>, движок сам допишет «звук как в образце».\n\n"
+                                                     "EN: Sound reference <Audio 1> (voice, music, ambience) for every "
+                                                     "block, up to 15 s."}),
+                "ref_audio_2": ("AUDIO", {"tooltip": "⚙ Звуковой образец <Audio 2>. / Sound reference <Audio 2>."}),
+                "ref_audio_3": ("AUDIO", {"tooltip": "⚙ Звуковой образец <Audio 3>. / Sound reference <Audio 3>."}),
                 "width": ("INT", {"forceInput": True}),
                 "height": ("INT", {"forceInput": True}),
             },
         }
 
+    @classmethod
+    def VALIDATE_INPUTS(cls, unet_model, clip_model, vae_video_model, vae_audio_model, turbo_lora_model,
+                        fast_lora_model):
+        # Файла из чужой схемы здесь нет — не красное окно: модель уходит на «авто», с запиской в отчёте.
+        # A saved file that doesn't exist here is not a red error: it falls back to auto, with a note.
+        return True
+
     def generate(self, expert=False, mode=None, total_seconds=30.0, block_seconds=10.0, keep_appearance=True,
                  size=AUTO_SIZE, manual_width=1344, manual_height=768, seam=None, seam_frames="22", unet_model=None,
-                 clip_model=None, vae_video_model=None, vae_audio_model=None, turbo_lora_model=None, seed=1,
+                 clip_model=None, vae_video_model=None, vae_audio_model=None, turbo_lora_model=None,
+                 fast_lora_model=None, fast_steps="4", ref_audio_1=None, ref_audio_2=None, ref_audio_3=None, seed=1,
                  ref_quality="auto", fast_attention=False, story=None, first_frame=None, appearance=None,
                  lora_all=None, width=None, height=None, **kw):
         notes = []
@@ -262,21 +314,39 @@ class NeronH3Story:
             notes.append(f"Блоки {', '.join(map(str, extra))} не пошли в дело: ролику хватило {blocks}. "
                          f"Увеличь длину ролика, если они нужны.")
 
-        def model(v, default):
-            return default if not v or v == NOT_FOUND else v
-        default_unet = story_mod.UNET_BF16 if story_mod.find_file("diffusion_models", story_mod.UNET_BF16) \
-            else story_mod.UNET_NAME
-        models = {"unet": model(unet_model, default_unet), "clip": model(clip_model, story_mod.CLIP_NAME),
-                  "vae_video": model(vae_video_model, story_mod.VAE_VIDEO_NAME),
-                  "vae_audio": model(vae_audio_model, story_mod.VAE_AUDIO_NAME),
-                  "turbo_lora": model(turbo_lora_model, story_mod.TURBO_LORA_NAME)}
+        mode = mode if mode in story_mod.MODES else story_mod.TURBO
+
+        def model(v, role):
+            # авто (или пусто) — файл из пакета, ищем прямо сейчас, а не по списку со старта ComfyUI
+            if not v or v in (AUTO_MODEL, NOT_FOUND):
+                return auto_file(role)
+            kind = ROLES[role][0]
+            found = story_mod.find_file(kind, story_mod.base(v))
+            if not found:
+                notes.append(f"⚠ Файла «{v}» нет — взят «авто». EN: «{v}» not found, using auto.")
+                return auto_file(role)
+            return found
+        need = ["unet", "clip", "vae_video", "vae_audio"] + (["turbo_lora"] if mode == story_mod.TURBO else []) \
+            + (["fast_lora"] if mode == story_mod.FAST else [])
+        picked = {"unet": unet_model, "clip": clip_model, "vae_video": vae_video_model, "vae_audio": vae_audio_model,
+                  "turbo_lora": turbo_lora_model, "fast_lora": fast_lora_model}
+        models = {role: model(picked[role], role) for role in ROLES}
+        missing = [role for role in need if not models[role]]
+        if missing:
+            names = {"unet": "модель H3", "clip": "текстовый энкодер", "vae_video": "VAE видео",
+                     "vae_audio": "VAE звука", "turbo_lora": "турбо-LoRA (⚡)", "fast_lora": "быстрая LoRA (🚀)"}
+            raise story_mod.FriendlyError(
+                "[H3 Story] Не хватает файлов: " + ", ".join(names[m] for m in missing) + ". Нажми на ноде "
+                "«📥 Модели / Models» — она скачает всё сама и разложит по папкам.\n\nEN: Missing model files: "
+                + ", ".join(missing) + ". Press «📥 Модели / Models» on the node — it downloads everything.")
         try:
             frames, audio, last, count, report = story_mod.generate(
-                prompts, w, h, n, mode if mode in story_mod.MODES else story_mod.MODES[0], int(seed), models,
+                prompts, w, h, n, mode, int(seed), models,
                 first_frame=first, appearance=appear, keep_appearance=bool(keep_appearance), seam=seam_ok,
                 seam_frames=int(seam_frames or 22), ref_quality=ref_quality, fast_attention=bool(fast_attention),
                 global_loras=bus.loras_pairs(g_loras), block_loras=block_loras, total_frames=T,
-                block_images=block_images)
+                block_images=block_images, fast_steps=int(fast_steps or 4),
+                ref_audios=[a for a in (ref_audio_1, ref_audio_2, ref_audio_3) if a is not None])
         except Exception:
             story_mod.free("после ошибки / after error")
             raise

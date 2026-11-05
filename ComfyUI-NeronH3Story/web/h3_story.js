@@ -8,6 +8,7 @@ const NODE_COLOR = "#4a2f1e";
 const NODE_BGCOLOR = "#2e1c10";
 const GROUP_GAP = 18;
 const LABEL_FONT = "bold 10px sans-serif";
+const MODELS_BTN = "📥 Модели / Models";
 
 const GROUPS = [
     { name: "⚙️ EXPERT MODE / ЭКСПЕРТ", widgets: ["expert"],
@@ -22,6 +23,8 @@ const GROUPS = [
       fill: "rgba(200, 120, 120, 0.15)", border: "rgba(200, 120, 120, 0.75)", label: "rgba(255, 190, 190, 1.0)" },
     { name: "ТОНКАЯ НАСТРОЙКА / ADVANCED", widgets: ["seed", "control_after_generate", "ref_quality", "fast_attention"],
       fill: "rgba(120, 200, 160, 0.15)", border: "rgba(120, 200, 160, 0.75)", label: "rgba(190, 255, 220, 1.0)" },
+    { name: "🚀 БЫСТРО / FAST", widgets: ["fast_steps", "fast_lora_model"],
+      fill: "rgba(180, 120, 220, 0.15)", border: "rgba(180, 120, 220, 0.75)", label: "rgba(230, 200, 255, 1.0)" },
 ];
 
 function wv(node, name) {
@@ -292,7 +295,8 @@ function canon() {
     const list = [["story", STORY_TYPE], ["first_frame", "IMAGE"], ["appearance", "IMAGE"], ["lora_all", LORA_TYPE]];
     for (let k = 1; k <= MAX_BLOCKS; k++)
         list.push([`prompt_${k}`, "STRING"], [`block_${k}`, BLOCK_TYPE], [`lora_${k}`, LORA_TYPE]);
-    return list.concat([["width", "INT"], ["height", "INT"]]);
+    return list.concat([["ref_audio_1", "AUDIO"], ["ref_audio_2", "AUDIO"], ["ref_audio_3", "AUDIO"],
+                        ["width", "INT"], ["height", "INT"]]);
 }
 
 function linked(node, name) {
@@ -322,6 +326,11 @@ function wantedSet(node) {
             ["appearance", "lora_all", "width", "height"].forEach((x) => want.add(x));
             for (let k = 1; k <= n; k++) want.add(`block_${k}`);
         }
+    }
+    if (ex) {   // звуковые образцы — только эксперт, и со story тоже: AutoPrompter про них не знает
+        want.add("ref_audio_1");
+        if (linked(node, "ref_audio_1")) want.add("ref_audio_2");
+        if (linked(node, "ref_audio_2")) want.add("ref_audio_3");
     }
     for (const inp of node.inputs || []) if (inp.link != null) want.add(inp.name);   // подключённое — всегда
     return want;
@@ -380,182 +389,444 @@ function updateBlockInputs(node) {
     app.graph?.setDirtyCanvas(true, true);
 }
 
+// ---------- 📥 модели ----------
+const DL = { status: null, hooked: false, dialog: null, autoShown: false, nodes: new Set() };
+
+function gb(b) { return (b / 1024 ** 3).toFixed(1); }
+
+async function fetchStatus() {
+    try {
+        const r = await api.fetchApi("/neron_h3story/status");
+        DL.status = await r.json();
+    } catch (_) { DL.status = null; }
+    refreshButtons();
+    return DL.status;
+}
+
+function refreshButtons() {
+    const s = DL.status;
+    let label = MODELS_BTN;
+    if (s) {
+        const miss = s.files.filter((f) => !f.present).length;
+        const st = s.download?.state;
+        if (st === "downloading" || st === "probing") label = "⏬ Качаю модели… / Downloading…";
+        else if (miss === 0) label = "✅ Модели на месте / Models OK";
+        else label = `📥 Скачать модели (нет ${miss} из ${s.files.length}) / Download models`;
+    }
+    for (const node of DL.nodes) {
+        const b = node.__h3ModelsBtn;
+        if (b) { b.name = label; b.label = label; }
+    }
+    app.graph?.setDirtyCanvas(true, false);
+}
+
+function hookDownload() {
+    if (DL.hooked) return;
+    DL.hooked = true;
+    api.addEventListener("neron_h3story.download", (e) => {
+        if (DL.status) DL.status.download = e.detail || {};
+        const st = e.detail?.state;
+        if (st === "done") {
+            // новые файлы — сразу в списки моделей, без перезапуска ComfyUI
+            try { app.refreshComboInNodes?.(); } catch (_) {}
+            fetchStatus().then(() => DL.dialog?.render());
+        }
+        else { refreshButtons(); DL.dialog?.render(); }
+    });
+}
+
+function el(tag, css, text) {
+    const e = document.createElement(tag);
+    if (css) e.style.cssText = css;
+    if (text != null) e.textContent = text;
+    return e;
+}
+
+function btn(text, bg, onClick) {
+    const b = el("button", `padding:8px 16px;background:${bg};color:#fff;border:none;border-radius:5px;` +
+        "cursor:pointer;font:13px sans-serif;margin:4px 6px 4px 0;", text);
+    b.onclick = onClick;
+    return b;
+}
+
+function openModelsDialog(greeting) {
+    if (DL.dialog) { DL.dialog.render(); return; }
+    const overlay = el("div", "position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:99999;display:flex;" +
+        "align-items:center;justify-content:center;");
+    const box = el("div", "background:#14202a;color:#e0e0e0;border:1px solid #3d6273;border-radius:10px;padding:20px 22px;" +
+        "width:min(680px,92vw);max-height:88vh;overflow-y:auto;font:13px/1.5 sans-serif;" +
+        "box-shadow:0 10px 40px rgba(0,0,0,0.85);");
+    overlay.append(box);
+    const close = () => { overlay.remove(); DL.dialog = null; };
+    overlay.onclick = (e) => { if (e.target === overlay) close(); };
+    let tokenInput = null;
+
+    const render = () => {
+        const s = DL.status;
+        box.innerHTML = "";
+        box.append(el("div", "font:bold 17px sans-serif;margin-bottom:6px;color:#bfe9ff;",
+                      "📥 Модели для H3 Story / Models for H3 Story"));
+        if (!s) {
+            box.append(el("div", "color:#ff8a80;margin:10px 0;", "Не удалось узнать состояние моделей. Перезапусти ComfyUI.\n" +
+                          "EN: Could not read model status. Restart ComfyUI."));
+            box.append(btn("Закрыть / Close", "#455a64", close));
+            return;
+        }
+        const missing = s.files.filter((f) => !f.present);
+        const d = s.download || {};
+        if (greeting && missing.length) {
+            box.append(el("div", "background:#1f3a2a;border:1px solid #3f7a52;border-radius:6px;padding:10px 12px;margin:8px 0;",
+                "👋 Каких-то моделей H3 у тебя пока нет. Не беда — нажми «Скачать пакет»: нода скачает недостающее " +
+                "сама и разложит по папкам. Что уже лежит — не трогает.\n\n" +
+                "EN: Some H3 models are missing. Press «Download pack» — the node downloads what is missing and " +
+                "puts it in the right folders. What you already have is left alone."));
+            box.lastChild.style.whiteSpace = "pre-wrap";
+        }
+        box.append(el("div", "font:bold 14px sans-serif;margin-top:10px;", s.pack_title));
+        const desc = el("div", "color:#b0bec5;white-space:pre-wrap;margin:4px 0 8px;", s.pack_description);
+        box.append(desc);
+        const list = el("div", "background:#0d171e;border-radius:6px;padding:8px 12px;margin:6px 0;font:12px monospace;");
+        for (const f of s.files) {
+            const part = (!f.present && f.partial_bytes) ? `  (скачано ${gb(f.partial_bytes)} ГБ — докачаю)` : "";
+            const alt = (f.present && f.have && f.have !== f.name) ? `  (есть замена / have: ${f.have})` : "";
+            list.append(el("div", f.present ? "color:#9be7a0;" : "color:#ffcc80;",
+                           `${f.present ? "✅" : "❌"} ${f.name}${alt}${part}`));
+        }
+        box.append(list);
+        const info = [];
+        if (s.size_note) info.push(`Объём пакета / pack size: ${s.size_note}`);
+        if (s.free_gb != null) info.push(`Свободно на диске моделей / free disk: ${s.free_gb.toFixed(0)} ГБ`);
+        if (s.vram_gb) info.push(`Видеокарта / GPU: ${s.vram_gb.toFixed(0)} ГБ` + (s.ram_gb ? `, оперативка / RAM: ${s.ram_gb.toFixed(0)} ГБ` : ""));
+        box.append(el("div", "color:#90a4ae;white-space:pre-wrap;margin-bottom:8px;", info.join("\n")));
+
+        const busy = d.state === "downloading" || d.state === "probing";
+        if (!missing.length) {
+            box.append(el("div", "color:#9be7a0;font:bold 14px sans-serif;margin:10px 0;",
+                          "✅ Всё на месте! Подключи картинку и промпты блоков (или Story AutoPrompter) и жми Run.\nEN: All set! Connect an image and block prompts (or the Story AutoPrompter) and press Run."));
+            box.lastChild.style.whiteSpace = "pre-wrap";
+            box.append(btn("Закрыть / Close", "#2a5d9c", close));
+            return;
+        }
+
+        // доступ к Hugging Face
+        const needToken = missing.some((f) => f.gated) || ["gated", "no_token"].includes(d.error);
+        if (needToken) {
+            const t = el("div", "border:1px solid #3d6273;border-radius:6px;padding:10px 12px;margin:8px 0;");
+            t.append(el("div", "font:bold 13px sans-serif;margin-bottom:4px;",
+                        s.token_set ? "🔑 Доступ к Hugging Face: токен сохранён ✅ / token saved"
+                                    : "🔑 Доступ к Hugging Face — один раз / one time only"));
+            t.append(el("div", "color:#b0bec5;white-space:pre-wrap;",
+                "Hugging Face попросил вход. Это бесплатно и один раз:\n" +
+                "1) Открой страницу модели, войди (можно через Google); если есть «Agree and access» — нажми.\n" +
+                "2) Открой страницу токенов → «Create new token» → тип «Read» → скопируй.\n" +
+                "3) Вставь токен сюда и нажми «Сохранить», потом «Докачать». Он хранится только на твоём компьютере.\n" +
+                "Токен от Neron LTX Engine подхватывается сам.\n\n" +
+                "EN: Hugging Face asked for a sign-in (free, once): 1) open the model page, sign in, accept if asked; " +
+                "2) create a Read token; 3) paste it here, save, resume. It stays on your computer."));
+            const row = el("div", "margin-top:6px;");
+            row.append(btn("1. Страница модели / Model page", "#37474f", () => window.open(s.license_url, "_blank")));
+            row.append(btn("2. Страница токенов / Tokens page", "#37474f", () => window.open(s.token_url, "_blank")));
+            t.append(row);
+            if (!s.token_from_env) {
+                const r2 = el("div", "display:flex;gap:6px;align-items:center;margin-top:4px;");
+                tokenInput = el("input", "flex:1;padding:7px;background:#0d171e;color:#e0e0e0;border:1px solid #3d6273;" +
+                    "border-radius:4px;font:12px monospace;");
+                tokenInput.type = "password";
+                tokenInput.placeholder = s.token_set ? "токен уже сохранён — можно заменить / saved, can replace" : "hf_…";
+                r2.append(tokenInput);
+                r2.append(btn("3. Сохранить / Save", "#2e7d32", async () => {
+                    const v = tokenInput.value.trim();
+                    if (!v) return;
+                    await api.fetchApi("/neron_h3story/token", { method: "POST", body: JSON.stringify({ token: v }) });
+                    await fetchStatus(); render();
+                }));
+                t.append(r2);
+            }
+            box.append(t);
+        }
+
+        // прогресс и ошибки
+        if (busy || d.state === "error" || d.state === "cancelled") {
+            const p = el("div", "margin:8px 0;");
+            if (busy) {
+                const pct = d.total ? Math.min(100, d.done / d.total * 100) : 0;
+                p.append(el("div", "", d.state === "probing" ? "Проверяю файлы… / Checking files…"
+                    : `Файл ${d.file_i} из ${d.files_n}: ${d.file}`));
+                const bar = el("div", "height:14px;background:#0d171e;border-radius:7px;overflow:hidden;margin:6px 0;");
+                bar.append(el("div", `height:100%;width:${pct.toFixed(1)}%;background:linear-gradient(90deg,#2a8fc4,#5fd0ff);`));
+                p.append(bar);
+                if (d.total) p.append(el("div", "color:#90a4ae;font:12px monospace;",
+                    `${gb(d.done)} / ${gb(d.total)} ГБ · ${pct.toFixed(1)}% · ${(d.speed || 0).toFixed(1)} МБ/с` +
+                    (d.speed > 0 ? ` · ≈ ещё ${fmt((d.total - d.done) / (d.speed * 1024 * 1024) * 1000)}` : "")));
+                p.append(el("div", "color:#78909c;font-size:12px;margin-top:4px;",
+                    "Окно можно закрыть — скачивание продолжится. EN: You can close this window, the download continues."));
+            } else {
+                p.append(el("div", "color:#ff8a80;white-space:pre-wrap;background:#2a1414;border-radius:6px;padding:8px 10px;",
+                            d.message || "Ошибка / Error"));
+            }
+            box.append(p);
+        }
+
+        const row = el("div", "margin-top:10px;");
+        if (busy) {
+            row.append(btn("⏹ Остановить / Stop", "#8e3b3b", async () => {
+                await api.fetchApi("/neron_h3story/cancel", { method: "POST", body: "{}" });
+            }));
+        } else {
+            const resume = s.files.some((f) => !f.present && f.partial_bytes);
+            row.append(btn(resume ? "⏬ Докачать / Resume" : "⏬ Скачать пакет / Download pack", "#2a7fc4", async () => {
+                if (needToken && !s.token_set && tokenInput && tokenInput.value.trim()) {
+                    await api.fetchApi("/neron_h3story/token", { method: "POST", body: JSON.stringify({ token: tokenInput.value.trim() }) });
+                }
+                await api.fetchApi("/neron_h3story/download", { method: "POST", body: JSON.stringify({ pack: s.pack_id }) });
+                await fetchStatus(); render();
+            }));
+        }
+        row.append(btn("Закрыть / Close", "#455a64", close));
+        box.append(row);
+    };
+
+    DL.dialog = { render };
+    document.body.append(overlay);
+    fetchStatus().then(render);
+    render();
+}
+
 // ---------- справка ----------
 const HELP_TEXT = `
-🎬 NERON H3 STORY (prototype)
+🎬 NERON H3 STORY
 ===================================================
 
 📌 WHAT IT IS 📌
-A long MiniMax H3 video made as a chain of blocks.
-H3 is trained on up to 15 s; this node glues blocks
-so the seams are hard to see. One model load for the
-whole video. Output: ready VIDEO with sound.
+A long MiniMax H3 video (5–45 s) with sound, made as
+a chain of BLOCKS. H3 itself makes at most ~15 s; a
+longer clip "drifts". So the node makes short pieces
+one after another and glues them so the seams are
+hard to see — picture AND sound. The model loads once
+for the whole video. Output: a ready VIDEO with sound.
 
-📌 LENGTH 📌
-Video seconds 5–45 and block seconds 5–15 — both are
-sliders. Block seconds is the MAXIMUM: the video is cut
-into equal blocks no longer than that (e.g. 30 s with
-10 s blocks = 4 blocks of ~8.7 s). The node works out the number of blocks
-itself (up to 12) and cuts the finished video exactly
-to the video length. Each seam takes ~0.9 s.
+📌 FIRST RUN 📌
+No models? The 📥 window opens by itself (or press
+"📥 Models"): the node downloads what is missing and
+puts each file in the right folder — with progress,
+resume after a dropped connection and a disk check.
+Files you already have (even another version, e.g.
+the bf16 model) are not downloaded again.
+Models: official Comfy-Org page; Turbo/Fast LoRAs:
+their authors lightx2v. All models are on "🤖 auto".
+The Story AutoPrompter needs the 🎬 Neron AutoPrompter
+folder — it downloads its LLM and server itself.
 
-📌 THREE STATES OF THE NODE 📌
-• 'story' connected (📝 Story AutoPrompter) — only
-  story → video is shown: plan, prompts, pictures and
-  LoRAs come through that one wire.
-• Beginner (no story) — first_frame + prompt_1, 2…
-  (the next appears when you connect the previous).
-  Each prompt goes to the model as is.
-• ⚙ Expert (no story) — everything: 🎞 Block nodes
-  (block_k: pictures, text and LoRAs of a block),
-  lora_all (🎨 style for the whole video), sizes,
-  seam, models and all outputs.
-A wire connected straight to the engine wins over
-what came through 'story'. Connected inputs are
-never hidden.
+📌 WHAT A BLOCK IS 📌
+One scene of the video, 5–15 s. 30 s with 10 s blocks
+= 4 blocks of ~8.7 s. "Block seconds" is the MAXIMUM:
+the video is split into EQUAL blocks no longer than
+that. The node counts blocks itself (up to 12) and
+cuts the finished video exactly to the video length.
+Shorter blocks drift less, but there are more seams.
+Each block has its own prompt, pictures and LoRAs.
 
-📌 🎞 BLOCK PICTURES 📌
-Block 1 first frame — the opening frame.
-Blocks 2+ first frame — a "who / where" reference
-(the start is always the previous tail).
-Middle frames — navigators "the action goes here".
-Last frame — pinned to the block's last frame.
-They become <Picture 2>, <Picture 3>… in that block
-(<Picture 1> = appearance); the report lists them.
-
-📌 HOW THE SEAM WORKS 📌
-Block 2, 3… do not start from a picture. The last
-~0.9 s of the previous block (22 frames) WITH ITS
-SOUND is pinned to the start of the new block (native
-ComfyUI node "Add Guide for MiniMax H3"). The model
-continues motion and sound instead of restarting.
-On joining, that overlap is removed from the picture
+📌 HOW BLOCKS ARE GLUED (THE SEAM) 📌
+Block 1 starts from your first frame.
+Block 2, 3… do NOT start from a picture: the last
+~0.9 s of the previous block (22 frames) together WITH
+ITS SOUND is pinned to the start of the next one. The
+model sees the motion and hears the sound and simply
+carries on — steps, speech, music don't restart.
+When joining, that overlap is cut from the picture
 and the sound is crossfaded over it.
-Seam (expert): clip + sound (default) or single frame.
+Each block also gets "a single continuous shot, no
+cuts" — otherwise H3 likes to cut to a new angle.
+Seam (expert): clip + sound (default) or one frame;
+length 22 frames, 5 (shorter) or 39 (~1.6 s, more
+"memory" of the motion).
+
+📌 SOUND 📌
+H3 makes picture and sound together — voices, steps,
+music, ambience — from your prompt. The seam carries
+the sound on, so the video sounds like one take.
+Write sound into the prompt: "Sound: rain on the
+roof, soft piano". The AutoPrompter adds a Sound line
+to every block itself.
+⚙ Expert: ref_audio_1…3 — sound samples (LoadAudio):
+a voice, music or ambience. They go as <Audio 1…3>
+into EVERY block (up to 15 s each). If the prompt has
+no <Audio 1>, the engine adds "the sound follows
+<Audio 1>". The AutoPrompter doesn't know about them —
+this is your own call: try it, listen, decide.
 
 📌 🔒 KEEP APPEARANCE (on by default) 📌
-What for: people, cars, creatures — anything — look
-the same in every block.
-Why: the last frame of a block can be "empty" —
-they hugged, turned away, hid their faces. Without a
-sample the next block may draw other people.
-How: the first frame (or the 'appearance' input) goes
-as <Picture 1> into EVERY block, and the prompt gets
-a line "same appearance as <Picture 1>". If you write
-<Picture 1> in your prompt yourself, the line is not
-added. Turn it off when the subject must change by
-the story (changes clothes, transforms).
+People, cars, creatures look the same in every block.
+The end of a block can be "empty" (they hugged, turned
+away) — without a sample the next block may draw
+other people. The first frame (or 'appearance') goes
+as <Picture 1> into EVERY block, as an identity-only
+sample: faces, hair, clothes — not its background or
+poses. Turn off if the subject must change by story.
 
-📌 BLOCK SECONDS 📌
-5–15 s, default 10. Shorter — less drift inside a
-block, but more seams.
+📌 🎞 BLOCK PICTURES (expert) 📌
+Block 1 first frame — the opening frame.
+Blocks 2+ first frame — a "who / where" sample.
+Middle frames — navigators "the action goes here".
+Last frame — pinned to the block's last frame.
+In the block they become <Picture 2>, <Picture 3>…
+
+📌 LORA 📌
+🎨 LoRA set > lora_all — for the WHOLE video (style).
+🎨 LoRA set > 🎞 Block > loras — only that block.
+Up to 3 per set, sets can be chained.
 
 📌 MODE 📌
-⚡ Turbo 12 steps · Quality 40 · Maximum 50 + bf16.
-Time ≈ one H3 Engine run × number of blocks.
-Real timings for this node are not measured yet.
+🚀 Fast — 4 steps on the 4-step LoRA (lightx2v
+   settings: euler, shift 6/3). Cartoons, 3D, trying
+   out a story. Expert: 4 / 6 / 8 steps.
+⚡ Turbo — 12 steps on the 8-step LoRA. Main mode.
+Quality — 40 steps, ~3× longer than Turbo.
+Maximum — 50 steps + the bf16 model if you have it.
+Measured on the author's PC, 1344×768: Turbo int8,
+30 s video (4 blocks) incl. AutoPrompter — 1 h 18 min;
+Turbo bf16 — ~30 min per 10 s block. Time grows with
+the number of blocks.
+
+📌 THREE STATES OF THE NODE 📌
+• 'story' connected — only story → video: plan,
+  prompts, pictures and LoRAs come through one wire.
+• Beginner — first_frame + prompt_1, 2… (the next
+  appears when you connect the previous).
+• ⚙ Expert — everything: 🎞 Block nodes, lora_all,
+  sound samples, sizes, seam, models, all outputs.
+A wire straight into the engine wins over 'story'.
+Connected inputs are never hidden.
 
 📌 OUTPUTS 📌
 video — with sound, straight into Save Video.
 frames / audio — separately. last_frame — the end,
 to continue in the next run.
 
-📌 PROTOTYPE 📌
-Test build in the dev branch. Next: the Story
-AutoPrompter and the plan strip on this node.
+📌 QUICK START 📌
+1. Open workflow Neron_H3_Story_AutoPrompter
+2. LoadImage — your first frame
+3. Scenario — what happens, in your own words
+4. Video 30 s, block 10 s, mode ⚡ Turbo
+5. Queue
 
 ===================================================
 🇷🇺 РУССКИЙ
 ===================================================
 
 📌 ЧТО ЭТО 📌
-Длинный ролик MiniMax H3 цепочкой блоков. H3 обучена
-до 15 с — нода склеивает блоки так, чтобы стыков не
-было видно. Модель грузится один раз на весь ролик.
-На выходе — готовое ВИДЕО со звуком.
+Длинный ролик MiniMax H3 (5–45 с) со звуком, собранный
+цепочкой БЛОКОВ. Сама H3 делает максимум ~15 с, а
+длинный кусок «уплывает». Поэтому нода делает короткие
+куски один за другим и склеивает их так, что стыков
+не видно — ни в картинке, ни в звуке. Модель грузится
+один раз на весь ролик. На выходе — готовое ВИДЕО со
+звуком.
 
-📌 ДЛИНА 📌
-Длина ролика 5–45 с и длина блока 5–15 с — оба
-ползунка. Длина блока — это МАКСИМУМ: ролик делится
-на ровные блоки не длиннее неё (например, 30 с при
-блоке 10 с = 4 блока по ~8,7 с). Сколько нужно блоков (до 12), нода считает
-сама, а готовый ролик обрезает ровно под длину
-ролика. Каждый стык съедает ~0,9 с.
+📌 ПЕРВЫЙ ЗАПУСК 📌
+Нет моделей? Окно 📥 откроется само (или нажми
+«📥 Модели»): нода скачает недостающее и разложит по
+папкам — с прогрессом, докачкой после обрыва и
+проверкой места на диске. Что уже лежит (даже другая
+версия, например модель bf16) — заново не качает.
+Модель — с официальной страницы Comfy-Org, LoRA
+Турбо/Быстро — от их авторов lightx2v. Все модели
+стоят на «🤖 авто».
+Story AutoPrompter'у нужна папка 🎬 Neron AutoPrompter
+— свою LLM и сервер она скачивает сама.
 
-📌 ТРИ СОСТОЯНИЯ НОДЫ 📌
-• Подключён 'story' (📝 Story AutoPrompter) — видно
-  только story → video: план, промпты, картинки и
-  LoRA приходят по этому одному проводу.
-• «Чайник» (без story) — first_frame + prompt_1, 2…
-  (следующий появляется, когда подключён прошлый).
-  Каждый промпт идёт в модель как есть.
-• ⚙ Эксперт (без story) — всё: ноды 🎞 Блок
-  (block_k: картинки, текст и LoRA блока), lora_all
-  (🎨 стиль на весь ролик), размеры, стык, модели и
-  все выходы.
-Провод, подключённый к движку напрямую, главнее
-того, что пришло по 'story'. Подключённое никогда
-не прячется.
+📌 ЧТО ТАКОЕ БЛОК 📌
+Одна сцена ролика, 5–15 с. 30 с при блоке 10 с =
+4 блока по ~8,7 с. «Длина блока» — это МАКСИМУМ: ролик
+делится на РОВНЫЕ блоки не длиннее неё. Сколько
+блоков (до 12), нода считает сама, а готовый ролик
+обрезает ровно под длину ролика. Короче блок — меньше
+«уплывает», но больше стыков.
+У каждого блока свой промпт, картинки и LoRA.
 
-📌 КАРТИНКИ 🎞 БЛОКА 📌
+📌 КАК СКЛЕИВАЮТСЯ БЛОКИ (СТЫК) 📌
+Блок 1 начинается с твоего первого кадра.
+Блоки 2, 3… начинаются НЕ с картинки: последние
+~0,9 с прошлого блока (22 кадра) ВМЕСТЕ СО ЗВУКОМ
+прикалываются к началу следующего. Модель видит
+движение, слышит звук и просто продолжает — шаги,
+речь, музыка не начинаются заново.
+При склейке этот перехлёст вырезается из картинки, а
+звук на нём плавно сводится.
+Каждому блоку добавляется «один непрерывный план, без
+склеек» — иначе H3 любит перескочить на новый ракурс.
+Стык (эксперт): кусок + звук (по умолчанию) или один
+кадр; длина 22 кадра, 5 (короче) или 39 (~1,6 с,
+больше «памяти» о движении).
+
+📌 ЗВУК 📌
+H3 делает картинку и звук вместе — голоса, шаги,
+музыку, фон — по твоему промпту. Стык переносит звук
+дальше, поэтому ролик звучит как один дубль.
+Пиши звук в промпте: «Звук: дождь по крыше, тихое
+пианино». AutoPrompter сам добавляет строку Sound в
+каждый блок.
+⚙ Эксперт: ref_audio_1…3 — звуковые образцы
+(LoadAudio): голос, музыка или фон. Идут как
+<Audio 1…3> в КАЖДЫЙ блок (до 15 с каждый). Нет в
+промпте <Audio 1> — движок сам допишет «звук как в
+образце». AutoPrompter про них не знает — это твоё
+решение: пробуй, слушай, решай.
+
+📌 🔒 СОХРАНИТЬ ВНЕШНИЙ ВИД (вкл. по умолчанию) 📌
+Люди, машины, звери выглядят одинаково во всех
+блоках. Конец блока бывает «пустым» (обнялись,
+отвернулись) — без образца следующий блок может
+нарисовать других людей. Первый кадр (или вход
+'appearance') идёт <Picture 1> в КАЖДЫЙ блок — только
+как образец внешности: лица, волосы, одежда, а не его
+фон и позы. Сними, если объект по сюжету меняется.
+
+📌 КАРТИНКИ 🎞 БЛОКА (эксперт) 📌
 Первый кадр блока 1 — начало ролика.
-Первый кадр блоков 2+ — образец «кто / где»
-(старт там всегда — хвост прошлого блока).
+Первый кадр блоков 2+ — образец «кто / где».
 Промежуточные — навигаторы «действие идёт сюда».
 Последний — прикалывается к концу блока.
 В блоке они становятся <Picture 2>, <Picture 3>…
-(<Picture 1> — внешность); список — в отчёте.
 
-📌 КАК РАБОТАЕТ СТЫК 📌
-Блоки 2, 3… начинаются не с картинки. Последние
-~0,9 с прошлого блока (22 кадра) ВМЕСТЕ СО ЗВУКОМ
-прикалываются к началу нового (родная нода ComfyUI
-«Add Guide for MiniMax H3»). Модель продолжает
-движение и звук, а не начинает заново. При склейке
-этот перехлёст убирается из картинки, а звук на нём
-плавно сводится.
-Стык (эксперт): кусок + звук (по умолчанию) или
-один кадр.
-
-📌 🔒 СОХРАНИТЬ ВНЕШНИЙ ВИД (вкл. по умолчанию) 📌
-Для чего: люди, машины, звери — что угодно — выглядят
-одинаково во всех блоках.
-Почему важно: последний кадр блока бывает «пустым» —
-обнялись, отвернулись, спрятали лица. Без образца
-следующий блок может нарисовать других людей.
-Как: первый кадр (или вход 'appearance') идёт
-образцом <Picture 1> в КАЖДЫЙ блок, а к промпту
-добавляется фраза «внешность как на <Picture 1>».
-Написал <Picture 1> в промпте сам — фраза не
-добавляется. Сними галочку, если объект по сюжету
-должен измениться (переоделся, превратился).
-
-📌 ДЛИНА БЛОКА 📌
-5–15 с, по умолчанию 10. Короче — меньше «уплывает»
-внутри блока, но больше стыков.
+📌 LORA 📌
+🎨 Набор LoRA > lora_all — на ВЕСЬ ролик (стиль).
+🎨 Набор LoRA > 🎞 Блок > loras — только этот блок.
+До 3 в наборе, наборы можно цеплять цепочкой.
 
 📌 РЕЖИМ 📌
-⚡ Турбо 12 шагов · Качество 40 · Максимум 50 + bf16.
-Время ≈ один прогон H3 Engine × число блоков.
-Реальные замеры этой ноды ещё не сделаны.
+🚀 Быстро — 4 шага на 4-шаговой LoRA (настройки
+   авторов lightx2v: euler, сдвиг 6/3). Мультики, 3D,
+   проба сюжета. Эксперт: 4 / 6 / 8 шагов.
+⚡ Турбо — 12 шагов на 8-шаговой LoRA. Основной.
+Качество — 40 шагов, ~3× дольше Турбо.
+Максимум — 50 шагов + модель bf16, если скачана.
+Замеры на компьютере автора, 1344×768: Турбо int8,
+ролик 30 с (4 блока) вместе с AutoPrompter — 1 ч 18 мин;
+Турбо bf16 — ~30 мин на блок 10 с. Время растёт с
+числом блоков.
+
+📌 ТРИ СОСТОЯНИЯ НОДЫ 📌
+• Подключён 'story' — видно только story → video:
+  план, промпты, картинки и LoRA идут одним проводом.
+• «Чайник» — first_frame + prompt_1, 2… (следующий
+  появляется, когда подключён прошлый).
+• ⚙ Эксперт — всё: ноды 🎞 Блок, lora_all, звуковые
+  образцы, размеры, стык, модели, все выходы.
+Провод прямо в движок главнее 'story'. Подключённое
+никогда не прячется.
 
 📌 ВЫХОДЫ 📌
 video — со звуком, сразу в Save Video.
 frames / audio — отдельно. last_frame — конец ролика,
 чтобы продолжить в следующем прогоне.
 
-📌 ПРОТОТИП 📌
-Тестовая сборка в ветке dev. Дальше — Story
-AutoPrompter и полоска плана на этой ноде.
-
 📌 БЫСТРЫЙ СТАРТ 📌
-1. LoadImage > first_frame
-2. Три текста > prompt_1, prompt_2, prompt_3
-3. РЕЖИМ = Турбо (сначала проверь стыки на черновике)
-4. ДЛИНА РОЛИКА = 30, ДЛИНА БЛОКА = 10
-   (LoRA и картинки блоков — ⚙ эксперт, ноды 🎞 Блок)
-5. video > Save Video
-6. Queue
+1. Открой процесс Neron_H3_Story_AutoPrompter
+2. LoadImage — твой первый кадр
+3. Сценарий — что происходит, своими словами
+4. Ролик 30 с, блок 10 с, режим ⚡ Турбо
+5. Queue
 
 ===================================================
 `;
@@ -605,6 +876,11 @@ app.registerExtension({
         const origDrawBg = nodeType.prototype.onDrawBackground;
         const origDrawFg = nodeType.prototype.onDrawForeground;
         const origResize = nodeType.prototype.onResize;
+        const origRemoved = nodeType.prototype.onRemoved;
+        nodeType.prototype.onRemoved = function () {
+            DL.nodes.delete(this);
+            return origRemoved?.apply(this, arguments);
+        };
 
         nodeType.prototype.onNodeCreated = function () {
             const r = origCreated?.apply(this, arguments);
@@ -622,10 +898,17 @@ app.registerExtension({
                 const cb = w.callback;
                 w.callback = function () { const rr = cb?.apply(this, arguments); updateBlockInputs(node); applyExpert(node, specs); return rr; };
             }
+            node.__h3ModelsBtn = node.addWidget("button", MODELS_BTN, null, () => openModelsDialog(false));
             node.addWidget("button", "🔄 Reset to Defaults / Сброс", null, () => resetAll(node, specs));
             node.addWidget("button", "📖 Help / Справка", null, () => showHelpDialog());
             for (const t of [50, 300, 800]) setTimeout(() => { updateBlockInputs(node); applyExpert(node, specs); }, t);
             setupClock(node);
+            hookDownload();
+            DL.nodes.add(node);
+            // первый запуск: чего-то не хватает — окно само, один раз за сессию
+            fetchStatus().then((s) => {
+                if (s && !s.all_present && !DL.autoShown) { DL.autoShown = true; openModelsDialog(true); }
+            });
             return r;
         };
         nodeType.prototype.onConfigure = function () {

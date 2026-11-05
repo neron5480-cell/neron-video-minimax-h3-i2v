@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """🎬 Neron H3 Story — длинный ролик MiniMax H3 цепочкой блоков / long MiniMax H3 video as a chain of blocks.
 Ноды: движок, 🎞 Блок, 🎨 Набор LoRA, 📝 Story AutoPrompter (пользуется сервером LLM нашего Neron AutoPrompter)."""
-from . import block_node, lora_pack, node, story_autoprompter
+from . import block_node, downloader, lora_pack, node, story_autoprompter
+
+downloader.register_routes()
 
 NODE_CLASS_MAPPINGS = {**node.NODE_CLASS_MAPPINGS, **block_node.NODE_CLASS_MAPPINGS, **lora_pack.NODE_CLASS_MAPPINGS,
                        **story_autoprompter.NODE_CLASS_MAPPINGS}

@@ -1,0 +1,33 @@
+{
+  "_comment": "Пакеты моделей для 🎬 Neron H3 Story. Чтобы добавить пакет или файл — допиши сюда, код трогать не нужно. alternatives — другие версии того же файла: если лежит любая, файл не качается. Model packs: edit here, no code changes needed.",
+  "default": "standard",
+  "packs": {
+    "standard": {
+      "title": "Стандарт · MiniMax H3 / Standard · MiniMax H3",
+      "description": "Всё, на чём собран и проверен Neron H3 Story: модель H3 в сжатии int8, текстовый энкодер, VAE видео и звука, турбо-LoRA (⚡ Турбо, 8 шагов) и быстрая LoRA (🚀 Быстро, 4 шага). Модель — с официальной страницы Comfy-Org, LoRA — от их авторов lightx2v.\nЕсли у тебя уже лежит другая версия (например, модель bf16) — её не качаю.\n\nEN: Everything Neron H3 Story is built and tested on: H3 int8, text encoder, video and audio VAE, the Turbo LoRA (8 steps) and the Fast LoRA (4 steps). Model from Comfy-Org, LoRAs from their authors lightx2v. Files you already have in another version are skipped.",
+      "known_size_note": "точный размер окно узнаёт у сервера перед скачиванием / the exact size is checked before downloading",
+      "files": [
+        {"role": "unet", "kind": "diffusion_models", "repo": "Comfy-Org/MiniMax-H3", "gated": false,
+         "path": "diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+         "alternatives": ["minimax_h3_fl2va_pruned_bf16.safetensors", "minimax_h3_fl2va_pruned_fp8_scaled.safetensors",
+                          "minimax_h3_fl2va_pruned_w6a8.safetensors"]},
+        {"role": "clip", "kind": "text_encoders", "repo": "Comfy-Org/MiniMax-H3", "gated": false,
+         "path": "text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+         "alternatives": ["qwen3vl_32b_minimax_h3_int8_convrot.safetensors"]},
+        {"role": "vae_video", "kind": "vae", "repo": "Comfy-Org/MiniMax-H3", "gated": false,
+         "path": "vae/minimax_h3_video_vae_fp16.safetensors"},
+        {"role": "vae_audio", "kind": "vae", "repo": "Comfy-Org/MiniMax-H3", "gated": false,
+         "path": "vae/minimax_h3_audio_vae_fp32.safetensors"},
+        {"role": "turbo_lora", "kind": "loras", "repo": "lightx2v/Minimax-h3-Turbo", "gated": false,
+         "path": "minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors",
+         "alternatives": ["minimax_h3_fl2v_turbo_8step_v1.1_768p_comfyui_bf16.safetensors",
+                          "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors"]},
+        {"role": "fast_lora", "kind": "loras", "repo": "lightx2v/Minimax-h3-Turbo", "gated": false,
+         "path": "minimax_h3_fl2v_turbo_4step_v1.3_768p_comfyui_bf16.safetensors",
+         "alternatives": ["minimax_h3_fl2v_turbo_4step_v1.2_768p_comfyui_bf16.safetensors",
+                          "minimax_h3_fl2v_turbo_4step_v1.1_768p_comfyui_bf16.safetensors",
+                          "minimax_h3_fl2v_turbo_4step_v1.0_768p_comfyui_bf16.safetensors"]}
+      ]
+    }
+  }
+}
