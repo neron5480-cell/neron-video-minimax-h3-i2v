@@ -24,17 +24,20 @@ os.environ["NERON_STUDIO_NO_DIALOG_ROUTES"] = "1"
 
 from .autoprompter import NeronAutoPrompter  # noqa: E402
 from .ltx_autoprompter import NeronLTXAutoPrompter  # noqa: E402
+from .story_autoprompter import NeronH3StoryAutoPrompter  # noqa: E402
 
 WEB_DIRECTORY = "./web"
 
 NODE_CLASS_MAPPINGS = {
     "NeronAutoPrompter": NeronAutoPrompter,
     "NeronLTXAutoPrompter": NeronLTXAutoPrompter,
+    "NeronH3StoryAutoPrompter": NeronH3StoryAutoPrompter,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "NeronAutoPrompter": "🎬 Neron AutoPrompter",
     "NeronLTXAutoPrompter": "🎬 Neron LTX AutoPrompter / Автопромтер LTX",
+    "NeronH3StoryAutoPrompter": "📝 Neron H3 Story AutoPrompter / Автопромтер Story",
 }
 
 __all__ = [
