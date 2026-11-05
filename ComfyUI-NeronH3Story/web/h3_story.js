@@ -162,6 +162,13 @@ function applyExpert(node, specs) {
 }
 
 // ---------- часы ----------
+// Часы стоят СРАЗУ ПОД входами/выходами (их число меняется: story / чайник / эксперт), а распорка CLOCK_ROOM
+// держит под ними место — подпись больше не налезает на панели.
+const CLOCK_ROOM = 84;
+function slotsBottom(node) {
+    const h = (globalThis.LiteGraph?.NODE_SLOT_HEIGHT) || 20;
+    return Math.max(node.inputs?.length || 0, node.outputs?.length || 0) * h + 6;
+}
 function fmt(ms) {
     const t = Math.max(0, Math.round(ms / 1000));
     const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
@@ -231,7 +238,7 @@ function setupClock(node) {
         const c = CLOCK;
         const mine = c.current != null && String(c.current) === String(this.id);
         // место справа под выходами: входов 8, выходов 5 — там пусто
-        const cx = this.size[0] * 0.66, maxW = this.size[0] * 0.6;
+        const cx = this.size[0] * 0.5, maxW = this.size[0] * 0.9;
         const fit = (t) => {
             if (ctx.measureText(t).width <= maxW) return t;
             while (t.length > 4 && ctx.measureText(t + "…").width > maxW) t = t.slice(0, -1);
@@ -258,11 +265,12 @@ function setupClock(node) {
         ctx.save();
         ctx.textAlign = "center";
         ctx.fillStyle = color; ctx.font = "bold 28px monospace";
-        ctx.fillText(big, cx, 150);
+        const y0 = slotsBottom(this);
+        ctx.fillText(big, cx, y0 + 30);
         ctx.font = "13px sans-serif"; ctx.fillStyle = "#b0bec5";
-        if (l2) ctx.fillText(fit(l2), cx, 174);
+        if (l2) ctx.fillText(fit(l2), cx, y0 + 52);
         ctx.font = "12px sans-serif"; ctx.fillStyle = "#90a4ae";
-        if (l3) ctx.fillText(fit(l3), cx, 193);
+        if (l3) ctx.fillText(fit(l3), cx, y0 + 70);
         ctx.restore();
         return r;
     };
@@ -604,7 +612,7 @@ app.registerExtension({
             // невидимая распорка сверху — подпись первой панели не наезжает на входы
             const spacer = node.addWidget("text", "_spacer", "", () => {});
             spacer.draw = function () {};
-            spacer.computeSize = () => [0, 52];   // место под часы и подпись, чтобы не налезали на «ЭКСПЕРТ»
+            spacer.computeSize = () => [0, CLOCK_ROOM];   // место под часы — сразу под входами/выходами
             node.widgets.splice(node.widgets.indexOf(spacer), 1);
             node.widgets.unshift(spacer);
             for (const w of node.widgets || []) {
