@@ -50,8 +50,14 @@ MODES = ["⚡ Турбо / Turbo", "Качество / Quality", "Максиму
 SEAMS = ["🎬 кусок + звук / clip + sound", "🖼 один кадр / single frame"]
 SEAM_FRAMES = [22, 5, 39]          # сетка модели для клипа-якоря: 5, 22, 39… (17k + 5)
 
-APPEARANCE_LINE = (" Every person, creature and object keeps exactly the same appearance as in <Picture 1>: "
-                   "the same face, body, hair, clothing, colors and proportions.")
+APPEARANCE_LINE = (" <Picture 1> is only an identity reference for the people, creatures and objects: take from it "
+                   "their faces, hair, bodies, clothing and colors, nothing else. Ignore the background, framing, "
+                   "camera angle and poses of <Picture 1>.")
+# H3 умеет склейки (смену плана): без этой строки блок может «срезать» на новый план по образцу.
+FIRST_LINE = "A single continuous shot with no cuts and no scene changes."
+NEXT_LINE = ("A single continuous shot with no cuts and no scene changes: it continues directly from the opening "
+             "frames, in the same place, with the same camera position and framing, and the action flows on from "
+             "them.")
 
 NEEDED_NODES = ["MiniMaxH3ImageToVideo", "MiniMaxH3ReferenceToVideo", "MiniMaxH3AddGuide", "MiniMaxH3SigmaShift",
                 "CreateVideo"]
@@ -237,6 +243,12 @@ def with_appearance(prompt):
     return prompt if "<Picture" in prompt else prompt.rstrip() + APPEARANCE_LINE
 
 
+def with_continuity(prompt, k):
+    """Первая строка: один непрерывный кадр; для блоков 2+ — продолжение прикреплённого хвоста."""
+    line = FIRST_LINE if k == 0 else NEXT_LINE
+    return line + " " + prompt.lstrip()
+
+
 def generate(prompts, width, height, length, mode, seed, models, first_frame=None, appearance=None,
              keep_appearance=True, seam=SEAMS[0], seam_frames=22, ref_quality="auto", fast_attention=False,
              global_loras=(), block_loras=None, total_frames=None):
@@ -277,6 +289,7 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
     conds = []
     for k, p in enumerate(prompts):
         send(f"Текст блока {k + 1}/{blocks} / Text {k + 1}/{blocks}")
+        p = with_continuity(p, k)
         if use_ref:
             positive, latent = node("MiniMaxH3ReferenceToVideo", clip=clip, vae=vae, prompt=with_appearance(p),
                                     width=int(width), height=int(height), length=int(length),
