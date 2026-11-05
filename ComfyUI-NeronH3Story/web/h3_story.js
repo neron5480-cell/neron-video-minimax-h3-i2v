@@ -454,7 +454,7 @@ app.registerExtension({
             // невидимая распорка сверху — подпись первой панели не наезжает на входы
             const spacer = node.addWidget("text", "_spacer", "", () => {});
             spacer.draw = function () {};
-            spacer.computeSize = () => [0, 20];
+            spacer.computeSize = () => [0, 52];   // место под часы и подпись, чтобы не налезали на «ЭКСПЕРТ»
             node.widgets.splice(node.widgets.indexOf(spacer), 1);
             node.widgets.unshift(spacer);
             for (const w of node.widgets || []) {
