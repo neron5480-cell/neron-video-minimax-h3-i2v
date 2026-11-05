@@ -1,5 +1,20 @@
 # Changelog / История изменений
 
+## 🎬 Neron H3 Story — прототип длинного ролика / long-video prototype (dev, 05.11.2026)
+
+**RU:**
+- Новая нода **🎬 Neron H3 Story**: ролик MiniMax H3 цепочкой до 4 блоков по 3–15 с (по умолчанию 10 с). Промпты блоков — проводами prompt_1…prompt_4.
+- **Стык без рывка:** блоки 2+ начинаются не с картинки, а с хвоста прошлого блока (22 кадра ≈ 0,9 с) **вместе с его звуком** — родная нода ComfyUI «Add Guide for MiniMax H3». Перехлёст при склейке убирается, звук на нём плавно сводится. В эксперте — стык «один кадр» и длина стыка 5 / 22 / 39.
+- **🔒 Сохранить внешний вид** (вкл. по умолчанию): первый кадр (или вход appearance) — образец <Picture 1> в каждом блоке; объясняется в 📖 Справке.
+- Модель грузится один раз на весь ролик, тексты всех блоков кодируются разом.
+- Логика цепочки проверена на макете ComfyUI; на настоящей H3 ещё не запускалась. План: `docs/PLAN_Neron_H3_Story.md`.
+
+**EN:**
+- New **🎬 Neron H3 Story** node: MiniMax H3 video as a chain of up to 4 blocks (3–15 s each), one prompt wire per block.
+- Seamless joins: blocks 2+ continue the previous tail (22 frames ≈ 0.9 s) with its sound via the native "Add Guide for MiniMax H3" node; overlap removed, audio crossfaded.
+- Keep appearance (on by default): first frame as <Picture 1> in every block. One model load per video.
+- Chain logic verified on a ComfyUI mock; not yet run on real H3.
+
 ## 🎬 LTX 2.5 v2.0 — Neron LTX Engine + Neron LTX AutoPrompter (main, 04.11.2026)
 
 **RU:**
