@@ -24,28 +24,30 @@ from types import SimpleNamespace
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
 
+NEEDED = ["NeronMultiImageLLM", "_ask_reliably", "_image_to_data_uri_small", "_stop_llama_server",
+          "_find_llama_server", "_ensure_server_running", "_llm_list", "NeronLTXAutoPrompter"]
+_AP_MISSING = []
+
+
 def _ap():
     """Код нашего 🎬 Neron AutoPrompter (папка NeronStudio-AutoPrompter), уже загруженный ComfyUI.
     Своей копии сервера LLM у Story нет — иначе два llama-server спорили бы за один порт.
-    Ищем по содержимому модулей (имя пакета зависит от способа установки)."""
-    found = {}
+    Модули этой папки импортируют функции друг у друга, поэтому каждое нужное имя берём из ЛЮБОГО её модуля:
+    это один и тот же объект, где бы он ни лежал."""
+    got = {}
     for m in list(sys.modules.values()):
         f = str(getattr(m, "__file__", "") or "").replace("\\", "/")
-        if "NeronStudio-AutoPrompter" not in f:
+        if "/NeronStudio-AutoPrompter/" not in f:
             continue
-        if hasattr(m, "_ask_reliably") and hasattr(m, "NeronMultiImageLLM"):
-            found["ml"] = m
-        elif hasattr(m, "_ensure_server_running") and hasattr(m, "_find_llama_server"):
-            found["dn"] = m
-        elif hasattr(m, "NeronLTXAutoPrompter") and hasattr(m, "_finalize"):
-            found["ltx"] = m
-    if len(found) < 3:
+        for name in NEEDED:
+            if name not in got and hasattr(m, name):
+                got[name] = getattr(m, name)
+    _AP_MISSING[:] = [n for n in NEEDED if n not in got]
+    if _AP_MISSING:
         return None
-    return SimpleNamespace(
-        NeronMultiImageLLM=found["ml"].NeronMultiImageLLM, _ask_reliably=found["ml"]._ask_reliably,
-        _image_to_data_uri_small=found["ml"]._image_to_data_uri_small, _stop_llama_server=found["ml"]._stop_llama_server,
-        _find_llama_server=found["dn"]._find_llama_server, _ensure_server_running=found["dn"]._ensure_server_running,
-        _llm_list=found["dn"]._llm_list, LTX=found["ltx"].NeronLTXAutoPrompter)
+    ns = SimpleNamespace(**got)
+    ns.LTX = got["NeronLTXAutoPrompter"]
+    return ns
 
 
 def _need_ap():
@@ -54,8 +56,10 @@ def _need_ap():
         raise RuntimeError("[H3 Story AutoPrompter] Не найден 🎬 Neron AutoPrompter (папка NeronStudio-AutoPrompter): "
                            "Story AutoPrompter пользуется его сервером LLM и моделями. Поставь пакет Neron целиком "
                            "(Manager → Install via Git URL) или папку NeronStudio-AutoPrompter в custom_nodes и "
-                           "перезапусти ComfyUI.\n\nEN: 🎬 Neron AutoPrompter (NeronStudio-AutoPrompter folder) not "
-                           "found — the Story AutoPrompter uses its LLM server. Install the Neron pack and restart.")
+                           "перезапусти ComfyUI. Если папка стоит — она старая: обнови её (нужен LTX AutoPrompter от "
+                           "04.11). Не найдено: " + ", ".join(_AP_MISSING) + "\n\nEN: 🎬 Neron AutoPrompter "
+                           "(NeronStudio-AutoPrompter folder) not found or outdated — the Story AutoPrompter uses its LLM "
+                           "server. Missing: " + ", ".join(_AP_MISSING))
     return ap
 
 log = logging.getLogger("Neron.H3.StoryAutoPrompter")
