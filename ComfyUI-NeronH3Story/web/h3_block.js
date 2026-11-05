@@ -28,8 +28,11 @@ engine's first_frame input).
 
 📌 TEXT 📌
 In your own words, any language.
-With the Story AutoPrompter it is a hint — it expands
-it into a full block prompt with timing and sound.
+With the Story AutoPrompter the block ADDS to the
+scenario: its note and pictures go into the block
+where they happen in the story (the AutoPrompter may
+move them — e.g. a tiger from block 1 to block 2).
+Only last_frame stays strict.
 Straight into the engine (expert) it IS the prompt:
 then refer to pictures yourself as <Picture N>
 (the engine's report shows which is which).
@@ -63,8 +66,11 @@ last_frame  — чем блок должен закончиться;
 
 📌 ТЕКСТ 📌
 Своими словами, на любом языке.
-С Story AutoPrompter — подсказка: он развернёт её в
-полный промпт блока с секундами и звуком.
+С Story AutoPrompter блок ДОПОЛНЯЕТ сценарий: его
+заметка и картинки попадут в тот блок, где это
+происходит по сюжету (AutoPrompter может их
+перенести — например, тигра из блока 1 в блок 2).
+Жёстким остаётся только last_frame.
 Прямо в движок (эксперт) — это и есть промпт: тогда
 на картинки ссылайся сам как <Picture N> (какая
 какая — видно в отчёте движка).

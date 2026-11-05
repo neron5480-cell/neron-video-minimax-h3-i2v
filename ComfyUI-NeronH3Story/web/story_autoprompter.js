@@ -231,26 +231,40 @@ story  → the engine's 'story' input. That's all: the
 prompts → (optional) all block prompts as text.
 
 📌 CAMERA 📌
-Same as our ⚡ Fixed Camera H3 node (its code is used):
-AUTO picks the angle from words in the scenario ("left",
-"behind", "from above"…), otherwise front. The program
-puts ONE fixed camera header at the start of EVERY
-block — the camera never changes between blocks.
+Works like our ⚡ Fixed Camera H3 node:
+• AUTO — the AutoPrompter decides. No camera words in
+  the scenario → the camera is locked. You wrote a
+  move ("the camera circles her and stops over her
+  shoulder") → it is written by seconds: direction,
+  speed, where it ends; then the camera holds. The
+  next block starts with the camera where it ended.
+• FRONT / LEFT / RIGHT / BACK / TOP / BOTTOM — a fixed
+  angle: the program puts the camera header (from
+  Fixed Camera H3) into every block and removes any
+  camera words of the LLM.
 Framing "as in the first frame" — safest for a chain.
-The LLM is told not to describe camera moves.
+A moving camera holds seams a bit worse than a locked
+one — keep moves short and clear.
 
 📌 LENGTH 📌
 Video 5–45 s and block 5–15 s (maximum) are set HERE.
 The plan is shown live on the node, e.g.
 "30 s = 4 blocks of 8.7 s", and goes to the engine.
 
-📌 PICTURES 📌
-The LLM sees the opening frame and each block's
-pictures and refers to them as <Picture N> in the
-same numbering the engine builds: <Picture 1> =
-appearance, then the block's "who/where" reference
-(blocks 2+), then its navigators. The end frame of a
-block is pinned by the engine itself.
+📌 SCENARIO AND 🎞 BLOCKS 📌
+The scenario is the backbone: the whole story, spread
+over the blocks in its order. 🎞 Block nodes ADD to it
+— a note and pictures (a tiger, a crater, a room).
+The plan puts each addition into the block where it
+happens in the story, even if you wired it to
+another block node: the tiger from block_1 shows up
+in block 2 if that's when it appears. The preview
+title tells where pictures moved ("A2→2").
+Only last_frame is strict: that block ends exactly
+like that picture — use it only for a frame of the
+same scene and angle.
+In the prompts pictures become <Picture N> in the
+engine's numbering (<Picture 1> = appearance).
 
 📌 PREVIEW AND EDIT 📌
 The preview shows all prompts, split by
@@ -298,25 +312,39 @@ story  → вход 'story' движка. И всё: на движке тогд�
 prompts → (по желанию) все промпты текстом.
 
 📌 КАМЕРА 📌
-Как в нашей ноде ⚡ Fixed Camera H3 (её код и работает):
-АВТО берёт ракурс по словам сценария («слева»,
-«сзади», «сверху»…), иначе фронт. Программа ставит
-ОДНУ неподвижную шапку камеры в начало КАЖДОГО блока —
-камера между блоками не меняется. План «как на первом
-кадре» — самый надёжный для цепочки. LLM запрещено
-описывать движения камеры.
+Работает как наша нода ⚡ Fixed Camera H3:
+• АВТО — решает AutoPrompter. В сценарии о камере ни
+  слова → камера стоит. Написал движение («камера
+  огибает её и застывает над плечом») → оно
+  расписывается по секундам: куда, как быстро, где
+  останавливается; дальше камера стоит. Следующий
+  блок начинается с камерой там, где она встала.
+• ФРОНТ / СЛЕВА / СПРАВА / СЗАДИ / СВЕРХУ / СНИЗУ —
+  жёсткий ракурс: программа ставит шапку камеры (из
+  Fixed Camera H3) в каждый блок и вычищает слова LLM
+  про камеру.
+План «как на первом кадре» — самый надёжный для
+цепочки. Подвижная камера держит стыки чуть хуже
+неподвижной — делай движения короткими и ясными.
 
 📌 ДЛИНА 📌
 Ролик 5–45 с и блок 5–15 с (максимум) задаются ЗДЕСЬ.
 План виден на ноде сразу, например «30 с = 4 блока по
 8,7 с», и уходит в движок.
 
-📌 КАРТИНКИ 📌
-LLM видит первый кадр и картинки каждого блока и
-ссылается на них как <Picture N> — в той же нумерации,
-что соберёт движок: <Picture 1> — внешность, дальше
-образец «кто/где» блока (блоки 2+), дальше его
-навигаторы. Кадр конца блока движок прикалывает сам.
+📌 СЦЕНАРИЙ И 🎞 БЛОКИ 📌
+Сценарий — хребет: вся история, разложенная по
+блокам по порядку. Ноды 🎞 Блок её ДОПОЛНЯЮТ —
+заметка и картинки (тигр, воронка, комната). План
+кладёт каждую добавку в тот блок, где это происходит
+по сюжету, даже если ты подключил её к другой ноде:
+тигр с block_1 окажется в блоке 2, если появляется
+он там. Куда переехали картинки — видно в заголовке
+предпросмотра («A2→2»).
+Жёсткий только last_frame: блок закончится ровно этой
+картинкой — ставь туда кадр той же сцены и ракурса.
+В промптах картинки — <Picture N> в нумерации движка
+(<Picture 1> — внешность).
 
 📌 ПРЕДПРОСМОТР И ПРАВКА 📌
 В окне — все промпты, разделённые строками
