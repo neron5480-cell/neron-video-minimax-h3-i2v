@@ -66,9 +66,10 @@ function widgetHeight(w, nodeWidth) {
 function groupRect(node, g) {
     let y0 = Infinity, y1 = -Infinity;
     for (const w of node.widgets || []) {
-        if (!g.widgets.includes(w.name) || isHidden(w) || w.last_y === undefined) continue;
+        const wy = w.last_y ?? w.y;                    // в разных сборках ComfyUI — last_y или y
+        if (!g.widgets.includes(w.name) || isHidden(w) || wy === undefined) continue;
         const h = widgetHeight(w, node.size[0]) - (w.__neronBottomPadding || 0);
-        y0 = Math.min(y0, w.last_y); y1 = Math.max(y1, w.last_y + h);
+        y0 = Math.min(y0, wy); y1 = Math.max(y1, wy + h);
     }
     if (!isFinite(y0) || y1 <= y0) return null;
     // Текстовые поля ComfyUI рисует почти до края ноды — рамку делаем шире, чтобы поле было ВНУТРИ неё
@@ -83,18 +84,23 @@ function isFlexible(w) {
     return !!w && (typeof w.computeLayoutSize === "function" || !!w.element) && !w.__neronOrigSize;
 }
 
+// Отступы между панелями — отдельные невидимые распорки (_gap_*), а не «добавка» к высоте последнего виджета:
+// часть сборок ComfyUI считает высоту списков по-своему и добавку игнорирует — панели наезжали друг на друга.
+const GAPS = [["_gap_main", "total_seconds"], ["_gap_cam", "camera_mode"], ["_gap_llm", "model"],
+              ["_gap_prev", "_ltx_preview"], ["_gap_edit", "edited_prompt"]];
+
 function applyGroupGaps(node) {
-    for (const w of node.widgets || []) clearBottomPadding(w);
-    for (const g of GROUPS) {
-        let last = null;
-        for (const w of node.widgets || []) if (g.widgets.includes(w.name) && !isHidden(w)) last = w;
-        if (last && !isFlexible(last)) setBottomPadding(last, GROUP_GAP);
+    for (const w of node.widgets || []) clearBottomPadding(w);      // старые сохранённые ноды
+    const ex = wv(node, "expert") === true;
+    for (const w of node.widgets || []) {
+        if (w.name === "_gap_llm") w.hidden = !ex;                    // LLM спрятан — его распорка тоже
     }
 }
 
 function addGap(node, name, beforeName) {
     const gap = node.addWidget("text", name, "", () => {});
     gap.serialize = false;
+    gap.options = Object.assign(gap.options || {}, { serialize: false });
     gap.draw = function () {};
     gap.computeSize = () => [0, GROUP_GAP + 6];
     node.widgets.splice(node.widgets.indexOf(gap), 1);
@@ -386,7 +392,7 @@ app.registerExtension({
             const prev = makePreview(node);
             const ei = node.widgets.findIndex((w) => w.name === "edited_prompt");
             if (ei >= 0) { node.widgets.splice(node.widgets.indexOf(prev), 1); node.widgets.splice(ei, 0, prev); }
-            addGap(node, "_gap_edit", "edited_prompt");      // подпись «ПРАВКА» больше не налезает на окно
+            for (const [gn, before] of GAPS) addGap(node, gn, before);   // подписи панелей не налезают на соседей
             node.addWidget("button", "✏ В правку / To edit", null, () => {
                 const w = node.widgets.find((x) => x.name === "edited_prompt");
                 if (w && node.__ltxLast) { w.value = node.__ltxLast; app.graph?.setDirtyCanvas(true, true); }
