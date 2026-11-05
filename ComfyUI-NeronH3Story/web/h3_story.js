@@ -167,7 +167,9 @@ function applyExpert(node, specs) {
 const CLOCK_ROOM = 84;
 function slotsBottom(node) {
     const h = (globalThis.LiteGraph?.NODE_SLOT_HEIGHT) || 20;
-    return Math.max(node.inputs?.length || 0, node.outputs?.length || 0) * h + 6;
+    // у нового ComfyUI каждый виджет держит скрытый «вход» в node.inputs — считаем только настоящие гнёзда
+    const ins = (node.inputs || []).filter((i) => !i.widget).length;
+    return Math.max(ins, node.outputs?.length || 0) * h + 6;
 }
 function fmt(ms) {
     const t = Math.max(0, Math.round(ms / 1000));
