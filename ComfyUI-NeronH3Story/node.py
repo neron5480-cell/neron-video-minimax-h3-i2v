@@ -1,23 +1,24 @@
 # -*- coding: utf-8 -*-
 """🎬 Neron H3 Story — длинный ролик MiniMax H3 цепочкой блоков (прототип, ветка dev).
 
-Новичок видит: эксперт, режим, длину блока, 🔒 «сохранить внешний вид», размер. Длина ролика и блока — ползунки;
-блоков нода насчитает сама. Промпт и LoRA каждого блока — проводами (prompt_k + lora_k), общая LoRA — lora_all. Остальное — под ⚙ экспертом.
+Три состояния (их показывает интерфейс, движок принимает всё всегда):
+  • подключён story (📝 Story AutoPrompter) — план, промпты, картинки и LoRA приходят по шине;
+  • «чайник» — первый кадр + промпт блока 1, 2… проводами;
+  • ⚙ эксперт — ноды 🎞 Блок, lora_all, длины, размер, стык, модели.
+Провод, подключённый к движку напрямую, главнее того, что пришло по шине.
 """
 import logging
 
-import math
-
-from . import passport, story
-from .lora_pack import LORA_TYPE
+from . import bus, passport
+from . import story as story_mod
 
 log = logging.getLogger("Neron.H3.Story")
 NOT_FOUND = "__not_found__"
 NO_LORA = "— нет / none —"
 AUTO_SIZE = "Авто — по первому кадру / Auto — from first frame"
-MAX_BLOCKS = 12
-TOTAL_MIN, TOTAL_MAX = 5.0, 45.0
-MIN_TRAINED = 124          # 5 с — меньше модель не обучена; блоки цепочки не короче
+MAX_BLOCKS = bus.MAX_BLOCKS
+TOTAL_MIN, TOTAL_MAX = bus.TOTAL_MIN, bus.TOTAL_MAX
+FPS = bus.FPS
 
 
 def _files(kind, extra_first=None):
@@ -85,7 +86,7 @@ class NeronH3Story:
                 "expert": ("BOOLEAN", _main("⚙ эксперт / expert", default=False,
                            tooltip="Показать стык, модели, LoRA, ручной размер и сид. Скрытое всё равно работает.\n\n"
                                    "EN: Show seam, models, LoRA, manual size and seed. Hidden settings still work.")),
-                "mode": (story.MODES, _main("режим / mode", default=story.MODES[0],
+                "mode": (story_mod.MODES, _main("режим / mode", default=story_mod.MODES[0],
                          tooltip="⚡ Турбо — 12 шагов, черновик. Качество — 40 шагов, ~3× дольше. Максимум — 50 шагов + "
                                  "bf16, если скачана. Время умножается на число блоков.\n\nEN: Turbo 12 steps · Quality "
                                  "40 · Maximum 50 + bf16. Time is multiplied by the number of blocks.")),
@@ -114,7 +115,7 @@ class NeronH3Story:
                                  step=32)),
                 "manual_height": ("INT", _exp("ручной · высота / manual height", default=768, min=256, max=8192,
                                   step=32)),
-                "seam": (story.SEAMS, _exp("стык / seam", default=story.SEAMS[0],
+                "seam": (story_mod.SEAMS, _exp("стык / seam", default=story_mod.SEAMS[0],
                          tooltip="Кусок + звук — к началу блока прикалываются последние кадры прошлого вместе с их "
                                  "звуком: модель продолжает движение и звук без рывка. Один кадр — только последний "
                                  "кадр, звук стыкуется плавным переходом.\n\nEN: Clip + sound continues motion and "
@@ -124,49 +125,64 @@ class NeronH3Story:
                                         "движении. Только сетка модели.\n\nEN: 22 ≈ 0.9 s default; 5 shorter; "
                                         "39 ≈ 1.6 s more motion memory.")),
                 "unet_model": (unets, _exp("модель / model",
-                               default=_pick(unets, story.UNET_BF16 if _has(unets, story.UNET_BF16) else story.UNET_NAME))),
-                "clip_model": (clips, _exp("текстовый энкодер / text encoder", default=_pick(clips, story.CLIP_NAME))),
-                "vae_video_model": (vaes, _exp("VAE видео / video VAE", default=_pick(vaes, story.VAE_VIDEO_NAME))),
-                "vae_audio_model": (vaes, _exp("VAE звука / audio VAE", default=_pick(vaes, story.VAE_AUDIO_NAME))),
+                               default=_pick(unets, story_mod.UNET_BF16 if _has(unets, story_mod.UNET_BF16) else story_mod.UNET_NAME))),
+                "clip_model": (clips, _exp("текстовый энкодер / text encoder", default=_pick(clips, story_mod.CLIP_NAME))),
+                "vae_video_model": (vaes, _exp("VAE видео / video VAE", default=_pick(vaes, story_mod.VAE_VIDEO_NAME))),
+                "vae_audio_model": (vaes, _exp("VAE звука / audio VAE", default=_pick(vaes, story_mod.VAE_AUDIO_NAME))),
                 "turbo_lora_model": (_files("loras"), _exp("турбо-LoRA / turbo LoRA",
-                                     default=_pick(_files("loras"), story.TURBO_LORA_NAME))),
+                                     default=_pick(_files("loras"), story_mod.TURBO_LORA_NAME))),
                 "seed": ("INT", _exp("сид / seed", default=1, min=0, max=0xFFFFFFFFFFFFFFFF)),
                 "ref_quality": (["auto", "max", "match"], _exp("качество образца / reference quality",
                                 default="auto", tooltip="auto: Турбо — match, Качество/Максимум — max.")),
                 "fast_attention": ("BOOLEAN", _exp("быстрое внимание INT8 / fast attention", default=False)),
             },
             "optional": {
-                "first_frame": ("IMAGE", {"tooltip": "Первый кадр ролика (LoadImage). Нет — блок 1 по тексту.\n\n"
-                                                     "EN: First frame of the video. None — block 1 from text."}),
-                "appearance": ("IMAGE", {"tooltip": "Образец внешности, если нужен другой, чем первый кадр. Не "
-                                                    "подключён — образцом служит первый кадр.\n\nEN: Appearance "
-                                                    "reference; defaults to the first frame."}),
-                "lora_all": (LORA_TYPE, {"tooltip": "LoRA на ВЕСЬ ролик (стиль, персонаж) — 🎨 Набор LoRA.\n\n"
-                                                    "EN: LoRAs for the WHOLE video — a 🎨 LoRA set node."}),
-                "prompt_1": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 1 / Block 1 prompt"}),
-                "lora_1": (LORA_TYPE, {"tooltip": "LoRA только для блока 1 — 🎨 Набор LoRA.\n\nEN: LoRAs for block 1 only."}),
-                "prompt_2": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 2 / Block 2 prompt"}),
-                "lora_2": (LORA_TYPE, {"tooltip": "LoRA только для блока 2 — 🎨 Набор LoRA.\n\nEN: LoRAs for block 2 only."}),
-                "prompt_3": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 3 / Block 3 prompt"}),
-                "lora_3": (LORA_TYPE, {"tooltip": "LoRA только для блока 3 — 🎨 Набор LoRA.\n\nEN: LoRAs for block 3 only."}),
-                "prompt_4": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 4 / Block 4 prompt"}),
-                "lora_4": (LORA_TYPE, {"tooltip": "LoRA только для блока 4 — 🎨 Набор LoRA.\n\nEN: LoRAs for block 4 only."}),
-                "prompt_5": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 5 / Block 5 prompt"}),
-                "lora_5": (LORA_TYPE, {"tooltip": "LoRA только для блока 5 — 🎨 Набор LoRA.\n\nEN: LoRAs for block 5 only."}),
-                "prompt_6": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 6 / Block 6 prompt"}),
-                "lora_6": (LORA_TYPE, {"tooltip": "LoRA только для блока 6 — 🎨 Набор LoRA.\n\nEN: LoRAs for block 6 only."}),
-                "prompt_7": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 7 / Block 7 prompt"}),
-                "lora_7": (LORA_TYPE, {"tooltip": "LoRA только для блока 7 — 🎨 Набор LoRA.\n\nEN: LoRAs for block 7 only."}),
-                "prompt_8": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 8 / Block 8 prompt"}),
-                "lora_8": (LORA_TYPE, {"tooltip": "LoRA только для блока 8 — 🎨 Набор LoRA.\n\nEN: LoRAs for block 8 only."}),
-                "prompt_9": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 9 / Block 9 prompt"}),
-                "lora_9": (LORA_TYPE, {"tooltip": "LoRA только для блока 9 — 🎨 Набор LoRA.\n\nEN: LoRAs for block 9 only."}),
-                "prompt_10": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 10 / Block 10 prompt"}),
-                "lora_10": (LORA_TYPE, {"tooltip": "LoRA только для блока 10 — 🎨 Набор LoRA.\n\nEN: LoRAs for block 10 only."}),
-                "prompt_11": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 11 / Block 11 prompt"}),
-                "lora_11": (LORA_TYPE, {"tooltip": "LoRA только для блока 11 — 🎨 Набор LoRA.\n\nEN: LoRAs for block 11 only."}),
-                "prompt_12": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 12 / Block 12 prompt"}),
-                "lora_12": (LORA_TYPE, {"tooltip": "LoRA только для блока 12 — 🎨 Набор LoRA.\n\nEN: LoRAs for block 12 only."}),
+                "story": (bus.STORY_TYPE, {"tooltip": "Шина от 📝 Story AutoPrompter: план, промпты, картинки и LoRA всех "
+                                                      "блоков одним проводом. Подключена — лишнее на ноде прячется.\n\n"
+                                                      "EN: Bus from the Story AutoPrompter: plan, prompts, pictures and "
+                                                      "LoRAs of all blocks in one wire."}),
+                "first_frame": ("IMAGE", {"tooltip": "Первый кадр ролика (LoadImage). Он же образец внешности (🔒).\n\n"
+                                                     "EN: First frame of the video, also the appearance sample."}),
+                "appearance": ("IMAGE", {"tooltip": "Отдельный образец внешности, если нужен не первый кадр.\n\n"
+                                                    "EN: Separate appearance reference."}),
+                "lora_all": (bus.LORA_TYPE, {"tooltip": "LoRA на ВЕСЬ ролик (стиль) — 🎨 Набор LoRA.\n\n"
+                                                        "EN: LoRAs for the WHOLE video (style)."}),
+                "prompt_1": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 1 — как есть, в модель. / Block 1 prompt, as is."}),
+                "block_1": (bus.BLOCK_TYPE, {"tooltip": "🎞 Блок 1: картинки, текст и LoRA блока. / Block 1 node."}),
+                "lora_1": (bus.LORA_TYPE, {"tooltip": "LoRA блока 1 (старый вход; теперь — через 🎞 Блок). / Block 1 LoRAs (legacy)."}),
+                "prompt_2": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 2 — как есть, в модель. / Block 2 prompt, as is."}),
+                "block_2": (bus.BLOCK_TYPE, {"tooltip": "🎞 Блок 2: картинки, текст и LoRA блока. / Block 2 node."}),
+                "lora_2": (bus.LORA_TYPE, {"tooltip": "LoRA блока 2 (старый вход; теперь — через 🎞 Блок). / Block 2 LoRAs (legacy)."}),
+                "prompt_3": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 3 — как есть, в модель. / Block 3 prompt, as is."}),
+                "block_3": (bus.BLOCK_TYPE, {"tooltip": "🎞 Блок 3: картинки, текст и LoRA блока. / Block 3 node."}),
+                "lora_3": (bus.LORA_TYPE, {"tooltip": "LoRA блока 3 (старый вход; теперь — через 🎞 Блок). / Block 3 LoRAs (legacy)."}),
+                "prompt_4": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 4 — как есть, в модель. / Block 4 prompt, as is."}),
+                "block_4": (bus.BLOCK_TYPE, {"tooltip": "🎞 Блок 4: картинки, текст и LoRA блока. / Block 4 node."}),
+                "lora_4": (bus.LORA_TYPE, {"tooltip": "LoRA блока 4 (старый вход; теперь — через 🎞 Блок). / Block 4 LoRAs (legacy)."}),
+                "prompt_5": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 5 — как есть, в модель. / Block 5 prompt, as is."}),
+                "block_5": (bus.BLOCK_TYPE, {"tooltip": "🎞 Блок 5: картинки, текст и LoRA блока. / Block 5 node."}),
+                "lora_5": (bus.LORA_TYPE, {"tooltip": "LoRA блока 5 (старый вход; теперь — через 🎞 Блок). / Block 5 LoRAs (legacy)."}),
+                "prompt_6": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 6 — как есть, в модель. / Block 6 prompt, as is."}),
+                "block_6": (bus.BLOCK_TYPE, {"tooltip": "🎞 Блок 6: картинки, текст и LoRA блока. / Block 6 node."}),
+                "lora_6": (bus.LORA_TYPE, {"tooltip": "LoRA блока 6 (старый вход; теперь — через 🎞 Блок). / Block 6 LoRAs (legacy)."}),
+                "prompt_7": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 7 — как есть, в модель. / Block 7 prompt, as is."}),
+                "block_7": (bus.BLOCK_TYPE, {"tooltip": "🎞 Блок 7: картинки, текст и LoRA блока. / Block 7 node."}),
+                "lora_7": (bus.LORA_TYPE, {"tooltip": "LoRA блока 7 (старый вход; теперь — через 🎞 Блок). / Block 7 LoRAs (legacy)."}),
+                "prompt_8": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 8 — как есть, в модель. / Block 8 prompt, as is."}),
+                "block_8": (bus.BLOCK_TYPE, {"tooltip": "🎞 Блок 8: картинки, текст и LoRA блока. / Block 8 node."}),
+                "lora_8": (bus.LORA_TYPE, {"tooltip": "LoRA блока 8 (старый вход; теперь — через 🎞 Блок). / Block 8 LoRAs (legacy)."}),
+                "prompt_9": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 9 — как есть, в модель. / Block 9 prompt, as is."}),
+                "block_9": (bus.BLOCK_TYPE, {"tooltip": "🎞 Блок 9: картинки, текст и LoRA блока. / Block 9 node."}),
+                "lora_9": (bus.LORA_TYPE, {"tooltip": "LoRA блока 9 (старый вход; теперь — через 🎞 Блок). / Block 9 LoRAs (legacy)."}),
+                "prompt_10": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 10 — как есть, в модель. / Block 10 prompt, as is."}),
+                "block_10": (bus.BLOCK_TYPE, {"tooltip": "🎞 Блок 10: картинки, текст и LoRA блока. / Block 10 node."}),
+                "lora_10": (bus.LORA_TYPE, {"tooltip": "LoRA блока 10 (старый вход; теперь — через 🎞 Блок). / Block 10 LoRAs (legacy)."}),
+                "prompt_11": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 11 — как есть, в модель. / Block 11 prompt, as is."}),
+                "block_11": (bus.BLOCK_TYPE, {"tooltip": "🎞 Блок 11: картинки, текст и LoRA блока. / Block 11 node."}),
+                "lora_11": (bus.LORA_TYPE, {"tooltip": "LoRA блока 11 (старый вход; теперь — через 🎞 Блок). / Block 11 LoRAs (legacy)."}),
+                "prompt_12": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 12 — как есть, в модель. / Block 12 prompt, as is."}),
+                "block_12": (bus.BLOCK_TYPE, {"tooltip": "🎞 Блок 12: картинки, текст и LoRA блока. / Block 12 node."}),
+                "lora_12": (bus.LORA_TYPE, {"tooltip": "LoRA блока 12 (старый вход; теперь — через 🎞 Блок). / Block 12 LoRAs (legacy)."}),
                 "width": ("INT", {"forceInput": True}),
                 "height": ("INT", {"forceInput": True}),
             },
@@ -175,21 +191,40 @@ class NeronH3Story:
     def generate(self, expert=False, mode=None, total_seconds=30.0, block_seconds=10.0, keep_appearance=True,
                  size=AUTO_SIZE, manual_width=1344, manual_height=768, seam=None, seam_frames="22", unet_model=None,
                  clip_model=None, vae_video_model=None, vae_audio_model=None, turbo_lora_model=None, seed=1,
-                 ref_quality="auto", fast_attention=False, first_frame=None, appearance=None, lora_all=None,
-                 width=None, height=None, **kw):
-        given = [((kw.get(f"prompt_{k}") or "").strip(), list(kw.get(f"lora_{k}") or []))
-                 for k in range(1, MAX_BLOCKS + 1)]
-        if not any(p for p, _ in given):
-            raise story.FriendlyError("[H3 Story] Нет ни одного промпта блока. Подключи prompt_1 (и prompt_2, "
-                                      "prompt_3…) — по промпту на блок.\n\nEN: No block prompts. Connect prompt_1 "
-                                      "(and more) — one prompt per block.")
+                 ref_quality="auto", fast_attention=False, story=None, first_frame=None, appearance=None,
+                 lora_all=None, width=None, height=None, **kw):
         notes = []
+        bus_ = story or {}
+        sb = list(bus_.get("blocks") or [])
+        # провод, подключённый к движку напрямую, главнее шины
+        first = first_frame if first_frame is not None else bus_.get("first_frame")
+        appear = appearance if appearance is not None else bus_.get("appearance")
+        g_loras = lora_all if lora_all is not None else bus_.get("lora_all")
+        if story is not None:
+            total_seconds = bus_.get("total_seconds", total_seconds)
+            block_seconds = bus_.get("block_seconds", block_seconds)
+            notes.append(f"План из Story AutoPrompter: {float(total_seconds):g} с, блок до {float(block_seconds):g} с")
+
+        given = []
+        for k in range(MAX_BLOCKS):
+            b = kw.get(f"block_{k + 1}") or (sb[k] if k < len(sb) else None) or {}
+            text = (kw.get(f"prompt_{k + 1}") or b.get("prompt") or b.get("text") or "").strip()
+            loras = list(b.get("loras") or []) + list(kw.get(f"lora_{k + 1}") or [])
+            given.append({"prompt": text, "loras": loras, "first": b.get("first"), "mid": list(b.get("mid") or []),
+                          "last": b.get("last")})
+        if first is None and given[0]["first"] is not None:
+            first = given[0]["first"]
+        if not any(g["prompt"] for g in given):
+            raise story_mod.FriendlyError("[H3 Story] Нет ни одного промпта блока. Подключи prompt_1 (и дальше), ноды "
+                                          "🎞 Блок с текстом или 📝 Story AutoPrompter.\n\nEN: No block prompts. "
+                                          "Connect prompt_1, 🎞 Block nodes with text, or the Story AutoPrompter.")
+
         if width is not None and height is not None:
             w, h, note = passport.fit(int(width), int(height))
         elif size == AUTO_SIZE:
-            if first_frame is not None:
-                w, h = passport.canvas(int(first_frame.shape[2]), int(first_frame.shape[1]))
-                note = f"по первому кадру {int(first_frame.shape[2])}×{int(first_frame.shape[1])} → {w}×{h}"
+            if first is not None:
+                w, h = passport.canvas(int(first.shape[2]), int(first.shape[1]))
+                note = f"по первому кадру {int(first.shape[2])}×{int(first.shape[1])} → {w}×{h}"
             else:
                 (w, h), note = passport.preset_size(list(passport.PRESETS)[0]), "кадра нет — 16:9"
         elif passport.PRESETS.get(size) is None:
@@ -198,66 +233,54 @@ class NeronH3Story:
             (w, h), note = passport.preset_size(size), ""
         if note:
             notes.append("Размер: " + note)
-        seam_ok = seam if seam in story.SEAMS else story.SEAMS[0]
-        S = int(seam_frames or 22) if seam_ok == story.SEAMS[0] else 1
-        total = min(TOTAL_MAX, max(TOTAL_MIN, float(total_seconds)))
-        T = int(round(total * passport.FPS))
-        # длина блока — максимум: ролик делится на РОВНЫЕ блоки не длиннее неё (стыки съедают S кадров),
-        # чтобы не гнать лишний полный блок ради последней секунды
-        n_max, _, note = passport.frames(seconds=float(block_seconds))
-        if note:
-            notes.append("Длина блока: " + note)
-        if T <= n_max:
-            blocks = 1
-            n = passport.frames(seconds=total)[0]
-        else:
-            blocks = math.ceil((T - S) / (n_max - S))
-            n = passport.frames(length=max(MIN_TRAINED, math.ceil((T + (blocks - 1) * S) / blocks)))[0]
-            n = min(n, n_max)
+
+        seam_ok = seam if seam in story_mod.SEAMS else story_mod.SEAMS[0]
+        S = int(seam_frames or 22) if seam_ok == story_mod.SEAMS[0] else 1
+        blocks, n, T, n_max = bus.plan(total_seconds, block_seconds, S)
         if blocks > MAX_BLOCKS:
-            raise story.FriendlyError(f"[H3 Story] {total:g} с при блоке {block_seconds:g} с — это {blocks} блоков, "
-                                      f"а нода умеет до {MAX_BLOCKS}. Сделай блок длиннее.\n\nEN: {blocks} blocks "
-                                      f"needed, max is {MAX_BLOCKS}. Make blocks longer.")
-        notes.append(f"План: {total:g} с = {blocks} блок(а) по {n / passport.FPS:.1f} с (не длиннее "
-                     f"{n_max / passport.FPS:.1f} с), стык {S} кадр.")
-        # промпт и LoRA для каждого блока; нет своего промпта — повторяем предыдущий (честно пишем об этом)
-        prompts, block_loras, prev = [], [], None
+            raise story_mod.FriendlyError(f"[H3 Story] Нужно {blocks} блоков, а нода умеет до {MAX_BLOCKS}. Сделай блок "
+                                          f"длиннее.\n\nEN: {blocks} blocks needed, max is {MAX_BLOCKS}.")
+        notes.append(f"План: {T / FPS:g} с = {blocks} блок(а) по {n / FPS:.1f} с (не длиннее {n_max / FPS:.1f} с), "
+                     f"стык {S} кадр.")
+        prompts, block_loras, block_images, prev = [], [], [], None
         for k in range(blocks):
-            p, loras_k = given[k]
+            g = given[k]
+            p = g["prompt"]
             if not p:
                 if prev is None:
-                    p = next(x for x, _ in given if x)
-                    notes.append(f"Блок {k + 1}: своего промпта нет — взят первый подключённый")
+                    p = next(x["prompt"] for x in given if x["prompt"])
+                    notes.append(f"Блок {k + 1}: своего промпта нет — взят первый")
                 else:
                     p = prev
                     notes.append(f"Блок {k + 1}: своего промпта нет — повторён промпт блока {k}")
             prompts.append(p)
-            block_loras.append([(d["name"], d["strength"]) for d in loras_k])
+            block_loras.append(bus.loras_pairs(g["loras"]))
+            block_images.append({"who": g["first"] if k > 0 else None, "mid": g["mid"], "last": g["last"]})
             prev = p
-        extra = [k + 1 for k in range(blocks, MAX_BLOCKS) if given[k][0]]
+        extra = [k + 1 for k in range(blocks, MAX_BLOCKS) if given[k]["prompt"]]
         if extra:
-            notes.append(f"Промпты блоков {', '.join(map(str, extra))} не пошли в дело: ролику хватило {blocks} "
-                         f"блок(ов). Увеличь длину ролика, если они нужны.")
-        global_loras = [(d["name"], d["strength"]) for d in (lora_all or [])]
+            notes.append(f"Блоки {', '.join(map(str, extra))} не пошли в дело: ролику хватило {blocks}. "
+                         f"Увеличь длину ролика, если они нужны.")
 
         def model(v, default):
             return default if not v or v == NOT_FOUND else v
-        default_unet = story.UNET_BF16 if story.find_file("diffusion_models", story.UNET_BF16) else story.UNET_NAME
-        models = {"unet": model(unet_model, default_unet), "clip": model(clip_model, story.CLIP_NAME),
-                  "vae_video": model(vae_video_model, story.VAE_VIDEO_NAME),
-                  "vae_audio": model(vae_audio_model, story.VAE_AUDIO_NAME),
-                  "turbo_lora": model(turbo_lora_model, story.TURBO_LORA_NAME)}
+        default_unet = story_mod.UNET_BF16 if story_mod.find_file("diffusion_models", story_mod.UNET_BF16) \
+            else story_mod.UNET_NAME
+        models = {"unet": model(unet_model, default_unet), "clip": model(clip_model, story_mod.CLIP_NAME),
+                  "vae_video": model(vae_video_model, story_mod.VAE_VIDEO_NAME),
+                  "vae_audio": model(vae_audio_model, story_mod.VAE_AUDIO_NAME),
+                  "turbo_lora": model(turbo_lora_model, story_mod.TURBO_LORA_NAME)}
         try:
-            frames, audio, last, count, report = story.generate(
-                prompts, w, h, n, mode if mode in story.MODES else story.MODES[0], int(seed), models,
-                first_frame=first_frame, appearance=appearance, keep_appearance=bool(keep_appearance),
-                seam=seam_ok, seam_frames=int(seam_frames or 22), ref_quality=ref_quality,
-                fast_attention=bool(fast_attention), global_loras=global_loras, block_loras=block_loras,
-                total_frames=T)
+            frames, audio, last, count, report = story_mod.generate(
+                prompts, w, h, n, mode if mode in story_mod.MODES else story_mod.MODES[0], int(seed), models,
+                first_frame=first, appearance=appear, keep_appearance=bool(keep_appearance), seam=seam_ok,
+                seam_frames=int(seam_frames or 22), ref_quality=ref_quality, fast_attention=bool(fast_attention),
+                global_loras=bus.loras_pairs(g_loras), block_loras=block_loras, total_frames=T,
+                block_images=block_images)
         except Exception:
-            story.free("после ошибки / after error")
+            story_mod.free("после ошибки / after error")
             raise
-        video = story.node("CreateVideo", images=frames, fps=24.0, audio=audio)[0]
+        video = story_mod.node("CreateVideo", images=frames, fps=float(FPS), audio=audio)[0]
         for line in notes + report:
             log.info("[H3 Story] %s", line)
         return {"ui": {"text": ["\n".join(notes + report)]}, "result": (video, frames, audio, last, count)}

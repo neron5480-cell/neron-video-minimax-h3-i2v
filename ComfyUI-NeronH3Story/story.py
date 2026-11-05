@@ -249,12 +249,28 @@ def with_continuity(prompt, k):
     return line + " " + prompt.lstrip()
 
 
+def block_refs_prompt(prompt, start_no, who, mids):
+    """Ссылки на картинки блока: что не упомянуто в промпте как <Picture N> — дописываем одной фразой.
+    who — образец «кто / где» (первый кадр блоков 2+), mids — навигаторы «куда идём»."""
+    lines, n = [], start_no
+    if who is not None:
+        if f"<Picture {n}>" not in prompt:
+            lines.append(f"Also use <Picture {n}> as a reference for who and what appears in this part.")
+        n += 1
+    for _ in mids:
+        if f"<Picture {n}>" not in prompt:
+            lines.append(f"The action moves toward the place or object shown in <Picture {n}>.")
+        n += 1
+    return (prompt.rstrip() + " " + " ".join(lines)) if lines else prompt
+
+
 def generate(prompts, width, height, length, mode, seed, models, first_frame=None, appearance=None,
              keep_appearance=True, seam=SEAMS[0], seam_frames=22, ref_quality="auto", fast_attention=False,
-             global_loras=(), block_loras=None, total_frames=None):
+             global_loras=(), block_loras=None, total_frames=None, block_images=None):
     """→ (видео [T,H,W,3] float32, звук, последний кадр, число кадров, отчёт-строки).
     global_loras — [(имя, сила)] на весь ролик; block_loras[k] — [(имя, сила)] только для блока k;
-    total_frames — обрезать готовый ролик ровно до этой длины."""
+    total_frames — обрезать готовый ролик ровно до этой длины;
+    block_images[k] — {"who": образец «кто/где» (только блоки 2+), "mid": [навигаторы], "last": кадр конца}."""
     check_comfy()
     t0 = time.time()
     report = []
@@ -286,14 +302,33 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
     send("Тексты всех блоков / Encoding all blocks")
     clip = node("CLIPLoader", clip_name=models["clip"], type=CLIP_TYPE, device="default")[0]
     vae = node("VAELoader", vae_name=models["vae_video"])[0]
+    block_images = list(block_images or [])
+    block_images += [{}] * (blocks - len(block_images))
     conds = []
     for k, p in enumerate(prompts):
         send(f"Текст блока {k + 1}/{blocks} / Text {k + 1}/{blocks}")
+        bi = block_images[k] or {}
+        who = bi.get("who") if k > 0 else None
+        mids = [m for m in (bi.get("mid") or []) if m is not None]
+        refs = ([ref] if use_ref else []) + ([who] if who is not None else []) + mids
         p = with_continuity(p, k)
         if use_ref:
-            positive, latent = node("MiniMaxH3ReferenceToVideo", clip=clip, vae=vae, prompt=with_appearance(p),
+            p = with_appearance(p)
+        if who is not None or mids:
+            p = block_refs_prompt(p, 2 if use_ref else 1, who, mids)
+            tags, no = [], 1
+            if use_ref:
+                tags.append("<Picture 1> внешность"); no += 1
+            if who is not None:
+                tags.append(f"<Picture {no}> образец «кто/где»"); no += 1
+            for i in range(len(mids)):
+                tags.append(f"<Picture {no}> навигатор {i + 1}"); no += 1
+            report.append(f"Блок {k + 1}: " + ", ".join(tags))
+        if refs:
+            positive, latent = node("MiniMaxH3ReferenceToVideo", clip=clip, vae=vae, prompt=p,
                                     width=int(width), height=int(height), length=int(length),
-                                    ref_image_size=ref_quality, ref_images={"ref_image_0": ref})
+                                    ref_image_size=ref_quality,
+                                    ref_images={f"ref_image_{i}": im for i, im in enumerate(refs)})
         else:
             positive, latent = node("MiniMaxH3ImageToVideo", clip=clip, vae=vae, prompt=p, width=int(width),
                                     height=int(height), length=int(length))
@@ -367,6 +402,14 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
                 kw["audio_vae"] = node("VAELoader", vae_name=models["vae_audio"])[0]
             positive = node("MiniMaxH3AddGuide", **kw)[0]
             del vae, kw
+        last_img = (block_images[k] or {}).get("last")
+        if last_img is not None:
+            send(f"{label}: кадр конца / end frame")
+            vae = node("VAELoader", vae_name=models["vae_video"])[0]
+            positive = node("MiniMaxH3AddGuide", positive=positive, latent=latent, frame_idx=-1, vae=vae,
+                            image=last_img[:1])[0]
+            del vae
+            report.append(f"{label}: конец прикреплён к последнему кадру блока")
         free(f"{label}: начало прикреплено")
 
         key = tuple(block_loras[k])

@@ -149,6 +149,7 @@ function applyExpert(node, specs) {
         if (!o) { prevHidden = false; continue; }
         let hide = !ex && !o.h3_main;
         if (w.name === "manual_width" || w.name === "manual_height") hide = !manual;   // только при «Ручной»
+        if ((w.name === "total_seconds" || w.name === "block_seconds") && storyLinked(node)) hide = true;  // план — из story
         if (w.hidden !== hide) w.hidden = hide;
         prevHidden = hide;
     }
@@ -268,16 +269,20 @@ function setupClock(node) {
 }
 
 
-// ---------- входы блоков: пара «промпт + LoRA» появляется, когда подключён промпт прошлого блока ----------
+// ---------- три состояния: story / «чайник» / эксперт ----------
+// story подключён — видно только story → video. Без story: «чайник» — первый кадр + промпты блоков,
+// эксперт — всё (🎞 Блок, lora_all, размеры, все выходы). Подключённое никогда не прячем.
 const MAX_BLOCKS = 12;
 const LORA_TYPE = "NERON_H3_LORAS";
-const FIXED_HEAD = [["first_frame", "IMAGE"], ["appearance", "IMAGE"], ["lora_all", LORA_TYPE]];
-const FIXED_TAIL = [["width", "INT"], ["height", "INT"]];
+const BLOCK_TYPE = "NERON_H3_BLOCK";
+const STORY_TYPE = "NERON_H3_STORY";
+const EXTRA_OUTPUTS = [["frames", "IMAGE"], ["audio", "AUDIO"], ["last_frame", "IMAGE"], ["frames_count", "INT"]];
 
 function canon() {
-    const list = [...FIXED_HEAD];
-    for (let k = 1; k <= MAX_BLOCKS; k++) list.push([`prompt_${k}`, "STRING"], [`lora_${k}`, LORA_TYPE]);
-    return list.concat(FIXED_TAIL);
+    const list = [["story", STORY_TYPE], ["first_frame", "IMAGE"], ["appearance", "IMAGE"], ["lora_all", LORA_TYPE]];
+    for (let k = 1; k <= MAX_BLOCKS; k++)
+        list.push([`prompt_${k}`, "STRING"], [`block_${k}`, BLOCK_TYPE], [`lora_${k}`, LORA_TYPE]);
+    return list.concat([["width", "INT"], ["height", "INT"]]);
 }
 
 function linked(node, name) {
@@ -285,44 +290,77 @@ function linked(node, name) {
     return !!(i && i.link != null);
 }
 
+function storyLinked(node) { return linked(node, "story"); }
+
 function wantedBlocks(node) {
     let n = 1;
     for (let k = 1; k <= MAX_BLOCKS; k++) {
-        if (linked(node, `prompt_${k}`) || linked(node, `lora_${k}`)) n = Math.max(n, Math.min(MAX_BLOCKS, k + 1));
+        if (["prompt", "block", "lora"].some((p) => linked(node, `${p}_${k}`))) n = Math.max(n, Math.min(MAX_BLOCKS, k + 1));
     }
     return n;
+}
+
+function wantedSet(node) {
+    const ex = wv(node, "expert") === true;
+    const st = storyLinked(node);
+    const n = wantedBlocks(node);
+    const want = new Set(["story"]);
+    if (!st) {
+        want.add("first_frame");
+        for (let k = 1; k <= n; k++) want.add(`prompt_${k}`);
+        if (ex) {
+            ["appearance", "lora_all", "width", "height"].forEach((x) => want.add(x));
+            for (let k = 1; k <= n; k++) want.add(`block_${k}`);
+        }
+    }
+    for (const inp of node.inputs || []) if (inp.link != null) want.add(inp.name);   // подключённое — всегда
+    return want;
+}
+
+function updateOutputs(node) {
+    if (!node.outputs) return;
+    const all = wv(node, "expert") === true && !storyLinked(node);
+    const extraLinked = node.outputs.slice(1).some((o) => o.links && o.links.length);
+    if (all || extraLinked) {
+        // индексы выходов важны для ComfyUI — добавляем только недостающий хвост и строго по порядку
+        for (let i = node.outputs.length - 1; i < EXTRA_OUTPUTS.length; i++) {
+            const [name, type] = EXTRA_OUTPUTS[i];
+            if (node.outputs.length === i + 1) node.addOutput(name, type);
+        }
+    } else {
+        for (let i = node.outputs.length - 1; i >= 1; i--) node.removeOutput(i);   // все четыре разом
+    }
+}
+
+// Входы по порядку canon(). Провода переносим вместе со входом: у каждого провода поправляем номер слота.
+function sortInputs(node) {
+    const rank = new Map(canon().map(([n], i) => [n, i]));
+    const before = node.inputs.slice();
+    const sorted = before.slice().sort((a, b) => (rank.get(a.name) ?? 999) - (rank.get(b.name) ?? 999));
+    if (sorted.every((x, i) => x === before[i])) return;
+    node.inputs.length = 0;
+    node.inputs.push(...sorted);
+    sorted.forEach((inp, slot) => {
+        if (inp.link == null) return;
+        const l = app.graph?.links?.[inp.link] ?? app.graph?.links?.get?.(inp.link);
+        if (l) l.target_slot = slot;
+    });
 }
 
 function updateBlockInputs(node) {
     if (!node.inputs || node.__neronUpdating) return;
     node.__neronUpdating = true;
     try {
-        const n = wantedBlocks(node);
-        const order = canon().filter(([name]) => {
-            const m = name.match(/^(prompt|lora)_(\d+)$/);
-            return !m || Number(m[2]) <= n || linked(node, name);
-        });
-        const want = new Set(order.map(([name]) => name));
-        // лишние пустые — убрать
+        const want = wantedSet(node);
+        const order = canon().filter(([name]) => want.has(name));
         for (let i = node.inputs.length - 1; i >= 0; i--) {
             const inp = node.inputs[i];
             if (canon().some(([nm]) => nm === inp.name) && !want.has(inp.name) && inp.link == null) node.removeInput(i);
         }
-        // порядок: всё, что стоит не на месте и не подключено, снимаем с хвоста и ставим заново по порядку
         const names = () => node.inputs.map((x) => x.name);
-        let idx = 0;
-        for (const [name] of order) {
-            const at = names().indexOf(name);
-            if (at === idx) { idx++; continue; }
-            // снять с хвоста все неподключённые входы, начиная с позиции idx
-            for (let i = node.inputs.length - 1; i >= idx; i--) {
-                if (node.inputs[i].link == null && want.has(node.inputs[i].name)) node.removeInput(i);
-            }
-            break;
-        }
-        for (const [name, type] of order) {
-            if (!names().includes(name)) node.addInput(name, type);
-        }
+        for (const [name, type] of order) if (!names().includes(name)) node.addInput(name, type);
+        sortInputs(node);
+        updateOutputs(node);
     } catch (e) {
         console.warn("[Neron H3 Story] входы:", e);
     } finally {
@@ -351,18 +389,29 @@ into equal blocks no longer than that (e.g. 30 s with
 itself (up to 12) and cuts the finished video exactly
 to the video length. Each seam takes ~0.9 s.
 
-📌 BLOCKS = PROMPT + LORA 📌
-Each block has a pair of inputs: prompt_k and lora_k.
-Connect prompt_1 — the pair for block 2 appears, and
-so on. Write each block as a continuation of the
-previous one. A block without its own prompt repeats
-the previous one (the report says so).
-lora_k — LoRAs ONLY for that block (a 🎨 LoRA set
-node): a fight in block 2, a sunset in block 3.
-lora_all — LoRAs for the WHOLE video (style,
-character). Block LoRAs go on top of lora_all.
-The model is loaded once; LoRAs are swapped per block.
-Block 1 starts from 'first_frame' (if connected).
+📌 THREE STATES OF THE NODE 📌
+• 'story' connected (📝 Story AutoPrompter) — only
+  story → video is shown: plan, prompts, pictures and
+  LoRAs come through that one wire.
+• Beginner (no story) — first_frame + prompt_1, 2…
+  (the next appears when you connect the previous).
+  Each prompt goes to the model as is.
+• ⚙ Expert (no story) — everything: 🎞 Block nodes
+  (block_k: pictures, text and LoRAs of a block),
+  lora_all (🎨 style for the whole video), sizes,
+  seam, models and all outputs.
+A wire connected straight to the engine wins over
+what came through 'story'. Connected inputs are
+never hidden.
+
+📌 🎞 BLOCK PICTURES 📌
+Block 1 first frame — the opening frame.
+Blocks 2+ first frame — a "who / where" reference
+(the start is always the previous tail).
+Middle frames — navigators "the action goes here".
+Last frame — pinned to the block's last frame.
+They become <Picture 2>, <Picture 3>… in that block
+(<Picture 1> = appearance); the report lists them.
 
 📌 HOW THE SEAM WORKS 📌
 Block 2, 3… do not start from a picture. The last
@@ -402,9 +451,8 @@ frames / audio — separately. last_frame — the end,
 to continue in the next run.
 
 📌 PROTOTYPE 📌
-This is a test build in the dev branch. Mid frames
-per block, storyboard, sound shelf and saving blocks
-to disk will come next.
+Test build in the dev branch. Next: the Story
+AutoPrompter and the plan strip on this node.
 
 ===================================================
 🇷🇺 РУССКИЙ
@@ -424,18 +472,29 @@ to disk will come next.
 сама, а готовый ролик обрезает ровно под длину
 ролика. Каждый стык съедает ~0,9 с.
 
-📌 БЛОК = ПРОМПТ + LORA 📌
-У каждого блока пара входов: prompt_k и lora_k.
-Подключил prompt_1 — появилась пара для блока 2, и
-так далее. Каждый следующий блок пиши как
-продолжение прошлого. Блок без своего промпта
-повторяет прошлый (в отчёте так и написано).
-lora_k — LoRA ТОЛЬКО для этого блока (нода
-🎨 Набор LoRA): драка в блоке 2, закат в блоке 3.
-lora_all — LoRA на ВЕСЬ ролик (стиль, персонаж).
-LoRA блока ложатся поверх lora_all.
-Модель грузится один раз, LoRA меняются по блокам.
-Блок 1 начинается с 'first_frame' (если подключён).
+📌 ТРИ СОСТОЯНИЯ НОДЫ 📌
+• Подключён 'story' (📝 Story AutoPrompter) — видно
+  только story → video: план, промпты, картинки и
+  LoRA приходят по этому одному проводу.
+• «Чайник» (без story) — first_frame + prompt_1, 2…
+  (следующий появляется, когда подключён прошлый).
+  Каждый промпт идёт в модель как есть.
+• ⚙ Эксперт (без story) — всё: ноды 🎞 Блок
+  (block_k: картинки, текст и LoRA блока), lora_all
+  (🎨 стиль на весь ролик), размеры, стык, модели и
+  все выходы.
+Провод, подключённый к движку напрямую, главнее
+того, что пришло по 'story'. Подключённое никогда
+не прячется.
+
+📌 КАРТИНКИ 🎞 БЛОКА 📌
+Первый кадр блока 1 — начало ролика.
+Первый кадр блоков 2+ — образец «кто / где»
+(старт там всегда — хвост прошлого блока).
+Промежуточные — навигаторы «действие идёт сюда».
+Последний — прикалывается к концу блока.
+В блоке они становятся <Picture 2>, <Picture 3>…
+(<Picture 1> — внешность); список — в отчёте.
 
 📌 КАК РАБОТАЕТ СТЫК 📌
 Блоки 2, 3… начинаются не с картинки. Последние
@@ -476,16 +535,15 @@ frames / audio — отдельно. last_frame — конец ролика,
 чтобы продолжить в следующем прогоне.
 
 📌 ПРОТОТИП 📌
-Это тестовая сборка в ветке dev. Промежуточные кадры
-по блокам, раскадровка, звуковая полка и сохранение
-блоков на диск — следующими шагами.
+Тестовая сборка в ветке dev. Дальше — Story
+AutoPrompter и полоска плана на этой ноде.
 
 📌 БЫСТРЫЙ СТАРТ 📌
 1. LoadImage > first_frame
 2. Три текста > prompt_1, prompt_2, prompt_3
 3. РЕЖИМ = Турбо (сначала проверь стыки на черновике)
 4. ДЛИНА РОЛИКА = 30, ДЛИНА БЛОКА = 10
-   (нужны LoRA — 🎨 Набор LoRA > lora_2 и т.д.)
+   (LoRA и картинки блоков — ⚙ эксперт, ноды 🎞 Блок)
 5. video > Save Video
 6. Queue
 
@@ -552,7 +610,7 @@ app.registerExtension({
             for (const w of node.widgets || []) {
                 if (w.name !== "expert" && w.name !== "size") continue;
                 const cb = w.callback;
-                w.callback = function () { const rr = cb?.apply(this, arguments); applyExpert(node, specs); return rr; };
+                w.callback = function () { const rr = cb?.apply(this, arguments); updateBlockInputs(node); applyExpert(node, specs); return rr; };
             }
             node.addWidget("button", "🔄 Reset to Defaults / Сброс", null, () => resetAll(node, specs));
             node.addWidget("button", "📖 Help / Справка", null, () => showHelpDialog());
@@ -569,7 +627,7 @@ app.registerExtension({
         nodeType.prototype.onConnectionsChange = function () {
             const r = origConn?.apply(this, arguments);
             clearTimeout(this.__neronInputs);
-            this.__neronInputs = setTimeout(() => updateBlockInputs(this), 30);
+            this.__neronInputs = setTimeout(() => { updateBlockInputs(this); applyExpert(this, specs); }, 30);
             return r;
         };
         nodeType.prototype.onResize = function () {
