@@ -1,6 +1,6 @@
 {
- "last_node_id": 7,
- "last_link_id": 5,
+ "last_node_id": 8,
+ "last_link_id": 6,
  "nodes": [
   {
    "id": 1,
@@ -11,7 +11,7 @@
    ],
    "size": [
     620,
-    420
+    520
    ],
    "flags": {},
    "order": 0,
@@ -20,7 +20,7 @@
    "outputs": [],
    "properties": {},
    "widgets_values": [
-    "## 🎬 Neron H3 Story — прототип / prototype\n\n**RU**\n1. **LoadImage** — первый кадр ролика. Он же образец внешности (🔒 включено).\n2. Три текста — по одному на блок. Каждый следующий пиши как **продолжение** прошлого.\n3. Сначала гоняй в **⚡ Турбо** — проверить стыки. Потом **Качество**.\n4. Блоки 2 и 3 начинаются с хвоста прошлого блока (≈0,9 с) **вместе со звуком** — стык не должен быть виден.\n5. Время ≈ прогон H3 Engine × число блоков. Замеров этой ноды ещё нет.\n\nЧто смотреть на тесте: рывок на стыке (≈10 и ≈19 с), обрыв звука, не поменялись ли лица и одежда.\n\n**EN**\nLoadImage = first frame and appearance sample. One text per block, each continues the previous one. Test in Turbo first. Blocks 2+ continue the previous tail (~0.9 s) with its sound. Check seams, sound and faces."
+    "## 🎬 Neron H3 Story — прототип / prototype\n\n**RU**\n1. **LoadImage** — первый кадр ролика. Он же образец внешности (🔒 включено).\n2. **Длина ролика** (5–45 с) и **длина блока** (5–15 с, это максимум) — блоки нода посчитает сама: 30 с при блоке 10 с = 4 ровных блока по ~8,7 с.\n3. Тексты — по одному на блок (prompt_1, prompt_2…). Подключил промпт — появилась пара входов для следующего блока. Блок без своего промпта повторяет прошлый.\n4. **LoRA:** 🎨 Набор LoRA → `lora_2` — только для блока 2 (драка), → `lora_all` — на весь ролик (стиль).\n5. Сначала гоняй в **⚡ Турбо** — проверить стыки. Потом **Качество**.\n6. Блоки 2+ начинаются с хвоста прошлого блока (≈0,9 с) **вместе со звуком**.\n\nЧто смотреть: рывок на стыках, обрыв звука, не поменялись ли лица и одежда. Замеров времени этой ноды ещё нет.\n\n**EN**\nVideo 5–45 s, block 5–15 s (maximum) — blocks are worked out automatically. One prompt per block; LoRA sets per block (lora_k) or for the whole video (lora_all). Test in Turbo first. Blocks 2+ continue the previous tail with its sound."
    ],
    "color": "#432",
    "bgcolor": "#653"
@@ -167,10 +167,10 @@
    ],
    "size": [
     480,
-    620
+    700
    ],
    "flags": {},
-   "order": 5,
+   "order": 6,
    "mode": 0,
    "inputs": [
     {
@@ -184,9 +184,19 @@
      "link": null
     },
     {
+     "name": "lora_all",
+     "type": "NERON_H3_LORAS",
+     "link": null
+    },
+    {
      "name": "prompt_1",
      "type": "STRING",
      "link": 2
+    },
+    {
+     "name": "lora_1",
+     "type": "NERON_H3_LORAS",
+     "link": null
     },
     {
      "name": "prompt_2",
@@ -194,13 +204,28 @@
      "link": 3
     },
     {
+     "name": "lora_2",
+     "type": "NERON_H3_LORAS",
+     "link": 6
+    },
+    {
      "name": "prompt_3",
      "type": "STRING",
      "link": 4
     },
     {
+     "name": "lora_3",
+     "type": "NERON_H3_LORAS",
+     "link": null
+    },
+    {
      "name": "prompt_4",
      "type": "STRING",
+     "link": null
+    },
+    {
+     "name": "lora_4",
+     "type": "NERON_H3_LORAS",
      "link": null
     },
     {
@@ -259,7 +284,7 @@
     620
    ],
    "flags": {},
-   "order": 6,
+   "order": 7,
    "mode": 0,
    "inputs": [
     {
@@ -277,6 +302,41 @@
     "auto",
     "auto"
    ]
+  },
+  {
+   "id": 8,
+   "type": "NeronH3LoraPack",
+   "pos": [
+    -340,
+    620
+   ],
+   "size": [
+    380,
+    250
+   ],
+   "flags": {},
+   "order": 5,
+   "mode": 0,
+   "title": "🎨 LoRA блока 2 / Block 2 LoRA",
+   "inputs": [
+    {
+     "name": "pack",
+     "type": "NERON_H3_LORAS",
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "name": "loras",
+     "type": "NERON_H3_LORAS",
+     "links": [
+      6
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "NeronH3LoraPack"
+   }
   }
  ],
  "links": [
@@ -293,7 +353,7 @@
    3,
    0,
    6,
-   2,
+   3,
    "STRING"
   ],
   [
@@ -301,7 +361,7 @@
    4,
    0,
    6,
-   3,
+   5,
    "STRING"
   ],
   [
@@ -309,7 +369,7 @@
    5,
    0,
    6,
-   4,
+   7,
    "STRING"
   ],
   [
@@ -319,6 +379,14 @@
    7,
    0,
    "VIDEO"
+  ],
+  [
+   6,
+   8,
+   0,
+   6,
+   6,
+   "NERON_H3_LORAS"
   ]
  ],
  "groups": [],

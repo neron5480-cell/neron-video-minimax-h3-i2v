@@ -239,8 +239,10 @@ def with_appearance(prompt):
 
 def generate(prompts, width, height, length, mode, seed, models, first_frame=None, appearance=None,
              keep_appearance=True, seam=SEAMS[0], seam_frames=22, ref_quality="auto", fast_attention=False,
-             user_loras=()):
-    """→ (видео [T,H,W,3] float32, звук, последний кадр, число кадров, отчёт-строки)."""
+             global_loras=(), block_loras=None, total_frames=None):
+    """→ (видео [T,H,W,3] float32, звук, последний кадр, число кадров, отчёт-строки).
+    global_loras — [(имя, сила)] на весь ролик; block_loras[k] — [(имя, сила)] только для блока k;
+    total_frames — обрезать готовый ролик ровно до этой длины."""
     check_comfy()
     t0 = time.time()
     report = []
@@ -287,7 +289,7 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
     free("текстовый энкодер выгружен")
     vram_log("после текста")
 
-    # ---- 2. модель — один раз на весь ролик ----
+    # ---- 2. модель — один раз на весь ролик; LoRA накладываются на неё по блокам ----
     send("Загрузка модели / Loading model")
     unet = models["unet"]
     if best and base(unet) == UNET_NAME:
@@ -297,20 +299,32 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
             report.append("Максимум: взята модель bf16")
         else:
             report.append("Максимум: модели bf16 нет — работаю на int8")
-    model = node("UNETLoader", unet_name=unet, weight_dtype="default")[0]
-    if turbo:
-        model = lora(model, models["turbo_lora"], TURBO_STRENGTH)
-    for name, strength in user_loras:
-        model = lora(model, name, float(strength))
-        report.append(f"LoRA: {base(name)} ×{strength:g}")
-    model = node("MiniMaxH3SigmaShift", model=model, shift_video=SHIFT_VIDEO, shift_audio=SHIFT_AUDIO)[0]
-    attn = ATTN_FAST if fast_attention else ATTN_FULL
-    if has_node("ModelAttentionBackend"):
-        try:
-            model = node("ModelAttentionBackend", model=model, attention=attn)[0]
-        except Exception as e:
-            log.warning("%s внимание %s недоступно (%s)", TAG, attn, e)
+    base_model = node("UNETLoader", unet_name=unet, weight_dtype="default")[0]
     report.append(f"Модель: {base(unet)}")
+    block_loras = list(block_loras or [])
+    block_loras += [[]] * (blocks - len(block_loras))
+    global_loras = list(global_loras or [])
+    if global_loras:
+        report.append("LoRA на весь ролик: " + ", ".join(f"{base(n)} ×{st:g}" for n, st in global_loras))
+    attn = ATTN_FAST if fast_attention else ATTN_FULL
+
+    def build(extra):
+        """Базовая модель + турбо + общие LoRA + LoRA блока. С диска базу заново не читаем —
+        LoRA ложатся «накладкой» на ту же модель."""
+        m = base_model
+        if turbo:
+            m = lora(m, models["turbo_lora"], TURBO_STRENGTH)
+        for name, st in global_loras + list(extra):
+            m = lora(m, name, float(st))
+        m = node("MiniMaxH3SigmaShift", model=m, shift_video=SHIFT_VIDEO, shift_audio=SHIFT_AUDIO)[0]
+        if has_node("ModelAttentionBackend"):
+            try:
+                m = node("ModelAttentionBackend", model=m, attention=attn)[0]
+            except Exception as e:
+                log.warning("%s внимание %s недоступно (%s)", TAG, attn, e)
+        return m
+
+    model, model_key = None, None
 
     # ---- 3. блоки по цепочке ----
     chunks = []              # видео по блокам без перехлёста, float16 на процессоре (экономим оперативку)
@@ -342,6 +356,14 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
             del vae, kw
         free(f"{label}: начало прикреплено")
 
+        key = tuple(block_loras[k])
+        if model is None or key != model_key:
+            send(f"{label}: LoRA блока / block LoRAs")
+            model = None
+            model = build(block_loras[k])
+            model_key = key
+            if block_loras[k]:
+                report.append(f"{label} LoRA: " + ", ".join(f"{base(n)} ×{st:g}" for n, st in block_loras[k]))
         send(f"{label}: генерация / generating", 0, steps)
         sampler = node("KSamplerSelect", sampler_name=SAMPLER)[0]
         noise = node("RandomNoise", noise_seed=int(seed) + k)[0]
@@ -383,11 +405,17 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
         last = video[-1:].clone()
         report.append(f"{label}: {time.time() - tb:.0f} с, раскодировка {how}")
 
-    del model
+    del model, base_model
     free("всё выгружено")
     send("Склейка / Joining")
     video = torch.cat([c.float() for c in chunks], dim=0)
     del chunks
+    if total_frames and video.shape[0] > int(total_frames):          # ровно под общую длину ролика
+        video = video[:int(total_frames)]
+        last = video[-1:].clone()
+        sr = int(full_audio["sample_rate"])
+        full_audio = {"waveform": full_audio["waveform"][..., :int(round(int(total_frames) / 24.0 * sr))],
+                      "sample_rate": sr}
     n = int(video.shape[0])
     report.append(f"Готово: {n} кадров ({n / 24:.1f} с) за {time.time() - t0:.0f} с")
     send("Готово / Done", 1, 1)

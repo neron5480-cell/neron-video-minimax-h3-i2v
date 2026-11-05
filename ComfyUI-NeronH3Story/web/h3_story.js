@@ -12,14 +12,12 @@ const LABEL_FONT = "bold 10px sans-serif";
 const GROUPS = [
     { name: "⚙️ EXPERT MODE / ЭКСПЕРТ", widgets: ["expert"],
       fill: "rgba(255, 200, 100, 0.22)", border: "rgba(255, 200, 100, 0.95)", label: "rgba(255, 235, 160, 1.0)", thick: 2.5 },
-    { name: "РОЛИК / STORY", widgets: ["mode", "block_seconds", "keep_appearance"],
+    { name: "РОЛИК / STORY", widgets: ["mode", "total_seconds", "block_seconds", "keep_appearance"],
       fill: "rgba( 90, 140, 200, 0.15)", border: "rgba( 90, 140, 200, 0.75)", label: "rgba(180, 215, 255, 1.0)" },
     { name: "РАЗМЕР / SIZE", widgets: ["size", "manual_width", "manual_height"],
       fill: "rgba(200, 160,  90, 0.15)", border: "rgba(200, 160,  90, 0.75)", label: "rgba(255, 225, 170, 1.0)" },
     { name: "СТЫК / SEAM", widgets: ["seam", "seam_frames"],
       fill: "rgba( 90, 200, 200, 0.15)", border: "rgba( 90, 200, 200, 0.75)", label: "rgba(180, 255, 255, 1.0)" },
-    { name: "LORA", widgets: ["lora_1", "lora_1_strength"],
-      fill: "rgba(160,  90, 200, 0.15)", border: "rgba(160,  90, 200, 0.75)", label: "rgba(225, 180, 255, 1.0)" },
     { name: "МОДЕЛИ / MODELS", widgets: ["unet_model", "clip_model", "vae_video_model", "vae_audio_model", "turbo_lora_model"],
       fill: "rgba(200, 120, 120, 0.15)", border: "rgba(200, 120, 120, 0.75)", label: "rgba(255, 190, 190, 1.0)" },
     { name: "ТОНКАЯ НАСТРОЙКА / ADVANCED", widgets: ["seed", "control_after_generate", "ref_quality", "fast_attention"],
@@ -269,6 +267,71 @@ function setupClock(node) {
     };
 }
 
+
+// ---------- входы блоков: пара «промпт + LoRA» появляется, когда подключён промпт прошлого блока ----------
+const MAX_BLOCKS = 12;
+const LORA_TYPE = "NERON_H3_LORAS";
+const FIXED_HEAD = [["first_frame", "IMAGE"], ["appearance", "IMAGE"], ["lora_all", LORA_TYPE]];
+const FIXED_TAIL = [["width", "INT"], ["height", "INT"]];
+
+function canon() {
+    const list = [...FIXED_HEAD];
+    for (let k = 1; k <= MAX_BLOCKS; k++) list.push([`prompt_${k}`, "STRING"], [`lora_${k}`, LORA_TYPE]);
+    return list.concat(FIXED_TAIL);
+}
+
+function linked(node, name) {
+    const i = node.inputs?.find((x) => x.name === name);
+    return !!(i && i.link != null);
+}
+
+function wantedBlocks(node) {
+    let n = 1;
+    for (let k = 1; k <= MAX_BLOCKS; k++) {
+        if (linked(node, `prompt_${k}`) || linked(node, `lora_${k}`)) n = Math.max(n, Math.min(MAX_BLOCKS, k + 1));
+    }
+    return n;
+}
+
+function updateBlockInputs(node) {
+    if (!node.inputs || node.__neronUpdating) return;
+    node.__neronUpdating = true;
+    try {
+        const n = wantedBlocks(node);
+        const order = canon().filter(([name]) => {
+            const m = name.match(/^(prompt|lora)_(\d+)$/);
+            return !m || Number(m[2]) <= n || linked(node, name);
+        });
+        const want = new Set(order.map(([name]) => name));
+        // лишние пустые — убрать
+        for (let i = node.inputs.length - 1; i >= 0; i--) {
+            const inp = node.inputs[i];
+            if (canon().some(([nm]) => nm === inp.name) && !want.has(inp.name) && inp.link == null) node.removeInput(i);
+        }
+        // порядок: всё, что стоит не на месте и не подключено, снимаем с хвоста и ставим заново по порядку
+        const names = () => node.inputs.map((x) => x.name);
+        let idx = 0;
+        for (const [name] of order) {
+            const at = names().indexOf(name);
+            if (at === idx) { idx++; continue; }
+            // снять с хвоста все неподключённые входы, начиная с позиции idx
+            for (let i = node.inputs.length - 1; i >= idx; i--) {
+                if (node.inputs[i].link == null && want.has(node.inputs[i].name)) node.removeInput(i);
+            }
+            break;
+        }
+        for (const [name, type] of order) {
+            if (!names().includes(name)) node.addInput(name, type);
+        }
+    } catch (e) {
+        console.warn("[Neron H3 Story] входы:", e);
+    } finally {
+        node.__neronUpdating = false;
+    }
+    try { node.setSize([node.size[0], Math.max(node.size[1], node.computeSize()[1])]); } catch (_) {}
+    app.graph?.setDirtyCanvas(true, true);
+}
+
 // ---------- справка ----------
 const HELP_TEXT = `
 🎬 NERON H3 STORY (prototype)
@@ -280,10 +343,25 @@ H3 is trained on up to 15 s; this node glues blocks
 so the seams are hard to see. One model load for the
 whole video. Output: ready VIDEO with sound.
 
-📌 BLOCKS = PROMPTS 📌
-prompt_1 … prompt_4 — one prompt per block.
-Connected 3 prompts → 3 blocks. Write each block as a
-continuation of the previous one.
+📌 LENGTH 📌
+Video seconds 5–45 and block seconds 5–15 — both are
+sliders. Block seconds is the MAXIMUM: the video is cut
+into equal blocks no longer than that (e.g. 30 s with
+10 s blocks = 4 blocks of ~8.7 s). The node works out the number of blocks
+itself (up to 12) and cuts the finished video exactly
+to the video length. Each seam takes ~0.9 s.
+
+📌 BLOCKS = PROMPT + LORA 📌
+Each block has a pair of inputs: prompt_k and lora_k.
+Connect prompt_1 — the pair for block 2 appears, and
+so on. Write each block as a continuation of the
+previous one. A block without its own prompt repeats
+the previous one (the report says so).
+lora_k — LoRAs ONLY for that block (a 🎨 LoRA set
+node): a fight in block 2, a sunset in block 3.
+lora_all — LoRAs for the WHOLE video (style,
+character). Block LoRAs go on top of lora_all.
+The model is loaded once; LoRAs are swapped per block.
 Block 1 starts from 'first_frame' (if connected).
 
 📌 HOW THE SEAM WORKS 📌
@@ -310,9 +388,8 @@ added. Turn it off when the subject must change by
 the story (changes clothes, transforms).
 
 📌 BLOCK SECONDS 📌
-3–15 s, default 10. Shorter — less drift inside a
-block, but more seams. Each seam takes ~0.9 s, so
-3 blocks × 10 s ≈ 28 s of video.
+5–15 s, default 10. Shorter — less drift inside a
+block, but more seams.
 
 📌 MODE 📌
 ⚡ Turbo 12 steps · Quality 40 · Maximum 50 + bf16.
@@ -339,10 +416,25 @@ to disk will come next.
 было видно. Модель грузится один раз на весь ролик.
 На выходе — готовое ВИДЕО со звуком.
 
-📌 БЛОКИ = ПРОМПТЫ 📌
-prompt_1 … prompt_4 — по промпту на блок.
-Подключено 3 промпта → 3 блока. Каждый следующий
-блок пиши как продолжение прошлого.
+📌 ДЛИНА 📌
+Длина ролика 5–45 с и длина блока 5–15 с — оба
+ползунка. Длина блока — это МАКСИМУМ: ролик делится
+на ровные блоки не длиннее неё (например, 30 с при
+блоке 10 с = 4 блока по ~8,7 с). Сколько нужно блоков (до 12), нода считает
+сама, а готовый ролик обрезает ровно под длину
+ролика. Каждый стык съедает ~0,9 с.
+
+📌 БЛОК = ПРОМПТ + LORA 📌
+У каждого блока пара входов: prompt_k и lora_k.
+Подключил prompt_1 — появилась пара для блока 2, и
+так далее. Каждый следующий блок пиши как
+продолжение прошлого. Блок без своего промпта
+повторяет прошлый (в отчёте так и написано).
+lora_k — LoRA ТОЛЬКО для этого блока (нода
+🎨 Набор LoRA): драка в блоке 2, закат в блоке 3.
+lora_all — LoRA на ВЕСЬ ролик (стиль, персонаж).
+LoRA блока ложатся поверх lora_all.
+Модель грузится один раз, LoRA меняются по блокам.
 Блок 1 начинается с 'first_frame' (если подключён).
 
 📌 КАК РАБОТАЕТ СТЫК 📌
@@ -370,9 +462,8 @@ prompt_1 … prompt_4 — по промпту на блок.
 должен измениться (переоделся, превратился).
 
 📌 ДЛИНА БЛОКА 📌
-3–15 с, по умолчанию 10. Короче — меньше «уплывает»
-внутри блока, но больше стыков. Каждый стык съедает
-~0,9 с, поэтому 3 блока × 10 с ≈ 28 с ролика.
+5–15 с, по умолчанию 10. Короче — меньше «уплывает»
+внутри блока, но больше стыков.
 
 📌 РЕЖИМ 📌
 ⚡ Турбо 12 шагов · Качество 40 · Максимум 50 + bf16.
@@ -393,7 +484,8 @@ frames / audio — отдельно. last_frame — конец ролика,
 1. LoadImage > first_frame
 2. Три текста > prompt_1, prompt_2, prompt_3
 3. РЕЖИМ = Турбо (сначала проверь стыки на черновике)
-4. ДЛИНА БЛОКА = 10
+4. ДЛИНА РОЛИКА = 30, ДЛИНА БЛОКА = 10
+   (нужны LoRA — 🎨 Набор LoRA > lora_2 и т.д.)
 5. video > Save Video
 6. Queue
 
@@ -464,13 +556,20 @@ app.registerExtension({
             }
             node.addWidget("button", "🔄 Reset to Defaults / Сброс", null, () => resetAll(node, specs));
             node.addWidget("button", "📖 Help / Справка", null, () => showHelpDialog());
-            for (const t of [50, 300, 800]) setTimeout(() => applyExpert(node, specs), t);
+            for (const t of [50, 300, 800]) setTimeout(() => { updateBlockInputs(node); applyExpert(node, specs); }, t);
             setupClock(node);
             return r;
         };
         nodeType.prototype.onConfigure = function () {
             const r = origConfigure?.apply(this, arguments);
-            for (const t of [50, 300, 800]) setTimeout(() => applyExpert(this, specs), t);
+            for (const t of [50, 300, 800]) setTimeout(() => { updateBlockInputs(this); applyExpert(this, specs); }, t);
+            return r;
+        };
+        const origConn = nodeType.prototype.onConnectionsChange;
+        nodeType.prototype.onConnectionsChange = function () {
+            const r = origConn?.apply(this, arguments);
+            clearTimeout(this.__neronInputs);
+            this.__neronInputs = setTimeout(() => updateBlockInputs(this), 30);
             return r;
         };
         nodeType.prototype.onResize = function () {
