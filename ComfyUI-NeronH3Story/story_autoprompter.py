@@ -122,8 +122,9 @@ def camera_header(ap, scenario, mode, framing, distance, frames):
                 f"rigid {fr} at distance {float(distance):g}. Absolutely no zoom, no camera parallax, no dolly, and no "
                 "tracking. All background elements and furniture are anchored and perfectly rigid.")
     if framing == FRAMING_AS_FIRST:
-        head = re.sub(r"The framing is a rigid [^.]*\.", "The framing stays exactly as in the opening frame, at the same "
-                      "distance and height, for the whole video.", head)
+        # до «at distance 1.0.» включительно — точка внутри числа не конец фразы
+        head = re.sub(r"The framing is a rigid .*? at distance [\d.]*\d\.", "The framing stays exactly as in the opening "
+                      "frame, at the same distance and height, for the whole video.", head)
     return head.strip()
 
 
