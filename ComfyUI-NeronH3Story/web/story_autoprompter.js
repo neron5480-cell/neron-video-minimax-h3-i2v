@@ -6,6 +6,7 @@ const NODE = "NeronH3StoryAutoPrompter";
 const NODE_COLOR = "#2a3a1e";
 const NODE_BGCOLOR = "#172210";
 const GROUP_GAP = 18;
+const FRAME_BOTTOM = 8;      // воздух между последним виджетом и низом рамки
 
 const GROUPS = [
     { name: "⚙️ EXPERT MODE / ЭКСПЕРТ", widgets: ["expert"],
@@ -85,7 +86,7 @@ function groupRect(node, g) {
     // Текстовые поля ComfyUI рисует почти до края ноды — рамку делаем шире, чтобы поле было ВНУТРИ неё
     const flex = g.widgets.some((n) => { const w = node.widgets?.find((x) => x.name === n); return isFlexible(w); });
     const padX = flex ? 4 : 10;
-    return { x: padX, y: y0 - 16, w: node.size[0] - padX * 2, h: (y1 - y0) + 16 };
+    return { x: padX, y: y0 - 16, w: node.size[0] - padX * 2, h: (y1 - y0) + 16 + FRAME_BOTTOM };
 }
 
 // Окна, которые растягиваются вместе с нодой (предпросмотр, правка), нельзя трогать отступом:
@@ -115,7 +116,7 @@ function blank(node, name, height) {
 }
 
 function addGap(node, name, beforeName) {
-    const gap = blank(node, name, GROUP_GAP + 6);
+    const gap = blank(node, name, GROUP_GAP + 6 + FRAME_BOTTOM);
     node.widgets.splice(node.widgets.indexOf(gap), 1);
     const i = node.widgets.findIndex((w) => w.name === beforeName);
     node.widgets.splice(i >= 0 ? i : node.widgets.length, 0, gap);

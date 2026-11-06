@@ -6,7 +6,8 @@ import { api } from "../../scripts/api.js";
 const NODE = "NeronH3Story";
 const NODE_COLOR = "#4a2f1e";
 const NODE_BGCOLOR = "#2e1c10";
-const GROUP_GAP = 18;
+const FRAME_BOTTOM = 8;      // воздух между последним виджетом и низом рамки
+const GROUP_GAP = 18 + FRAME_BOTTOM;
 const LABEL_FONT = "bold 10px sans-serif";
 const MODELS_BTN = "📥 Модели / Models";
 
@@ -99,7 +100,7 @@ function groupRect(node, g) {
     }
     if (!isFinite(y0) || y1 <= y0) return null;
     const padX = 10, labelH = 16;
-    return { x: padX, y: y0 - labelH, w: node.size[0] - padX * 2, h: (y1 - y0) + labelH };
+    return { x: padX, y: y0 - labelH, w: node.size[0] - padX * 2, h: (y1 - y0) + labelH + FRAME_BOTTOM };
 }
 
 function applyGroupGaps(node) {
