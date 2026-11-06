@@ -33,7 +33,9 @@ them to the video size itself.
 📌 THE FOUR WINDOWS (all optional) 📌
 1 · first frame — the opening frame. It is also the
     appearance reference <Picture 1> in every block
-    (faces, hair, clothes).
+    (faces, hair, clothes). In complex scenes use a
+    LANDSCAPE first frame: with a portrait one H3
+    sometimes drifts (a white tiger turns orange).
 2, 3 · middle — what appears during the video: a
     place, a creature, an object. WHEN — the
     AutoPrompter decides by the scenario (if it
@@ -60,7 +62,9 @@ them to the video size itself.
 📌 ЧЕТЫРЕ ОКНА (все необязательные) 📌
 1 · первый кадр — начало ролика. Он же образец
     внешности <Picture 1> во всех блоках (лица,
-    волосы, одежда).
+    волосы, одежда). В сложных сценах ставь его
+    ГОРИЗОНТАЛЬНЫМ: с вертикальным H3 иногда чудит
+    (белый тигр становится рыжим).
 2, 3 · промежуточные — что появится по ходу ролика:
     место, существо, предмет. КОГДА — решает
     AutoPrompter по сценарию (не сказано — примерно

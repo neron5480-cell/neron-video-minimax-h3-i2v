@@ -49,6 +49,9 @@ MiniMax H3»), перехлёст вырезается, звук сводитс�
 - включить «быстрое внимание INT8»;
 - 🚀 Быстро и меньше шагов; размер кадра поменьше; ролик короче или блоки длиннее (меньше стыков).
 
+**Совет.** В сложных сценах (несколько героев, существо с картинки) первый кадр лучше давать **горизонтальным**:
+с вертикальным H3 иногда чудит — например, белый тигр с картинки становится рыжим. Горизонтальный — держит.
+
 **Нужно:** свежий ComfyUI (с нодой «Add Guide for MiniMax H3»), для автопромтера — папка 🎬 Neron AutoPrompter.
 
 ---
@@ -74,6 +77,9 @@ Maximum 50 + bf16.
 Fast. Author's PC (RTX 5070 Ti 16 GB): Turbo int8, 30 s (4 blocks) incl. AutoPrompter — 1 h 18 min; Turbo on full (bf16) models — 1 h 30 min; Fast 6 steps,
 30 s portrait — 44 min. To speed up: a lighter model of your own in expert mode (int8 / fp8), INT8 fast attention,
 Fast with fewer steps, a smaller frame, fewer seams.
+
+**Tip:** in complex scenes give a **landscape** first frame — with a portrait one H3 sometimes drifts (e.g. a white
+tiger from a picture turns orange); landscape holds.
 
 **Needs:** a recent ComfyUI; for the AutoPrompter — the 🎬 Neron AutoPrompter folder.
 
