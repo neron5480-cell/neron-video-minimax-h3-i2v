@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""🎬 Neron H3 Story — длинный ролик MiniMax H3 цепочкой блоков (прототип, ветка dev).
+"""🎬 Neron H3 Story — длинный ролик MiniMax H3 цепочкой блоков.
 
 Три состояния (их показывает интерфейс, движок принимает всё всегда):
   • подключён story (📝 Story AutoPrompter) — план, промпты, картинки и LoRA приходят по шине;
@@ -364,5 +364,5 @@ class NeronH3Story:
 
 
 NODE_CLASS_MAPPINGS = {"NeronH3Story": NeronH3Story}
-NODE_DISPLAY_NAME_MAPPINGS = {"NeronH3Story": "🎬 Neron H3 Story / Длинный ролик H3 (прототип)"}
+NODE_DISPLAY_NAME_MAPPINGS = {"NeronH3Story": "🎬 Neron H3 Story / Длинный ролик H3"}
 

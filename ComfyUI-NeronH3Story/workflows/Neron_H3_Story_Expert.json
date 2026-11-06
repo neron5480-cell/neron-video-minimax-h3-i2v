@@ -1,546 +1,612 @@
 {
- "last_node_id": 9,
- "last_link_id": 7,
- "nodes": [
-  {
-   "id": 1,
-   "type": "MarkdownNote",
-   "pos": [
-    -1400,
-    -420
-   ],
-   "size": [
-    600,
-    560
-   ],
-   "flags": {},
-   "order": 0,
-   "mode": 0,
-   "inputs": [],
-   "outputs": [],
-   "properties": {},
-   "widgets_values": [
-    "## 🎬 Neron H3 Story — эксперт / expert\n\n**RU**\n1. **LoadImage** → `first_frame` движка: начало ролика и образец внешности (🔒).\n2. **🎞 Блок 1, 2, 3** → `block_1…3`. В каждом — «что здесь происходит» (сейчас стоят тестовые тексты), свои картинки (первый / промежуточные / последний — по желанию) и свои LoRA.\n3. **🎨 LoRA на весь ролик** → `lora_all` (стиль). **🎨 LoRA блока 2** → вход `loras` блока 2 (только он).\n4. В наборах LoRA сейчас «нет» — выбери свои файлы или оставь так.\n5. Длина ролика **28 с**, блок **10 с** → 3 блока, как в первом прогоне — для честного сравнения.\n6. Без ⚙ эксперта на движке видно только подключённое — так и задумано.\n\nЧто смотреть: стыки (~9 и ~18 с), не вернулся ли блок 3 к исходнику, звук, лица.\n\n**EN** LoadImage → first_frame. 🎞 Block 1–3 → block_1–3 (text, own pictures, own LoRAs). 🎨 LoRA set → lora_all (whole video) and → block 2's loras (that block only). 28 s / 10 s = 3 blocks."
-   ],
-   "color": "#432",
-   "bgcolor": "#653"
-  },
-  {
-   "id": 2,
-   "type": "LoadImage",
-   "pos": [
-    -760,
-    -420
-   ],
-   "size": [
-    380,
-    420
-   ],
-   "flags": {},
-   "order": 1,
-   "mode": 0,
-   "inputs": [],
-   "outputs": [
+  "last_node_id": 10,
+  "last_link_id": 8,
+  "nodes": [
     {
-     "name": "IMAGE",
-     "type": "IMAGE",
-     "links": [
-      1
-     ]
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        -1400,
+        -420
+      ],
+      "size": [
+        600,
+        560
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## 🎬 Neron H3 Story — блоки без автопромтера / blocks without the AutoPrompter\n\n**RU** — полный контроль: каждый блок пишешь сам.\n1. **LoadImage** → `first_frame` движка: начало ролика и образец внешности (🔒).\n2. **🎞 Блок 1…4** → `block_1…4` (30 с / 10 с = 4 блока). В каждом — промпт этого отрезка (по-английски, с секундами; сейчас стоят примеры), свои картинки (первый — образец «кто/где», промежуточные — навигаторы, последний — чем блок закончится) и свои LoRA.\n3. На картинки блока ссылайся как <Picture 2>, <Picture 3>… (<Picture 1> — внешность); какая какая — видно в отчёте движка.\n4. **🎨 LoRA на весь ролик** → `lora_all` (стиль). **🎨 LoRA блока** → вход `loras` нужного 🎞 Блока (только он).\n5. Блоков больше, чем нужно ролику, — лишние не пойдут; меньше — последний промпт повторится.\n\n**EN** Full control: write every block yourself. LoadImage → first_frame; 🎞 Block 1–4 → block_1–4 (prompt, own pictures, own LoRAs); 🎨 LoRA set → lora_all (whole video) or → a block's loras (that block only)."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
     },
     {
-     "name": "MASK",
-     "type": "MASK",
-     "links": null
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        -760,
+        -420
+      ],
+      "size": [
+        380,
+        420
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "example.png",
+        "image"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "NeronH3LoraPack",
+      "pos": [
+        -760,
+        40
+      ],
+      "size": [
+        380,
+        250
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "title": "🎨 LoRA на весь ролик / whole video",
+      "inputs": [
+        {
+          "name": "pack",
+          "type": "NERON_H3_LORAS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "loras",
+          "type": "NERON_H3_LORAS",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronH3LoraPack"
+      },
+      "widgets_values": [
+        "— нет / none —",
+        1.0,
+        "— нет / none —",
+        1.0,
+        "— нет / none —",
+        1.0
+      ]
+    },
+    {
+      "id": 4,
+      "type": "NeronH3LoraPack",
+      "pos": [
+        -760,
+        330
+      ],
+      "size": [
+        380,
+        250
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "title": "🎨 LoRA блока 2 / block 2",
+      "inputs": [
+        {
+          "name": "pack",
+          "type": "NERON_H3_LORAS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "loras",
+          "type": "NERON_H3_LORAS",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronH3LoraPack"
+      },
+      "widgets_values": [
+        "— нет / none —",
+        1.0,
+        "— нет / none —",
+        1.0,
+        "— нет / none —",
+        1.0
+      ]
+    },
+    {
+      "id": 5,
+      "type": "NeronH3Block",
+      "pos": [
+        -340,
+        -420
+      ],
+      "size": [
+        380,
+        330
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "title": "🎞 Блок 1 / Block 1",
+      "inputs": [
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "mid_frame_1",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "mid_frame_2",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "loras",
+          "type": "NERON_H3_LORAS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "block",
+          "type": "NERON_H3_BLOCK",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronH3Block"
+      },
+      "widgets_values": [
+        "The main subject from the first frame starts moving: at about the first second it turns its head slowly to the left, at the third second it takes a calm step forward, by the sixth second it walks steadily across the scene, the camera follows smoothly at the same height. Natural light, soft ambient sound of the place, footsteps, no music."
+      ]
+    },
+    {
+      "id": 6,
+      "type": "NeronH3Block",
+      "pos": [
+        -340,
+        -60
+      ],
+      "size": [
+        380,
+        330
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "title": "🎞 Блок 2 / Block 2",
+      "inputs": [
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "mid_frame_1",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "mid_frame_2",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "loras",
+          "type": "NERON_H3_LORAS",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "block",
+          "type": "NERON_H3_BLOCK",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronH3Block"
+      },
+      "widgets_values": [
+        "Continuing directly from the opening frames, in the same place and with the same camera: the main subject keeps walking in the same direction without stopping, at about the third second it slows down and looks back over its shoulder, at the sixth second it stops right where it is and turns to face the camera, a light breeze moves hair and fabric. Same light, same ambient sound, footsteps fade, no music."
+      ]
+    },
+    {
+      "id": 7,
+      "type": "NeronH3Block",
+      "pos": [
+        -340,
+        300
+      ],
+      "size": [
+        380,
+        330
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "title": "🎞 Блок 3 / Block 3",
+      "inputs": [
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "mid_frame_1",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "mid_frame_2",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "loras",
+          "type": "NERON_H3_LORAS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "block",
+          "type": "NERON_H3_BLOCK",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronH3Block"
+      },
+      "widgets_values": [
+        "Continuing directly from the opening frames, in exactly the same spot where the subject stopped, with the same background and the same camera: the main subject stays facing the camera, at about the second second it smiles gently, at the fourth second it raises one hand in a short greeting, then lowers it and stays still until the end, the camera slowly moves a little closer. Same light, quiet ambient sound, no music."
+      ]
+    },
+    {
+      "id": 8,
+      "type": "NeronH3Story",
+      "pos": [
+        80,
+        -420
+      ],
+      "size": [
+        480,
+        900
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "story",
+          "type": "NERON_H3_STORY",
+          "link": null
+        },
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "name": "appearance",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "lora_all",
+          "type": "NERON_H3_LORAS",
+          "link": 2
+        },
+        {
+          "name": "prompt_1",
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "name": "block_1",
+          "type": "NERON_H3_BLOCK",
+          "link": 4
+        },
+        {
+          "name": "prompt_2",
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "name": "block_2",
+          "type": "NERON_H3_BLOCK",
+          "link": 5
+        },
+        {
+          "name": "prompt_3",
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "name": "block_3",
+          "type": "NERON_H3_BLOCK",
+          "link": 6
+        },
+        {
+          "name": "prompt_4",
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "name": "block_4",
+          "type": "NERON_H3_BLOCK",
+          "link": 8
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": [
+            7
+          ]
+        },
+        {
+          "name": "frames",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "frames_count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronH3Story"
+      }
+    },
+    {
+      "id": 9,
+      "type": "SaveVideo",
+      "pos": [
+        600,
+        -420
+      ],
+      "size": [
+        560,
+        620
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 7
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "video/Neron_H3_Story",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 10,
+      "type": "NeronH3Block",
+      "pos": [
+        -340,
+        670
+      ],
+      "size": [
+        380,
+        330
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "title": "🎞 Блок 3 / Block 3",
+      "inputs": [
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "mid_frame_1",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "mid_frame_2",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "loras",
+          "type": "NERON_H3_LORAS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "block",
+          "type": "NERON_H3_BLOCK",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronH3Block"
+      },
+      "widgets_values": [
+        "Continuing directly from the opening frames, in the same place and with the same camera: the main subject holds the final pose, breathes calmly and looks straight ahead; the wind gently moves the hair and clothes; at about the fifth second the subject gives a slight nod and stays still until the end. Sound: soft wind, quiet ambience, no music."
+      ]
     }
-   ],
-   "properties": {
-    "Node name for S&R": "LoadImage"
-   },
-   "widgets_values": [
-    "example.png",
-    "image"
-   ]
-  },
-  {
-   "id": 3,
-   "type": "NeronH3LoraPack",
-   "pos": [
-    -760,
-    40
-   ],
-   "size": [
-    380,
-    250
-   ],
-   "flags": {},
-   "order": 2,
-   "mode": 0,
-   "title": "🎨 LoRA на весь ролик / whole video",
-   "inputs": [
-    {
-     "name": "pack",
-     "type": "NERON_H3_LORAS",
-     "link": null
-    }
-   ],
-   "outputs": [
-    {
-     "name": "loras",
-     "type": "NERON_H3_LORAS",
-     "links": [
-      2
-     ]
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "NeronH3LoraPack"
-   },
-   "widgets_values": [
-    "— нет / none —",
-    1.0,
-    "— нет / none —",
-    1.0,
-    "— нет / none —",
-    1.0
-   ]
-  },
-  {
-   "id": 4,
-   "type": "NeronH3LoraPack",
-   "pos": [
-    -760,
-    330
-   ],
-   "size": [
-    380,
-    250
-   ],
-   "flags": {},
-   "order": 3,
-   "mode": 0,
-   "title": "🎨 LoRA блока 2 / block 2",
-   "inputs": [
-    {
-     "name": "pack",
-     "type": "NERON_H3_LORAS",
-     "link": null
-    }
-   ],
-   "outputs": [
-    {
-     "name": "loras",
-     "type": "NERON_H3_LORAS",
-     "links": [
-      3
-     ]
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "NeronH3LoraPack"
-   },
-   "widgets_values": [
-    "— нет / none —",
-    1.0,
-    "— нет / none —",
-    1.0,
-    "— нет / none —",
-    1.0
-   ]
-  },
-  {
-   "id": 5,
-   "type": "NeronH3Block",
-   "pos": [
-    -340,
-    -420
-   ],
-   "size": [
-    380,
-    330
-   ],
-   "flags": {},
-   "order": 4,
-   "mode": 0,
-   "title": "🎞 Блок 1 / Block 1",
-   "inputs": [
-    {
-     "name": "first_frame",
-     "type": "IMAGE",
-     "link": null
-    },
-    {
-     "name": "mid_frame_1",
-     "type": "IMAGE",
-     "link": null
-    },
-    {
-     "name": "mid_frame_2",
-     "type": "IMAGE",
-     "link": null
-    },
-    {
-     "name": "last_frame",
-     "type": "IMAGE",
-     "link": null
-    },
-    {
-     "name": "loras",
-     "type": "NERON_H3_LORAS",
-     "link": null
-    }
-   ],
-   "outputs": [
-    {
-     "name": "block",
-     "type": "NERON_H3_BLOCK",
-     "links": [
-      4
-     ]
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "NeronH3Block"
-   },
-   "widgets_values": [
-    "The main subject from the first frame starts moving: at about the first second it turns its head slowly to the left, at the third second it takes a calm step forward, by the sixth second it walks steadily across the scene, the camera follows smoothly at the same height. Natural light, soft ambient sound of the place, footsteps, no music."
-   ]
-  },
-  {
-   "id": 6,
-   "type": "NeronH3Block",
-   "pos": [
-    -340,
-    -60
-   ],
-   "size": [
-    380,
-    330
-   ],
-   "flags": {},
-   "order": 5,
-   "mode": 0,
-   "title": "🎞 Блок 2 / Block 2",
-   "inputs": [
-    {
-     "name": "first_frame",
-     "type": "IMAGE",
-     "link": null
-    },
-    {
-     "name": "mid_frame_1",
-     "type": "IMAGE",
-     "link": null
-    },
-    {
-     "name": "mid_frame_2",
-     "type": "IMAGE",
-     "link": null
-    },
-    {
-     "name": "last_frame",
-     "type": "IMAGE",
-     "link": null
-    },
-    {
-     "name": "loras",
-     "type": "NERON_H3_LORAS",
-     "link": 3
-    }
-   ],
-   "outputs": [
-    {
-     "name": "block",
-     "type": "NERON_H3_BLOCK",
-     "links": [
-      5
-     ]
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "NeronH3Block"
-   },
-   "widgets_values": [
-    "Continuing directly from the opening frames, in the same place and with the same camera: the main subject keeps walking in the same direction without stopping, at about the third second it slows down and looks back over its shoulder, at the sixth second it stops right where it is and turns to face the camera, a light breeze moves hair and fabric. Same light, same ambient sound, footsteps fade, no music."
-   ]
-  },
-  {
-   "id": 7,
-   "type": "NeronH3Block",
-   "pos": [
-    -340,
-    300
-   ],
-   "size": [
-    380,
-    330
-   ],
-   "flags": {},
-   "order": 6,
-   "mode": 0,
-   "title": "🎞 Блок 3 / Block 3",
-   "inputs": [
-    {
-     "name": "first_frame",
-     "type": "IMAGE",
-     "link": null
-    },
-    {
-     "name": "mid_frame_1",
-     "type": "IMAGE",
-     "link": null
-    },
-    {
-     "name": "mid_frame_2",
-     "type": "IMAGE",
-     "link": null
-    },
-    {
-     "name": "last_frame",
-     "type": "IMAGE",
-     "link": null
-    },
-    {
-     "name": "loras",
-     "type": "NERON_H3_LORAS",
-     "link": null
-    }
-   ],
-   "outputs": [
-    {
-     "name": "block",
-     "type": "NERON_H3_BLOCK",
-     "links": [
-      6
-     ]
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "NeronH3Block"
-   },
-   "widgets_values": [
-    "Continuing directly from the opening frames, in exactly the same spot where the subject stopped, with the same background and the same camera: the main subject stays facing the camera, at about the second second it smiles gently, at the fourth second it raises one hand in a short greeting, then lowers it and stays still until the end, the camera slowly moves a little closer. Same light, quiet ambient sound, no music."
-   ]
-  },
-  {
-   "id": 8,
-   "type": "NeronH3Story",
-   "pos": [
-    80,
-    -420
-   ],
-   "size": [
-    480,
-    900
-   ],
-   "flags": {},
-   "order": 7,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "story",
-     "type": "NERON_H3_STORY",
-     "link": null
-    },
-    {
-     "name": "first_frame",
-     "type": "IMAGE",
-     "link": 1
-    },
-    {
-     "name": "appearance",
-     "type": "IMAGE",
-     "link": null
-    },
-    {
-     "name": "lora_all",
-     "type": "NERON_H3_LORAS",
-     "link": 2
-    },
-    {
-     "name": "prompt_1",
-     "type": "STRING",
-     "link": null
-    },
-    {
-     "name": "block_1",
-     "type": "NERON_H3_BLOCK",
-     "link": 4
-    },
-    {
-     "name": "prompt_2",
-     "type": "STRING",
-     "link": null
-    },
-    {
-     "name": "block_2",
-     "type": "NERON_H3_BLOCK",
-     "link": 5
-    },
-    {
-     "name": "prompt_3",
-     "type": "STRING",
-     "link": null
-    },
-    {
-     "name": "block_3",
-     "type": "NERON_H3_BLOCK",
-     "link": 6
-    },
-    {
-     "name": "prompt_4",
-     "type": "STRING",
-     "link": null
-    },
-    {
-     "name": "block_4",
-     "type": "NERON_H3_BLOCK",
-     "link": null
-    },
-    {
-     "name": "width",
-     "type": "INT",
-     "link": null
-    },
-    {
-     "name": "height",
-     "type": "INT",
-     "link": null
-    }
-   ],
-   "outputs": [
-    {
-     "name": "video",
-     "type": "VIDEO",
-     "links": [
-      7
-     ]
-    },
-    {
-     "name": "frames",
-     "type": "IMAGE",
-     "links": null
-    },
-    {
-     "name": "audio",
-     "type": "AUDIO",
-     "links": null
-    },
-    {
-     "name": "last_frame",
-     "type": "IMAGE",
-     "links": null
-    },
-    {
-     "name": "frames_count",
-     "type": "INT",
-     "links": null
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "NeronH3Story"
-   }
-  },
-  {
-   "id": 9,
-   "type": "SaveVideo",
-   "pos": [
-    600,
-    -420
-   ],
-   "size": [
-    560,
-    620
-   ],
-   "flags": {},
-   "order": 8,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "video",
-     "type": "VIDEO",
-     "link": 7
-    }
-   ],
-   "outputs": [],
-   "properties": {
-    "Node name for S&R": "SaveVideo"
-   },
-   "widgets_values": [
-    "video/Neron_H3_Story",
-    "auto",
-    "auto"
-   ]
-  }
- ],
- "links": [
-  [
-   1,
-   2,
-   0,
-   8,
-   1,
-   "IMAGE"
   ],
-  [
-   2,
-   3,
-   0,
-   8,
-   3,
-   "NERON_H3_LORAS"
+  "links": [
+    [
+      1,
+      2,
+      0,
+      8,
+      1,
+      "IMAGE"
+    ],
+    [
+      2,
+      3,
+      0,
+      8,
+      3,
+      "NERON_H3_LORAS"
+    ],
+    [
+      3,
+      4,
+      0,
+      6,
+      4,
+      "NERON_H3_LORAS"
+    ],
+    [
+      4,
+      5,
+      0,
+      8,
+      5,
+      "NERON_H3_BLOCK"
+    ],
+    [
+      5,
+      6,
+      0,
+      8,
+      7,
+      "NERON_H3_BLOCK"
+    ],
+    [
+      6,
+      7,
+      0,
+      8,
+      9,
+      "NERON_H3_BLOCK"
+    ],
+    [
+      7,
+      8,
+      0,
+      9,
+      0,
+      "VIDEO"
+    ],
+    [
+      8,
+      10,
+      0,
+      8,
+      11,
+      "NERON_H3_BLOCK"
+    ]
   ],
-  [
-   3,
-   4,
-   0,
-   6,
-   4,
-   "NERON_H3_LORAS"
-  ],
-  [
-   4,
-   5,
-   0,
-   8,
-   5,
-   "NERON_H3_BLOCK"
-  ],
-  [
-   5,
-   6,
-   0,
-   8,
-   7,
-   "NERON_H3_BLOCK"
-  ],
-  [
-   6,
-   7,
-   0,
-   8,
-   9,
-   "NERON_H3_BLOCK"
-  ],
-  [
-   7,
-   8,
-   0,
-   9,
-   0,
-   "VIDEO"
-  ]
- ],
- "groups": [],
- "config": {},
- "extra": {
-  "ds": {
-   "scale": 0.7,
-   "offset": [
-    1500,
-    560
-   ]
-  }
- },
- "version": 0.4
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.7,
+      "offset": [
+        1500,
+        560
+      ]
+    }
+  },
+  "version": 0.4
 }

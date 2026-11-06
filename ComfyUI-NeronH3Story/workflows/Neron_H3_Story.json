@@ -1,306 +1,306 @@
 {
- "last_node_id": 7,
- "last_link_id": 5,
- "nodes": [
-  {
-   "id": 1,
-   "type": "MarkdownNote",
-   "pos": [
-    -980,
-    -420
-   ],
-   "size": [
-    620,
-    520
-   ],
-   "flags": {},
-   "order": 0,
-   "mode": 0,
-   "inputs": [],
-   "outputs": [],
-   "properties": {},
-   "widgets_values": [
-    "## 🎬 Neron H3 Story — прототип / prototype\n\n**RU — режим «чайник»** (на ноде: картинка + промпты блоков)\n1. **LoadImage** — первый кадр ролика, он же образец внешности (🔒).\n2. **Длина ролика** (5–45 с) и **длина блока** (5–15 с, максимум) — блоки нода посчитает сама.\n3. Тексты — по одному на блок. Подключил промпт — появился вход для следующего.\n4. Сначала **⚡ Турбо**, потом **Качество**. Блоки 2+ продолжают хвост прошлого (≈0,9 с) **со звуком**.\n\n**⚙ Эксперт** — открывает ноды 🎞 Блок (свои картинки, текст и LoRA у каждого блока), `lora_all` (🎨 стиль на весь ролик), размеры, стык, модели и все выходы.\n**📝 Story AutoPrompter** (скоро) — один провод `story`, и на движке остаётся только он.\n\n**EN** — Beginner: first frame + one prompt per block. Expert: 🎞 Block nodes, lora_all, sizes, seam, models. Story AutoPrompter (soon): one `story` wire."
-   ],
-   "color": "#432",
-   "bgcolor": "#653"
-  },
-  {
-   "id": 2,
-   "type": "LoadImage",
-   "pos": [
-    -340,
-    -420
-   ],
-   "size": [
-    380,
-    460
-   ],
-   "flags": {},
-   "order": 1,
-   "mode": 0,
-   "inputs": [],
-   "outputs": [
+  "last_node_id": 7,
+  "last_link_id": 5,
+  "nodes": [
     {
-     "name": "IMAGE",
-     "type": "IMAGE",
-     "links": [
-      1
-     ]
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        -980,
+        -420
+      ],
+      "size": [
+        620,
+        520
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## 🎬 Neron H3 Story — без автопромтера / without the AutoPrompter\n\n**RU — простой режим** (на ноде: картинка + промпты блоков)\n1. **LoadImage** — первый кадр ролика, он же образец внешности (🔒).\n2. **Длина ролика** (5–45 с) и **длина блока** (5–15 с, максимум) — блоки нода посчитает сама (30 с / 10 с = 4 блока).\n3. Тексты — по одному на блок, пишешь сам (лучше по-английски, с секундами). Подключил промпт — появился вход для следующего. Не хватило текстов — последний повторится.\n4. Блоки 2+ продолжают хвост прошлого (≈0,9 с) **со звуком** — стыков не видно.\n\nХочешь, чтобы промпты писались сами по одному сценарию, — открой процесс **Neron_H3_Story_AutoPrompter**. Свои картинки и LoRA у каждого блока — процесс **Neron_H3_Story_Expert**.\n\n**EN** — Simple mode: first frame + one prompt per block (written by you). The AutoPrompter workflow writes them from one scenario; the Expert workflow adds per-block pictures and LoRAs."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
     },
     {
-     "name": "MASK",
-     "type": "MASK",
-     "links": null
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "LoadImage"
-   },
-   "widgets_values": [
-    "example.png",
-    "image"
-   ]
-  },
-  {
-   "id": 3,
-   "type": "PrimitiveStringMultiline",
-   "pos": [
-    -340,
-    70
-   ],
-   "size": [
-    380,
-    150
-   ],
-   "flags": {},
-   "order": 2,
-   "mode": 0,
-   "inputs": [],
-   "outputs": [
-    {
-     "name": "STRING",
-     "type": "STRING",
-     "links": [
-      2
-     ]
-    }
-   ],
-   "title": "Блок 1 / Block 1",
-   "properties": {
-    "Node name for S&R": "PrimitiveStringMultiline"
-   },
-   "widgets_values": [
-    "The main subject from the first frame starts moving: at about the first second it turns its head slowly to the left, at the third second it takes a calm step forward, by the sixth second it walks steadily across the scene, the camera follows smoothly at the same height. Natural light, soft ambient sound of the place, footsteps, no music."
-   ]
-  },
-  {
-   "id": 4,
-   "type": "PrimitiveStringMultiline",
-   "pos": [
-    -340,
-    250
-   ],
-   "size": [
-    380,
-    150
-   ],
-   "flags": {},
-   "order": 3,
-   "mode": 0,
-   "inputs": [],
-   "outputs": [
-    {
-     "name": "STRING",
-     "type": "STRING",
-     "links": [
-      3
-     ]
-    }
-   ],
-   "title": "Блок 2 / Block 2",
-   "properties": {
-    "Node name for S&R": "PrimitiveStringMultiline"
-   },
-   "widgets_values": [
-    "Continuing directly from the opening frames, in the same place and with the same camera: the main subject keeps walking in the same direction without stopping, at about the third second it slows down and looks back over its shoulder, at the sixth second it stops right where it is and turns to face the camera, a light breeze moves hair and fabric. Same light, same ambient sound, footsteps fade, no music."
-   ]
-  },
-  {
-   "id": 5,
-   "type": "PrimitiveStringMultiline",
-   "pos": [
-    -340,
-    430
-   ],
-   "size": [
-    380,
-    150
-   ],
-   "flags": {},
-   "order": 4,
-   "mode": 0,
-   "inputs": [],
-   "outputs": [
-    {
-     "name": "STRING",
-     "type": "STRING",
-     "links": [
-      4
-     ]
-    }
-   ],
-   "title": "Блок 3 / Block 3",
-   "properties": {
-    "Node name for S&R": "PrimitiveStringMultiline"
-   },
-   "widgets_values": [
-    "Continuing directly from the opening frames, in exactly the same spot where the subject stopped, with the same background and the same camera: the main subject stays facing the camera, at about the second second it smiles gently, at the fourth second it raises one hand in a short greeting, then lowers it and stays still until the end, the camera slowly moves a little closer. Same light, quiet ambient sound, no music."
-   ]
-  },
-  {
-   "id": 6,
-   "type": "NeronH3Story",
-   "pos": [
-    80,
-    -420
-   ],
-   "size": [
-    480,
-    560
-   ],
-   "flags": {},
-   "order": 6,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "story",
-     "type": "NERON_H3_STORY",
-     "link": null
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        -340,
+        -420
+      ],
+      "size": [
+        380,
+        460
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "example.png",
+        "image"
+      ]
     },
     {
-     "name": "first_frame",
-     "type": "IMAGE",
-     "link": 1
+      "id": 3,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -340,
+        70
+      ],
+      "size": [
+        380,
+        150
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "title": "Блок 1 / Block 1",
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "The main subject from the first frame starts moving: at about the first second it turns its head slowly to the left, at the third second it takes a calm step forward, by the sixth second it walks steadily across the scene, the camera follows smoothly at the same height. Natural light, soft ambient sound of the place, footsteps, no music."
+      ]
     },
     {
-     "name": "prompt_1",
-     "type": "STRING",
-     "link": 2
+      "id": 4,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -340,
+        250
+      ],
+      "size": [
+        380,
+        150
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "title": "Блок 2 / Block 2",
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "Continuing directly from the opening frames, in the same place and with the same camera: the main subject keeps walking in the same direction without stopping, at about the third second it slows down and looks back over its shoulder, at the sixth second it stops right where it is and turns to face the camera, a light breeze moves hair and fabric. Same light, same ambient sound, footsteps fade, no music."
+      ]
     },
     {
-     "name": "prompt_2",
-     "type": "STRING",
-     "link": 3
+      "id": 5,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -340,
+        430
+      ],
+      "size": [
+        380,
+        150
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "title": "Блок 3 / Block 3",
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "Continuing directly from the opening frames, in exactly the same spot where the subject stopped, with the same background and the same camera: the main subject stays facing the camera, at about the second second it smiles gently, at the fourth second it raises one hand in a short greeting, then lowers it and stays still until the end, the camera slowly moves a little closer. Same light, quiet ambient sound, no music."
+      ]
     },
     {
-     "name": "prompt_3",
-     "type": "STRING",
-     "link": 4
+      "id": 6,
+      "type": "NeronH3Story",
+      "pos": [
+        80,
+        -420
+      ],
+      "size": [
+        480,
+        560
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "story",
+          "type": "NERON_H3_STORY",
+          "link": null
+        },
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "name": "prompt_1",
+          "type": "STRING",
+          "link": 2
+        },
+        {
+          "name": "prompt_2",
+          "type": "STRING",
+          "link": 3
+        },
+        {
+          "name": "prompt_3",
+          "type": "STRING",
+          "link": 4
+        },
+        {
+          "name": "prompt_4",
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronH3Story"
+      }
     },
     {
-     "name": "prompt_4",
-     "type": "STRING",
-     "link": null
+      "id": 7,
+      "type": "SaveVideo",
+      "pos": [
+        600,
+        -420
+      ],
+      "size": [
+        520,
+        620
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 5
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "video/Neron_H3_Story",
+        "auto",
+        "auto"
+      ]
     }
-   ],
-   "outputs": [
-    {
-     "name": "video",
-     "type": "VIDEO",
-     "links": [
-      5
-     ]
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "NeronH3Story"
-   }
-  },
-  {
-   "id": 7,
-   "type": "SaveVideo",
-   "pos": [
-    600,
-    -420
-   ],
-   "size": [
-    520,
-    620
-   ],
-   "flags": {},
-   "order": 7,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "video",
-     "type": "VIDEO",
-     "link": 5
-    }
-   ],
-   "outputs": [],
-   "properties": {
-    "Node name for S&R": "SaveVideo"
-   },
-   "widgets_values": [
-    "video/Neron_H3_Story",
-    "auto",
-    "auto"
-   ]
-  }
- ],
- "links": [
-  [
-   1,
-   2,
-   0,
-   6,
-   1,
-   "IMAGE"
   ],
-  [
-   2,
-   3,
-   0,
-   6,
-   2,
-   "STRING"
+  "links": [
+    [
+      1,
+      2,
+      0,
+      6,
+      1,
+      "IMAGE"
+    ],
+    [
+      2,
+      3,
+      0,
+      6,
+      2,
+      "STRING"
+    ],
+    [
+      3,
+      4,
+      0,
+      6,
+      3,
+      "STRING"
+    ],
+    [
+      4,
+      5,
+      0,
+      6,
+      4,
+      "STRING"
+    ],
+    [
+      5,
+      6,
+      0,
+      7,
+      0,
+      "VIDEO"
+    ]
   ],
-  [
-   3,
-   4,
-   0,
-   6,
-   3,
-   "STRING"
-  ],
-  [
-   4,
-   5,
-   0,
-   6,
-   4,
-   "STRING"
-  ],
-  [
-   5,
-   6,
-   0,
-   7,
-   0,
-   "VIDEO"
-  ]
- ],
- "groups": [],
- "config": {},
- "extra": {
-  "ds": {
-   "scale": 0.8,
-   "offset": [
-    1100,
-    520
-   ]
-  }
- },
- "version": 0.4
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.8,
+      "offset": [
+        1100,
+        520
+      ]
+    }
+  },
+  "version": 0.4
 }

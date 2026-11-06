@@ -51,7 +51,10 @@ def block(text="", first=None, mid=(), last=None, loras=()):
 
 def frames(first=None, mid=(), last=None):
     """🖼 Кадры ролика одним проводом: первый, промежуточные (навигаторы), последний."""
-    return {"first": first, "mid": [m for m in mid if m is not None], "last": last}
+    mid = list(mid)
+    # mid_win — номер окна на ноде 🖼 Кадры (2 или 3): человек в сценарии пишет «изображение 3»
+    return {"first": first, "mid": [m for m in mid if m is not None],
+            "mid_win": [i + 2 for i, m in enumerate(mid) if m is not None], "last": last}
 
 
 def loras_pairs(loras):

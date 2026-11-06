@@ -168,12 +168,18 @@ def frames_to_blocks(fr, blocks):
     последний кадр — конец последнего блока."""
     given = [{} for _ in range(blocks)]
     mids = [m for m in (fr.get("mid") or []) if m is not None]
+    wins = list(fr.get("mid_win") or [])
     for i, m in enumerate(mids):
         k = min(blocks - 1, int((i + 1) / (len(mids) + 1) * blocks))
         given[k].setdefault("mid", []).append(m)
+        given[k].setdefault("mid_win", []).append(wins[i] if i < len(wins) else None)
     if fr.get("last") is not None:
         given[-1]["last"] = fr["last"]
     return given
+
+
+WINDOW_NAMES = "the user may call these pictures by the window number on the Frames node: «image 1 / изображение 1» " \
+               "= the first frame (<Picture 1>), «image 2» = A1, «image 3» = A2, «image 4» = the end frame"
 
 
 def story_assets(given, has_opening):
@@ -183,12 +189,15 @@ def story_assets(given, has_opening):
     for k, g in enumerate(given):
         if g.get("first") is not None and (k > 0 or has_opening):
             out.append({"block": k, "role": "a who / where reference", "img": g["first"]})
-        for m in g.get("mid") or []:
+        wins = list(g.get("mid_win") or [])
+        for j, m in enumerate(g.get("mid") or []):
             if m is not None:
                 out.append({"block": k, "role": "a middle picture (a place, creature or object that appears during "
-                                                "the video)", "img": m})
-    for i, a in enumerate(out):
-        a["id"] = f"A{i + 1}"
+                                                "the video)", "img": m, "win": wins[j] if j < len(wins) else None})
+    used = {a["win"] - 1 for a in out if a.get("win")}
+    free = (i for i in range(1, 99) if i not in used)
+    for a in out:          # A1 = окно 2, A2 = окно 3 — даже если окно 2 пустое
+        a["id"] = f"A{a['win'] - 1}" if a.get("win") else f"A{next(free)}"
     return out
 
 
@@ -507,7 +516,7 @@ class NeronH3StoryAutoPrompter:
                     "No overall scenario: build the story from the block notes and the pictures, in block order.")
         if block_lines:
             user.append("Pictures from the user — show each one in the block where its subject is in the story "
-                        "(list them in the USE lines):")
+                        f"(write the ASSET and USE lines); {WINDOW_NAMES}:")
             user += block_lines
         if not see:
             user.append("No pictures can be shown to you: rely on the text.")
