@@ -425,6 +425,7 @@ app.registerExtension({
                 if (w) { w.value = ""; app.graph?.setDirtyCanvas(true, true); }
             });
             node.addWidget("button", "📖 Help / Справка", null, () => showHelp());
+            addGap(node, "_gap_btn", "✏ В правку / To edit");   // рамка «ПРАВКА» не налезает на кнопки
             for (const t of [50, 300, 800]) setTimeout(() => { updateBlockInputs(node); applyExpert(node, specs); }, t);
             return r;
         };
