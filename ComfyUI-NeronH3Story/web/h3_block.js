@@ -11,7 +11,7 @@ const HELP_TEXT = `
 One block (scene) of a Neron H3 Story video: its
 pictures, what happens and its LoRAs — in one wire.
 Which block it is depends on where you connect it:
-block_2 on the engine / AutoPrompter = block 2.
+block_2 on the engine = block 2.
 The header shows it: "→ block 2".
 
 📌 PICTURES 📌
@@ -28,14 +28,12 @@ engine's first_frame input).
 
 📌 TEXT 📌
 In your own words, any language.
-With the Story AutoPrompter the block ADDS to the
-scenario: its note and pictures go into the block
-where they happen in the story (the AutoPrompter may
-move them — e.g. a tiger from block 1 to block 2).
-Only last_frame stays strict.
-Straight into the engine (expert) it IS the prompt:
-then refer to pictures yourself as <Picture N>
-(the engine's report shows which is which).
+Without the AutoPrompter it IS the block prompt.
+With the AutoPrompter (engine expert + story): your
+text REPLACES that block's prompt; leave it empty to
+keep the AutoPrompter's prompt and only add LoRAs.
+Refer to pictures yourself as <Picture N> (the
+engine's report shows which is which).
 
 📌 LORA 📌
 🎨 LoRA set > loras — only for this block
@@ -49,7 +47,7 @@ then refer to pictures yourself as <Picture N>
 Один блок (сцена) ролика Neron H3 Story: его
 картинки, что происходит и его LoRA — одним проводом.
 Какой это блок — решает, куда подключил:
-block_2 на движке / AutoPrompter = блок 2.
+block_2 на движке = блок 2.
 В заголовке так и видно: «→ блок 2».
 
 📌 КАРТИНКИ 📌
@@ -66,13 +64,11 @@ last_frame  — чем блок должен закончиться;
 
 📌 ТЕКСТ 📌
 Своими словами, на любом языке.
-С Story AutoPrompter блок ДОПОЛНЯЕТ сценарий: его
-заметка и картинки попадут в тот блок, где это
-происходит по сюжету (AutoPrompter может их
-перенести — например, тигра из блока 1 в блок 2).
-Жёстким остаётся только last_frame.
-Прямо в движок (эксперт) — это и есть промпт: тогда
-на картинки ссылайся сам как <Picture N> (какая
+Без AutoPrompter это и есть промпт блока.
+С AutoPrompter (эксперт движка + story): твой текст
+ЗАМЕНЯЕТ промпт этого блока; оставь пустым — промпт
+AutoPrompter останется, добавятся только LoRA.
+На картинки ссылайся сам как <Picture N> (какая
 какая — видно в отчёте движка).
 
 📌 LORA 📌

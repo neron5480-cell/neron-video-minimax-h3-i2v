@@ -1,314 +1,367 @@
 {
- "last_node_id": 7,
- "last_link_id": 5,
- "nodes": [
-  {
-   "id": 1,
-   "type": "MarkdownNote",
-   "pos": [
-    -1460,
-    -420
-   ],
-   "size": [
-    600,
-    560
-   ],
-   "flags": {},
-   "order": 0,
-   "mode": 0,
-   "inputs": [],
-   "outputs": [],
-   "properties": {},
-   "widgets_values": [
-    "## 🎬 Neron H3 Story + 📝 AutoPrompter\n\n**RU**\n1. **LoadImage** → `first_frame` автопромтера: начало ролика и образец внешности.\n2. **Сценарий** — весь ролик своими словами (любой язык). Можно коротко.\n3. На **📝 Story AutoPrompter**: длина ролика и блока — план видно прямо на ноде («30 с = 4 блока по 8,7 с»).\n4. Хочешь управлять сценой — добавь ноду **🎞 Блок** (меню Neron → H3) и подключи в `block_2` и т.д.: свои картинки, заметка, LoRA.\n5. Стиль на весь ролик — **🎨 Набор LoRA** → `lora_all`.\n6. На движке подключён только `story` — длина, промпты и картинки приходят оттуда.\n7. Промпты всех блоков видны в окне автопромтера; «✏ В правку» — поправить руками.\n\nПервый запуск: LLM (Qwen 3.5 9B) скачается сама, после промптов выгружается — H3 нужна вся видеокарта.\n\n**EN** LoadImage → first_frame; scenario text → scenario; set lengths on the AutoPrompter; optional 🎞 Block nodes → block_k; 🎨 LoRA set → lora_all; story → engine."
-   ],
-   "color": "#432",
-   "bgcolor": "#653"
-  },
-  {
-   "id": 2,
-   "type": "LoadImage",
-   "pos": [
-    -820,
-    -420
-   ],
-   "size": [
-    380,
-    420
-   ],
-   "flags": {},
-   "order": 1,
-   "mode": 0,
-   "inputs": [],
-   "outputs": [
+  "last_node_id": 8,
+  "last_link_id": 6,
+  "nodes": [
     {
-     "name": "IMAGE",
-     "type": "IMAGE",
-     "links": [
-      1
-     ]
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        -1960,
+        -420
+      ],
+      "size": [
+        600,
+        560
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## 🎬 Neron H3 Story + 📝 AutoPrompter\n\n**RU**\n1. **LoadImage** → **🖼 Кадры** → `first_frame`: начало ролика и образец внешности. Ещё картинки — в `mid_frame_1/2` (что появится по ходу: место, существо, предмет) и `last_frame` (чем ролик закончится). Всё идёт ОДНИМ проводом `frames`.\n2. **Сценарий** — весь ролик своими словами (любой язык). Хочешь движение камеры — так и напиши («камера огибает её и застывает над плечом»), ракурс на автопромтере — АВТО.\n3. На **📝 Story AutoPrompter**: длина ролика и блока — план видно прямо на ноде («30 с = 4 блока по 8,7 с»).\n4. Стиль на весь ролик — **🎨 Набор LoRA** → `lora_all`.\n5. На движке подключён только `story`. LoRA отдельного блока или свой текст для блока — включи ⚙ эксперт на движке и подключи ноду **🎞 Блок** в `block_k`.\n6. Промпты всех блоков видны в окне автопромтера; «✏ В правку» — поправить руками.\n\nПервый запуск: модели H3 и LLM (Qwen 3.5 9B) скачаются сами.\n\n**EN** LoadImage → 🖼 Frames (first / two middle / last) → frames; scenario text → scenario; lengths on the AutoPrompter; 🎨 LoRA set → lora_all; story → engine. Per-block LoRAs or text — 🎞 Block nodes on the engine (expert)."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
     },
     {
-     "name": "MASK",
-     "type": "MASK",
-     "links": null
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "LoadImage"
-   },
-   "widgets_values": [
-    "example.png",
-    "image"
-   ]
-  },
-  {
-   "id": 3,
-   "type": "PrimitiveStringMultiline",
-   "pos": [
-    -820,
-    40
-   ],
-   "size": [
-    380,
-    200
-   ],
-   "flags": {},
-   "order": 2,
-   "mode": 0,
-   "title": "Сценарий / Scenario",
-   "inputs": [],
-   "outputs": [
-    {
-     "name": "STRING",
-     "type": "STRING",
-     "links": [
-      2
-     ]
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "PrimitiveStringMultiline"
-   },
-   "widgets_values": [
-    "Воительница в белом плаще медленно спускается по заснеженной лестнице разрушенной крепости, на нижней ступени останавливается и оглядывает руины, ветер треплет её волосы и плащ. Потом она кладёт руку на рукоять катаны, поворачивается к камере и решительно идёт вперёд сквозь метель."
-   ]
-  },
-  {
-   "id": 4,
-   "type": "NeronH3LoraPack",
-   "pos": [
-    -820,
-    280
-   ],
-   "size": [
-    380,
-    250
-   ],
-   "flags": {},
-   "order": 3,
-   "mode": 0,
-   "title": "🎨 LoRA на весь ролик / whole video",
-   "inputs": [
-    {
-     "name": "pack",
-     "type": "NERON_H3_LORAS",
-     "link": null
-    }
-   ],
-   "outputs": [
-    {
-     "name": "loras",
-     "type": "NERON_H3_LORAS",
-     "links": [
-      3
-     ]
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "NeronH3LoraPack"
-   },
-   "widgets_values": [
-    "— нет / none —",
-    1.0,
-    "— нет / none —",
-    1.0,
-    "— нет / none —",
-    1.0
-   ]
-  },
-  {
-   "id": 5,
-   "type": "NeronH3StoryAutoPrompter",
-   "pos": [
-    -400,
-    -420
-   ],
-   "size": [
-    460,
-    860
-   ],
-   "flags": {},
-   "order": 4,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "scenario",
-     "type": "STRING",
-     "link": 2
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        -1280,
+        -420
+      ],
+      "size": [
+        380,
+        420
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "example.png",
+        "image"
+      ]
     },
     {
-     "name": "first_frame",
-     "type": "IMAGE",
-     "link": 1
+      "id": 3,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -820,
+        40
+      ],
+      "size": [
+        380,
+        200
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "title": "Сценарий / Scenario",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "Воительница в белом плаще медленно спускается по заснеженной лестнице разрушенной крепости, на нижней ступени останавливается и оглядывает руины, ветер треплет её волосы и плащ. Потом она кладёт руку на рукоять катаны, поворачивается к камере и решительно идёт вперёд сквозь метель."
+      ]
     },
     {
-     "name": "lora_all",
-     "type": "NERON_H3_LORAS",
-     "link": 3
+      "id": 4,
+      "type": "NeronH3LoraPack",
+      "pos": [
+        -820,
+        280
+      ],
+      "size": [
+        380,
+        250
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "title": "🎨 LoRA на весь ролик / whole video",
+      "inputs": [
+        {
+          "name": "pack",
+          "type": "NERON_H3_LORAS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "loras",
+          "type": "NERON_H3_LORAS",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronH3LoraPack"
+      },
+      "widgets_values": [
+        "— нет / none —",
+        1.0,
+        "— нет / none —",
+        1.0,
+        "— нет / none —",
+        1.0
+      ]
     },
     {
-     "name": "block_1",
-     "type": "NERON_H3_BLOCK",
-     "link": null
-    }
-   ],
-   "outputs": [
-    {
-     "name": "story",
-     "type": "NERON_H3_STORY",
-     "links": [
-      4
-     ]
+      "id": 5,
+      "type": "NeronH3StoryAutoPrompter",
+      "pos": [
+        -400,
+        -420
+      ],
+      "size": [
+        460,
+        860
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "scenario",
+          "type": "STRING",
+          "link": 2
+        },
+        {
+          "name": "frames",
+          "type": "NERON_H3_FRAMES",
+          "link": 6
+        },
+        {
+          "name": "lora_all",
+          "type": "NERON_H3_LORAS",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "story",
+          "type": "NERON_H3_STORY",
+          "links": [
+            4
+          ]
+        },
+        {
+          "name": "prompts",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronH3StoryAutoPrompter"
+      }
     },
     {
-     "name": "prompts",
-     "type": "STRING",
-     "links": null
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "NeronH3StoryAutoPrompter"
-   }
-  },
-  {
-   "id": 6,
-   "type": "NeronH3Story",
-   "pos": [
-    100,
-    -420
-   ],
-   "size": [
-    460,
-    560
-   ],
-   "flags": {},
-   "order": 5,
-   "mode": 0,
-   "inputs": [
+      "id": 6,
+      "type": "NeronH3Story",
+      "pos": [
+        100,
+        -420
+      ],
+      "size": [
+        460,
+        560
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "story",
+          "type": "NERON_H3_STORY",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronH3Story"
+      }
+    },
     {
-     "name": "story",
-     "type": "NERON_H3_STORY",
-     "link": 4
-    }
-   ],
-   "outputs": [
+      "id": 7,
+      "type": "SaveVideo",
+      "pos": [
+        600,
+        -420
+      ],
+      "size": [
+        560,
+        620
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 5
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "video/Neron_H3_Story",
+        "auto",
+        "auto"
+      ]
+    },
     {
-     "name": "video",
-     "type": "VIDEO",
-     "links": [
-      5
-     ]
+      "id": 8,
+      "type": "NeronH3Frames",
+      "pos": [
+        -820,
+        -560
+      ],
+      "size": [
+        380,
+        150
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "name": "mid_frame_1",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "mid_frame_2",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "frames",
+          "type": "NERON_H3_FRAMES",
+          "links": [
+            6
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronH3Frames"
+      }
     }
-   ],
-   "properties": {
-    "Node name for S&R": "NeronH3Story"
-   }
-  },
-  {
-   "id": 7,
-   "type": "SaveVideo",
-   "pos": [
-    600,
-    -420
-   ],
-   "size": [
-    560,
-    620
-   ],
-   "flags": {},
-   "order": 6,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "video",
-     "type": "VIDEO",
-     "link": 5
-    }
-   ],
-   "outputs": [],
-   "properties": {
-    "Node name for S&R": "SaveVideo"
-   },
-   "widgets_values": [
-    "video/Neron_H3_Story",
-    "auto",
-    "auto"
-   ]
-  }
- ],
- "links": [
-  [
-   1,
-   2,
-   0,
-   5,
-   1,
-   "IMAGE"
   ],
-  [
-   2,
-   3,
-   0,
-   5,
-   0,
-   "STRING"
+  "links": [
+    [
+      2,
+      3,
+      0,
+      5,
+      0,
+      "STRING"
+    ],
+    [
+      3,
+      4,
+      0,
+      5,
+      2,
+      "NERON_H3_LORAS"
+    ],
+    [
+      4,
+      5,
+      0,
+      6,
+      0,
+      "NERON_H3_STORY"
+    ],
+    [
+      5,
+      6,
+      0,
+      7,
+      0,
+      "VIDEO"
+    ],
+    [
+      1,
+      2,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      6,
+      8,
+      0,
+      5,
+      1,
+      "NERON_H3_FRAMES"
+    ]
   ],
-  [
-   3,
-   4,
-   0,
-   5,
-   2,
-   "NERON_H3_LORAS"
-  ],
-  [
-   4,
-   5,
-   0,
-   6,
-   0,
-   "NERON_H3_STORY"
-  ],
-  [
-   5,
-   6,
-   0,
-   7,
-   0,
-   "VIDEO"
-  ]
- ],
- "groups": [],
- "config": {},
- "extra": {
-  "ds": {
-   "scale": 0.7,
-   "offset": [
-    1500,
-    560
-   ]
-  }
- },
- "version": 0.4
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.7,
+      "offset": [
+        1500,
+        560
+      ]
+    }
+  },
+  "version": 0.4
 }

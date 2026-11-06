@@ -326,6 +326,10 @@ function wantedSet(node) {
             ["appearance", "lora_all", "width", "height"].forEach((x) => want.add(x));
             for (let k = 1; k <= n; k++) want.add(`block_${k}`);
         }
+    } else if (ex) {
+        // со story: 🎞 Блоки дополняют AutoPrompter — свой текст блока, LoRA блока; lora_all — стиль поверх шины
+        want.add("lora_all");
+        for (let k = 1; k <= n; k++) want.add(`block_${k}`);
     }
     if (ex) {   // звуковые образцы — только эксперт, и со story тоже: AutoPrompter про них не знает
         want.add("ref_audio_1");
@@ -691,6 +695,10 @@ the number of blocks.
 📌 THREE STATES OF THE NODE 📌
 • 'story' connected — only story → video: plan,
   prompts, pictures and LoRAs come through one wire.
+  ⚙ Expert + story: 🎞 Block nodes can be added
+  (block_1, 2…): their text REPLACES that block's
+  AutoPrompter prompt (empty text keeps it), their
+  LoRAs are ADDED to that block, lora_all on top.
 • Beginner — first_frame + prompt_1, 2… (the next
   appears when you connect the previous).
 • ⚙ Expert — everything: 🎞 Block nodes, lora_all,
@@ -809,6 +817,10 @@ H3 делает картинку и звук вместе — голоса, ша
 📌 ТРИ СОСТОЯНИЯ НОДЫ 📌
 • Подключён 'story' — видно только story → video:
   план, промпты, картинки и LoRA идут одним проводом.
+  ⚙ Эксперт + story: можно добавить ноды 🎞 Блок
+  (block_1, 2…): их текст ЗАМЕНЯЕТ промпт этого блока
+  от AutoPrompter (пустой — оставляет), их LoRA
+  ДОБАВЛЯЮТСЯ к блоку, lora_all — поверх.
 • «Чайник» — first_frame + prompt_1, 2… (следующий
   появляется, когда подключён прошлый).
 • ⚙ Эксперт — всё: ноды 🎞 Блок, lora_all, звуковые

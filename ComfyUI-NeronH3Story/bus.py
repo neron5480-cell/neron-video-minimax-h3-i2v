@@ -13,6 +13,7 @@ import math
 LORA_TYPE = "NERON_H3_LORAS"
 BLOCK_TYPE = "NERON_H3_BLOCK"
 STORY_TYPE = "NERON_H3_STORY"
+FRAMES_TYPE = "NERON_H3_FRAMES"
 
 FPS = 24
 MAX_BLOCKS = 12
@@ -46,6 +47,11 @@ def plan(total_seconds, block_seconds, seam_frames):
 def block(text="", first=None, mid=(), last=None, loras=()):
     return {"text": (text or "").strip(), "first": first, "mid": [m for m in mid if m is not None],
             "last": last, "loras": list(loras or [])}
+
+
+def frames(first=None, mid=(), last=None):
+    """🖼 Кадры ролика одним проводом: первый, промежуточные (навигаторы), последний."""
+    return {"first": first, "mid": [m for m in mid if m is not None], "last": last}
 
 
 def loras_pairs(loras):

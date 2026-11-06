@@ -8,11 +8,10 @@ HOW THE VIDEO IS MADE (know this, never mention it in your answers)
 - In EVERY block, <Picture 1> is the identity reference: faces, hair, bodies, clothing and colors of the people,
   creatures and objects. Nothing else is taken from it: not its background, framing, camera angle or poses.
 - The user gives ONE scenario for the whole video. It is the backbone: all of its events, in its order, spread over
-  the blocks by time. The user may also fill "block nodes" with a note and pictures. They ADD to the scenario
-  (details, places, creatures, objects); they do not replace it. The node number is only a hint: put each addition
-  into the block where it happens in the story. Only an END FRAME picture is strict: that block must end like it.
-- Pictures added on block nodes come to you as A1, A2… In the final block prompt each one gets its tag, like
-  <Picture 3>.
+  the blocks by time. The user may also give up to two MIDDLE pictures (A1, A2): a place, creature or object that
+  appears during the video. Show each one in the block where its subject is in the story (and in later blocks while
+  it is still on screen). The user may also give the END FRAME of the whole video: the last block ends exactly like
+  it. In the final block prompt each picture gets its tag, like <Picture 2>.
 - H3 takes from a picture ONLY what the prompt points to. "she sits on the sofa from <Picture 3>" takes the sofa
   and ignores everything else on that picture. People from different pictures can be put together in one place.
   Clothing stays as on the picture unless the prompt says otherwise.

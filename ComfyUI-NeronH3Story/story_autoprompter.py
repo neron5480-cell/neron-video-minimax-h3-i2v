@@ -76,6 +76,7 @@ AUTO = "🤖 авто / auto"
 LORA_TYPE = "NERON_H3_LORAS"
 BLOCK_TYPE = "NERON_H3_BLOCK"
 STORY_TYPE = "NERON_H3_STORY"
+FRAMES_TYPE = "NERON_H3_FRAMES"
 MAX_BLOCKS = 12
 FPS = 24
 SEAM = 22                  # стык по умолчанию у движка (кусок + звук)
@@ -152,19 +153,6 @@ def _exp(label, **o):
     return dict(o, display_name=label)
 
 
-def _block_pictures(k, blk, has_opening):
-    """Картинки блока k в ТОЙ ЖЕ нумерации, что соберёт движок:
-    <Picture 1> — внешность (первый кадр ролика), дальше — «кто/где» (только блоки 2+), навигаторы. → [(тег, роль, картинка)]."""
-    out, no = [], 2 if has_opening else 1
-    if k > 0 and blk.get("first") is not None:
-        out.append((f"<Picture {no}>", "who / where reference for this block", blk["first"]))
-        no += 1
-    for i, m in enumerate(blk.get("mid") or []):
-        out.append((f"<Picture {no}>", f"navigator {i + 1}: the place or object the action moves to", m))
-        no += 1
-    return out
-
-
 def _parse_plan(text, blocks):
     """Строки «BLOCK k / END k / RU k» → список словарей. Чего нет — пусто (потом подстрахуем)."""
     res = [{"block": "", "end": "", "ru": "", "cam": ""} for _ in range(blocks)]
@@ -173,6 +161,19 @@ def _parse_plan(text, blocks):
         if 0 <= k < blocks:
             res[k][kind.lower()] = val.strip()
     return res
+
+
+def frames_to_blocks(fr, blocks):
+    """🖼 Кадры → заготовка блоков: промежуточные по умолчанию на ~1/3 и ~2/3 ролика (план может переложить),
+    последний кадр — конец последнего блока."""
+    given = [{} for _ in range(blocks)]
+    mids = [m for m in (fr.get("mid") or []) if m is not None]
+    for i, m in enumerate(mids):
+        k = min(blocks - 1, int((i + 1) / (len(mids) + 1) * blocks))
+        given[k].setdefault("mid", []).append(m)
+    if fr.get("last") is not None:
+        given[-1]["last"] = fr["last"]
+    return given
 
 
 def story_assets(given, has_opening):
@@ -184,8 +185,8 @@ def story_assets(given, has_opening):
             out.append({"block": k, "role": "a who / where reference", "img": g["first"]})
         for m in g.get("mid") or []:
             if m is not None:
-                out.append({"block": k, "role": "a navigator (a place, creature or object the action moves to)",
-                            "img": m})
+                out.append({"block": k, "role": "a middle picture (a place, creature or object that appears during "
+                                                "the video)", "img": m})
     for i, a in enumerate(out):
         a["id"] = f"A{i + 1}"
     return out
@@ -341,12 +342,14 @@ class NeronH3StoryAutoPrompter:
             "scenario": ("STRING", {"forceInput": True,
                                     "tooltip": "Главный сценарий на весь ролик — своими словами, любой язык. Работает и "
                                                "без нод блоков.\n\nEN: The main scenario for the whole video."}),
-            "first_frame": ("IMAGE", {"tooltip": "Первый кадр ролика — начало и образец внешности <Picture 1>.\n\nEN: "
-                                                 "The opening frame and the appearance reference <Picture 1>."}),
-            "lora_all": (LORA_TYPE, {"tooltip": "🎨 LoRA на весь ролик (стиль). / LoRAs for the whole video."}),
+            "frames": (FRAMES_TYPE, {"tooltip": "🖼 Кадры ролика одним проводом: первый (начало + образец внешности "
+                                                "<Picture 1>), два промежуточных (что появится по ходу — когда, решит "
+                                                "план по сценарию) и последний (чем ролик закончится).\n\nEN: 🖼 Frames "
+                                                "in one wire: first, two middle (placed by the plan), last."}),
+            "lora_all": (LORA_TYPE, {"tooltip": "🎨 LoRA на весь ролик (стиль). LoRA отдельных блоков — нодами 🎞 Блок "
+                                                "прямо на движке.\n\nEN: LoRAs for the whole video. Per-block LoRAs — "
+                                                "🎞 Block nodes on the engine."}),
         }
-        for k in range(1, MAX_BLOCKS + 1):
-            opt[f"block_{k}"] = (BLOCK_TYPE, {"tooltip": f"🎞 Блок {k}: картинки, текст-подсказка и LoRA. / Block {k}."})
         return {"required": {k: req[k] for k in cls.ORDER}, "optional": opt}
 
     @classmethod
@@ -357,16 +360,14 @@ class NeronH3StoryAutoPrompter:
     def generate(self, expert=False, total_seconds=30.0, block_seconds=10.0, camera_mode=CAM_MODES[0],
                  framing=FRAMING_AS_FIRST, camera_distance=1.0, model=AUTO, mmproj=AUTO,
                  auto_download=True, system_prompt=None, max_tokens=6144, temperature=0.7, n_ctx=16384,
-                 n_gpu_layers=-1, unload_after=True, edited_prompt="", scenario=None, first_frame=None,
+                 n_gpu_layers=-1, unload_after=True, edited_prompt="", scenario=None, frames=None,
                  lora_all=None, **kw):
         blocks, n, T = plan(total_seconds, block_seconds)
-        given = [kw.get(f"block_{k}") or {} for k in range(1, MAX_BLOCKS + 1)]
-        opening = first_frame if first_frame is not None else given[0].get("first")
+        fr = frames or {}
+        opening = fr.get("first")
+        given = frames_to_blocks(fr, blocks)
         scenario = (scenario or "").strip()
         notes = [f"план: {T / FPS:g} с = {blocks} блок(а) по {n / FPS:.1f} с"]
-        extra = [k + 1 for k in range(blocks, MAX_BLOCKS) if given[k]]
-        if extra:
-            notes.append(f"блоки {', '.join(map(str, extra))} не влезли в {T / FPS:g} с — увеличь длину ролика")
 
         cam = camera_header(_ap(), scenario, camera_mode, framing, camera_distance, n)
         edited = (edited_prompt or "").strip()
@@ -378,10 +379,10 @@ class NeronH3StoryAutoPrompter:
                 assign = pic_ids[:blocks]       # раскладка картинок из прошлого прогона — промпты на неё и написаны
             notes.insert(0, "✏ своя правка — LLM не запускался / your edit, LLM skipped")
         else:
-            if not scenario and not any(g.get("text") for g in given[:blocks]):
-                raise RuntimeError(f"{TAG} Нет ни сценария, ни текста в блоках. Подключи вход scenario (текстовая нода) "
-                                   f"или напиши, что происходит, в нодах 🎞 Блок.\n\nEN: No scenario and no block text. "
-                                   f"Connect the scenario input or write in the 🎞 Block nodes.")
+            if not scenario:
+                raise RuntimeError(f"{TAG} Нет сценария. Подключи вход scenario — текстовая нода: что происходит во "
+                                   f"всём ролике, своими словами.\n\nEN: No scenario. Connect the scenario input — a text "
+                                   f"node with the whole video in your words.")
             ap = _need_ap()
             try:
                 llm_model, llm_mm, picked = ap.LTX._resolve_llm(self, model, mmproj, bool(auto_download))
@@ -465,23 +466,15 @@ class NeronH3StoryAutoPrompter:
         plan_imgs, block_lines = list(opening_item), []
         for a in assets:
             if len(plan_imgs) < MAX_PLAN_IMAGES:
-                plan_imgs.append((f"Picture {a['id']} (added on the block {a['block'] + 1} node as {a['role']}):",
-                                  a["img"]))
-        for k, g in enumerate(given):
-            desc = []
-            if g.get("text"):
-                desc.append(f"note added on the block {k + 1} node: {g['text']}")
-            mine = [a["id"] for a in assets if a["block"] == k]
-            if mine:
-                desc.append("pictures added on that node: " + ", ".join(mine))
-            if g.get("last") is not None:
-                desc.append(f"block {k + 1} has an exact END FRAME picture (shown to you): block {k + 1} must end "
-                            f"exactly like it")
-                if len(plan_imgs) < MAX_PLAN_IMAGES:
-                    plan_imgs.append((f"End frame of block {k + 1} (block {k + 1} must end exactly like this):",
-                                      g["last"]))
-            if desc:
-                block_lines.append(f"Block {k + 1} node: " + "; ".join(desc))
+                plan_imgs.append((f"Picture {a['id']} ({a['role']}):", a["img"]))
+        for a in assets:
+            block_lines.append(f"{a['id']} — {a['role']}; if the scenario does not say when, about block {a['block'] + 1}.")
+        if given and given[-1].get("last") is not None:
+            block_lines.append(f"The END FRAME of the whole video is given (shown to you): the last block (block "
+                               f"{blocks}) must end exactly like it.")
+            if len(plan_imgs) < MAX_PLAN_IMAGES:
+                plan_imgs.append(("End frame of the whole video (the last block must end exactly like this):",
+                                  given[-1]["last"]))
         times = ", ".join(f"block {k + 1} = {k * (n - SEAM) / FPS:.1f}–{k * (n - SEAM) / FPS + secs:.1f} s"
                           for k in range(blocks))
         user = ["TASK \"PLAN\".", f"The video is {blocks} block(s), each {secs:.1f} seconds ({times}); every block "
@@ -495,9 +488,8 @@ class NeronH3StoryAutoPrompter:
                     f"{scenario}" if scenario else
                     "No overall scenario: build the story from the block notes and the pictures, in block order.")
         if block_lines:
-            user.append("Additions from the 🎞 Block nodes — they ADD to the scenario (details, places, creatures, "
-                        "objects). Put each one into the block where it happens in the story; the node number is only "
-                        "a hint. List the pictures each block needs in its USE line:")
+            user.append("Pictures from the user — show each one in the block where its subject is in the story "
+                        "(list them in the USE lines):")
             user += block_lines
         if not see:
             user.append("No pictures can be shown to you: rely on the text.")
@@ -520,7 +512,7 @@ class NeronH3StoryAutoPrompter:
             no = 2 if opening is not None else 1
             pics = []
             for a in assign[k]:
-                pics.append((f"<Picture {no}>", f"{a['id']}, added as {a['role']}", a["img"]))
+                pics.append((f"<Picture {no}>", f"{a['id']}, {a['role']}", a["img"]))
                 no += 1
             items = list(opening_item) + [(f"{tag} ({role}):", img) for tag, role, img in pics]
             if g.get("last") is not None:
@@ -545,9 +537,6 @@ class NeronH3StoryAutoPrompter:
                          f"The first second repeats that moment (camera included); the new action starts after it.")
             if steps[k]["end"]:
                 u.append(f"It must end exactly in this state: {steps[k]['end']}")
-            notes_here = [f"{a['id']}: {given[a['block']].get('text')}" for a in assign[k] if given[a["block"]].get("text")]
-            if notes_here:
-                u.append("Notes that came with these pictures: " + "; ".join(dict.fromkeys(notes_here)))
             if tags:
                 u.append("Picture tags to use: " + "; ".join(tags))
             if scenario:

@@ -139,14 +139,13 @@ function planText(node) {
     return `${total} с = ${b} блок(а) по ${(n / 24).toFixed(1)} с / ${b} blocks`;
 }
 
-// ---------- входы блоков появляются по мере подключения ----------
-const MAX_BLOCKS = 12;
+// ---------- входы: сценарий, 🖼 кадры одним проводом, LoRA на весь ролик ----------
+// Старые входы (first_frame, block_1…) из прошлых версий убираем — теперь картинки идут через 🖼 Кадры,
+// а 🎞 Блоки подключаются прямо к движку.
 function canon() {
-    const list = [["scenario", "STRING"], ["first_frame", "IMAGE"], ["lora_all", "NERON_H3_LORAS"]];
-    for (let k = 1; k <= MAX_BLOCKS; k++) list.push([`block_${k}`, "NERON_H3_BLOCK"]);
-    return list;
+    return [["scenario", "STRING"], ["frames", "NERON_H3_FRAMES"], ["lora_all", "NERON_H3_LORAS"]];
 }
-function linkedIn(node, name) { const i = node.inputs?.find((x) => x.name === name); return !!(i && i.link != null); }
+function legacy(name) { return name === "first_frame" || /^block_\d+$/.test(name); }
 function sortInputs(node) {
     const rank = new Map(canon().map(([n], i) => [n, i]));
     const before = node.inputs.slice();
@@ -163,17 +162,9 @@ function updateBlockInputs(node) {
     if (!node.inputs || node.__neronUpdating) return;
     node.__neronUpdating = true;
     try {
-        let n = 1;
-        for (let k = 1; k <= MAX_BLOCKS; k++) if (linkedIn(node, `block_${k}`)) n = Math.min(MAX_BLOCKS, k + 1);
-        const want = new Set(["scenario", "first_frame", "lora_all"]);
-        for (let k = 1; k <= n; k++) want.add(`block_${k}`);
-        for (const inp of node.inputs) if (inp.link != null) want.add(inp.name);
-        for (let i = node.inputs.length - 1; i >= 0; i--) {
-            const inp = node.inputs[i];
-            if (canon().some(([nm]) => nm === inp.name) && !want.has(inp.name) && inp.link == null) node.removeInput(i);
-        }
+        for (let i = node.inputs.length - 1; i >= 0; i--) if (legacy(node.inputs[i].name)) node.removeInput(i);
         const names = node.inputs.map((x) => x.name);
-        for (const [name, type] of canon()) if (want.has(name) && !names.includes(name)) node.addInput(name, type);
+        for (const [name, type] of canon()) if (!names.includes(name)) node.addInput(name, type);
         sortInputs(node);
     } catch (e) { console.warn("[Neron Story AutoPrompter] входы:", e); }
     finally { node.__neronUpdating = false; }
@@ -217,18 +208,16 @@ continuity with the previous block, actions by
 seconds with physics, a detailed ending, sound.
 
 📌 WIRING 📌
-scenario    ← a text node: the whole video in your
-              words, any language. Works on its own,
-              without any blocks.
-first_frame ← Load Image: the opening frame and the
-              appearance reference <Picture 1>.
-block_1, 2… ← 🎞 Block nodes (optional): pictures, a
-              short note and LoRAs of that block. The
-              next input appears when you connect one.
-lora_all    ← 🎨 LoRA set: style for the whole video.
-story  → the engine's 'story' input. That's all: the
-         engine then shows only story → video.
+scenario ← a text node: the whole video in your words,
+           any language. This is the main thing.
+frames   ← 🖼 Frames node: all pictures in ONE wire —
+           first frame (start + appearance <Picture 1>),
+           two middle pictures, last frame.
+lora_all ← 🎨 LoRA set: style for the whole video.
+story  → the engine's 'story' input. That's all.
 prompts → (optional) all block prompts as text.
+Per-block LoRAs or your own text for one block —
+🎞 Block nodes straight on the ENGINE (expert).
 
 📌 CAMERA 📌
 Works like our ⚡ Fixed Camera H3 node:
@@ -251,18 +240,16 @@ Video 5–45 s and block 5–15 s (maximum) are set HERE.
 The plan is shown live on the node, e.g.
 "30 s = 4 blocks of 8.7 s", and goes to the engine.
 
-📌 SCENARIO AND 🎞 BLOCKS 📌
+📌 SCENARIO AND PICTURES 📌
 The scenario is the backbone: the whole story, spread
-over the blocks in its order. 🎞 Block nodes ADD to it
-— a note and pictures (a tiger, a crater, a room).
-The plan puts each addition into the block where it
-happens in the story, even if you wired it to
-another block node: the tiger from block_1 shows up
-in block 2 if that's when it appears. The preview
-title tells where pictures moved ("A2→2").
-Only last_frame is strict: that block ends exactly
-like that picture — use it only for a frame of the
-same scene and angle.
+over the blocks in its order.
+Middle pictures (a tiger, a crater, a room) appear
+where the scenario says; if it doesn't say — at
+about 1/3 and 2/3 of the video. The 🖼 line under
+each block in the preview shows its pictures.
+Last frame — strict: the very end of the video looks
+exactly like it. Use a frame of the same scene and
+angle.
 In the prompts pictures become <Picture N> in the
 engine's numbering (<Picture 1> = appearance).
 
@@ -298,18 +285,16 @@ takes longer — see the time in the preview title.
 концовка, звук.
 
 📌 ПОДКЛЮЧЕНИЕ 📌
-scenario    ← текстовая нода: весь ролик своими
-              словами, любой язык. Работает и сам,
-              без блоков.
-first_frame ← Load Image: начало ролика и образец
-              внешности <Picture 1>.
-block_1, 2… ← ноды 🎞 Блок (по желанию): картинки,
-              короткая заметка и LoRA блока. Подключил
-              — появился вход для следующего.
-lora_all    ← 🎨 Набор LoRA: стиль на весь ролик.
-story  → вход 'story' движка. И всё: на движке тогда
-         видно только story → video.
+scenario ← текстовая нода: весь ролик своими словами,
+           любой язык. Это главное.
+frames   ← нода 🖼 Кадры: все картинки ОДНИМ проводом
+           — первый кадр (начало + внешность
+           <Picture 1>), два промежуточных, последний.
+lora_all ← 🎨 Набор LoRA: стиль на весь ролик.
+story  → вход 'story' движка. И всё.
 prompts → (по желанию) все промпты текстом.
+LoRA отдельных блоков или свой текст для блока —
+ноды 🎞 Блок прямо на ДВИЖКЕ (эксперт).
 
 📌 КАМЕРА 📌
 Работает как наша нода ⚡ Fixed Camera H3:
@@ -332,17 +317,15 @@ prompts → (по желанию) все промпты текстом.
 План виден на ноде сразу, например «30 с = 4 блока по
 8,7 с», и уходит в движок.
 
-📌 СЦЕНАРИЙ И 🎞 БЛОКИ 📌
+📌 СЦЕНАРИЙ И КАРТИНКИ 📌
 Сценарий — хребет: вся история, разложенная по
-блокам по порядку. Ноды 🎞 Блок её ДОПОЛНЯЮТ —
-заметка и картинки (тигр, воронка, комната). План
-кладёт каждую добавку в тот блок, где это происходит
-по сюжету, даже если ты подключил её к другой ноде:
-тигр с block_1 окажется в блоке 2, если появляется
-он там. Куда переехали картинки — видно в заголовке
-предпросмотра («A2→2»).
-Жёсткий только last_frame: блок закончится ровно этой
-картинкой — ставь туда кадр той же сцены и ракурса.
+блокам по порядку.
+Промежуточные картинки (тигр, воронка, комната)
+появляются там, где это сказано в сценарии; не
+сказано — примерно на 1/3 и 2/3 ролика. Строка 🖼 под
+каждым блоком в предпросмотре — его картинки.
+Последний кадр — жёсткий: самый конец ролика будет
+ровно таким. Ставь кадр той же сцены и ракурса.
 В промптах картинки — <Picture N> в нумерации движка
 (<Picture 1> — внешность).
 

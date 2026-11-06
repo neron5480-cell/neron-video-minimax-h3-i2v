@@ -259,11 +259,18 @@ class NeronH3Story:
 
         given = []
         for k in range(MAX_BLOCKS):
-            b = kw.get(f"block_{k + 1}") or (sb[k] if k < len(sb) else None) or {}
-            text = (kw.get(f"prompt_{k + 1}") or b.get("prompt") or b.get("text") or "").strip()
-            loras = list(b.get("loras") or []) + list(kw.get(f"lora_{k + 1}") or [])
-            given.append({"prompt": text, "loras": loras, "first": b.get("first"), "mid": list(b.get("mid") or []),
-                          "last": b.get("last")})
+            # 🎞 Блок на движке ДОПОЛНЯЕТ шину: свой текст — заменяет промпт блока, пустой — промпт AutoPrompter
+            # остаётся; LoRA складываются; свои картинки — вместо картинок шины.
+            wb = kw.get(f"block_{k + 1}") or {}
+            bb = (sb[k] if k < len(sb) else None) or {}
+            own = (wb.get("text") or "").strip()
+            text = (kw.get(f"prompt_{k + 1}") or own or bb.get("prompt") or bb.get("text") or "").strip()
+            if own and bb.get("prompt"):
+                notes.append(f"Блок {k + 1}: текст 🎞 Блока вместо промпта AutoPrompter")
+            loras = list(bb.get("loras") or []) + list(wb.get("loras") or []) + list(kw.get(f"lora_{k + 1}") or [])
+            pics = wb if any(wb.get(x) is not None for x in ("first", "last")) or wb.get("mid") else bb
+            given.append({"prompt": text, "loras": loras, "first": pics.get("first"),
+                          "mid": list(pics.get("mid") or []), "last": pics.get("last")})
         if first is None and given[0]["first"] is not None:
             first = given[0]["first"]
         if not any(g["prompt"] for g in given):
