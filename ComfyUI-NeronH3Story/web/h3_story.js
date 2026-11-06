@@ -692,9 +692,9 @@ In the block they become <Picture 2>, <Picture 3>…
 Up to 3 per set, sets can be chained.
 
 📌 MODE 📌
-🚀 Fast — 4 steps on the 4-step LoRA (lightx2v
-   settings: euler, shift 6/3). Cartoons, 3D, trying
-   out a story. Expert: 4 / 6 / 8 steps.
+🚀 Fast — 6 steps on the fast LoRA (same sampler
+   and shift as Turbo). Cartoons, 3D, trying out a
+   story. Expert: 4 / 6 / 8 / 10 steps.
 ⚡ Turbo — 12 steps on the 8-step LoRA. Main mode.
 Quality — 40 steps, ~3× longer than Turbo.
 Maximum — 50 steps + the bf16 model if you have it.
@@ -814,9 +814,9 @@ H3 делает картинку и звук вместе — голоса, ша
 До 3 в наборе, наборы можно цеплять цепочкой.
 
 📌 РЕЖИМ 📌
-🚀 Быстро — 4 шага на 4-шаговой LoRA (настройки
-   авторов lightx2v: euler, сдвиг 6/3). Мультики, 3D,
-   проба сюжета. Эксперт: 4 / 6 / 8 шагов.
+🚀 Быстро — 6 шагов на быстрой LoRA (сэмплер и сдвиг
+   как в Турбо). Мультики, 3D, проба сюжета.
+   Эксперт: 4 / 6 / 8 / 10 шагов.
 ⚡ Турбо — 12 шагов на 8-шаговой LoRA. Основной.
 Качество — 40 шагов, ~3× дольше Турбо.
 Максимум — 50 шагов + модель bf16, если скачана.

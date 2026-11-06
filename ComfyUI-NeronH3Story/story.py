@@ -34,12 +34,14 @@ QUALITY_STEPS = 40
 MAX_STEPS = 50
 TURBO_STEPS = 12
 TURBO_STRENGTH = 0.8
-# 🚀 Быстро — 4-шаговая LoRA lightx2v, настройки авторов: euler, сдвиг 6/3, сила 1.0
-FAST_STEPS = [4, 6, 8]
+# 🚀 Быстро — 4-шаговая LoRA lightx2v. Настройки авторов (euler, сдвиг 6, 4 шага) на живом прогоне дали грязную
+# картинку — берём то, что проверено в Турбо: res_multistep, сдвиг 12/3, и по умолчанию 6 шагов (4…10 — в эксперте).
+FAST_STEPS = [4, 6, 8, 10]
+FAST_DEFAULT_STEPS = 6
 FAST_STRENGTH = 1.0
-FAST_SAMPLER = "euler"
-FAST_SHIFT_VIDEO = 6.0
-FAST_SHIFT_AUDIO = 3.0
+FAST_SAMPLER = SAMPLER
+FAST_SHIFT_VIDEO = SHIFT_VIDEO
+FAST_SHIFT_AUDIO = SHIFT_AUDIO
 REF_AUDIO_MAX_SEC = 15.0
 
 UNET_NAME = "minimax_h3_fl2va_pruned_int8_convrot.safetensors"
@@ -282,7 +284,7 @@ def block_refs_prompt(prompt, start_no, who, mids):
 
 def generate(prompts, width, height, length, mode, seed, models, first_frame=None, appearance=None,
              keep_appearance=True, seam=SEAMS[0], seam_frames=22, ref_quality="auto", fast_attention=False,
-             global_loras=(), block_loras=None, total_frames=None, block_images=None, fast_steps=4, ref_audios=()):
+             global_loras=(), block_loras=None, total_frames=None, block_images=None, fast_steps=6, ref_audios=()):
     """→ (видео [T,H,W,3] float32, звук, последний кадр, число кадров, отчёт-строки).
     global_loras — [(имя, сила)] на весь ролик; block_loras[k] — [(имя, сила)] только для блока k;
     total_frames — обрезать готовый ролик ровно до этой длины;
@@ -295,7 +297,7 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
     fast = mode == FAST
     turbo = mode == TURBO
     best = mode == BEST
-    fast_steps = int(fast_steps) if int(fast_steps or 0) in FAST_STEPS else FAST_STEPS[0]
+    fast_steps = int(fast_steps) if int(fast_steps or 0) in FAST_STEPS else FAST_DEFAULT_STEPS
     steps = fast_steps if fast else TURBO_STEPS if turbo else MAX_STEPS if best else QUALITY_STEPS
     if ref_quality == "auto":
         ref_quality = "match" if (turbo or fast) else "max"

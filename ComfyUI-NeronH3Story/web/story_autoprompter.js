@@ -190,7 +190,7 @@ function updateBlockInputs(node) {
 function makePreview(node) {
     const box = document.createElement("textarea");
     box.readOnly = true;
-    box.placeholder = "Здесь появятся промпты всех блоков.\nEN: The prompts of all blocks appear here.";
+    box.placeholder = "Здесь появится промпт ролика — по отрезкам, с секундами.\nEN: The video prompt appears here, part by part with seconds.";
     box.style.cssText = "width:100%;height:100%;box-sizing:border-box;resize:none;background:#0e1418;color:#d8e6ee;" +
         "margin:0;border:1px solid #2f4a5a;border-radius:6px;padding:6px 8px;font:11px/1.45 monospace;";
     const w = node.addDOMWidget("_ltx_preview", "ltx_preview", box,

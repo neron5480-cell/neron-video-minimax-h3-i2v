@@ -120,9 +120,9 @@ class NeronH3Story:
                            tooltip="Показать стык, модели, LoRA, ручной размер и сид. Скрытое всё равно работает.\n\n"
                                    "EN: Show seam, models, LoRA, manual size and seed. Hidden settings still work.")),
                 "mode": (story_mod.MODES, _main("режим / mode", default=story_mod.TURBO,
-                         tooltip="🚀 Быстро — 4 шага на быстрой LoRA: мультики, 3D, проба сюжета. ⚡ Турбо — 12 шагов, "
+                         tooltip="🚀 Быстро — 6 шагов на быстрой LoRA: мультики, 3D, проба сюжета. ⚡ Турбо — 12 шагов, "
                                  "основной режим. Качество — 40 шагов, ~3× дольше. Максимум — 50 шагов + bf16, если "
-                                 "скачана. Время умножается на число блоков.\n\nEN: Fast 4 steps (cartoons, 3D, story "
+                                 "скачана. Время умножается на число блоков.\n\nEN: Fast 6 steps (cartoons, 3D, story "
                                  "drafts) · Turbo 12 · Quality 40 · Maximum 50 + bf16. Time × number of blocks.")),
                 "total_seconds": ("FLOAT", _main("длина ролика, с / video seconds", default=30.0, min=TOTAL_MIN,
                                   max=TOTAL_MAX, step=0.5, display="slider",
@@ -158,10 +158,10 @@ class NeronH3Story:
                                 tooltip="22 кадра ≈ 0,9 с — по умолчанию. 5 — короче, 39 ≈ 1,6 с — больше «памяти» о "
                                         "движении. Только сетка модели.\n\nEN: 22 ≈ 0.9 s default; 5 shorter; "
                                         "39 ≈ 1.6 s more motion memory.")),
-                "fast_steps": (["4", "6", "8"], _exp("🚀 шаги «Быстро» / Fast steps", default="4",
-                               tooltip="Сколько шагов в режиме 🚀 Быстро. 4 — как задумано авторами LoRA, 6–8 — "
-                                       "чуть чище детали, дольше.\n\nEN: Steps in 🚀 Fast mode. 4 is what the LoRA "
-                                       "was made for; 6–8 a bit cleaner, slower.")),
+                "fast_steps": (["4", "6", "8", "10"], _exp("🚀 шаги «Быстро» / Fast steps", default="6",
+                               tooltip="Сколько шагов в режиме 🚀 Быстро. 6 — по умолчанию; 4 — быстрее, но грязнее; "
+                                       "8–10 — чище детали, дольше.\n\nEN: Steps in 🚀 Fast mode. 6 by default; 4 is "
+                                       "faster but dirtier; 8–10 cleaner, slower.")),
                 "unet_model": (unets, _exp("модель / model", default=AUTO_MODEL, tooltip=AUTO_TIP)),
                 "clip_model": (clips, _exp("текстовый энкодер / text encoder", default=AUTO_MODEL, tooltip=AUTO_TIP)),
                 "vae_video_model": (vaes, _exp("VAE видео / video VAE", default=AUTO_MODEL, tooltip=AUTO_TIP)),
@@ -242,7 +242,7 @@ class NeronH3Story:
     def generate(self, expert=False, mode=None, total_seconds=30.0, block_seconds=10.0, keep_appearance=True,
                  size=AUTO_SIZE, manual_width=1344, manual_height=768, seam=None, seam_frames="22", unet_model=None,
                  clip_model=None, vae_video_model=None, vae_audio_model=None, turbo_lora_model=None,
-                 fast_lora_model=None, fast_steps="4", ref_audio_1=None, ref_audio_2=None, ref_audio_3=None, seed=1,
+                 fast_lora_model=None, fast_steps="6", ref_audio_1=None, ref_audio_2=None, ref_audio_3=None, seed=1,
                  ref_quality="auto", fast_attention=False, story=None, first_frame=None, appearance=None,
                  lora_all=None, width=None, height=None, **kw):
         notes = []
@@ -352,7 +352,7 @@ class NeronH3Story:
                 first_frame=first, appearance=appear, keep_appearance=bool(keep_appearance), seam=seam_ok,
                 seam_frames=int(seam_frames or 22), ref_quality=ref_quality, fast_attention=bool(fast_attention),
                 global_loras=bus.loras_pairs(g_loras), block_loras=block_loras, total_frames=T,
-                block_images=block_images, fast_steps=int(fast_steps or 4),
+                block_images=block_images, fast_steps=int(fast_steps or 6),
                 ref_audios=[a for a in (ref_audio_1, ref_audio_2, ref_audio_3) if a is not None])
         except Exception:
             story_mod.free("после ошибки / after error")
