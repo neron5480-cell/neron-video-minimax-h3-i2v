@@ -268,9 +268,9 @@ In the prompts pictures become <Picture N> in the
 engine's numbering (<Picture 1> = appearance).
 
 📌 PREVIEW AND EDIT 📌
-The preview shows all prompts, split by
-"### БЛОК k ###" lines. The "💬" line is a short
-summary for you — it is NOT sent to the model.
+The preview shows all prompts, split by header lines
+"### БЛОК k · seconds · 🖼 pictures ###" (headers are
+NOT sent to the model).
 "✏ To edit" copies it into "your edit". While it has
 text, it goes to the engine as is (LLM skipped) —
 fix a block and run again. Keep the ### lines.
@@ -344,9 +344,9 @@ LoRA отдельных блоков или свой текст для блок�
 (<Picture 1> — внешность).
 
 📌 ПРЕДПРОСМОТР И ПРАВКА 📌
-В окне — все промпты, разделённые строками
-«### БЛОК k ###». Строка «💬» — краткий пересказ
-для тебя, в модель она НЕ идёт.
+В окне — все промпты, разделённые строками-
+заголовками «### БЛОК k · секунды · 🖼 картинки ###»
+(заголовки в модель НЕ идут).
 «✏ В правку» копирует их в «свою правку». Пока там
 есть текст, он идёт в движок как есть (LLM не
 запускается) — поправил блок и запустил снова.

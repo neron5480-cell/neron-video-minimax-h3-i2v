@@ -700,8 +700,9 @@ Quality — 40 steps, ~3× longer than Turbo.
 Maximum — 50 steps + the bf16 model if you have it.
 Measured on the author's PC, 1344×768: Turbo int8,
 30 s video (4 blocks) incl. AutoPrompter — 1 h 18 min;
-Turbo bf16 — ~30 min per 10 s block. Time grows with
-the number of blocks.
+Turbo bf16 — ~30 min per 10 s block. 🚀 Fast 6 steps:
+30 s portrait video (4 blocks) incl. AutoPrompter —
+44 min. Time grows with the number of blocks.
 
 📌 THREE STATES OF THE NODE 📌
 • 'story' connected — only story → video: plan,
@@ -822,8 +823,9 @@ H3 делает картинку и звук вместе — голоса, ша
 Максимум — 50 шагов + модель bf16, если скачана.
 Замеры на компьютере автора, 1344×768: Турбо int8,
 ролик 30 с (4 блока) вместе с AutoPrompter — 1 ч 18 мин;
-Турбо bf16 — ~30 мин на блок 10 с. Время растёт с
-числом блоков.
+Турбо bf16 — ~30 мин на блок 10 с. 🚀 Быстро 6 шагов:
+вертикальный ролик 30 с (4 блока) вместе с
+AutoPrompter — 44 мин. Время растёт с числом блоков.
 
 📌 ТРИ СОСТОЯНИЯ НОДЫ 📌
 • Подключён 'story' — видно только story → video:

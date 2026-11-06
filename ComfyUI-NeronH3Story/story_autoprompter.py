@@ -235,6 +235,8 @@ def _split_edit(text):
         end = marks[i + 1].start() if i + 1 < len(marks) else len(text)
         body = text[m.end():end].strip()
         k = int(m.group(1))
+        if "🖼" in m.group(0):           # картинки отрезка — в заголовке «### БЛОК k · … · 🖼 A1 ###»
+            pics[k] = [x.upper() for x in re.findall(r"\bA\d+\b", m.group(0).split("🖼", 1)[1], re.I)]
         for l in body.splitlines():
             if l.strip().startswith("🖼"):
                 pics[k] = [x.upper() for x in re.findall(r"\bA\d+\b", l, re.I)]
@@ -251,13 +253,11 @@ def _join(prompts, summaries, n, pics=None):
     parts = []
     for k, p in enumerate(prompts):
         a, b = k * (n - SEAM) / FPS, k * (n - SEAM) / FPS + secs
-        head = f"### БЛОК {k + 1} / BLOCK {k + 1} · {a:.1f}–{b:.1f} с ###"
-        ru = summaries[k] if k < len(summaries) and summaries[k] else ""
+        # одна строка-заголовок: номер, секунды и картинки отрезка (🖼 A1, A2) — без лишних надписей
         pl = ""
         if pics is not None and k < len(pics):
-            pl = f"\n{PICS_LINE} {', '.join(pics[k]) if pics[k] else '—'}"
-        parts.append(head + (f"\n💬 для тебя, в модель не идёт / for you, not sent: {ru}" if ru else "") + pl + "\n"
-                     + p.strip())
+            pl = f" · 🖼 {', '.join(pics[k]) if pics[k] else '—'}"
+        parts.append(f"### БЛОК {k + 1} / BLOCK {k + 1} · {a:.1f}–{b:.1f} с{pl} ###\n" + p.strip())
     return "\n\n".join(parts)
 
 
