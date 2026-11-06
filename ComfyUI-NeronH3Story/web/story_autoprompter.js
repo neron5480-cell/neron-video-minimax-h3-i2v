@@ -97,12 +97,15 @@ function applyGroupGaps(node) {
     }
 }
 
+// Невидимая распорка: свой тип виджета, клик по ней ничего не открывает (у текстового — окошко «Value»)
+function blank(node, name, height) {
+    return node.addCustomWidget({ name, type: "neron_blank", value: "", serialize: false,
+                                  options: { serialize: false }, draw() {}, computeSize: () => [0, height],
+                                  mouse() { return false; } });
+}
+
 function addGap(node, name, beforeName) {
-    const gap = node.addWidget("text", name, "", () => {});
-    gap.serialize = false;
-    gap.options = Object.assign(gap.options || {}, { serialize: false });
-    gap.draw = function () {};
-    gap.computeSize = () => [0, GROUP_GAP + 6];
+    const gap = blank(node, name, GROUP_GAP + 6);
     node.widgets.splice(node.widgets.indexOf(gap), 1);
     const i = node.widgets.findIndex((w) => w.name === beforeName);
     node.widgets.splice(i >= 0 ? i : node.widgets.length, 0, gap);
@@ -390,9 +393,7 @@ app.registerExtension({
             const r = oCreated?.apply(this, arguments);
             const node = this;
             node.color = NODE_COLOR; node.bgcolor = NODE_BGCOLOR; node.resizable = true;
-            const spacer = node.addWidget("text", "_spacer", "", () => {});
-            spacer.serialize = false;
-            spacer.draw = function () {}; spacer.computeSize = () => [0, 20];
+            const spacer = blank(node, "_spacer", 20);
             node.widgets.splice(node.widgets.indexOf(spacer), 1); node.widgets.unshift(spacer);
             const ex = node.widgets.find((w) => w.name === "expert");
             if (ex) {

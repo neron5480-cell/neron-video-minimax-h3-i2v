@@ -900,9 +900,10 @@ app.registerExtension({
             node.color = NODE_COLOR;
             node.bgcolor = NODE_BGCOLOR;
             // невидимая распорка сверху — подпись первой панели не наезжает на входы
-            const spacer = node.addWidget("text", "_spacer", "", () => {});
-            spacer.draw = function () {};
-            spacer.computeSize = () => [0, CLOCK_ROOM];   // место под часы — сразу под входами/выходами
+            // свой тип виджета: клик по распорке ничего не открывает (у текстового — окошко «Value»)
+            const spacer = node.addCustomWidget({ name: "_spacer", type: "neron_blank", value: "", serialize: false,
+                                                  options: { serialize: false }, draw() {},
+                                                  computeSize: () => [0, CLOCK_ROOM], mouse() { return false; } });
             node.widgets.splice(node.widgets.indexOf(spacer), 1);
             node.widgets.unshift(spacer);
             for (const w of node.widgets || []) {
