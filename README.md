@@ -44,7 +44,8 @@
 
 **Общий код — одна копия.** Некоторые папки берут код у соседей, поэтому копируйте их вместе:
 - `ComfyUI-H3-Static-Camera` и `NeronStudio-Image-Processor` → нужна `ComfyUI-Interactive-Processor` (загрузка и цвет картинки);
-- `NeronStudio-AutoPrompter` → нужна `ComfyUI-H3-Static-Camera` (камера H3).
+- `NeronStudio-AutoPrompter` → нужна `ComfyUI-H3-Static-Camera` (камера H3);
+- `ComfyUI-NeronH3Story` (его 📝 Story AutoPrompter) → нужна `NeronStudio-AutoPrompter` (сервер LLM) и `ComfyUI-H3-Static-Camera`.
 
 Не хватит соседа — в консоли будет понятная ошибка с именем нужной папки.
 
@@ -74,6 +75,22 @@
 * Работает и с лёгкими (квантованными) моделями.
 
 *Подробности — в [README внутри папки](ComfyUI-NeronH3Engine/README.md).*
+
+---
+
+## 🎬 NERON H3 STORY — длинные ролики MiniMax H3 до 45 секунд (новое)
+
+👋 Ноды и воркфлоу лежат в папке **[`ComfyUI-NeronH3Story`](ComfyUI-NeronH3Story/)**.
+
+Тот же качественный движок H3, только ролик **5–45 секунд со звуком** — цепочкой блоков, склеенных без видимых стыков: каждый следующий блок продолжает хвост прошлого **вместе со звуком**.
+
+* **🖼 Кадры** — первый, два промежуточных и последний кадр загружаются прямо в одну ноду, без лапши.
+* **📝 Story AutoPrompter** — один сценарий своими словами → промпт каждого отрезка с секундами, физикой и звуком; камера стоит, пока в сценарии не попросишь движение.
+* Можно и **без автопромтера** — нодами **🎞 Блок** (свой текст, картинки и LoRA у каждого отрезка).
+* Режимы **🚀 Быстро / ⚡ Турбо / Качество / Максимум**; модели качает сам.
+* Настроено на качество — это долго (30 с ≈ 45 мин – 1,5 ч на RTX 5070 Ti); как ускорить — в README.
+
+*Подробности — в [README внутри папки](ComfyUI-NeronH3Story/README.md).*
 
 ---
 
@@ -178,6 +195,7 @@
 |---|---|---|
 | Подготовить первый кадр | **🖼 Neron Studio Image Processor** — пресеты подрезаются по центру, Сброс и Справка | Interactive Image Processor (пресеты растягивают картинку); Smart Load & Resize Image и Manual Color & Upscale Panel — *legacy*, тот же код |
 | Сгенерировать видео H3 | **🎬 Neron H3 Engine** — качество; **⚡ Neron H3 Engine Fast** — скорость (тест, ветка dev) | 🎥 Neron MiniMax H3 Generator (Lite) — для воркфлоу Neron Studio H3 |
+| Длинный ролик H3 (5–45 с) | **🎬 Neron H3 Story** + **🖼 Кадры** + **📝 Story AutoPrompter** (или ноды **🎞 Блок**) | — |
 | Сгенерировать видео LTX 2.5 | **🎬 Neron LTX Engine** — первый / промежуточные / последний кадр, звук, модели качает сам; **🎬 Neron LTX AutoPrompter** — промпт под LTX с физикой и камерой, LLM качает сам | — |
 | Написать промпт | **🎬 Neron AutoPrompter** — промпт под H3 по картинке и брифу | 🎬 Neron Dialog Autoprompter и 🧠 Multi-Image LLM — диалоговый режим |
 | Камера H3 | **⚡ Fixed Camera H3** | — |
@@ -245,7 +263,8 @@ Nodes from `Neron_Studio_H3` are copied **one by one** (the folders inside it), 
 
 **Shared code lives in one copy.** Some folders use code from their neighbours, so copy them together:
 - `ComfyUI-H3-Static-Camera` and `NeronStudio-Image-Processor` → need `ComfyUI-Interactive-Processor` (image loading and color);
-- `NeronStudio-AutoPrompter` → needs `ComfyUI-H3-Static-Camera` (the H3 camera).
+- `NeronStudio-AutoPrompter` → needs `ComfyUI-H3-Static-Camera` (the H3 camera);
+- `ComfyUI-NeronH3Story` (its 📝 Story AutoPrompter) → needs `NeronStudio-AutoPrompter` (the LLM server) and `ComfyUI-H3-Static-Camera`.
 
 If a neighbour is missing, the console names the folder you need.
 
@@ -275,6 +294,22 @@ The best quality MiniMax H3 can give on a home PC. No upscales, no tricks: hones
 * Works with light (quantized) models too.
 
 *Details are in the [README inside the folder](ComfyUI-NeronH3Engine/README.md).*
+
+---
+
+## 🎬 NERON H3 STORY — long MiniMax H3 videos up to 45 seconds (new)
+
+👋 The nodes and workflows live in the **[`ComfyUI-NeronH3Story`](ComfyUI-NeronH3Story/)** folder.
+
+The same quality H3 engine, but a **5–45 s video with sound** — a chain of blocks joined without visible seams: every next block continues the previous one's tail **with its sound**.
+
+* **🖼 Frames** — first, two middle and last frames loaded right inside one node, no spaghetti.
+* **📝 Story AutoPrompter** — one scenario in your words → a prompt per part with timing, physics and sound; the camera stays locked unless the scenario asks for a move.
+* Or **without the AutoPrompter** — with **🎞 Block** nodes (own text, pictures and LoRAs per part).
+* **🚀 Fast / ⚡ Turbo / Quality / Maximum** modes; downloads its models.
+* Tuned for quality — it takes time (30 s ≈ 45 min – 1.5 h on an RTX 5070 Ti); how to speed up — in the README.
+
+*Details are in the [README inside the folder](ComfyUI-NeronH3Story/README.md).*
 
 ---
 
@@ -379,6 +414,7 @@ Details in the **[README inside NeronTheme](NeronTheme/README.md)**.
 |---|---|---|
 | Prepare the first frame | **🖼 Neron Studio Image Processor** — presets are center-cropped, Reset and Help | Interactive Image Processor (presets stretch the picture); Smart Load & Resize Image and Manual Color & Upscale Panel — *legacy*, same code |
 | Generate H3 video | **🎬 Neron H3 Engine** — quality; **⚡ Neron H3 Engine Fast** — speed (test, dev branch) | 🎥 Neron MiniMax H3 Generator (Lite) — for the Neron Studio H3 workflows |
+| Long H3 video (5–45 s) | **🎬 Neron H3 Story** + **🖼 Frames** + **📝 Story AutoPrompter** (or **🎞 Block** nodes) | — |
 | Generate LTX 2.5 video | **🎬 Neron LTX Engine** — first / middle / last frames, audio, downloads its models; **🎬 Neron LTX AutoPrompter** — an LTX prompt with physics and camera, downloads its LLM | — |
 | Write the prompt | **🎬 Neron AutoPrompter** — an H3 prompt from a picture and a brief | 🎬 Neron Dialog Autoprompter and 🧠 Multi-Image LLM — dialog mode |
 | H3 camera | **⚡ Fixed Camera H3** | — |

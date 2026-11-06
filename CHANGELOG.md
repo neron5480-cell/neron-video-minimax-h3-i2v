@@ -1,5 +1,19 @@
 # Changelog / История изменений
 
+## 🎬 Neron H3 Story — длинные ролики H3 до 45 с / long H3 videos up to 45 s (main, 06.11.2026)
+
+**RU:**
+- **🎬 Neron H3 Story** — ролик MiniMax H3 5–45 с со звуком цепочкой блоков (блок 5–15 с, до 12). Каждый следующий блок начинается с последних ~0,9 с прошлого **вместе со звуком** (родная нода «Add Guide for MiniMax H3»), перехлёст вырезается, звук сводится — стыков не видно и не слышно. Модель грузится один раз на весь ролик. 🔒 Сохранить внешний вид — первый кадр образцом во все блоки.
+- **🖼 Neron H3 Кадры** — четыре окна загрузки прямо в ноде (первый, два промежуточных, последний), клик или перетаскивание, картинки любого размера; один провод вместо четырёх.
+- **📝 Neron H3 Story AutoPrompter** — один сценарий (любой язык) → план и промпт каждого отрезка: продолжение стыка, действия по секундам, физика, звук. Камера как в ⚡ Fixed Camera H3 (АВТО: стоит, пока сценарий не попросит движение; пресеты — жёсткий ракурс). Промежуточные картинки появляются там, где сказано в сценарии («изображение 3»), и держат облик до конца. Предпросмотр и своя правка. Пользуется сервером LLM 🎬 Neron AutoPrompter.
+- **🎞 Neron H3 Блок** и **🎨 Набор LoRA** — работа без автопромтера: свой текст, картинки и LoRA у каждого отрезка; с автопромтером — LoRA отдельного отрезка.
+- Режимы **🚀 Быстро** (быстрая LoRA, 6 шагов) / **⚡ Турбо** / **Качество** / **Максимум**. **📥 Модели качает сам** (Comfy-Org + lightx2v), что лежит — не трогает. Эксперт: звуковые образцы, стык, свои модели.
+- Настроено на качество: 30 с — от ~45 мин (🚀) до 1,5 ч (⚡ на полных моделях) на RTX 5070 Ti. Совет: в сложных сценах первый кадр — горизонтальный.
+- Процессы: `Neron_H3_Story_AutoPrompter.json`, `Neron_H3_Story_Expert.json` (блоки без автопромтера), `Neron_H3_Story.json`.
+
+**EN:**
+- **🎬 Neron H3 Story** — a 5–45 s MiniMax H3 video with sound as a chain of blocks joined without visible or audible seams (each block continues the previous tail with its sound). **🖼 Frames** — four picture windows inside one node. **📝 Story AutoPrompter** — one scenario → a prompt per part with timing, physics, sound and camera. **🎞 Block** / **🎨 LoRA set** — work without the AutoPrompter or add per-part LoRAs. 🚀 Fast / ⚡ Turbo / Quality / Maximum; downloads its models. Tuned for quality: 30 s ≈ 45 min – 1.5 h on an RTX 5070 Ti.
+
 ## 🎬 LTX 2.5 v2.0 — Neron LTX Engine + Neron LTX AutoPrompter (main, 04.11.2026)
 
 **RU:**

@@ -1,0 +1,327 @@
+{
+  "revision": 0,
+  "last_node_id": 9,
+  "last_link_id": 6,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        -1781.2887310763115,
+        -557.4897215345264
+      ],
+      "size": [
+        600,
+        560
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## 🎬 Neron H3 Story + 📝 AutoPrompter\n\n**RU**\n1. **🖼 Кадры** — четыре окна прямо в ноде: нажми на окно или перетащи на него файл. 1 — первый кадр (начало ролика и образец внешности), 2 и 3 — промежуточные (что появится по ходу: место, существо, предмет), 4 — последний кадр (чем ролик закончится). Картинки любого размера. Всё идёт ОДНИМ проводом `frames`.\n2. **Сценарий** — весь ролик своими словами, любой язык. На картинки ссылайся номером окна: «изображение 2», «изображение 3». Время — «на 15 секунде». Движение камеры — так и пиши («камера плавно поворачивается и встаёт сбоку»), ракурс на автопромтере — АВТО. Сейчас там пример — замени на свой.\n3. На **📝 Story AutoPrompter**: длина ролика и блока — план видно прямо на ноде («30 с = 4 блока по 8,7 с»).\n4. Стиль на весь ролик — **🎨 Набор LoRA** → `lora_all`.\n5. На движке подключён только `story`. Режим: ⚡ Турбо (по умолчанию) или 🚀 Быстро. LoRA отдельного блока или свой текст для блока — включи ⚙ эксперт на движке и подключи ноду **🎞 Блок** в `block_k`.\n6. Промпты всех отрезков видны в окне автопромтера; «✏ В правку» — поправить руками.\n\nПервый запуск: модели H3 и LLM (Qwen 3.5 9B) скачаются сами.\n\n**EN** 🖼 Frames: click or drop pictures into its four windows (first / two middle / last) → frames; scenario (refer to pictures as «image 2», «image 3») → scenario; lengths on the AutoPrompter; 🎨 LoRA set → lora_all; story → engine. Per-block LoRAs or text — 🎞 Block nodes on the engine (expert)."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 3,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -875.1963050311796,
+        -203.15752061597084
+      ],
+      "size": [
+        380,
+        200
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "title": "Сценарий / Scenario",
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "видео 30 секунд.\nдевушка спускается по лестнице и достигает разрушенной площади. Она останавливается у подножия лестницы и смотрит в перед.\nвокруг сильный ветер несущий снег. \nна заднем плане сверкают молнии (изображение 2), мощный грохот грозы и треск молний.\nкамера плавно поворачивается и встает с боку немного выше девушки показывая панораму разрушенной площади. сильный ветер со снегом. Площадь разрушена , девушка стоит у лестницы.\nв центр площади на расстоянии от девушки  в одно место начинают неистово бить молнии (изображение 2). вокруг места ударов поднимается еле заметный вихрь из каменой крошки и снега. в месте ударов молнии проглядываются раскалённые камни площади. Девушка прикрывает лицо рукой защищая глаза.\nна 15 секунде молнии перестают бить в площадь оставляя в месте ударов небольшой раскалённый кратер. над кратером вихрь из каменой крошки и снега. по вихрю пробегают многочисленные остаточные молнии . \nиз вихря проявляется белый тигр (изображение 3)  покрытый молниями , его ярко синие глаза периодически испускают молнии, что пробегают по его шкуре и лапам впиваясь в камни площади.\nдевушка опускает руку и смотрит спокойно на белого тигра покрытого молниями. тигр рыча начинает идти к девушке.\nдевушка спокойно его ждет. На 29 секунде камера показывает их полностью в кадре.\n \n\n"
+      ]
+    },
+    {
+      "id": 4,
+      "type": "NeronH3LoraPack",
+      "pos": [
+        -878.8224947668214,
+        65.6911867225256
+      ],
+      "size": [
+        380,
+        250
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pack",
+          "shape": 7,
+          "type": "NERON_H3_LORAS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "loras",
+          "type": "NERON_H3_LORAS",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "title": "🎨 LoRA на весь ролик / whole video",
+      "properties": {
+        "Node name for S&R": "NeronH3LoraPack"
+      },
+      "widgets_values": [
+        "— нет / none —",
+        1.0,
+        "— нет / none —",
+        1.0,
+        "— нет / none —",
+        1.0
+      ],
+      "color": "#3a2350",
+      "bgcolor": "#24152f"
+    },
+    {
+      "id": 5,
+      "type": "NeronH3StoryAutoPrompter",
+      "pos": [
+        -446.7532467532469,
+        -566.7532467532462
+      ],
+      "size": [
+        460,
+        924
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "scenario",
+          "shape": 7,
+          "type": "STRING",
+          "link": 2
+        },
+        {
+          "name": "frames",
+          "shape": 7,
+          "type": "NERON_H3_FRAMES",
+          "link": 6
+        },
+        {
+          "name": "lora_all",
+          "shape": 7,
+          "type": "NERON_H3_LORAS",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "story",
+          "type": "NERON_H3_STORY",
+          "links": [
+            4
+          ]
+        },
+        {
+          "name": "prompts",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronH3StoryAutoPrompter"
+      },
+      "color": "#2a3a1e",
+      "bgcolor": "#172210"
+    },
+    {
+      "id": 6,
+      "type": "NeronH3Story",
+      "pos": [
+        37.662337662338125,
+        -566.7532467532463
+      ],
+      "size": [
+        460,
+        380
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "story",
+          "shape": 7,
+          "type": "NERON_H3_STORY",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronH3Story"
+      },
+      "color": "#4a2f1e",
+      "bgcolor": "#2e1c10"
+    },
+    {
+      "id": 7,
+      "type": "SaveVideo",
+      "pos": [
+        524.6753246753244,
+        -573.2467532467527
+      ],
+      "size": [
+        560,
+        620
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "video/Neron_H3_Story",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 8,
+      "type": "NeronH3Frames",
+      "pos": [
+        -1100,
+        -560
+      ],
+      "size": [
+        620,
+        318
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "frames",
+          "type": "NERON_H3_FRAMES",
+          "slot_index": 0,
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronH3Frames"
+      },
+      "widgets_values": [
+        "— нет / none —",
+        "— нет / none —",
+        "— нет / none —",
+        "— нет / none —"
+      ],
+      "color": "#1e3a4a",
+      "bgcolor": "#10232e"
+    }
+  ],
+  "links": [
+    [
+      2,
+      3,
+      0,
+      5,
+      0,
+      "STRING"
+    ],
+    [
+      3,
+      4,
+      0,
+      5,
+      2,
+      "NERON_H3_LORAS"
+    ],
+    [
+      6,
+      8,
+      0,
+      5,
+      1,
+      "NERON_H3_FRAMES"
+    ],
+    [
+      5,
+      6,
+      0,
+      7,
+      0,
+      "VIDEO"
+    ],
+    [
+      4,
+      5,
+      0,
+      6,
+      0,
+      "NERON_H3_STORY"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.8,
+      "offset": [
+        1900,
+        700
+      ]
+    }
+  },
+  "version": 0.4
+}
