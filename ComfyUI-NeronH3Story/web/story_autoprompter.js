@@ -65,11 +65,21 @@ function widgetHeight(w, nodeWidth) {
 
 function groupRect(node, g) {
     let y0 = Infinity, y1 = -Infinity;
-    for (const w of node.widgets || []) {
+    const ws = node.widgets || [];
+    for (let i = 0; i < ws.length; i++) {
+        const w = ws[i];
         const wy = w.last_y ?? w.y;                    // в разных сборках ComfyUI — last_y или y
         if (!g.widgets.includes(w.name) || isHidden(w) || wy === undefined) continue;
-        const h = widgetHeight(w, node.size[0]) - (w.__neronBottomPadding || 0);
-        y0 = Math.min(y0, wy); y1 = Math.max(y1, wy + h);
+        let bottom = wy + widgetHeight(w, node.size[0]) - (w.__neronBottomPadding || 0);
+        // Низ виджета — по месту, которое ему реально отдал ComfyUI (до следующего виджета): в некоторых сборках
+        // виджеты выше, чем говорит computeSize, и рамка «не доставала» до низа последнего виджета.
+        for (let j = i + 1; j < ws.length; j++) {
+            const nx = ws[j], ny = nx.last_y ?? nx.y;
+            if (isHidden(nx) || ny === undefined || ny <= wy) continue;
+            bottom = Math.max(bottom, ny - (w.__neronBottomPadding || 0) - 2);
+            break;
+        }
+        y0 = Math.min(y0, wy); y1 = Math.max(y1, bottom);
     }
     if (!isFinite(y0) || y1 <= y0) return null;
     // Текстовые поля ComfyUI рисует почти до края ноды — рамку делаем шире, чтобы поле было ВНУТРИ неё
