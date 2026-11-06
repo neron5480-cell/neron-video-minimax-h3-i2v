@@ -41,7 +41,8 @@ MiniMax H3»), перехлёст вырезается, звук сводитс�
 
 **Про скорость — честно.** Процесс настроен на **качество**: на «авто» движок берёт самую полную модель, что у тебя
 есть (bf16, если скачана), и даже 🚀 Быстро работает на ней. Поэтому это долго. Замеры на компьютере автора
-(RTX 5070 Ti 16 ГБ): Турбо int8, ролик 30 с (4 блока) вместе с автопромтером — 1 ч 18 мин; 🚀 Быстро 6 шагов,
+(RTX 5070 Ti 16 ГБ): Турбо int8, ролик 30 с (4 блока) вместе с автопромтером — 1 ч 18 мин; Турбо на полных
+моделях (bf16) — 1 ч 30 мин; 🚀 Быстро 6 шагов,
 вертикальный ролик 30 с — 44 мин. Ускорить можно:
 - в ⚙ эксперте движка поставить свою, более лёгкую модель (int8 / fp8 — всё, что грузит обычный Load Diffusion
   Model);
@@ -70,7 +71,7 @@ pictures appear where the scenario says and keep their look) · 🎞 Block (own 
 Maximum 50 + bf16.
 
 **Speed, honestly:** tuned for **quality** — on auto it uses the fullest model you have (bf16 if present), even in
-Fast. Author's PC (RTX 5070 Ti 16 GB): Turbo int8, 30 s (4 blocks) incl. AutoPrompter — 1 h 18 min; Fast 6 steps,
+Fast. Author's PC (RTX 5070 Ti 16 GB): Turbo int8, 30 s (4 blocks) incl. AutoPrompter — 1 h 18 min; Turbo on full (bf16) models — 1 h 30 min; Fast 6 steps,
 30 s portrait — 44 min. To speed up: a lighter model of your own in expert mode (int8 / fp8), INT8 fast attention,
 Fast with fewer steps, a smaller frame, fewer seams.
 
