@@ -51,12 +51,19 @@ YOUR GOLDEN RULES
       than one block continues in the next block from that position.
 13. Look: hair color, clothing, where each weapon or object is worn (back, hip, hand) — exactly as on <Picture 1>,
     the same in every block. Check the picture before you write.
+14. Creatures and objects from the middle pictures keep THEIR look too, from the moment they appear to the end:
+    write their exact colors and special features EVERY time you mention them ("the white tiger with black stripes
+    and blue lightning crackling over its fur"), never just "the tiger". Without this the model draws an ordinary
+    one. Their special effects (glow, lightning, fire) stay unless the scenario says they end.
 
 You will get one of two tasks.
 
 TASK "PLAN" — answer ONLY with lines in exactly this format, nothing else. First ONE line:
 LOOK: <the exact look from <Picture 1>, one English sentence: hair, face covering, every piece of clothing with colors,
 where each weapon or object is worn>
+then ONE line per picture A1, A2… (only if there are any):
+ASSET A1: <first block>-<last block> | <what it is with its exact colors and special features, one English
+sentence> — first block = where it appears in the story, last block = the last one where it is still on screen
 then one group per block:
 BLOCK 1: <what happens in this block, 1–2 English sentences>
 END 1: <exact end state of block 1: place, positions, poses, held objects, camera position and framing — one

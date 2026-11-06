@@ -205,6 +205,24 @@ def assign_assets(plan_text, assets, blocks):
             found[k] = [x.upper() for x in re.findall(r"\bA\d+\b", val, re.I)]
     by_id = {a["id"]: a for a in assets}
     res = [[] for _ in range(blocks)]
+    # главнее всего — строки «ASSET A2: 3-4 | …»: картинка идёт образцом во ВСЕ блоки, пока её герой на экране
+    spans = {}
+    for aid, b0, b1, desc in re.findall(r"^\s*ASSET\s*(A\d+)\s*:\s*(\d+)\s*(?:-\s*(\d+))?\s*(?:\|\s*(.*))?$",
+                                       plan_text, re.M | re.I):
+        aid = aid.upper()
+        if aid in by_id:
+            k0 = max(0, int(b0) - 1)
+            k1 = min(blocks - 1, max(k0, int(b1 or b0) - 1))
+            spans[aid] = (k0, k1)
+            if desc and desc.strip():
+                by_id[aid]["desc"] = desc.strip()
+    if spans:
+        for a in assets:
+            k0, k1 = spans.get(a["id"], (min(a["block"], blocks - 1),) * 2)
+            for k in range(k0, k1 + 1):
+                if len(res[k]) < MAX_PICS_PER_BLOCK:
+                    res[k].append(a)
+        return res
     if not found:
         for a in assets:
             if a["block"] < blocks:
@@ -508,11 +526,15 @@ class NeronH3StoryAutoPrompter:
         prompts = []
         whole = "\n".join(f"Block {i + 1}: {s['block']} END: {s['end']}" + (f" CAMERA: {s['cam']}" if s["cam"] else "")
                           for i, s in enumerate(steps))
+        asset_lines = re.findall(r"^\s*ASSET\s*A\d+\s*:.*$", plan_text, re.M | re.I)
+        if asset_lines:
+            whole += "\n" + "\n".join(l.strip() for l in asset_lines)
         for k, g in enumerate(given):
             no = 2 if opening is not None else 1
             pics = []
             for a in assign[k]:
-                pics.append((f"<Picture {no}>", f"{a['id']}, {a['role']}", a["img"]))
+                look_a = f" — exact look, keep it every time you mention it: {a['desc']}" if a.get("desc") else ""
+                pics.append((f"<Picture {no}>", f"{a['id']}, {a['role']}{look_a}", a["img"]))
                 no += 1
             items = list(opening_item) + [(f"{tag} ({role}):", img) for tag, role, img in pics]
             if g.get("last") is not None:
