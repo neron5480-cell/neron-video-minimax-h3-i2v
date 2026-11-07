@@ -10,15 +10,14 @@
 
 ## 🚀 Установка (2 минуты)
 
-### Способ 1. Одной ссылкой через ComfyUI Manager (проще всего)
+### Способ 1. Сам ComfyUI (Desktop и браузер) — проще всего
 
-1. Откройте **Manager** → **Install via Git URL**.
-2. Вставьте ссылку:
-   ```
-   https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
-   ```
-3. Дождитесь окончания установки и **полностью перезапустите ComfyUI**.
-4. Обновите страницу: **Ctrl + F5**.
+Пакет есть в официальном каталоге ComfyUI (Comfy Registry, издатель **neron**).
+
+- **Открыли наш процесс, а ноды красные?** ComfyUI сам предложит установить недостающие ноды — согласитесь,
+  потом **полностью перезапустите ComfyUI** (в Desktop — и из трея).
+- **Или через Manager:** откройте **Manager** (в Comfy Desktop он встроен) → поиск **Neron** → **Install** →
+  перезапуск.
 
 Встанут **сразу все ноды** из этого репозитория. В консоли ComfyUI появится строка:
 ```
@@ -26,7 +25,13 @@
 ```
 со списком загруженных нод.
 
-> ℹ️ Поиск по названию в Manager ноды не найдёт: пакет пока не зарегистрирован в общем каталоге. Ставьте по ссылке.
+### Способ 1б. По ссылке (браузерная версия с ComfyUI Manager)
+
+**Manager** → **Install via Git URL** → вставьте ссылку и перезапустите ComfyUI:
+```
+https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
+```
+> ℹ️ В Comfy Desktop этого пункта может не быть или он закрыт настройкой безопасности — тогда Способ 1 или 2.
 
 ### Способ 2. Вручную (только нужные ноды)
 
@@ -229,15 +234,13 @@ This repository contains my custom nodes for ComfyUI. It holds **independent pro
 
 ## 🚀 Installation (2 minutes)
 
-### Option 1. One link via ComfyUI Manager (easiest)
+### Option 1. ComfyUI itself (Desktop and browser) — easiest
 
-1. Open **Manager** → **Install via Git URL**.
-2. Paste the link:
-   ```
-   https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
-   ```
-3. Wait for the install to finish and **restart ComfyUI completely**.
-4. Refresh the page: **Ctrl + F5**.
+The pack is in the official ComfyUI catalog (Comfy Registry, publisher **neron**).
+
+- **Opened our workflow and the nodes are red?** ComfyUI offers to install the missing nodes — accept, then
+  **restart ComfyUI completely** (in Desktop, also from the tray).
+- **Or via Manager:** open **Manager** (built into Comfy Desktop) → search **Neron** → **Install** → restart.
 
 **All nodes** from this repository are installed at once. The ComfyUI console will show:
 ```
@@ -245,7 +248,13 @@ This repository contains my custom nodes for ComfyUI. It holds **independent pro
 ```
 with the list of loaded nodes.
 
-> ℹ️ Searching by name in Manager will not find the pack: it is not listed in the public registry yet. Install by link.
+### Option 1b. By link (browser version with ComfyUI Manager)
+
+**Manager** → **Install via Git URL** → paste the link and restart ComfyUI:
+```
+https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
+```
+> ℹ️ Comfy Desktop may not have this item, or a security setting blocks it — use Option 1 or 2 then.
 
 ### Option 2. Manually (only the nodes you need)
 
