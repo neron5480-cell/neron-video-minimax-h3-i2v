@@ -111,9 +111,14 @@ sys.modules["nodes"] = nodes
 server = types.ModuleType("server")
 
 
+class _Routes:
+    def __getattr__(self, name):
+        return lambda *a, **k: (lambda f: f)
+
+
 class _PS:
     class instance:
-        routes = None
+        routes = _Routes()
 
         @staticmethod
         def send_sync(*a, **k):
@@ -300,6 +305,93 @@ for pid in ("standard", "extreme", "quality", "maximum"):
     assert p["files"], pid
 assert set(E.MODE_PACK.values()) <= set(D.load_packs()["packs"])
 print("✅ у каждого режима свой пакет моделей")
+
+# ─────────── 🎭 Подмена ───────────
+from fractions import Fraction
+W = importlib.import_module("NeronH3One.swap")
+SW = pkg.NODE_CLASS_MAPPINGS["NeronH3Swap"]
+it = SW.INPUT_TYPES()
+assert list(it["required"]) == SW.ORDER
+for k, v in it["required"].items():
+    if isinstance(v[0], list):
+        assert v[1].get("default", v[0][0]) in v[0], f"swap {k}: дефолт не из списка"
+    assert v[1].get("display_name"), f"swap {k}: нет подписи RU/EN"
+
+
+class _Comp:
+    def __init__(self, n, fps, audio):
+        self.images, self.frame_rate, self.audio = torch.rand(n, 360, 640, 3), Fraction(fps), audio
+
+
+class _Video:
+    def __init__(self, n, fps, audio):
+        self.c = _Comp(n, fps, audio)
+
+    def get_components(self):
+        return self.c
+
+
+src_audio = {"waveform": torch.ones(1, 2, 44100 * 20), "sample_rate": 44100}
+# фото — из файла в input (как будто загружено окном ноды)
+os.makedirs(os.path.join(TMP, "input"), exist_ok=True)
+from PIL import Image as _I
+_I.new("RGB", (512, 768), (200, 150, 120)).save(os.path.join(TMP, "input", "me.png"))
+folder_paths.get_annotated_filepath = lambda name: os.path.join(TMP, "input", name)
+folder_paths.get_input_directory = lambda: os.path.join(TMP, "input")
+
+
+def swap(n_out=107, **kw):
+    CALLS.clear()
+    T_FRAMES["n"] = n_out                       # столько кадров «раскодирует» заглушка
+    args = dict(seed=1, mode=E.FAST, photo="me.png")
+    args.update(kw)
+    out = SW().generate(**args)
+    return out["result"], out["ui"]["text"][0]
+
+
+# 20 с при 30 к/с → 24 к/с, не длиннее 15 с → 345 кадров (17k+5)
+(_, _, aud, _, count), rep = swap(n_out=345, video_in=_Video(600, 30, src_audio))
+ref = calls("MiniMaxH3ReferenceToVideo")[0]
+assert ref["length"] == 345 and ref["ref_videos"]["ref_video_0"].shape[0] == 345, ref["length"]
+assert list(ref["ref_images"]) == ["ref_image_0"] and "ref_video_audios" in ref and "audio_vae" in ref
+assert "MiniMaxH3AddGuide" not in names(), "в подмене фото — образец, а не кадр"
+assert "<Video 1>" in ref["prompt"] and "<Picture 1>" in ref["prompt"] and "ONLY the face" in ref["prompt"]
+assert ref["width"] == 1344 and ref["height"] == 768, (ref["width"], ref["height"])
+assert ref["ref_image_size"] == "max"
+assert aud["waveform"].shape[-1] == int(round(345 / 24 * 44100)) and float(aud["waveform"].mean()) == 1.0
+assert "взято начало" in rep and "оригинал" in rep
+print("✅ 🎭 подмена лица: 30 к/с → 24, до 15 с (345 кадров), <Video 1> + <Picture 1>, звук — оригинал байт в байт")
+
+swap(video_in=_Video(120, 24, src_audio), what=W.WHOLE, hold=W.LOOSE, extra="She smiles at the end.")
+p = calls("MiniMaxH3ReferenceToVideo")[0]["prompt"]
+assert "ENTIRELY" in p and "She smiles at the end." in p and "Do not add" not in p
+assert calls("MiniMaxH3ReferenceToVideo")[0]["length"] == 107       # 5 с = 120 кадров → 107 (17k+5 вниз)
+print("✅ 🧍 полностью + свободнее + уточнение; 5 с → 107 кадров (сетка вниз — не длиннее видео)")
+
+own = {"waveform": torch.full((1, 1, 44100 * 3), 0.5), "sample_rate": 44100}
+(_, _, aud, _, count), rep = swap(video_in=_Video(120, 24, src_audio), sound=W.SND_OWN, audio_in=own)
+r = calls("MiniMaxH3ReferenceToVideo")[0]
+assert "ref_audios" in r and "ref_video_audios" not in r
+assert abs(float(aud["waveform"][..., :44100].mean()) - 0.5) < 1e-6 and float(aud["waveform"][..., -10:].abs().sum()) == 0
+print("✅ 🔊 свой звук: идёт образцом и на выход, короче ролика — дополнен тишиной")
+
+(_, _, aud, _, _), rep = swap(video_in=_Video(120, 24, None))
+assert "нет звука" in rep and "сгенерирован" in rep
+print("✅ видео без звука → звук генерирует H3, с пояснением")
+
+(_, _, aud, _, _), rep = swap(video_in=_Video(120, 24, src_audio), sound=W.SND_GEN)
+assert "сгенерирован" in rep and "ref_video_audios" in calls("MiniMaxH3ReferenceToVideo")[0]
+run_ok = True
+for bad in (dict(video_in=_Video(10, 24, None)), dict(video_in=None, video=W.NO_FILE), dict(video_in=_Video(120, 24, None), photo=W.NO_FILE)):
+    try:
+        swap(**bad)
+        run_ok = False
+    except Exception as e:
+        assert "EN:" in str(e), e
+assert run_ok
+swap(video_in=_Video(120, 24, src_audio), mode=E.BALANCE)
+assert [s["steps"] for s in calls("BasicScheduler")] == [8, 3]
+print("✅ ✨ сгенерировать, понятные ошибки (короткое видео, нет видео, нет фото), ⚖ Баланс работает и в подмене")
 
 shutil.rmtree(TMP, ignore_errors=True)
 print("\n🎉 ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ / ALL CHECKS PASSED")

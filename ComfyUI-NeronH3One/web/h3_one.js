@@ -30,6 +30,26 @@ const GROUPS = [
       fill: "rgba(120, 200, 160, 0.15)", border: "rgba(120, 200, 160, 0.75)", label: "rgba(190, 255, 220, 1.0)" },
 ];
 
+const G = (name, widgets, rgb, label, thick) => ({ name, widgets, fill: `rgba(${rgb}, 0.15)`,
+    border: `rgba(${rgb}, 0.75)`, label, thick });
+const GROUPS_SWAP = [
+    GROUPS[0],
+    G("🎭 ПОДМЕНА / SWAP", ["_swap_windows", "what", "sound"], "220, 120, 160", "rgba(255, 200, 225, 1.0)"),
+    G("РЕЖИМ / MODE", ["mode"], " 90, 140, 200", "rgba(180, 215, 255, 1.0)"),
+    G("ТОНКО / FINE", ["hold", "extra", "size", "max_seconds", "lora_1", "strength_1"], "200, 160,  90",
+      "rgba(255, 225, 170, 1.0)"),
+    GROUPS[4], GROUPS[5],
+    G("ТОНКАЯ НАСТРОЙКА / ADVANCED", ["seed", "control_after_generate", "fast_steps", "fast_kind", "balance_clean",
+      "protect_lora", "keep_clip", "ref_quality"], "120, 200, 160", "rgba(190, 255, 220, 1.0)"),
+];
+// у каждой ноды пакета — свои группы и справка; оформление, часы, модели и отчёт — общие
+const CONFIG = {
+    NeronH3One: { groups: GROUPS, title: "📖 Neron H3 One", help: () => HELP_TEXT },
+    NeronH3Swap: { groups: GROUPS_SWAP, title: "📖 Neron H3 Подмена / Swap", help: () => HELP_SWAP,
+                   alwaysHidden: ["video", "photo", "own_audio"], windows: true },
+};
+function groupsOf(node) { return CONFIG[node?.type]?.groups || GROUPS; }
+
 function wv(node, name) {
     const w = node.widgets?.find((x) => x.name === name);
     return w ? w.value : undefined;
@@ -107,7 +127,7 @@ function groupRect(node, g) {
 
 function applyGroupGaps(node) {
     for (const w of node.widgets || []) clearBottomPadding(w);
-    for (const g of GROUPS) {
+    for (const g of groupsOf(node)) {
         let last = null;
         for (const w of node.widgets || []) if (g.widgets.includes(w.name) && !isHidden(w)) last = w;
         if (last) setBottomPadding(last, GROUP_GAP);
@@ -116,7 +136,7 @@ function applyGroupGaps(node) {
 
 function drawGroupRects(node, ctx) {
     ctx.save();
-    for (const g of GROUPS) {
+    for (const g of groupsOf(node)) {
         const r = groupRect(node, g);
         if (!r) continue;
         ctx.fillStyle = g.fill;
@@ -142,7 +162,7 @@ function drawGroupRects(node, ctx) {
 function drawGroupLabels(node, ctx) {
     ctx.save();
     ctx.font = LABEL_FONT; ctx.textBaseline = "middle"; ctx.textAlign = "left";
-    for (const g of GROUPS) {
+    for (const g of groupsOf(node)) {
         const r = groupRect(node, g);
         if (!r) continue;
         ctx.fillStyle = g.label;
@@ -167,6 +187,7 @@ function applyExpert(node, specs) {
         if (w.name === "manual_width" || w.name === "manual_height") hide = !manual;   // только при «Ручной»
         if (w.name === "seconds" && linked(node, "length_in")) hide = true;         // длина пришла проводом
         if (w.name === "sparse_tau" && String(wv(node, "sparse") || "").startsWith("выкл")) hide = true;
+        if (CONFIG[node.type]?.alwaysHidden?.includes(w.name)) hide = true;      // вместо них — окна в ноде
         if (w.hidden !== hide) w.hidden = hide;
         prevHidden = hide;
     }
@@ -240,7 +261,7 @@ function hookClock() {
     api.addEventListener("progress", (e) => {         // шаги сэмплера — штатное событие Comfy
         const d = e.detail || {};
         if (!d.max || String(d.node) !== String(CLOCK.current)) return;
-        if (app.graph?.getNodeById?.(d.node)?.type !== NODE) return;
+        if (!(app.graph?.getNodeById?.(d.node)?.type in CONFIG)) return;
         if (d.max !== CLOCK.total || d.value < CLOCK.i) CLOCK.stageT0 = Date.now() - 1;
         CLOCK.i = d.value; CLOCK.total = d.max;
     });
@@ -581,7 +602,7 @@ H3 понимает только свой текстовый энкодер (Qwe
 ===================================================
 `;
 
-function showHelpDialog() { showText("📖 Neron H3 One", HELP_TEXT); }
+function showHelpDialog(node) { const c = CONFIG[node?.type] || CONFIG.NeronH3One; showText(c.title, c.help()); }
 
 // сброс: всё к заводским, кроме выбранных файлов моделей (их пользователь подбирал сам)
 function resetAll(node, specs) {
@@ -599,10 +620,271 @@ function linked(node, name) {
     return !!(i && i.link != null);
 }
 
+// ---------- 🎭 окна подмены: видео · на кого · свой звук (клик или перетащить файл, ✕ — убрать) ----------
+const NONE_FILE = "— нет / none —";
+const SWAP_SLOTS = [
+    { widget: "video", kind: "video", ru: "🎬 ОПОРНОЕ ВИДЕО", en: "source video", color: "#5fd0ff", part: 0.44,
+      accept: "video/*" },
+    { widget: "photo", kind: "image", ru: "🖼 НА КОГО", en: "who", color: "#ffd166", part: 0.34, accept: "image/*" },
+    { widget: "own_audio", kind: "audio", ru: "🔊 СВОЙ ЗВУК", en: "own sound", color: "#c39bff", part: 0.22,
+      accept: "audio/*" },
+];
+const SW_PAD = 10, SW_GAP = 8, SW_CAP = 30, SW_INFO = 18, SW_CLOSE = 18;
+const MEDIA = new Map();
+
+function swHeight(width) { return SW_CAP + Math.round(Math.max(120, (width - 40) * 0.30)) + SW_INFO; }
+
+function swRect(node, i, top) {
+    const W = node.size[0] - SW_PAD * 2 - SW_GAP * (SWAP_SLOTS.length - 1);
+    let x = SW_PAD;
+    for (let k = 0; k < i; k++) x += W * SWAP_SLOTS[k].part + SW_GAP;
+    const w = W * SWAP_SLOTS[i].part, h = swHeight(node.size[0]);
+    return { x, y: top, w, h, img: { x: x + 4, y: top + SW_CAP, w: w - 8, h: h - SW_CAP - SW_INFO },
+             close: { x: x + w - 4 - SW_CLOSE - 3, y: top + SW_CAP + 3, w: SW_CLOSE, h: SW_CLOSE } };
+}
+
+function inRect(p, r) { return p[0] >= r.x && p[0] <= r.x + r.w && p[1] >= r.y && p[1] <= r.y + r.h; }
+
+function fitT(ctx, t, maxW) {
+    if (ctx.measureText(t).width <= maxW) return t;
+    while (t.length > 2 && ctx.measureText(t + "…").width > maxW) t = t.slice(0, -1);
+    return t + "…";
+}
+
+function viewURL(name) {
+    const i = name.lastIndexOf("/");
+    const sub = i >= 0 ? name.slice(0, i) : "", file = i >= 0 ? name.slice(i + 1) : name;
+    return api.apiURL(`/view?filename=${encodeURIComponent(file)}&type=input&subfolder=${encodeURIComponent(sub)}`);
+}
+
+function media(kind, name) {
+    if (!name || name === NONE_FILE) return null;
+    const key = kind + ":" + name;
+    let m = MEDIA.get(key);
+    if (m) return m;
+    const redraw = () => app.graph?.setDirtyCanvas(true, false);
+    if (kind === "image") {
+        m = new Image(); m.onload = redraw; m.onerror = () => { m.__failed = true; redraw(); };
+        m.src = viewURL(name);
+    } else if (kind === "video") {
+        m = document.createElement("video");
+        m.muted = true; m.preload = "auto"; m.crossOrigin = "anonymous";
+        m.onloadeddata = () => { try { m.currentTime = Math.min(0.5, (m.duration || 1) / 3); } catch (_) {} redraw(); };
+        m.onseeked = redraw; m.onerror = () => { m.__failed = true; redraw(); };
+        m.src = viewURL(name);
+    } else {
+        m = document.createElement("audio");
+        m.preload = "metadata"; m.onloadedmetadata = redraw; m.onerror = () => { m.__failed = true; redraw(); };
+        m.src = viewURL(name);
+    }
+    MEDIA.set(key, m);
+    return m;
+}
+
+function swTop(node) { const g = node.widgets?.find((w) => w.name === "_swap_windows"); return g ? (g.last_y ?? g.y ?? 0) : 0; }
+
+function drawSwap(node, ctx, top) {
+    const soundOwn = String(wv(node, "sound") || "").startsWith("🔊");
+    for (let i = 0; i < SWAP_SLOTS.length; i++) {
+        const s = SWAP_SLOTS[i], R = swRect(node, i, top), A = R.img;
+        const val = wv(node, s.widget);
+        const wired = linked(node, { video: "video_in", image: "photo_in", audio: "audio_in" }[s.kind]);
+        const dim = s.kind === "audio" && !soundOwn;
+        ctx.save();
+        ctx.globalAlpha = dim ? 0.45 : 1;
+        ctx.fillStyle = "rgba(10, 20, 28, 0.85)"; roundRect(ctx, R.x, R.y, R.w, R.h, 8); ctx.fill();
+        ctx.strokeStyle = s.color; ctx.lineWidth = 1.5; roundRect(ctx, R.x, R.y, R.w, R.h, 8); ctx.stroke();
+        ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+        ctx.fillStyle = s.color; ctx.font = "bold 11px sans-serif";
+        ctx.fillText(fitT(ctx, s.ru, R.w - 8), R.x + R.w / 2, R.y + 14);
+        ctx.fillStyle = "rgba(200, 220, 230, 0.75)"; ctx.font = "10px sans-serif";
+        ctx.fillText(fitT(ctx, s.en, R.w - 8), R.x + R.w / 2, R.y + 26);
+        ctx.fillStyle = "rgba(0, 0, 0, 0.35)"; roundRect(ctx, A.x, A.y, A.w, A.h, 6); ctx.fill();
+        ctx.save(); roundRect(ctx, A.x, A.y, A.w, A.h, 6); ctx.clip();
+        let info = "";
+        const center = (lines, color, font) => {
+            ctx.fillStyle = color; ctx.font = font; ctx.textBaseline = "middle";
+            lines.forEach((t, k) => ctx.fillText(fitT(ctx, t, A.w - 8), A.x + A.w / 2,
+                                                A.y + A.h / 2 + (k - (lines.length - 1) / 2) * 16));
+        };
+        const m = wired ? null : media(s.kind, val);
+        if (wired) {
+            center(["🔌 с провода", "from wire"], "#9be7a0", "12px sans-serif"); info = "провод / wire";
+        } else if (m && m.__failed) {
+            center(["⚠ файла нет", "missing file"], "#ff8a80", "11px sans-serif"); info = String(val);
+        } else if (m && s.kind === "image" && m.complete && m.naturalWidth) {
+            const k = Math.min(A.w / m.naturalWidth, A.h / m.naturalHeight), dw = m.naturalWidth * k, dh = m.naturalHeight * k;
+            ctx.drawImage(m, A.x + (A.w - dw) / 2, A.y + (A.h - dh) / 2, dw, dh);
+            info = `${m.naturalWidth}×${m.naturalHeight}`;
+        } else if (m && s.kind === "video" && m.readyState >= 2 && m.videoWidth) {
+            const k = Math.min(A.w / m.videoWidth, A.h / m.videoHeight), dw = m.videoWidth * k, dh = m.videoHeight * k;
+            try { ctx.drawImage(m, A.x + (A.w - dw) / 2, A.y + (A.h - dh) / 2, dw, dh); } catch (_) {}
+            const d = m.duration || 0;
+            info = `${m.videoWidth}×${m.videoHeight} · ${d.toFixed(1)} с` + (d > 15.1 ? " → 15 с" : "");
+        } else if (m && s.kind === "audio") {
+            center(["🔊", fitT(ctx, String(val).split("/").pop(), A.w - 8)], "#d7c4ff", "13px sans-serif");
+            info = m.duration ? `${m.duration.toFixed(1)} с` : "";
+        } else if (m) {
+            center(["…"], "#90a4ae", "12px sans-serif");
+        } else {
+            center(["＋", "нажми или перетащи", "click or drop"], "rgba(180, 200, 210, 0.6)", "11px sans-serif");
+            if (dim) info = "для «🔊 свой файл» / for «own file»";
+        }
+        ctx.restore();
+        if (!wired && val && val !== NONE_FILE) {
+            const C = R.close;
+            ctx.fillStyle = "rgba(0, 0, 0, 0.7)"; roundRect(ctx, C.x, C.y, C.w, C.h, 4); ctx.fill();
+            ctx.fillStyle = "#ffffff"; ctx.font = "bold 12px sans-serif"; ctx.textBaseline = "middle"; ctx.textAlign = "center";
+            ctx.fillText("✕", C.x + C.w / 2, C.y + C.h / 2 + 1);
+        }
+        if (info) {
+            ctx.fillStyle = "rgba(200, 220, 230, 0.85)"; ctx.font = "10px monospace"; ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+            ctx.fillText(fitT(ctx, info, R.w - 8), R.x + R.w / 2, A.y + A.h + SW_INFO / 2);
+        }
+        ctx.restore();
+    }
+}
+
+function swapSlotAt(node, pos) {
+    const top = swTop(node);
+    for (let i = 0; i < SWAP_SLOTS.length; i++) {
+        const R = swRect(node, i, top);
+        if (inRect(pos, R)) return { i, R };
+    }
+    return null;
+}
+
+function swapSet(node, slot, value) {
+    const w = getWidget(node, slot.widget);
+    if (!w) return;
+    const vals = w.options?.values;
+    if (Array.isArray(vals) && !vals.includes(value)) vals.push(value);
+    w.value = value;
+    try { w.callback?.(value); } catch (_) {}
+    if (slot.kind === "audio" && value !== NONE_FILE) {          // загрузил свой звук — значит, он и нужен
+        const snd = getWidget(node, "sound");
+        const own = snd?.options?.values?.find((v) => String(v).startsWith("🔊"));
+        if (snd && own) { snd.value = own; try { snd.callback?.(own); } catch (_) {} }
+    }
+    app.graph?.setDirtyCanvas(true, true);
+}
+
+async function swapUpload(node, slot, file) {
+    if (!file) return;
+    const body = new FormData();
+    body.append("image", file);                 // штатная загрузка ComfyUI — так же грузятся видео и звук
+    body.append("type", "input");
+    try {
+        const r = await api.fetchApi("/upload/image", { method: "POST", body });
+        if (r.status !== 200) { console.warn("[Neron Swap] upload", r.status); return; }
+        const d = await r.json();
+        const value = d.subfolder ? `${d.subfolder}/${d.name}` : d.name;
+        MEDIA.delete(slot.kind + ":" + value);
+        swapSet(node, slot, value);
+    } catch (e) { console.warn("[Neron Swap] upload failed", e); }
+}
+
+function swapPick(node, slot) {
+    const inp = document.createElement("input");
+    inp.type = "file"; inp.accept = slot.accept; inp.style.display = "none";
+    inp.onchange = () => { if (inp.files?.[0]) swapUpload(node, slot, inp.files[0]); inp.remove(); };
+    document.body.append(inp); inp.click();
+}
+
+let swLastClick = 0;
+function swapClick(node, pos) {
+    const hit = swapSlotAt(node, pos);
+    if (!hit) return false;
+    const now = Date.now();
+    if (now - swLastClick < 400) return true;
+    swLastClick = now;
+    const s = SWAP_SLOTS[hit.i], val = wv(node, s.widget);
+    if (val && val !== NONE_FILE && inRect(pos, hit.R.close)) { swapSet(node, s, NONE_FILE); return true; }
+    swapPick(node, s);
+    return true;
+}
+
+function swapDrop(node, e) {
+    const files = [...(e?.dataTransfer?.files || [])];
+    if (!files.length) return false;
+    for (const f of files) {
+        const kind = f.type?.split("/")[0];
+        const slot = SWAP_SLOTS.find((s) => s.kind === kind);
+        if (slot) swapUpload(node, slot, f);
+    }
+    return true;
+}
+
+function setupSwapWindows(node) {
+    const win = node.addCustomWidget({
+        name: "_swap_windows", type: "neron_swap", value: "", serialize: false, options: { serialize: false },
+        draw(ctx, n, width, y) { drawSwap(n, ctx, y); },
+        computeSize(width) { return [width, swHeight(width ?? node.size[0])]; },
+        mouse(e, pos, n) {
+            const t = e?.type || "";
+            if (t === "pointerdown" || t === "mousedown") return swapClick(n, pos);
+            return true;
+        },
+    });
+    node.widgets.splice(node.widgets.indexOf(win), 1);
+    const at = node.widgets.findIndex((w) => w.name === "expert");
+    node.widgets.splice(at + 1, 0, win);
+    try { node.setSize([Math.max(node.size[0], 560), node.size[1]]); } catch (_) {}
+    // видео-превью: пока грузится — перерисовывать
+    const t = setInterval(() => { if (!node.graph) clearInterval(t); else app.graph?.setDirtyCanvas(true, false); }, 1500);
+    setTimeout(() => clearInterval(t), 15000);
+}
+
+const HELP_SWAP = `
+🎭 NERON H3 ПОДМЕНА / SWAP  (альфа)
+===================================================
+
+Опорное видео + фото «на кого» → тот же ролик с другим
+человеком. До 15 с, со звуком. Модель — MiniMax H3.
+
+КАК / HOW
+---------------------------------------------------
+1. 🎬 Опорное видео — нажми окно или перетащи файл.
+   Оттуда берутся движение, сцена, камера, свет, звук.
+   Длиннее 15 с — возьмётся начало (⚙ «не длиннее»).
+2. 🖼 На кого — фото человека. Лицо хорошо видно,
+   ровный свет. Для «полностью» — в полный рост.
+3. Заменить: 🙂 лицо (тело, одежда — из видео)
+   или 🧍 полностью (весь облик — с фото).
+4. Звук: 🎵 оригинал — звук видео байт в байт;
+   🔊 свой файл — окно «свой звук»;
+   ✨ сгенерировать — звук делает H3.
+5. Run. Текст для модели нода пишет сама.
+
+Можно сразу бросить на ноду и видео, и фото, и звук —
+каждый файл ляжет в своё окно.
+
+⚙ ЭКСПЕРТ
+---------------------------------------------------
+движение — строго (повторить видео) / свободнее;
+уточнение — что дописать, лучше по-английски;
+размер, длина, LoRA, ускорение, модели, сид.
+Профи: входы video_in / photo_in / audio_in / prompt
+(свой текст — назови <Video 1> и <Picture 1>).
+
+РЕЖИМЫ — как в 🎬 H3 One: 🔥 Экстрим · 🚀 Быстро ·
+⚖ Баланс · ✨ Качество · 👑 Максимум.
+
+⚠ Заменяй себя и тех, кто согласен.
+
+АЛЬФА: что «уплывает» (движение, лицо, губы) — пришли
+📋 Отчёт и пару кадров: подкрутим. Если движение не
+держится — следующим шагом подключим штатный
+Fun ControlNet H3 (поза/глубина из опорного видео).
+===================================================
+`;
+
 app.registerExtension({
     name: "Neron.H3.One",
     async beforeRegisterNodeDef(nodeType, nodeData) {
-        if (nodeData.name !== NODE) return;
+        if (!(nodeData.name in CONFIG)) return;
+        const cfg = CONFIG[nodeData.name];
         const specs = {};
         for (const grp of ["required", "optional"])
             for (const [k, s] of Object.entries(nodeData.input?.[grp] || {}))
@@ -637,6 +919,7 @@ app.registerExtension({
                                                   computeSize: () => [0, CLOCK_ROOM], mouse() { return false; } });
             node.widgets.splice(node.widgets.indexOf(spacer), 1);
             node.widgets.unshift(spacer);
+            if (cfg.windows) setupSwapWindows(node);
             for (const w of node.widgets || []) {
                 if (!["expert", "size", "sparse", "mode"].includes(w.name)) continue;
                 const cb = w.callback;
@@ -653,7 +936,7 @@ app.registerExtension({
                 showText("📋 Отчёт / Report", node.__h3Report || REPORT.text ||
                          "Отчёта пока нет — запусти генерацию.\nEN: No report yet — run a generation."));
             node.addWidget("button", "🔄 Reset to Defaults / Сброс", null, () => resetAll(node, specs));
-            node.addWidget("button", "📖 Help / Справка", null, () => showHelpDialog());
+            node.addWidget("button", "📖 Help / Справка", null, () => showHelpDialog(node));
             for (const t of [50, 300, 800]) setTimeout(() => applyExpert(node, specs), t);
             setupClock(node);
             hookDownload();
@@ -664,6 +947,15 @@ app.registerExtension({
             });
             return r;
         };
+        if (cfg.windows) {
+            nodeType.prototype.onDragOver = function (e) { return !!e?.dataTransfer?.types?.includes?.("Files"); };
+            nodeType.prototype.onDragDrop = function (e) { return swapDrop(this, e); };
+            const origMouse = nodeType.prototype.onMouseDown;
+            nodeType.prototype.onMouseDown = function (e, pos) {
+                if (swapSlotAt(this, pos)) return swapClick(this, pos);
+                return origMouse?.apply(this, arguments);
+            };
+        }
         nodeType.prototype.onConfigure = function () {
             const r = origConfigure?.apply(this, arguments);
             for (const t of [50, 300, 800]) setTimeout(() => applyExpert(this, specs), t);

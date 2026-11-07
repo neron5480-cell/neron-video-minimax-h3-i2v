@@ -86,6 +86,51 @@ MODE_TIP = ("🔥 Экстрим — самое быстрое из того, ч
             "Quality — bf16, 40 steps · Maximum — everything at max, 50 steps.")
 
 
+def resolve_models(notes, mode, unet_model, clip_model, vae_video_model, vae_audio_model, turbo_lora_model,
+                   fast_lora_model, tag="[H3 One]"):
+    """Файлы моделей по выбору на ноде («авто» — из пакета). → (models, своя ли модель выбрана)."""
+    def pick(v, role):
+        if not v or v in (AUTO_MODEL, NOT_FOUND):
+            return auto_file(role), False
+        found = find_file(ROLES[role][0], base(v))
+        if not found:
+            notes.append(f"⚠ Файла «{v}» нет — взят «авто» / not found, using auto")
+            return auto_file(role), False
+        return found, True
+
+    models = {}
+    models["unet"], chosen = pick(unet_model, "unet")
+    models["clip"], _ = pick(clip_model, "clip")
+    models["vae_video"], _ = pick(vae_video_model, "vae_video")
+    models["vae_audio"], _ = pick(vae_audio_model, "vae_audio")
+    models["turbo_lora"], _ = pick(turbo_lora_model, "turbo_lora")
+    models["fast_lora"], _ = pick(fast_lora_model, "fast_lora")
+    models["unet_fast"] = auto_file("unet_fast")
+    models["clip_precise"] = auto_file("clip_precise")
+    need = {"unet": "модель H3", "clip": "текстовый энкодер", "vae_video": "VAE видео", "vae_audio": "VAE звука"}
+    if mode == E.EXTREME and models["unet_fast"] and not chosen:
+        need.pop("unet")
+    missing = [v for k, v in need.items() if not models.get(k)]
+    if missing:
+        raise FriendlyError(f"{tag} Не хватает файлов: " + ", ".join(missing) + ". Нажми на ноде «📥 Модели» — "
+                            "она скачает всё сама и разложит по папкам.\n\nEN: Missing model files. Press "
+                            "«📥 Models» on the node — it downloads everything.")
+    return models, chosen
+
+
+def resolve_loras(notes, pairs, pack=None):
+    """LoRA со слотов ноды + 🎨 Набор LoRA. Нет файла — пропуск с запиской."""
+    out = [(n, float(s)) for n, s in pairs if n and n not in (NO_LORA, NOT_FOUND)]
+    out += [(d["name"], float(d["strength"])) for d in (pack or [])]
+    keep = []
+    for n, st in out:
+        if find_file("loras", base(n)):
+            keep.append((n, st))
+        else:
+            notes.append(f"⚠ LoRA «{n}» не найдена — пропущена / LoRA not found, skipped")
+    return keep
+
+
 class NeronH3One:
     CATEGORY = "Neron/H3"
     FUNCTION = "generate"
@@ -276,43 +321,10 @@ class NeronH3One:
         if lnote:
             notes.append("Длина: " + lnote)
 
-        # ---- модели ----
-        def pick(v, role):
-            if not v or v in (AUTO_MODEL, NOT_FOUND):
-                return auto_file(role), False
-            kind = ROLES[role][0]
-            found = find_file(kind, base(v))
-            if not found:
-                notes.append(f"⚠ Файла «{v}» нет — взят «авто» / not found, using auto")
-                return auto_file(role), False
-            return found, True
-
-        models = {}
-        unet, chosen = pick(unet_model, "unet")
-        models["unet"] = unet
-        models["clip"], _ = pick(clip_model, "clip")
-        models["vae_video"], _ = pick(vae_video_model, "vae_video")
-        models["vae_audio"], _ = pick(vae_audio_model, "vae_audio")
-        models["turbo_lora"], _ = pick(turbo_lora_model, "turbo_lora")
-        models["fast_lora"], _ = pick(fast_lora_model, "fast_lora")
-        models["unet_fast"] = auto_file("unet_fast")
-        models["clip_precise"] = auto_file("clip_precise")
-        need = {"unet": "модель H3", "clip": "текстовый энкодер", "vae_video": "VAE видео", "vae_audio": "VAE звука"}
-        if mode == E.EXTREME and models["unet_fast"] and not chosen:
-            need.pop("unet")
-        missing = [v for k, v in need.items() if not models.get(k)]
-        if missing:
-            raise FriendlyError("[H3 One] Не хватает файлов: " + ", ".join(missing) + ". Нажми на ноде «📥 Модели» — "
-                                "она скачает всё сама и разложит по папкам.\n\nEN: Missing model files. Press "
-                                "«📥 Models» on the node — it downloads everything.")
-
-        user_loras = [(n, float(s)) for n, s in ((lora_1, strength_1), (lora_2, strength_2), (lora_3, strength_3))
-                      if n and n not in (NO_LORA, NOT_FOUND)]
-        user_loras += [(d["name"], float(d["strength"])) for d in (loras or [])]
-        for n, _s in list(user_loras):
-            if not find_file("loras", base(n)):
-                notes.append(f"⚠ LoRA «{n}» не найдена — пропущена / LoRA not found, skipped")
-                user_loras.remove((n, _s))
+        # ---- модели и LoRA ----
+        models, chosen = resolve_models(notes, mode, unet_model, clip_model, vae_video_model, vae_audio_model,
+                                        turbo_lora_model, fast_lora_model)
+        user_loras = resolve_loras(notes, ((lora_1, strength_1), (lora_2, strength_2), (lora_3, strength_3)), loras)
 
         imgs = {"first": first, "ref_1": ref_image_1, "ref_2": ref_image_2, "ref_3": ref_image_3, "last": last_frame,
                 "ref_video": ref_video, "ref_video_audio": ref_video_audio, "ref_audio": ref_audio}
