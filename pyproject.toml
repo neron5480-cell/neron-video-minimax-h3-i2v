@@ -1,0 +1,16 @@
+[project]
+name = "neron-video-minimax-h3"
+description = "Neron nodes for ComfyUI: MiniMax H3 video with sound (long clips, AutoPrompter, auto model download), LTX 2.5 engine, Audio Studio, Video Sampler, Neron Theme. RU/EN. / Ноды Neron: видео MiniMax H3 со звуком, LTX, звук, тема."
+version = "2.1.0"
+license = { file = "LICENSE" }
+dependencies = ["imageio-ffmpeg", "soundfile"]
+
+[project.urls]
+Repository = "https://github.com/neron5480-cell/neron-video-minimax-h3-i2v"
+Documentation = "https://github.com/neron5480-cell/neron-video-minimax-h3-i2v#readme"
+"Bug Tracker" = "https://github.com/neron5480-cell/neron-video-minimax-h3-i2v/issues"
+
+[tool.comfy]
+PublisherId = "neron"
+DisplayName = "Neron — MiniMax H3 Video"
+Icon = ""
