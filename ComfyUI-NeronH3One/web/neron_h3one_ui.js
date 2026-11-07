@@ -40,7 +40,7 @@ const GROUPS_SWAP = [
       "rgba(255, 225, 170, 1.0)"),
     GROUPS[4], GROUPS[5],
     G("ТОНКАЯ НАСТРОЙКА / ADVANCED", ["seed", "control_after_generate", "fast_steps", "fast_kind", "balance_clean",
-      "protect_lora", "keep_clip", "ref_quality"], "120, 200, 160", "rgba(190, 255, 220, 1.0)"),
+      "protect_lora", "keep_clip", "ref_quality", "ref_video_size"], "120, 200, 160", "rgba(190, 255, 220, 1.0)"),
 ];
 // у каждой ноды пакета — свои группы и справка; оформление, часы, модели и отчёт — общие
 const CONFIG = {

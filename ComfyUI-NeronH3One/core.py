@@ -31,7 +31,9 @@ class FriendlyError(Exception):
 # ---------------- связь с интерфейсом ----------------
 
 def send(stage, i=0, total=0):
-    """Этап и прогресс — на часы ноды."""
+    """Этап и прогресс — на часы ноды и строкой в консоль ComfyUI (видно, даже если оформление не загрузилось)."""
+    if not total or i == 0:
+        log.info("%s ▶ %s", TAG, stage)
     try:
         from server import PromptServer
         PromptServer.instance.send_sync(EVENT, {"stage": stage, "i": int(i), "total": int(total)})

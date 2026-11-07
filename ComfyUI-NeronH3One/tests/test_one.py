@@ -319,13 +319,13 @@ for k, v in it["required"].items():
 
 
 class _Comp:
-    def __init__(self, n, fps, audio):
-        self.images, self.frame_rate, self.audio = torch.rand(n, 360, 640, 3), Fraction(fps), audio
+    def __init__(self, n, fps, audio, hw=(360, 640)):
+        self.images, self.frame_rate, self.audio = torch.rand(n, hw[0], hw[1], 3), Fraction(fps), audio
 
 
 class _Video:
-    def __init__(self, n, fps, audio):
-        self.c = _Comp(n, fps, audio)
+    def __init__(self, n, fps, audio, hw=(360, 640)):
+        self.c = _Comp(n, fps, audio, hw)
 
     def get_components(self):
         return self.c
@@ -381,6 +381,15 @@ print("✅ видео без звука → звук генерирует H3, с
 
 (_, _, aud, _, _), rep = swap(video_in=_Video(120, 24, src_audio), sound=W.SND_GEN)
 assert "сгенерирован" in rep and "ref_video_audios" in calls("MiniMaxH3ReferenceToVideo")[0]
+(_, _, _, _, _), rep = swap(video_in=_Video(120, 24, src_audio, hw=(720, 1280)))
+rv = calls("MiniMaxH3ReferenceToVideo")[0]["ref_videos"]["ref_video_0"]
+assert tuple(rv.shape[1:3]) == (512, 896), rv.shape
+assert calls("MiniMaxH3ReferenceToVideo")[0]["width"] == 1344          # сам ролик — в полном размере
+swap(video_in=_Video(120, 24, src_audio, hw=(720, 1280)), ref_video_size=W.REF_SIZES[0])
+assert tuple(calls("MiniMaxH3ReferenceToVideo")[0]["ref_videos"]["ref_video_0"].shape[1:3]) == (384, 672)
+swap(video_in=_Video(120, 24, src_audio, hw=(720, 1280)), ref_video_size=W.REF_SIZES[2])
+assert tuple(calls("MiniMaxH3ReferenceToVideo")[0]["ref_videos"]["ref_video_0"].shape[1:3]) == (720, 1280)
+print("✅ видео-образец уменьшается (512 по умолчанию, 384, полный), сам ролик — в полном размере")
 run_ok = True
 for bad in (dict(video_in=_Video(10, 24, None)), dict(video_in=None, video=W.NO_FILE), dict(video_in=_Video(120, 24, None), photo=W.NO_FILE)):
     try:

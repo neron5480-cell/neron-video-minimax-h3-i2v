@@ -33,6 +33,8 @@ SND_ORIG, SND_OWN, SND_GEN = SOUND
 HOLD = ["строго / strict", "свободнее / looser"]
 STRICT, LOOSE = HOLD
 MAX_SEC = 15.0
+REF_SIZES = ["⚡ лёгкий 384 / light", "⚖ средний 512 / medium", "🎯 полный (как кадр, медленно) / full (slow)"]
+REF_SIDE = {REF_SIZES[0]: 384, REF_SIZES[1]: 512, REF_SIZES[2]: 0}
 MIN_FRAMES = 48            # 2 с при 24 к/с
 
 FACE_TEXT = ("<Video 1> is the source performance. Recreate it exactly: the same motion, gestures, timing, body, "
@@ -134,6 +136,23 @@ def fit_audio(audio, seconds):
     return {"waveform": wf.contiguous(), "sample_rate": sr}
 
 
+def shrink(frames, side):
+    """Видео-образец → короткая сторона не больше side (кратно 32, пропорции те же). 0 — как есть."""
+    if not side:
+        return frames
+    h, w = int(frames.shape[1]), int(frames.shape[2])
+    if min(h, w) <= side:
+        return frames
+    k = side / float(min(h, w))
+    nw, nh = max(32, int(round(w * k / 32)) * 32), max(32, int(round(h * k / 32)) * 32)
+    out = []
+    for i in range(0, frames.shape[0], 32):                    # кусками — не держим в памяти лишнего
+        chunk = frames[i:i + 32].movedim(-1, 1)
+        out.append(torch.nn.functional.interpolate(chunk, size=(nh, nw), mode="bilinear", antialias=True,
+                                                   align_corners=False).movedim(1, -1))
+    return torch.cat(out, 0).clamp(0, 1)
+
+
 def swap_prompt(what, hold, extra=""):
     p = (FACE_TEXT if what == FACE else WHOLE_TEXT) + (STRICT_TEXT if hold == STRICT else LOOSE_TEXT)
     extra = (extra or "").strip()
@@ -156,7 +175,9 @@ class NeronH3Swap:
              "lora_1", "strength_1",
              "attention", "sparse", "sparse_tau",
              "unet_model", "clip_model", "vae_video_model", "vae_audio_model", "turbo_lora_model", "fast_lora_model",
-             "seed", "fast_steps", "fast_kind", "balance_clean", "protect_lora", "keep_clip", "ref_quality"]
+             "seed", "fast_steps", "fast_kind", "balance_clean", "protect_lora", "keep_clip", "ref_quality",
+             # новое — строго в конец: сохранённые схемы хранят значения по порядку
+             "ref_video_size"]
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -223,6 +244,13 @@ class NeronH3Swap:
                               tooltip="max — фото идёт в полном качестве (лицо узнаётся лучше). match — под размер "
                                       "кадра, чуть быстрее.\n\nEN: max — full quality (better likeness); match — "
                                       "frame size, a bit faster."))
+        req["ref_video_size"] = (REF_SIZES, _exp("видео-образец / reference video", default=REF_SIZES[1],
+                                 tooltip="Опорное видео H3 кладёт в расчёт РЯДОМ с самим роликом, целиком: в полном "
+                                         "размере это в разы дольше и тяжелее для памяти. Движение и мимику модель "
+                                         "читает и с уменьшенного. ⚖ 512 — по умолчанию; ⚡ 384 — быстрее; 🎯 полный — "
+                                         "точнее мелочи, но очень медленно на 16 ГБ.\n\nEN: H3 puts the whole "
+                                         "reference video into the computation next to the clip. Smaller is much "
+                                         "faster; 512 by default."))
         return {
             "required": req,
             "optional": {
@@ -260,7 +288,7 @@ class NeronH3Swap:
                  strength_1=1.0, attention=speed.AUTO, sparse=speed.AUTO, sparse_tau=E.SPARSE_TAU, unet_model=None,
                  clip_model=None, vae_video_model=None, vae_audio_model=None, turbo_lora_model=None,
                  fast_lora_model=None, seed=1, fast_steps="6", fast_kind=E.FAST_LORA_KIND, balance_clean=False,
-                 protect_lora=True, keep_clip="auto", ref_quality="max", video_in=None, photo_in=None, audio_in=None,
+                 protect_lora=True, keep_clip="auto", ref_quality="max", ref_video_size=None, video_in=None, photo_in=None, audio_in=None,
                  prompt=None, loras=None):
         notes = []
         mode = E.mode_key(mode)
@@ -316,6 +344,13 @@ class NeronH3Swap:
             w, h = passport.canvas(int(frames.shape[2]), int(frames.shape[1]))
             notes.append(f"Размер: как у видео {int(frames.shape[2])}×{int(frames.shape[1])} → {w}×{h}")
 
+        # ---- видео-образец: уменьшить (H3 кладёт его в расчёт целиком, рядом с роликом) ----
+        side = REF_SIDE.get(ref_video_size, 512)
+        h0, w0 = int(frames.shape[1]), int(frames.shape[2])
+        ref_frames = shrink(frames, side)
+        notes.append(f"Видео-образец: {w0}×{h0} → {int(ref_frames.shape[2])}×{int(ref_frames.shape[1])}" +
+                     (" (полный — медленно)" if not side else ""))
+
         # ---- текст ----
         text = (prompt or "").strip() or swap_prompt(what, hold, extra)
         notes.append("Подмена: " + ("свой текст" if (prompt or "").strip() else what.split(" / ")[0]) +
@@ -324,7 +359,7 @@ class NeronH3Swap:
         models, chosen = resolve_models(notes, mode, unet_model, clip_model, vae_video_model, vae_audio_model,
                                         turbo_lora_model, fast_lora_model, tag=TAG)
         user_loras = resolve_loras(notes, ((lora_1, strength_1),), loras)
-        imgs = {"ref_1": person, "ref_video": frames}
+        imgs = {"ref_1": person, "ref_video": ref_frames}
         if sound == SND_OWN and own is not None:
             imgs["ref_audio"] = fit_audio(own, length / 24.0)
         elif src_audio is not None:
