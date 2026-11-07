@@ -356,11 +356,14 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
             p = block_refs_prompt(p, 2 if use_ref else 1, who, mids)
             tags, no = [], 1
             if use_ref:
-                tags.append("<Picture 1> внешность"); no += 1
+                tags.append("<Picture 1> внешность")
+                no += 1
             if who is not None:
-                tags.append(f"<Picture {no}> образец «кто/где»"); no += 1
+                tags.append(f"<Picture {no}> образец «кто/где»")
+                no += 1
             for i in range(len(mids)):
-                tags.append(f"<Picture {no}> навигатор {i + 1}"); no += 1
+                tags.append(f"<Picture {no}> навигатор {i + 1}")
+                no += 1
             report.append(f"Блок {k + 1}: " + ", ".join(tags))
         if refs or auds:
             kw = {}
