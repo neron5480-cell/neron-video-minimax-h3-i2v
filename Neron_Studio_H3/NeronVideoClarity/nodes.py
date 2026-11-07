@@ -550,14 +550,16 @@ class NeronVideoClarity:
         if N < 2:
             return frames
         frames_np = (frames.detach().cpu().numpy() * 255.0).clip(0, 255).astype(np.uint8)
-        small_w = max(32, int(W * 0.5)); small_h = max(32, int(H * 0.5))
+        small_w = max(32, int(W * 0.5))
+        small_h = max(32, int(H * 0.5))
         small_gray = []
         for i in range(N):
             g = cv2.cvtColor(frames_np[i], cv2.COLOR_RGB2GRAY)
             g = cv2.resize(g, (small_w, small_h), interpolation=cv2.INTER_AREA)
             small_gray.append(g)
         grid_x, grid_y = np.meshgrid(np.arange(W, dtype=np.float32), np.arange(H, dtype=np.float32))
-        scale_x = W / small_w; scale_y = H / small_h
+        scale_x = W / small_w
+        scale_y = H / small_h
         out = []
         for i in range(N):
             out.append(frames[i])
@@ -566,7 +568,8 @@ class NeronVideoClarity:
                     pyr_scale=0.5, levels=3, winsize=13, iterations=3,
                     poly_n=5, poly_sigma=1.2, flags=0)
                 f_full = cv2.resize(f, (W, H), interpolation=cv2.INTER_LINEAR)
-                f_full[..., 0] *= scale_x; f_full[..., 1] *= scale_y
+                f_full[..., 0] *= scale_x
+                f_full[..., 1] *= scale_y
                 map_x = (grid_x + f_full[..., 0] * 0.5).astype(np.float32)
                 map_y = (grid_y + f_full[..., 1] * 0.5).astype(np.float32)
                 mid = cv2.remap(frames_np[i], map_x, map_y,
@@ -576,10 +579,12 @@ class NeronVideoClarity:
 
     def _mc_stabilize(self, frames, window, strength, motion_threshold, flow_scale):
         N, H, W, C = frames.shape
-        if window % 2 == 0: window += 1
+        if window % 2 == 0:
+            window += 1
         half = window // 2
         frames_np = (frames.detach().cpu().numpy() * 255.0).clip(0, 255).astype(np.uint8)
-        small_w = max(32, int(W * flow_scale)); small_h = max(32, int(H * flow_scale))
+        small_w = max(32, int(W * flow_scale))
+        small_h = max(32, int(H * flow_scale))
         small_gray = []
         for i in range(N):
             g = cv2.cvtColor(frames_np[i], cv2.COLOR_RGB2GRAY)
@@ -597,11 +602,15 @@ class NeronVideoClarity:
             total = np.zeros((small_h, small_w, 2), dtype=np.float32)
             step = 1 if idx_to > idx_from else -1
             for k in range(idx_from, idx_to, step):
-                if step == 1: total = total + forward_flows[k]
-                else: total = total - forward_flows[k - 1]
-            scale_x = W / small_w; scale_y = H / small_h
+                if step == 1:
+                    total = total + forward_flows[k]
+                else:
+                    total = total - forward_flows[k - 1]
+            scale_x = W / small_w
+            scale_y = H / small_h
             total_full = cv2.resize(total, (W, H), interpolation=cv2.INTER_LINEAR)
-            total_full[..., 0] *= scale_x; total_full[..., 1] *= scale_y
+            total_full[..., 0] *= scale_x
+            total_full[..., 1] *= scale_y
             map_x = (grid_x + total_full[..., 0]).astype(np.float32)
             map_y = (grid_y + total_full[..., 1]).astype(np.float32)
             warped = cv2.remap(frames_np[idx_from], map_x, map_y,
@@ -611,11 +620,14 @@ class NeronVideoClarity:
         result = torch.empty_like(frames)
         sigma = motion_threshold
         for i in range(N):
-            lo = max(0, i - half); hi = min(N, i + half + 1)
+            lo = max(0, i - half)
+            hi = min(N, i + half + 1)
             stack = []
             for j in range(lo, hi):
-                if j == i: stack.append(frames[i])
-                else: stack.append(warp_to(j, i))
+                if j == i:
+                    stack.append(frames[i])
+                else:
+                    stack.append(warp_to(j, i))
             stack = torch.stack(stack, dim=0)
             median = stack.median(dim=0).values
             del stack
@@ -627,7 +639,8 @@ class NeronVideoClarity:
 
     def _temporal_stabilize(self, frames, window, strength, motion_threshold):
         N, H, W, C = frames.shape
-        if window % 2 == 0: window += 1
+        if window % 2 == 0:
+            window += 1
         half = window // 2
         padded = torch.cat([frames[:1].expand(half, H, W, C), frames,
                             frames[-1:].expand(half, H, W, C)], dim=0)
@@ -651,7 +664,8 @@ class NeronVideoClarity:
         frame_lum = lum.mean(dim=(1, 2))
         del lum
         win = min(DEFLICKER_WINDOW, N if N % 2 == 1 else N - 1)
-        if win < 3: return frames
+        if win < 3:
+            return frames
         half = win // 2
         padded = torch.cat([frame_lum[:1].expand(half), frame_lum,
                             frame_lum[-1:].expand(half)])
@@ -665,7 +679,8 @@ class NeronVideoClarity:
         return torch.clamp(frames * correction.view(-1, 1, 1, 1), 0.0, 1.0)
 
     def _saturate(self, frames, saturation):
-        if frames.shape[-1] < 3: return frames
+        if frames.shape[-1] < 3:
+            return frames
         gray = (frames[..., 0:1] * 0.299 + frames[..., 1:2] * 0.587 + frames[..., 2:3] * 0.114)
         rgb = frames[..., :3]
         out_rgb = torch.clamp(gray + (rgb - gray) * saturation, 0.0, 1.0)
