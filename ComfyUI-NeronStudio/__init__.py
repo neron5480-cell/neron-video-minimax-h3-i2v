@@ -29,7 +29,7 @@ WORKFLOWS = {
                 "ComfyUI-PerceptionRelay/workflows/perception_relay_basic.json"],
     "audio": ["NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json"],
     "restore": [_RESTORE],
-    "outpaint": [_RESTORE],
+    "outpaint": ["workflow/Neron_Flux_Fill_PreProcessor.json", _RESTORE],   # свой процесс: фото → широкий кадр
     "upscale": [_RESTORE],
 }
 

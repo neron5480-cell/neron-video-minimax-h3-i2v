@@ -1,0 +1,1364 @@
+{
+  "id": "aff23af9-e8f4-41f8-8e4c-0854e355b753",
+  "revision": 0,
+  "last_node_id": 59,
+  "last_link_id": 122,
+  "nodes": [
+    {
+      "id": 9,
+      "type": "SaveImage",
+      "pos": [
+        987.4554192364158,
+        96.27679521552581
+      ],
+      "size": [
+        475.52895897362896,
+        512.2304340626359
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 120
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.64"
+      },
+      "widgets_values": [
+        "ComfyUI"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "ComfyUI"
+      }
+    },
+    {
+      "id": 57,
+      "type": "ImageSharpen",
+      "pos": [
+        691.3928398598462,
+        -20.0748188270129
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 119
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            120
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageSharpen"
+      },
+      "widgets_values": [
+        1,
+        0.51,
+        0.4
+      ],
+      "widgets_values_named": {
+        "sharpen_radius": 1,
+        "sigma": 0.51,
+        "alpha": 0.4
+      }
+    },
+    {
+      "id": 53,
+      "type": "cf869dcc-a50b-4c96-bbc0-d5efe2225140",
+      "pos": [
+        692.0807728081159,
+        133.0852855454195
+      ],
+      "size": [
+        270.5592576455284,
+        172
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 108
+        },
+        {
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": 109
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE0",
+          "type": "IMAGE",
+          "links": [
+            119
+          ]
+        }
+      ],
+      "title": "генератор",
+      "properties": {
+        "previewExposures": [
+          {
+            "name": "$$canvas-image-preview",
+            "sourceNodeId": "52",
+            "sourcePreviewName": "$$canvas-image-preview"
+          },
+          {
+            "name": "$$canvas-image-preview_1",
+            "sourceNodeId": "3",
+            "sourcePreviewName": "$$canvas-image-preview"
+          }
+        ]
+      },
+      "widgets_values": [
+        "",
+        1024,
+        1024
+      ],
+      "widgets_values_named": {
+        "text": "",
+        "target_width": 1024,
+        "target_height": 1024
+      }
+    },
+    {
+      "id": 17,
+      "type": "LoadImage",
+      "pos": [
+        358.97911975918555,
+        134.38748041703928
+      ],
+      "size": [
+        315,
+        314.0000000000001
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            108
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "slot_index": 1,
+          "links": [
+            109
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.64"
+      },
+      "widgets_values": [
+        "Без названия (42).jpg",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "Без названия (42).jpg",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 59,
+      "type": "Note",
+      "pos": [
+        -310.7232943630239,
+        56.908940943872445
+      ],
+      "size": [
+        327.3944251249521,
+        536.5320838357509
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "English",
+      "properties": {},
+      "widgets_values": [
+        "================================================================================\n🛠️ FLUX-FILL ADAPTIVE PRE-PROCESSOR | By neron5480922\n================================================================================\n\nThis micro-workflow perfectly adapts ANY input image (portrait or \nlandscape) to a specified resolution, for example 1024x1024 for \nvideo generators (MiniMax / LTX). \nFlux-Fill automatically outpaints the missing edges, while the custom unsharp \nmasking node sharpens contours.\n\nREQUIRED MODELS & DIRECTORIES:\n\n1. Diffusion Model (Flux Fill):\n   • Filename: flux1-fill-dev.safetensors\n   • Directory: ComfyUI/models/unet/\n   • Source: Search for \"flux1-fill-dev\" on Civitai or Hugging Face.\n\n2. CLIP Text Encoders:\n   • Filename 1: clip_l.safetensors\n   • Filename 2: t5xxl_fp16.safetensors (or fp8_e4m3fn for low VRAM)\n   • Directory: ComfyUI/models/clip/\n\n3. VAE Model:\n   • Filename: ae.safetensors (Official Flux VAE)\n   • Directory: ComfyUI/models/vae/\n\nHOW TO USE IT:\n1. Load your raw photo into the \"Load Image\" node.\n2. Set target_width and target_height to your desired size (e.g., 1024).\n3. In the text field (inside the generator subgraph), you can type 2-3 words \n   describing the background to outpaint (e.g., \"living room, apartment interior\").\n4. Click Queue Prompt. get a picture !\n================================================================================\n"
+      ],
+      "widgets_values_named": {
+        "text": "================================================================================\n🛠️ FLUX-FILL ADAPTIVE PRE-PROCESSOR | By neron5480922\n================================================================================\n\nThis micro-workflow perfectly adapts ANY input image (portrait or \nlandscape) to a specified resolution, for example 1024x1024 for \nvideo generators (MiniMax / LTX). \nFlux-Fill automatically outpaints the missing edges, while the custom unsharp \nmasking node sharpens contours.\n\nREQUIRED MODELS & DIRECTORIES:\n\n1. Diffusion Model (Flux Fill):\n   • Filename: flux1-fill-dev.safetensors\n   • Directory: ComfyUI/models/unet/\n   • Source: Search for \"flux1-fill-dev\" on Civitai or Hugging Face.\n\n2. CLIP Text Encoders:\n   • Filename 1: clip_l.safetensors\n   • Filename 2: t5xxl_fp16.safetensors (or fp8_e4m3fn for low VRAM)\n   • Directory: ComfyUI/models/clip/\n\n3. VAE Model:\n   • Filename: ae.safetensors (Official Flux VAE)\n   • Directory: ComfyUI/models/vae/\n\nHOW TO USE IT:\n1. Load your raw photo into the \"Load Image\" node.\n2. Set target_width and target_height to your desired size (e.g., 1024).\n3. In the text field (inside the generator subgraph), you can type 2-3 words \n   describing the background to outpaint (e.g., \"living room, apartment interior\").\n4. Click Queue Prompt. get a picture !\n================================================================================\n"
+      },
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 58,
+      "type": "Note",
+      "pos": [
+        51.244465362260556,
+        53.04473293228203
+      ],
+      "size": [
+        283.20879225338444,
+        537.362640844615
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "РУССКИЙ ЯЗЫК",
+      "properties": {},
+      "widgets_values": [
+        "================================================================================\n🛠️ FLUX-FILL АДАПТИВНЫЙ ПРЕПРОЦЕССОР (1024x1024) | Автор: neron5480922\n================================================================================\n\nЭтот микро-процесс идеально подгоняет ЛЮБОЕ изображение (вертикальное или \nгоризонтальное)  под заданное значение , например 1024x1024 для видеогенераторов (MiniMax / LTX). \nFlux-Fill автоматически дорисовывает края кадра без швов, а финальный блок \nматематической резкости убирает ИИ-мыло, подготавливая четкий референс.\n\nСПИСОК МОДЕЛЕЙ И КУДА ИХ СКАЧАТЬ:\n\n1. Модель диффузии (Flux Fill):\n   • Имя файла: flux1-fill-dev.safetensors\n   • Папка: ComfyUI/models/unet/\n   • Ссылка: Ищите \"flux1-fill-dev\" на Civitai или Hugging Face (Black Forest Labs).\n\n2. Текстовые энкодеры CLIP:\n   • Имя файла 1: clip_l.safetensors\n   • Имя файла 2: t5xxl_fp16.safetensors (или fp8_e4m3fn для экономии памяти)\n   • Папка: ComfyUI/models/clip/\n\n3. VAE модель:\n   • Имя файла: ae.safetensors (родной VAE от Flux)\n   • Папка: ComfyUI/models/vae/\n\nИНСТРУКЦИЯ ПО ПРИМЕНЕНИЮ:\n1. Загрузите исходное фото в ноду \"Загрузить изображение\".\n2. Выставите target_width и target_height на 1024.\n3. В поле text (внутри ноды генератора) можно написать 2-3 слова описания фона, \n   который нужно дорисовать (например: \"living room, apartment interior\").\n4. Нажмите Queue Prompt. получите картинку !\n================================================================================\n"
+      ],
+      "widgets_values_named": {
+        "text": "================================================================================\n🛠️ FLUX-FILL АДАПТИВНЫЙ ПРЕПРОЦЕССОР (1024x1024) | Автор: neron5480922\n================================================================================\n\nЭтот микро-процесс идеально подгоняет ЛЮБОЕ изображение (вертикальное или \nгоризонтальное)  под заданное значение , например 1024x1024 для видеогенераторов (MiniMax / LTX). \nFlux-Fill автоматически дорисовывает края кадра без швов, а финальный блок \nматематической резкости убирает ИИ-мыло, подготавливая четкий референс.\n\nСПИСОК МОДЕЛЕЙ И КУДА ИХ СКАЧАТЬ:\n\n1. Модель диффузии (Flux Fill):\n   • Имя файла: flux1-fill-dev.safetensors\n   • Папка: ComfyUI/models/unet/\n   • Ссылка: Ищите \"flux1-fill-dev\" на Civitai или Hugging Face (Black Forest Labs).\n\n2. Текстовые энкодеры CLIP:\n   • Имя файла 1: clip_l.safetensors\n   • Имя файла 2: t5xxl_fp16.safetensors (или fp8_e4m3fn для экономии памяти)\n   • Папка: ComfyUI/models/clip/\n\n3. VAE модель:\n   • Имя файла: ae.safetensors (родной VAE от Flux)\n   • Папка: ComfyUI/models/vae/\n\nИНСТРУКЦИЯ ПО ПРИМЕНЕНИЮ:\n1. Загрузите исходное фото в ноду \"Загрузить изображение\".\n2. Выставите target_width и target_height на 1024.\n3. В поле text (внутри ноды генератора) можно написать 2-3 слова описания фона, \n   который нужно дорисовать (например: \"living room, apartment interior\").\n4. Нажмите Queue Prompt. получите картинку !\n================================================================================\n"
+      },
+      "color": "#223",
+      "bgcolor": "#335"
+    }
+  ],
+  "links": [
+    [
+      108,
+      17,
+      0,
+      53,
+      0,
+      "IMAGE"
+    ],
+    [
+      109,
+      17,
+      1,
+      53,
+      1,
+      "MASK"
+    ],
+    [
+      119,
+      53,
+      0,
+      57,
+      0,
+      "IMAGE"
+    ],
+    [
+      120,
+      57,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "cf869dcc-a50b-4c96-bbc0-d5efe2225140",
+        "version": 1,
+        "state": {
+          "lastGroupId": 0,
+          "lastNodeId": 59,
+          "lastLinkId": 122,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "генератор",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -193.12917897799883,
+            -135.37928551623258,
+            128,
+            168
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            946.3525581339983,
+            -87.93463037001001,
+            128,
+            68
+          ]
+        },
+        "inputs": [
+          {
+            "id": "67ce5c88-59da-4ced-819d-6127c0bc1276",
+            "name": "image",
+            "type": "IMAGE",
+            "linkIds": [
+              101
+            ],
+            "localized_name": "image",
+            "pos": [
+              -89.12917897799883,
+              -111.37928551623258
+            ]
+          },
+          {
+            "id": "4d930a4b-f940-45de-93ee-9447dbc6915f",
+            "name": "mask",
+            "type": "MASK",
+            "linkIds": [
+              105
+            ],
+            "localized_name": "mask",
+            "shape": 7,
+            "pos": [
+              -89.12917897799883,
+              -91.37928551623258
+            ]
+          },
+          {
+            "id": "27757536-943e-4dd6-bf5d-63c4cabcd252",
+            "name": "seed",
+            "type": "INT",
+            "linkIds": [],
+            "pos": [
+              -89.12917897799883,
+              -71.37928551623258
+            ]
+          },
+          {
+            "id": "322492a1-730f-4abe-b85b-c9cbefc638c8",
+            "name": "text",
+            "type": "STRING",
+            "linkIds": [
+              112
+            ],
+            "pos": [
+              -89.12917897799883,
+              -51.379285516232585
+            ]
+          },
+          {
+            "id": "4cf59ae4-aa99-4898-87cc-e9101d5be090",
+            "name": "target_width",
+            "type": "INT",
+            "linkIds": [
+              121
+            ],
+            "pos": [
+              -89.12917897799883,
+              -31.379285516232585
+            ]
+          },
+          {
+            "id": "3c87a7fa-7321-4c60-ba86-7118a3564f53",
+            "name": "target_height",
+            "type": "INT",
+            "linkIds": [
+              122
+            ],
+            "pos": [
+              -89.12917897799883,
+              -11.379285516232585
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "fe03bf3c-fe43-41d7-9e0d-002b6f2df7df",
+            "name": "IMAGE0",
+            "type": "IMAGE",
+            "linkIds": [
+              107
+            ],
+            "localized_name": "IMAGE0",
+            "pos": [
+              970.3525581339983,
+              -63.93463037001001
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 39,
+            "type": "DifferentialDiffusion",
+            "pos": [
+              459.6430738033913,
+              -132.7131374387348
+            ],
+            "size": [
+              277.20001220703125,
+              58
+            ],
+            "flags": {
+              "collapsed": true
+            },
+            "order": 3,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "модель",
+                "name": "model",
+                "type": "MODEL",
+                "link": 85
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "МОДЕЛЬ",
+                "name": "MODEL",
+                "type": "MODEL",
+                "slot_index": 0,
+                "links": [
+                  86
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "DifferentialDiffusion",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.64"
+            },
+            "widgets_values": [
+              1
+            ],
+            "widgets_values_named": {
+              "strength": 1
+            }
+          },
+          {
+            "id": 23,
+            "type": "CLIPTextEncode",
+            "pos": [
+              199.85269249467333,
+              -88.45886071062309
+            ],
+            "size": [
+              422.8500061035156,
+              164.30999755859375
+            ],
+            "flags": {
+              "collapsed": true
+            },
+            "order": 6,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "clip",
+                "name": "clip",
+                "type": "CLIP",
+                "link": 62
+              },
+              {
+                "localized_name": "текст",
+                "name": "text",
+                "type": "STRING",
+                "widget": {
+                  "name": "text"
+                },
+                "link": 112
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "КОНДИЦИОНИРОВАНИЕ",
+                "name": "CONDITIONING",
+                "type": "CONDITIONING",
+                "slot_index": 0,
+                "links": [
+                  41,
+                  99
+                ]
+              }
+            ],
+            "title": "CLIP Text Encode (Positive Prompt)",
+            "properties": {
+              "Node name for S&R": "CLIPTextEncode",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.64"
+            },
+            "widgets_values": [
+              ""
+            ],
+            "widgets_values_named": {
+              "text": ""
+            },
+            "color": "#232",
+            "bgcolor": "#353"
+          },
+          {
+            "id": 26,
+            "type": "FluxGuidance",
+            "pos": [
+              478.5080455842684,
+              -84.73193121471498
+            ],
+            "size": [
+              317.3999938964844,
+              58
+            ],
+            "flags": {
+              "collapsed": true
+            },
+            "order": 7,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "условие",
+                "name": "conditioning",
+                "type": "CONDITIONING",
+                "link": 41
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "КОНДИЦИОНИРОВАНИЕ",
+                "name": "CONDITIONING",
+                "type": "CONDITIONING",
+                "slot_index": 0,
+                "links": [
+                  80
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "FluxGuidance",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.64"
+            },
+            "widgets_values": [
+              30
+            ],
+            "widgets_values_named": {
+              "guidance": 30
+            }
+          },
+          {
+            "id": 46,
+            "type": "ConditioningZeroOut",
+            "pos": [
+              189.34559782713634,
+              -45.84678574977897
+            ],
+            "size": [
+              229.5767578125,
+              26
+            ],
+            "flags": {
+              "collapsed": true
+            },
+            "order": 9,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "условие",
+                "name": "conditioning",
+                "type": "CONDITIONING",
+                "link": 99
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "КОНДИЦИОНИРОВАНИЕ",
+                "name": "CONDITIONING",
+                "type": "CONDITIONING",
+                "links": [
+                  100
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ConditioningZeroOut",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.64"
+            }
+          },
+          {
+            "id": 38,
+            "type": "InpaintModelConditioning",
+            "pos": [
+              439.8053352629654,
+              -11.693419693307689
+            ],
+            "size": [
+              302.3999938964844,
+              138
+            ],
+            "flags": {
+              "collapsed": true
+            },
+            "order": 8,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "положительный",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "link": 80
+              },
+              {
+                "localized_name": "отрицательный",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "link": 100
+              },
+              {
+                "localized_name": "vae",
+                "name": "vae",
+                "type": "VAE",
+                "link": 82
+              },
+              {
+                "localized_name": "пиксели",
+                "name": "pixels",
+                "type": "IMAGE",
+                "link": 103
+              },
+              {
+                "localized_name": "маска",
+                "name": "mask",
+                "type": "MASK",
+                "link": 104
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "положительный",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "slot_index": 0,
+                "links": [
+                  77
+                ]
+              },
+              {
+                "localized_name": "отрицательный",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "slot_index": 1,
+                "links": [
+                  78
+                ]
+              },
+              {
+                "localized_name": "латентный",
+                "name": "latent",
+                "type": "LATENT",
+                "slot_index": 2,
+                "links": [
+                  88
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "InpaintModelConditioning",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.64"
+            },
+            "widgets_values": [
+              false
+            ],
+            "widgets_values_named": {
+              "noise_mask": false
+            }
+          },
+          {
+            "id": 3,
+            "type": "KSampler",
+            "pos": [
+              655.5280891379595,
+              -69.81997868075341
+            ],
+            "size": [
+              310,
+              510
+            ],
+            "flags": {
+              "collapsed": true
+            },
+            "order": 4,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "модель",
+                "name": "model",
+                "type": "MODEL",
+                "link": 86
+              },
+              {
+                "localized_name": "положительный",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "link": 77
+              },
+              {
+                "localized_name": "отрицательный",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "link": 78
+              },
+              {
+                "localized_name": "латентное_изображение",
+                "name": "latent_image",
+                "type": "LATENT",
+                "link": 88
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "ЛАТЕНТНЫЙ",
+                "name": "LATENT",
+                "type": "LATENT",
+                "slot_index": 0,
+                "links": [
+                  7
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "KSampler",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.64"
+            },
+            "widgets_values": [
+              1117542961148787,
+              "randomize",
+              20,
+              1,
+              "euler",
+              "normal",
+              1
+            ],
+            "widgets_values_named": {
+              "seed": 1117542961148787,
+              "control_after_generate": "randomize",
+              "steps": 20,
+              "cfg": 1,
+              "sampler_name": "euler",
+              "scheduler": "normal",
+              "denoise": 1
+            }
+          },
+          {
+            "id": 32,
+            "type": "VAELoader",
+            "pos": [
+              689.9670210435052,
+              -126.25492251224365
+            ],
+            "size": [
+              315,
+              58
+            ],
+            "flags": {
+              "collapsed": true
+            },
+            "order": 2,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [
+              {
+                "localized_name": "VAE",
+                "name": "VAE",
+                "type": "VAE",
+                "slot_index": 0,
+                "links": [
+                  60,
+                  82
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "VAELoader",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.64",
+              "models": [
+                {
+                  "name": "ae.safetensors",
+                  "url": "https://huggingface.co/Comfy-Org/Lumina_Image_2.0_Repackaged/resolve/main/split_files/vae/ae.safetensors",
+                  "directory": "vae"
+                }
+              ]
+            },
+            "widgets_values": [
+              "ae.safetensors"
+            ],
+            "widgets_values_named": {
+              "vae_name": "ae.safetensors"
+            }
+          },
+          {
+            "id": 8,
+            "type": "VAEDecode",
+            "pos": [
+              733.3309339636196,
+              -17.755190608717523
+            ],
+            "size": [
+              210,
+              46
+            ],
+            "flags": {
+              "collapsed": true
+            },
+            "order": 5,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "образцы",
+                "name": "samples",
+                "type": "LATENT",
+                "link": 7
+              },
+              {
+                "localized_name": "vae",
+                "name": "vae",
+                "type": "VAE",
+                "link": 60
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "ИЗОБРАЖЕНИЕ",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "slot_index": 0,
+                "links": [
+                  106
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "VAEDecode",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.64"
+            }
+          },
+          {
+            "id": 52,
+            "type": "GLSLShader",
+            "pos": [
+              794.8633514603205,
+              -68.92416699275007
+            ],
+            "size": [
+              273.7855540960769,
+              134
+            ],
+            "flags": {
+              "collapsed": true
+            },
+            "order": 11,
+            "mode": 4,
+            "inputs": [
+              {
+                "localized_name": "image0",
+                "name": "images.image0",
+                "type": "IMAGE",
+                "link": 106
+              },
+              {
+                "localized_name": "image1",
+                "name": "images.image1",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": null
+              },
+              {
+                "localized_name": "u_float0",
+                "name": "floats.u_float0",
+                "shape": 7,
+                "type": "FLOAT",
+                "link": null
+              },
+              {
+                "localized_name": "u_int0",
+                "name": "ints.u_int0",
+                "shape": 7,
+                "type": "INT",
+                "link": null
+              },
+              {
+                "localized_name": "u_bool0",
+                "name": "bools.u_bool0",
+                "shape": 7,
+                "type": "BOOLEAN",
+                "link": null
+              },
+              {
+                "localized_name": "u_curve0",
+                "name": "curves.u_curve0",
+                "shape": 7,
+                "type": "CURVE",
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE0",
+                "name": "IMAGE0",
+                "type": "IMAGE",
+                "links": [
+                  107
+                ]
+              },
+              {
+                "localized_name": "IMAGE1",
+                "name": "IMAGE1",
+                "type": "IMAGE",
+                "links": null
+              },
+              {
+                "localized_name": "IMAGE2",
+                "name": "IMAGE2",
+                "type": "IMAGE",
+                "links": null
+              },
+              {
+                "localized_name": "IMAGE3",
+                "name": "IMAGE3",
+                "type": "IMAGE",
+                "links": null
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "GLSLShader"
+            },
+            "widgets_values": [
+              "#version 300 es\nprecision highp float;\n\nuniform sampler2D u_image0;\nuniform vec2 u_resolution;\n\nin vec2 v_texCoord;\nlayout(location = 0) out vec4 fragColor0;\n\nvoid main() {\n    vec2 texelSize = 1.0 / u_resolution;\n    \n    // Получаем цвета соседних пикселей\n    vec4 top_left  = texture(u_image0, v_texCoord + vec2(-1.0,  1.0) * texelSize);\n    vec4 top_mid   = texture(u_image0, v_texCoord + vec2( 0.0,  1.0) * texelSize);\n    vec4 top_right = texture(u_image0, v_texCoord + vec2( 1.0,  1.0) * texelSize);\n    \n    vec4 mid_left  = texture(u_image0, v_texCoord + vec2(-1.0,  0.0) * texelSize);\n    vec4 center    = texture(u_image0, v_texCoord + vec2( 0.0,  0.0) * texelSize);\n    vec4 mid_right = texture(u_image0, v_texCoord + vec2( 1.0,  0.0) * texelSize);\n    \n    vec4 bot_left  = texture(u_image0, v_texCoord + vec2(-1.0, -1.0) * texelSize);\n    vec4 bot_mid   = texture(u_image0, v_texCoord + vec2( 0.0, -1.0) * texelSize);\n    vec4 bot_right = texture(u_image0, v_texCoord + vec2( 1.0, -1.0) * texelSize);\n    \n    // Матрица резкости (Sharpen Kernel) с силой ~10%\n    // Сумма всех коэффициентов строго равна 1.0, чтобы не менять общую яркость\n    vec4 sharpened = center * 1.8 \n                   - top_mid * 0.1 - bot_mid * 0.1 - mid_left * 0.1 - mid_right * 0.1\n                   - top_left * 0.1 - top_right * 0.1 - bot_left * 0.1 - bot_right * 0.1;\n                   \n    fragColor0 = clamp(sharpened, 0.0, 1.0);\n}\n",
+              "from_input"
+            ],
+            "widgets_values_named": {
+              "fragment_shader": "#version 300 es\nprecision highp float;\n\nuniform sampler2D u_image0;\nuniform vec2 u_resolution;\n\nin vec2 v_texCoord;\nlayout(location = 0) out vec4 fragColor0;\n\nvoid main() {\n    vec2 texelSize = 1.0 / u_resolution;\n    \n    // Получаем цвета соседних пикселей\n    vec4 top_left  = texture(u_image0, v_texCoord + vec2(-1.0,  1.0) * texelSize);\n    vec4 top_mid   = texture(u_image0, v_texCoord + vec2( 0.0,  1.0) * texelSize);\n    vec4 top_right = texture(u_image0, v_texCoord + vec2( 1.0,  1.0) * texelSize);\n    \n    vec4 mid_left  = texture(u_image0, v_texCoord + vec2(-1.0,  0.0) * texelSize);\n    vec4 center    = texture(u_image0, v_texCoord + vec2( 0.0,  0.0) * texelSize);\n    vec4 mid_right = texture(u_image0, v_texCoord + vec2( 1.0,  0.0) * texelSize);\n    \n    vec4 bot_left  = texture(u_image0, v_texCoord + vec2(-1.0, -1.0) * texelSize);\n    vec4 bot_mid   = texture(u_image0, v_texCoord + vec2( 0.0, -1.0) * texelSize);\n    vec4 bot_right = texture(u_image0, v_texCoord + vec2( 1.0, -1.0) * texelSize);\n    \n    // Матрица резкости (Sharpen Kernel) с силой ~10%\n    // Сумма всех коэффициентов строго равна 1.0, чтобы не менять общую яркость\n    vec4 sharpened = center * 1.8 \n                   - top_mid * 0.1 - bot_mid * 0.1 - mid_left * 0.1 - mid_right * 0.1\n                   - top_left * 0.1 - top_right * 0.1 - bot_left * 0.1 - bot_right * 0.1;\n                   \n    fragColor0 = clamp(sharpened, 0.0, 1.0);\n}\n",
+              "size_mode": "from_input"
+            }
+          },
+          {
+            "id": 49,
+            "type": "ImagePadForOutpaintTargetSize",
+            "pos": [
+              160.89549962263558,
+              -3.435247876678256
+            ],
+            "size": [
+              333.648046875,
+              150
+            ],
+            "flags": {
+              "collapsed": true
+            },
+            "order": 10,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "image",
+                "name": "image",
+                "type": "IMAGE",
+                "link": 101
+              },
+              {
+                "localized_name": "mask",
+                "name": "mask",
+                "shape": 7,
+                "type": "MASK",
+                "link": 105
+              },
+              {
+                "localized_name": "target_width",
+                "name": "target_width",
+                "type": "INT",
+                "widget": {
+                  "name": "target_width"
+                },
+                "link": 121
+              },
+              {
+                "localized_name": "target_height",
+                "name": "target_height",
+                "type": "INT",
+                "widget": {
+                  "name": "target_height"
+                },
+                "link": 122
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "ИЗОБРАЖЕНИЕ",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  103
+                ]
+              },
+              {
+                "localized_name": "МАСКА",
+                "name": "MASK",
+                "type": "MASK",
+                "links": [
+                  104
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ImagePadForOutpaintTargetSize"
+            },
+            "widgets_values": [
+              1024,
+              1024,
+              24,
+              "nearest-exact"
+            ],
+            "widgets_values_named": {
+              "target_width": 1024,
+              "target_height": 1024,
+              "feathering": 24,
+              "upscale_method": "nearest-exact"
+            }
+          },
+          {
+            "id": 31,
+            "type": "UNETLoader",
+            "pos": [
+              200.4598799640002,
+              -135.74930330649892
+            ],
+            "size": [
+              315,
+              82
+            ],
+            "flags": {
+              "collapsed": true
+            },
+            "order": 0,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [
+              {
+                "localized_name": "МОДЕЛЬ",
+                "name": "MODEL",
+                "type": "MODEL",
+                "slot_index": 0,
+                "links": [
+                  85
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "UNETLoader",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.64",
+              "models": [
+                {
+                  "name": "flux1-fill-dev.safetensors",
+                  "url": "https://huggingface.co/Comfy-Org/flux1-dev/resolve/main/split_files/diffusion_models/flux1-fill-dev.safetensors",
+                  "directory": "diffusion_models"
+                }
+              ]
+            },
+            "widgets_values": [
+              "flux1-fill-dev.safetensors",
+              "default"
+            ],
+            "widgets_values_named": {
+              "unet_name": "flux1-fill-dev.safetensors",
+              "weight_dtype": "default"
+            }
+          },
+          {
+            "id": 34,
+            "type": "DualCLIPLoader",
+            "pos": [
+              -21.54036673495704,
+              -87.42991478951066
+            ],
+            "size": [
+              315,
+              130
+            ],
+            "flags": {
+              "collapsed": true
+            },
+            "order": 1,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [
+              {
+                "localized_name": "CLIP",
+                "name": "CLIP",
+                "type": "CLIP",
+                "links": [
+                  62
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "DualCLIPLoader",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.64",
+              "models": [
+                {
+                  "name": "clip_l.safetensors",
+                  "url": "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors?download=true",
+                  "directory": "text_encoders"
+                },
+                {
+                  "name": "t5xxl_fp16.safetensors",
+                  "url": "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors?download=true",
+                  "directory": "text_encoders"
+                }
+              ]
+            },
+            "widgets_values": [
+              "clip_l.safetensors",
+              "t5xxl_fp16.safetensors",
+              "flux",
+              "default"
+            ],
+            "widgets_values_named": {
+              "clip_name1": "clip_l.safetensors",
+              "clip_name2": "t5xxl_fp16.safetensors",
+              "type": "flux",
+              "device": "default"
+            }
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 106,
+            "origin_id": 8,
+            "origin_slot": 0,
+            "target_id": 52,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 86,
+            "origin_id": 39,
+            "origin_slot": 0,
+            "target_id": 3,
+            "target_slot": 0,
+            "type": "MODEL"
+          },
+          {
+            "id": 77,
+            "origin_id": 38,
+            "origin_slot": 0,
+            "target_id": 3,
+            "target_slot": 1,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 78,
+            "origin_id": 38,
+            "origin_slot": 1,
+            "target_id": 3,
+            "target_slot": 2,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 88,
+            "origin_id": 38,
+            "origin_slot": 2,
+            "target_id": 3,
+            "target_slot": 3,
+            "type": "LATENT"
+          },
+          {
+            "id": 7,
+            "origin_id": 3,
+            "origin_slot": 0,
+            "target_id": 8,
+            "target_slot": 0,
+            "type": "LATENT"
+          },
+          {
+            "id": 60,
+            "origin_id": 32,
+            "origin_slot": 0,
+            "target_id": 8,
+            "target_slot": 1,
+            "type": "VAE"
+          },
+          {
+            "id": 85,
+            "origin_id": 31,
+            "origin_slot": 0,
+            "target_id": 39,
+            "target_slot": 0,
+            "type": "MODEL"
+          },
+          {
+            "id": 80,
+            "origin_id": 26,
+            "origin_slot": 0,
+            "target_id": 38,
+            "target_slot": 0,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 100,
+            "origin_id": 46,
+            "origin_slot": 0,
+            "target_id": 38,
+            "target_slot": 1,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 82,
+            "origin_id": 32,
+            "origin_slot": 0,
+            "target_id": 38,
+            "target_slot": 2,
+            "type": "VAE"
+          },
+          {
+            "id": 103,
+            "origin_id": 49,
+            "origin_slot": 0,
+            "target_id": 38,
+            "target_slot": 3,
+            "type": "IMAGE"
+          },
+          {
+            "id": 104,
+            "origin_id": 49,
+            "origin_slot": 1,
+            "target_id": 38,
+            "target_slot": 4,
+            "type": "MASK"
+          },
+          {
+            "id": 99,
+            "origin_id": 23,
+            "origin_slot": 0,
+            "target_id": 46,
+            "target_slot": 0,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 41,
+            "origin_id": 23,
+            "origin_slot": 0,
+            "target_id": 26,
+            "target_slot": 0,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 62,
+            "origin_id": 34,
+            "origin_slot": 0,
+            "target_id": 23,
+            "target_slot": 0,
+            "type": "CLIP"
+          },
+          {
+            "id": 101,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 49,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 105,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 49,
+            "target_slot": 1,
+            "type": "MASK"
+          },
+          {
+            "id": 107,
+            "origin_id": 52,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 112,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 23,
+            "target_slot": 1,
+            "type": "STRING"
+          },
+          {
+            "id": 121,
+            "origin_id": -10,
+            "origin_slot": 4,
+            "target_id": 49,
+            "target_slot": 2,
+            "type": "INT"
+          },
+          {
+            "id": 122,
+            "origin_id": -10,
+            "origin_slot": 5,
+            "target_id": 49,
+            "target_slot": 3,
+            "type": "INT"
+          }
+        ],
+        "extra": {
+          "pixaromaGroups": []
+        }
+      }
+    ]
+  },
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.1961540343310288,
+      "offset": [
+        326.7357581324508,
+        369.68028606152427
+      ]
+    },
+    "frontendVersion": "1.52.7",
+    "VHS_KeepIntermediate": true,
+    "VHS_MetadataImage": true,
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0
+  },
+  "version": 0.4
+}
