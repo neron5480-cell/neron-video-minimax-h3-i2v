@@ -5,6 +5,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
+const VERSION = "2026.11.08·3";                 // видно в подсказке монеты и на полосе — какая версия загружена
 const POS_KEY = "neron-studio-coin-pos";
 const SIZE = 46, MARGIN = 6;
 let overlay = null, frame = null;
@@ -126,7 +127,7 @@ function buildBar() {
     fontsOnce(); css();
     const b = document.createElement("div");
     b.id = "neron-studio-bar";
-    b.innerHTML = `<div class="nsb-coin" title="Neron Studio">N</div><span class="nsb-name">NERON STUDIO</span>
+    b.innerHTML = `<div class="nsb-coin" title="Neron Studio ${VERSION}">N</div><span class="nsb-name">NERON STUDIO</span>
       <span class="nsb-sep"></span><span class="nsb-proc"></span><span class="nsb-sep"></span>
       <button type="button" class="nsb-home" title="Вернуться на рабочий стол">🏠 Стол</button>
       <button type="button" class="nsb-run" title="Запустить этот процесс (как «Запустить» ComfyUI)">▶ Создать</button>
@@ -212,7 +213,7 @@ function addCoin() {
     const b = document.createElement("button");
     b.id = "neron-studio-coin";
     b.type = "button";
-    b.title = "Neron Studio — щёлкни: открыть стол · потяни: переставить\nclick: open desktop · drag: move";
+    b.title = `Neron Studio ${VERSION} — щёлкни: открыть стол · потяни: переставить\nclick: open desktop · drag: move`;
     b.textContent = "N";
     b.style.cssText = `position:fixed;z-index:9999;width:${SIZE}px;height:${SIZE}px;border-radius:50%;` +
         "border:0;cursor:pointer;font:700 22px Georgia,serif;color:#4a2c06;touch-action:none;user-select:none;" +

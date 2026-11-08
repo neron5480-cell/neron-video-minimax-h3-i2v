@@ -4,15 +4,7 @@ import {
     T, clamp, mix, ROLES, ROLE_IDS, C_KEYS, LIFE_LEVELS, BGFX, BUILTIN, normalizeTheme, generateFromColor, paletteFromImage,
     themeFromPalette, fixReadable, encodeCode, decodeAny, themeFile, toComfyPalette, isLight, hexOk, WIRE_TYPES, WIRE_MODES, wireColor,
 } from "./nts_core.js";
-import { registerType, setCurrent, setPreview, getApplied, engineState, themeVarsForNode, setStudio } from "./nts_engine.js";
-import { BUILTIN as NTS_BUILTIN } from "./nts_core.js";
-
-// Мост для Neron Studio: процесс открыт со стола — холст в оформлении стола (если нода темы не стоит — её выбор главнее)
-window.__neronThemeStudio = (on) => {
-    const t = on ? NTS_BUILTIN.find((x) => x.id === "studio") : null;
-    try { setStudio(t); } catch (e) { console.warn("[Neron Theme] studio skin", e); }
-    return !!t;
-};
+import { registerType, setCurrent, setPreview, getApplied, engineState, themeVarsForNode } from "./nts_engine.js";
 
 // ============================================================================
 //  Neron Theme 🎨 — нода / the node
