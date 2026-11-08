@@ -5,7 +5,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-const VERSION = "2026.11.08·3";                 // видно в подсказке монеты и на полосе — какая версия загружена
+const VERSION = "2026.11.08·4";                 // видно в подсказке монеты и на полосе — какая версия загружена
 const POS_KEY = "neron-studio-coin-pos";
 const SIZE = 46, MARGIN = 6;
 let overlay = null, frame = null;
@@ -92,6 +92,22 @@ function css() {
   overflow: hidden; text-overflow: ellipsis; max-width: 26vw; }
 #neron-studio-bar .nsb-clock.run { color: #ffb347; } #neron-studio-bar .nsb-clock.ok { color: #8fd99a; } #neron-studio-bar .nsb-clock.err { color: #ff8a80; }
 #neron-studio-bar[hidden], #neron-studio-coin[hidden] { display: none !important; }
+/* весь ComfyUI в оформлении стола: смысловые цвета интерфейса → стекло и бронза (только пока включено оформление) */
+html.neron-studio-skin, html.neron-studio-skin body, html.neron-studio-skin .dark-theme {
+  --background: rgba(22, 15, 10, .72) !important; --card: rgba(36, 25, 16, .78) !important;
+  --secondary: rgba(36, 25, 16, .80) !important; --popover: rgba(22, 15, 10, .94) !important;
+  --muted: #3a2616 !important; --accent: #4a301b !important; --border: #5a3f27 !important;
+  --foreground: #f3e6d2 !important; --muted-foreground: #a8957e !important;
+  --primary: #c8873a !important; --primary-fg: #1b130d !important; --primary-hover-bg: #f0c75a !important;
+  --primary-hover-fg: #0e0a07 !important; --ring: #c8873a !important; --input: #3a2616 !important;
+  --comfy-menu-bg: rgba(20, 14, 9, .78) !important; --comfy-menu-secondary-bg: rgba(36, 25, 16, .82) !important;
+  --interface-panel-surface: rgba(22, 15, 10, .72) !important; --shadow-color: rgba(0, 0, 0, .55) !important;
+  --node: rgba(27, 19, 13, .82) !important; --node-header: #3a2616 !important; --node-border: #5a3f27 !important;
+}
+html.neron-studio-skin .bg-background, html.neron-studio-skin .bg-secondary, html.neron-studio-skin .bg-card,
+html.neron-studio-skin .bg-popover, html.neron-studio-skin .bg-comfy-menu-bg, html.neron-studio-skin .bg-interface-panel-surface {
+  backdrop-filter: blur(12px) saturate(1.2); -webkit-backdrop-filter: blur(12px) saturate(1.2); }
+html.neron-studio-skin .minimap-canvas, html.neron-studio-skin .minimap-viewport { border-radius: 10px; }
 @media (max-width: 900px) { #neron-studio-bar .nsb-name, #neron-studio-bar .nsb-sep { display: none; } }`;
     document.head.append(st);
 }
@@ -154,6 +170,7 @@ function enterStudioMode(title) {
     b.querySelector(".nsb-proc").textContent = M.title;
     const coin = document.getElementById("neron-studio-coin"); if (coin) coin.hidden = true;
     skin(true);
+    document.documentElement.classList.add("neron-studio-skin");
     drawClock();
 }
 
@@ -163,6 +180,7 @@ function exitStudioMode() {
     if (M.bar) M.bar.hidden = true;
     const coin = document.getElementById("neron-studio-coin"); if (coin) coin.hidden = false;
     skin(false);
+    document.documentElement.classList.remove("neron-studio-skin");
 }
 
 function hookRun() {
