@@ -352,6 +352,8 @@ function fit() {
   else settle(null);
 }
 addEventListener("resize", () => { fit(); render(); });
+let lastW = 0;
+new ResizeObserver(() => { if (desk.clientWidth !== lastW) { lastW = desk.clientWidth; fit(); render(); } }).observe(desk);
 
 // ================== ЖИВЫЕ ПЛИТКИ: по художнику на плитку ==================
 const rnd = (s) => { const x = Math.sin(s * 127.1) * 43758.5453; return x - Math.floor(x); };
@@ -413,11 +415,13 @@ const PAINT = {
     const rows = [["Текст", 9, COL.bronze], ["Генерация", 137, COL.ember], ["Видео-VAE", 16, COL.gold], ["Звук", 1, COL.ok]];
     const total = 163, x0 = 12, lw = Math.min(90, w * .38), bw = w - x0 - lw - 46;
     const grow = REDUCED ? 1 : Math.min(1, (t % 12) / 2.2);
-    ctx.font = "600 26px JetBrains Mono, monospace"; ctx.fillStyle = COL.gold; ctx.textAlign = "left";
-    ctx.fillText(`${Math.round(total * grow)} с`, x0, 34);
-    ctx.font = "400 10px JetBrains Mono, monospace"; ctx.fillStyle = COL.muted; ctx.fillText("весь прогон · 2,7 мин", x0, 50);
+    const big = Math.max(16, Math.min(26, h * .16)), top = big + 8;
+    ctx.font = `600 ${big}px JetBrains Mono, monospace`; ctx.fillStyle = COL.gold; ctx.textAlign = "left";
+    ctx.fillText(`${Math.round(total * grow)} с`, x0, top);
+    ctx.font = "400 10px JetBrains Mono, monospace"; ctx.fillStyle = COL.muted; ctx.fillText("весь прогон · 2,7 мин", x0 + big * 3.4, top);
+    const y0 = top + 12, step = Math.max(14, (h - y0 - 6) / 4);
     rows.forEach(([name, s, c], i) => {
-      const y = 70 + i * Math.max(22, (h - 90) / 4);
+      const y = y0 + i * step;
       ctx.fillStyle = COL.text; ctx.font = "500 11px Golos Text, sans-serif"; ctx.fillText(name, x0, y + 9);
       ctx.fillStyle = "#2a1c12"; ctx.fillRect(x0 + lw, y, bw, 10);
       ctx.fillStyle = c; ctx.fillRect(x0 + lw, y, Math.max(2, bw * (s / 137) * grow), 10);
