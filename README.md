@@ -69,7 +69,7 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 
 ## 🖥 NERON STUDIO — свой рабочий стол внутри ComfyUI (новое)
 
-Плитки, папки и свой фон — и все процессы Neron в один клик. После установки на холсте появится золотая монета **N** (её можно перетащить), или меню **Neron → Neron Studio**.
+Плитки, папки и свой фон — и все процессы Neron в один клик. 📖 Подробно, со скриншотами: [статья на Civitai](https://civitai.com/articles/38373/neron-studio-svoj-rabochij-stol-vnutri-comfyui-your-own-desktop-inside-comfyui). После установки на холсте появится золотая монета **N** (её можно перетащить), или меню **Neron → Neron Studio**.
 
 - **Папки:** Видео · Картинки · Звук · Модели; внутри — плитки по задачам и варианты процесса. Путь сверху, назад — «‹ Назад» или Esc.
 - **Живые плитки:** перетаскиваются, растягиваются, убираются и возвращаются; раскладка запоминается.
@@ -303,7 +303,7 @@ If you installed nodes manually before and now install by link, **delete the old
 
 ## 🖥 NERON STUDIO — your own desktop inside ComfyUI (new)
 
-Tiles, folders and your own background — and every Neron workflow one click away. After install a golden **N** coin appears on the canvas (drag it anywhere), or use the menu **Neron → Neron Studio**.
+Tiles, folders and your own background — and every Neron workflow one click away. 📖 Details with screenshots: [article on Civitai](https://civitai.com/articles/38373/neron-studio-svoj-rabochij-stol-vnutri-comfyui-your-own-desktop-inside-comfyui). After install a golden **N** coin appears on the canvas (drag it anywhere), or use the menu **Neron → Neron Studio**.
 
 - **Folders:** Video · Images · Sound · Models; inside — tiles by task and workflow variants. A path on top; go back with «‹ Back» or Esc.
 - **Live tiles:** drag, resize, remove and bring back; the layout is remembered.
