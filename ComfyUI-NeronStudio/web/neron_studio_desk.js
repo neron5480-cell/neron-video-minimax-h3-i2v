@@ -5,7 +5,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-const VERSION = "2026.11.08·4";                 // видно в подсказке монеты и на полосе — какая версия загружена
+const VERSION = "2026.11.08·5";                 // видно в подсказке монеты и на полосе — какая версия загружена
 const POS_KEY = "neron-studio-coin-pos";
 const SIZE = 46, MARGIN = 6;
 let overlay = null, frame = null;
@@ -103,6 +103,11 @@ html.neron-studio-skin, html.neron-studio-skin body, html.neron-studio-skin .dar
   --comfy-menu-bg: rgba(20, 14, 9, .78) !important; --comfy-menu-secondary-bg: rgba(36, 25, 16, .82) !important;
   --interface-panel-surface: rgba(22, 15, 10, .72) !important; --shadow-color: rgba(0, 0, 0, .55) !important;
   --node: rgba(27, 19, 13, .82) !important; --node-header: #3a2616 !important; --node-border: #5a3f27 !important;
+  --primary-background: #c8873a !important; --primary-bg: #c8873a !important;
+  --color-azure-400: #e09a48 !important; --color-azure-500: #d38f40 !important; --color-azure-600: #c8873a !important;
+  --color-azure-700: #a86f2c !important; --p-primary-color: #c8873a !important; --p-primary-500: #c8873a !important;
+  --p-button-primary-background: #c8873a !important; --p-button-primary-border-color: #c8873a !important;
+  --p-button-primary-hover-background: #f0c75a !important; --p-button-primary-color: #1b130d !important;
 }
 html.neron-studio-skin .bg-background, html.neron-studio-skin .bg-secondary, html.neron-studio-skin .bg-card,
 html.neron-studio-skin .bg-popover, html.neron-studio-skin .bg-comfy-menu-bg, html.neron-studio-skin .bg-interface-panel-surface {
@@ -152,7 +157,7 @@ function buildBar() {
     b.querySelector(".nsb-home").onclick = openStudio;
     b.querySelector(".nsb-coin").onclick = openStudio;
     b.querySelector(".nsb-run").onclick = runQueue;
-    b.querySelector(".nsb-x").onclick = exitStudioMode;
+    b.querySelector(".nsb-x").onclick = () => exitStudioMode();
     document.body.append(b);
     M.bar = b;
     return b;
@@ -163,8 +168,34 @@ function skin(on, tries = 0) {
     if (tries < 25) setTimeout(() => skin(on, tries + 1), 200);      // Neron Theme ещё грузится
 }
 
-function enterStudioMode(title) {
+// Оформление живёт во вкладках, открытых со стола: переключились на свою вкладку — обычный ComfyUI,
+// вернулись — снова стол. «✕» (на полосе или «✕ В ComfyUI» на столе) — обычный ComfyUI сразу.
+const TABS_KEY = "neron-studio-tabs";
+let TABS = {};
+try { TABS = JSON.parse(localStorage.getItem(TABS_KEY) || "{}") || {}; } catch (_) { TABS = {}; }
+function saveTabs() { try { localStorage.setItem(TABS_KEY, JSON.stringify(TABS)); } catch (_) {} }
+function activeKey() {
+    try {
+        const w = app.extensionManager?.workflow?.activeWorkflow;
+        return w ? String(w.path || w.key || w.filename || "") : null;      // null — эта сборка ComfyUI не говорит
+    } catch (_) { return null; }
+}
+function rememberTab(title) {
+    setTimeout(() => { const k = activeKey(); if (k) { TABS[k] = title; saveTabs(); } }, 400);
+}
+function followTabs() {
+    if (Date.now() - (M.since || 0) < 1200) return;                     // вкладка только что открыта — даём ей встать
+    const k = activeKey();
+    if (k === null) return;                                             // не знаем вкладку — ничего не трогаем
+    const t = TABS[k];
+    if (t && !M.on) enterStudioMode(t, true);
+    else if (!t && M.on) exitStudioMode(true);
+    else if (t && M.on && M.bar) M.bar.querySelector(".nsb-proc").textContent = t;
+}
+
+function enterStudioMode(title, quiet) {
     M.on = true; M.title = title || M.title || "Neron";
+    if (!quiet) { rememberTab(M.title); M.since = Date.now(); }
     try { localStorage.setItem(MODE_KEY, JSON.stringify({ on: true, title: M.title })); } catch (_) {}
     const b = buildBar(); b.hidden = false;
     b.querySelector(".nsb-proc").textContent = M.title;
@@ -174,8 +205,9 @@ function enterStudioMode(title) {
     drawClock();
 }
 
-function exitStudioMode() {
+function exitStudioMode(quiet) {
     M.on = false;
+    if (!quiet) { const k = activeKey(); if (k && TABS[k]) { delete TABS[k]; saveTabs(); } }
     try { localStorage.setItem(MODE_KEY, JSON.stringify({ on: false, title: M.title })); } catch (_) {}
     if (M.bar) M.bar.hidden = true;
     const coin = document.getElementById("neron-studio-coin"); if (coin) coin.hidden = false;
@@ -207,7 +239,7 @@ function hookRun() {
 addEventListener("message", (e) => {
     const d = e?.data;
     if (!d || !d.neronStudio) return;
-    if (d.neronStudio === "close") closeStudio();
+    if (d.neronStudio === "close") { closeStudio(); if (M.on) exitStudioMode(); }
     if (d.neronStudio === "open" && d.id) openWorkflow(String(d.id), String(d.title || d.id));
 });
 addEventListener("keydown", (e) => { if (e.key === "Escape" && overlay && !overlay.hidden) closeStudio(); });
@@ -280,7 +312,9 @@ app.registerExtension({
         hookRun();
         try {                                                     // процесс был открыт со стола — оформление на месте
             const m = JSON.parse(localStorage.getItem(MODE_KEY) || "null");
-            if (m?.on) enterStudioMode(m.title);
+            if (m?.on && activeKey() === null) enterStudioMode(m.title, true);   // сборка без вкладок — как раньше
         } catch (_) {}
+        setInterval(followTabs, 700);                                         // оформление — по вкладке
+        setTimeout(followTabs, 300);
     },
 });
