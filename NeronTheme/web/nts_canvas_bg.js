@@ -35,7 +35,7 @@ function idbFile() {
 }
 
 function themeBg() {
-    const t = window.__neronThemeEngine?.current;
+    const E = window.__neronThemeEngine, t = E?.applied || E?.current || E?.studio;
     return t?.c?.bg || getComputedStyle(document.body).getPropertyValue("--bg-color").trim() || "#111111";
 }
 

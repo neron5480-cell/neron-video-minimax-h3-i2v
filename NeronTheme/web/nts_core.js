@@ -345,6 +345,11 @@ export const BUILTIN = [
         roles: { model: "#e090d8", input: "#7fb2e0", text: "#ffcf70", gen: "#f3a453", latent: "#f29ab4", image: "#97d17f", audio: "#97d17f", output: "#c9e07f", util: "#c9ab8c" },
         tint: 0.32, btint: 0.05, glow: 0.35, life: { level: 1, bgfx: "none" },
     }), { id: "brown" }),
+    Object.assign(make("#c8873a", "Neron Studio", { scheme: "harmony" }, {
+        c: { bg: "#0e0a07", grid: "#1b130d", title: "#3a2616", body: "#1b130d", text: "#f3e6d2", widget: "#0a0705", line: "#5a3f27", link: "#d9904a", menu: "#140e09", accent: "#c8873a" },
+        roles: { model: "#e090d8", input: "#7fb2e0", text: "#f0c75a", gen: "#ff7a1a", latent: "#f29ab4", image: "#97d17f", audio: "#97d17f", output: "#f0c75a", util: "#c9ab8c" },
+        tint: 0.38, btint: 0.06, glow: 0.55, opacity: 0.8, halo: 0.3, life: { level: 1, bgfx: "none" },
+    }), { id: "studio" }),
     Object.assign(make("#ff2bd6", T("Неон", "Neon"), { scheme: "rainbow" }, {
         c: { bg: "#06040f", grid: "#0f0a22", title: "#1a1033", body: "#0c0820", text: "#ece7ff", widget: "#0d0822", line: "#4f39a8", link: "#00e5ff", menu: "#0b0718", accent: "#ff2bd6" },
         roles: { model: "#ff2bd6", input: "#00e5ff", text: "#ffe600", gen: "#ff3b6b", latent: "#b26bff", image: "#39ff88", audio: "#39ff88", output: "#ff9f1c", util: "#8f88cc" },

@@ -1,6 +1,7 @@
 // 🖥 Neron Studio — монета «N» на холсте ComfyUI и пункт меню: открывает рабочий стол поверх ComfyUI.
 // Монету можно перетащить в любое место (щелчок — открыть стол, потянуть — переставить); место запоминается.
-// «Открыть» на плитке: стол просит процесс → он открывается в ComfyUI новой вкладкой (как перетащенный файл).
+// «Открыть» на плитке: процесс открывается в ComfyUI новой вкладкой — и холст надевает «шкуру» Neron Studio:
+// полоса стола сверху (монета, процесс, «🏠 Стол», «▶ Создать», часы) и ноды в оформлении стола (через Neron Theme).
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
@@ -42,9 +43,145 @@ async function openWorkflow(id, title) {
     try {
         await app.loadGraphData(data, true, true, file);
         closeStudio();
+        enterStudioMode(title);
     } catch (e) {
         console.error("[Neron Studio] open workflow", e);
         tellDesk(`ComfyUI не смог открыть «${title}»: ${e?.message || e}`);
+    }
+}
+
+
+// ================== 🪙 ПРОЦЕСС В ОФОРМЛЕНИИ СТОЛА ==================
+const MODE_KEY = "neron-studio-mode";
+const M = { on: false, title: "", bar: null, timer: 0, t0: 0, stage: "", i: 0, total: 0, running: false, result: "" };
+
+function fontsOnce() {
+    if (document.getElementById("neron-studio-fonts")) return;
+    const l = document.createElement("link");
+    l.id = "neron-studio-fonts"; l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@700&family=Golos+Text:wght@500;600;700&display=swap";
+    document.head.append(l);
+}
+
+function css() {
+    if (document.getElementById("neron-studio-bar-css")) return;
+    const st = document.createElement("style");
+    st.id = "neron-studio-bar-css";
+    st.textContent = `
+#neron-studio-bar { position: fixed; z-index: 9998; top: 46px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px; padding: 7px 10px 7px 8px; border-radius: 16px;
+  background: color-mix(in srgb, #1b130d 78%, transparent); backdrop-filter: blur(14px) saturate(1.25);
+  -webkit-backdrop-filter: blur(14px) saturate(1.25); border: 1px solid #5a3f27;
+  box-shadow: 0 12px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(200,135,58,.15);
+  font: 600 13px "Golos Text", "Segoe UI", system-ui, sans-serif; color: #f3e6d2; max-width: calc(100vw - 24px); }
+#neron-studio-bar .nsb-coin { width: 34px; height: 34px; flex: none; border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(circle at 35% 30%, #fff1b8, #f0c75a 35%, #b9821f 75%, #6b4210);
+  box-shadow: 0 0 16px rgba(255,122,26,.5), inset 0 0 0 2px rgba(107,66,16,.7); font: 700 17px Georgia, serif; color: #4a2c06; }
+#neron-studio-bar .nsb-name { font: 700 17px "Cormorant SC", Georgia, serif; letter-spacing: .08em; color: #f0c75a; white-space: nowrap; }
+#neron-studio-bar .nsb-proc { color: #f3e6d2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 30vw; }
+#neron-studio-bar .nsb-sep { width: 1px; height: 22px; background: #5a3f27; flex: none; }
+#neron-studio-bar button { font: 600 13px "Golos Text", "Segoe UI", system-ui, sans-serif; border-radius: 10px; cursor: pointer;
+  padding: 7px 12px; border: 1px solid #5a3f27; background: rgba(36,25,16,.85); color: #f3e6d2; white-space: nowrap; }
+#neron-studio-bar button:hover { color: #f0c75a; border-color: #c8873a; }
+#neron-studio-bar button.nsb-run { background: linear-gradient(180deg, #e09a48, #c8873a); color: #1b130d; border-color: #f0c75a;
+  box-shadow: 0 0 18px rgba(255,122,26,.45); padding: 7px 16px; }
+#neron-studio-bar button.nsb-run:hover { color: #0e0a07; background: #f0c75a; }
+#neron-studio-bar button.nsb-x { padding: 6px 9px; color: #a8957e; }
+#neron-studio-bar .nsb-clock { font: 600 12px ui-monospace, Consolas, monospace; color: #a8957e; white-space: nowrap; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; max-width: 26vw; }
+#neron-studio-bar .nsb-clock.run { color: #ffb347; } #neron-studio-bar .nsb-clock.ok { color: #8fd99a; } #neron-studio-bar .nsb-clock.err { color: #ff8a80; }
+#neron-studio-bar[hidden], #neron-studio-coin[hidden] { display: none !important; }
+@media (max-width: 900px) { #neron-studio-bar .nsb-name, #neron-studio-bar .nsb-sep { display: none; } }`;
+    document.head.append(st);
+}
+
+function fmt(ms) {
+    const t = Math.max(0, Math.round(ms / 1000)), m = Math.floor(t / 60), s = t % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+function drawClock() {
+    const c = M.bar?.querySelector(".nsb-clock");
+    if (!c) return;
+    c.classList.toggle("run", M.running); c.classList.toggle("ok", !M.running && M.result === "ok");
+    c.classList.toggle("err", !M.running && (M.result === "error" || M.result === "stop"));
+    if (M.running) {
+        const steps = M.total > 1 ? ` · ${M.i}/${M.total}` : "";
+        c.textContent = `⏱ ${fmt(Date.now() - M.t0)}${M.stage ? " · " + M.stage : ""}${steps}`;
+    } else if (M.t0) {
+        c.textContent = `⏱ ${fmt(M.end - M.t0)} · ` + (M.result === "ok" ? "готово ✓" : M.result === "error" ? "ошибка" : "остановлено");
+    } else c.textContent = "⏱ --:--";
+}
+
+function runQueue() {
+    try {
+        const cmd = app.extensionManager?.command;
+        if (cmd?.execute) { cmd.execute("Comfy.QueuePrompt"); return; }
+    } catch (_) {}
+    app.queuePrompt?.(0, 1);
+}
+
+function buildBar() {
+    if (M.bar) return M.bar;
+    fontsOnce(); css();
+    const b = document.createElement("div");
+    b.id = "neron-studio-bar";
+    b.innerHTML = `<div class="nsb-coin" title="Neron Studio">N</div><span class="nsb-name">NERON STUDIO</span>
+      <span class="nsb-sep"></span><span class="nsb-proc"></span><span class="nsb-sep"></span>
+      <button type="button" class="nsb-home" title="Вернуться на рабочий стол">🏠 Стол</button>
+      <button type="button" class="nsb-run" title="Запустить этот процесс (как «Запустить» ComfyUI)">▶ Создать</button>
+      <span class="nsb-clock">⏱ --:--</span>
+      <button type="button" class="nsb-x" title="Снять оформление Studio — обычный ComfyUI">✕</button>`;
+    b.querySelector(".nsb-home").onclick = openStudio;
+    b.querySelector(".nsb-coin").onclick = openStudio;
+    b.querySelector(".nsb-run").onclick = runQueue;
+    b.querySelector(".nsb-x").onclick = exitStudioMode;
+    document.body.append(b);
+    M.bar = b;
+    return b;
+}
+
+function skin(on, tries = 0) {
+    if (typeof window.__neronThemeStudio === "function") { window.__neronThemeStudio(on); return; }
+    if (tries < 25) setTimeout(() => skin(on, tries + 1), 200);      // Neron Theme ещё грузится
+}
+
+function enterStudioMode(title) {
+    M.on = true; M.title = title || M.title || "Neron";
+    try { localStorage.setItem(MODE_KEY, JSON.stringify({ on: true, title: M.title })); } catch (_) {}
+    const b = buildBar(); b.hidden = false;
+    b.querySelector(".nsb-proc").textContent = M.title;
+    const coin = document.getElementById("neron-studio-coin"); if (coin) coin.hidden = true;
+    skin(true);
+    drawClock();
+}
+
+function exitStudioMode() {
+    M.on = false;
+    try { localStorage.setItem(MODE_KEY, JSON.stringify({ on: false, title: M.title })); } catch (_) {}
+    if (M.bar) M.bar.hidden = true;
+    const coin = document.getElementById("neron-studio-coin"); if (coin) coin.hidden = false;
+    skin(false);
+}
+
+function hookRun() {
+    const start = () => { M.running = true; M.t0 = Date.now(); M.stage = ""; M.i = 0; M.total = 0; M.result = "";
+        clearInterval(M.timer); M.timer = setInterval(drawClock, 500); drawClock(); };
+    const finish = (r) => { if (!M.running) return; M.running = false; M.end = Date.now(); M.result = r; clearInterval(M.timer); drawClock(); };
+    api.addEventListener("execution_start", start);
+    api.addEventListener("execution_success", () => finish("ok"));
+    api.addEventListener("execution_error", () => finish("error"));
+    api.addEventListener("execution_interrupted", () => finish("stop"));
+    api.addEventListener("executing", (e) => {
+        const d = e.detail, id = (d && typeof d === "object") ? (d.display_node ?? d.node) : d;
+        if (id == null) { finish("ok"); return; }
+        if (!M.running) start();
+        const n = app.graph?.getNodeById?.(id);
+        if (n) { M.stage = n.title || n.type || ""; M.i = 0; M.total = 0; }
+    });
+    api.addEventListener("progress", (e) => { const d = e.detail || {}; M.i = d.value || 0; M.total = d.max || 0; });
+    for (const ev of ["neron_h3one.progress", "neron_h3story.progress"]) {      // этапы наших движков — по-человечески
+        api.addEventListener(ev, (e) => { const d = e.detail || {}; if (d.stage) M.stage = String(d.stage).split(" / ")[0]; });
     }
 }
 
@@ -119,5 +256,12 @@ app.registerExtension({
     name: "Neron.Studio",
     commands: [{ id: "Neron.Studio.Open", label: "🖥 Neron Studio", icon: "pi pi-th-large", function: openStudio }],
     menuCommands: [{ path: ["Neron"], commands: ["Neron.Studio.Open"] }],
-    async setup() { addCoin(); },
+    async setup() {
+        addCoin();
+        hookRun();
+        try {                                                     // процесс был открыт со стола — оформление на месте
+            const m = JSON.parse(localStorage.getItem(MODE_KEY) || "null");
+            if (m?.on) enterStudioMode(m.title);
+        } catch (_) {}
+    },
 });

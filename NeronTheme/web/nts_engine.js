@@ -25,6 +25,7 @@ const CANVAS_KEYS = ["node_title_color", "default_link_color", "clear_background
 const E = {
     current: null,        // тема с ноды (или null — темы нет)
     preview: null,        // тема под мышкой (временный показ)
+    studio: null,         // «шкура» Neron Studio: процесс открыт со стола (нода темы на холсте главнее)
     applied: null,        // что сейчас реально на экране
     sig: "",
     ours: null,           // значения, которые поставили мы (чтобы заметить, если их кто-то сменил)
@@ -178,7 +179,7 @@ function guard() {
 }
 
 function refresh() {
-    const want0 = E.preview || E.current;
+    const want0 = E.preview || E.current || E.studio;
     const want = want0 && want0.__none ? null : want0;      // примерка «обычного ComfyUI»
     const sig = want ? JSON.stringify(want) : "";
     if (sig === E.sig) return;
@@ -193,6 +194,8 @@ function refresh() {
 }
 
 export function setCurrent(t) { E.current = t || null; refresh(); }
+// Neron Studio: процесс открыт со стола — холст в оформлении стола (стеклянные ноды, цвета стола)
+export function setStudio(t) { E.studio = t || null; refresh(); }
 export function setPreview(t) { E.preview = t || null; refresh(); }
 export function getApplied() { return E.applied; }
 export function engineReady() { return !!(LG() && app.canvas); }
