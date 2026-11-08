@@ -42,6 +42,22 @@ body {
 }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--ink); }
 
+/* ---------- свой фон: фото / гифка / видео на весь экран ---------- */
+:root { --bgdim: .45; --bgblur: 0px; --tileop: 82%; }
+.bg-layer { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.bg-layer img, .bg-layer video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(var(--bgblur)); transform: scale(1.04); }
+.bg-dim { position: absolute; inset: 0; background: var(--ink); opacity: var(--bgdim); }
+.bar, .hint, .desk { position: relative; z-index: 1; }
+.has-bg .tile { background: color-mix(in srgb, var(--panel) var(--tileop), transparent); backdrop-filter: blur(12px) saturate(1.2); -webkit-backdrop-filter: blur(12px) saturate(1.2); }
+.has-bg .tabs, .has-bg .tool { background: color-mix(in srgb, var(--panel) 85%, transparent); backdrop-filter: blur(8px); }
+.has-bg .hint { color: var(--text); text-shadow: 0 1px 3px rgba(0, 0, 0, .6); }
+.drawer h3 { margin: 14px 0 6px; font: 600 13px var(--f-body); color: var(--text); }
+.row2 { display: flex; gap: 6px; flex-wrap: wrap; }
+.row2 button { flex: 1; min-width: 120px; }
+.slider { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; margin-top: 8px; font-size: 12px; color: var(--muted); }
+.slider input { grid-column: 1 / -1; width: 100%; accent-color: var(--bronze); }
+.desk.drop { outline: 2px dashed var(--gold); outline-offset: 6px; border-radius: 14px; }
+
 /* ---------- верхняя полоса ---------- */
 .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-bottom: 16px; }
 .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
@@ -131,6 +147,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .tile, .ghost { transition: none; } }
 </style>
 
+<div class="bg-layer" id="bgLayer" hidden><img id="bgImg" alt="" hidden><video id="bgVid" muted loop playsinline autoplay hidden></video><div class="bg-dim"></div></div>
 <header class="bar">
   <div class="brand">
     <div class="coin" aria-hidden="true">N</div>
@@ -149,7 +166,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
     <button type="button" class="tool" id="reset">↺ Как было</button>
   </div>
 </header>
-<p class="hint">Тяните плитку за шапку, размер — за уголок, ✕ — убрать. «⊞ Выровнять» сдвигает всё без дыр. Прототип: кнопки «Открыть» пока только показывают, какой процесс откроется.</p>
+<p class="hint">Тяните плитку за шапку, размер — за уголок, ✕ — убрать. Свой фон — перетащите фото или видео на стол. Прототип: «Открыть» пока только показывает процесс.</p>
 <main class="desk" id="desk" aria-label="Плитки процессов"></main>
 <div class="drawer" id="drawer" hidden></div>
 <div class="drawer" id="themes" hidden></div>
@@ -679,7 +696,10 @@ function applyTheme() {
 const themesBox = document.getElementById("themes");
 function fillThemes() {
   const cur = engine()?.current;
-  themesBox.innerHTML = `<h2>Тема стола</h2><p>Те же темы, что у ноды Neron Theme 🎨. «Как в ComfyUI» — стол сам переключается вместе с темой ComfyUI.</p>`;
+  themesBox.innerHTML = `<h2>Тема стола</h2>`;
+  bgPanel(themesBox);
+  const h = document.createElement("h3"); h.textContent = "🎨 Цвета — темы Neron Theme"; themesBox.append(h);
+  const p = document.createElement("p"); p.textContent = "«Как в ComfyUI» — стол переключается вместе с нодой Neron Theme."; themesBox.append(p);
   const add = (id, name, cols) => {
     const b = document.createElement("button"); b.type = "button"; b.className = "item"; b.setAttribute("aria-pressed", String(themeChoice === id));
     b.innerHTML = `<span class="swatch">${cols.map((x) => `<i style="background:${x}"></i>`).join("")}</span><span>${name}</span>`;
@@ -694,6 +714,82 @@ document.getElementById("themeBtn").onclick = () => { fillThemes(); drawer.hidde
 document.addEventListener("pointerdown", (e) => { if (!themesBox.hidden && !themesBox.contains(e.target) && e.target.id !== "themeBtn") themesBox.hidden = true; });
 try { parent !== window && parent.addEventListener("neron-theme", () => { if (themeChoice === COMFY) applyTheme(); }); } catch (_) {}
 applyTheme();
+
+// ================== 🖼 СВОЙ ФОН: фото / гифка / видео (хранится только в этом браузере) ==================
+const BGS = "neron-studio-bg-settings";
+let bgSet = { dim: .45, blur: 0, tileop: 82 };
+try { Object.assign(bgSet, JSON.parse(localStorage.getItem(BGS) || "{}")); } catch (_) {}
+const bgLayer = document.getElementById("bgLayer"), bgImg = document.getElementById("bgImg"), bgVid = document.getElementById("bgVid");
+let bgURL = null, bgName = "";
+function idb() {
+  return new Promise((ok, no) => {
+    try { const r = indexedDB.open("neron-studio", 1); r.onupgradeneeded = () => r.result.createObjectStore("bg"); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }
+    catch (e) { no(e); }
+  });
+}
+async function bgStore(rec) {
+  try { const db = await idb(); await new Promise((ok, no) => { const tx = db.transaction("bg", "readwrite"); rec ? tx.objectStore("bg").put(rec, "file") : tx.objectStore("bg").delete("file"); tx.oncomplete = ok; tx.onerror = () => no(tx.error); }); }
+  catch (_) {}
+}
+async function bgLoad() {
+  try { const db = await idb(); return await new Promise((ok) => { const r = db.transaction("bg").objectStore("bg").get("file"); r.onsuccess = () => ok(r.result || null); r.onerror = () => ok(null); }); }
+  catch (_) { return null; }
+}
+function bgApplySettings() {
+  const root = document.documentElement.style;
+  root.setProperty("--bgdim", String(bgSet.dim)); root.setProperty("--bgblur", bgSet.blur + "px"); root.setProperty("--tileop", bgSet.tileop + "%");
+  try { localStorage.setItem(BGS, JSON.stringify(bgSet)); } catch (_) {}
+}
+function bgShow(rec) {
+  if (bgURL) { URL.revokeObjectURL(bgURL); bgURL = null; }
+  bgImg.hidden = bgVid.hidden = true; bgVid.removeAttribute("src");
+  if (!rec || !rec.blob) { bgLayer.hidden = true; document.documentElement.classList.remove("has-bg"); bgName = ""; return; }
+  bgURL = URL.createObjectURL(rec.blob); bgName = rec.name || "";
+  if (String(rec.type).startsWith("video/")) { bgVid.src = bgURL; bgVid.hidden = false; if (!REDUCED) bgVid.play().catch(() => {}); }
+  else { bgImg.src = bgURL; bgImg.hidden = false; }
+  bgLayer.hidden = false; document.documentElement.classList.add("has-bg");
+}
+async function bgSetFile(file) {
+  if (!file || !/^(image|video)\//.test(file.type)) { toast("Фоном может быть фото, гифка или видео."); return; }
+  const rec = { blob: file, type: file.type, name: file.name };
+  bgShow(rec); await bgStore(rec);
+  toast(`Фон: ${file.name}. Затемнение и прозрачность — в «🎨 Тема».`);
+  if (!themesBox.hidden) fillThemes();
+}
+async function bgClear() { bgShow(null); await bgStore(null); if (!themesBox.hidden) fillThemes(); toast("Свой фон убран."); }
+function bgPick() {
+  const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*,video/*"; inp.hidden = true;
+  inp.onchange = () => { bgSetFile(inp.files?.[0]); inp.remove(); };
+  document.body.append(inp); inp.click();
+}
+function bgPanel(box) {
+  const h = document.createElement("h3"); h.textContent = "🖼 Свой фон — фото, гифка или видео"; box.append(h);
+  const row = document.createElement("div"); row.className = "row2";
+  const pick = document.createElement("button"); pick.type = "button"; pick.className = "item"; pick.textContent = bgName ? "🔁 Другой файл…" : "📂 Выбрать файл…"; pick.onclick = bgPick;
+  row.append(pick);
+  if (bgName) { const clr = document.createElement("button"); clr.type = "button"; clr.className = "item"; clr.textContent = "✕ Убрать фон"; clr.onclick = bgClear; row.append(clr); }
+  box.append(row);
+  const note = document.createElement("p"); note.style.marginTop = "6px";
+  note.textContent = bgName ? `Сейчас: ${bgName}. Хранится только в этом браузере.` : "Или просто перетащите файл на стол. Файл никуда не отправляется.";
+  box.append(note);
+  const slider = (label, key, min, max, step, fmt) => {
+    const id = "bg-" + key, wrap = document.createElement("label"); wrap.className = "slider"; wrap.htmlFor = id;
+    const val = document.createElement("span"); val.textContent = fmt(bgSet[key]);
+    wrap.innerHTML = `<span>${label}</span>`; wrap.append(val);
+    const r = document.createElement("input"); r.type = "range"; r.id = id; r.min = min; r.max = max; r.step = step; r.value = bgSet[key];
+    r.oninput = () => { bgSet[key] = Number(r.value); val.textContent = fmt(bgSet[key]); bgApplySettings(); };
+    wrap.append(r); box.append(wrap);
+  };
+  slider("Затемнение фона", "dim", 0, .85, .05, (v) => Math.round(v * 100) + "%");
+  slider("Размытие фона", "blur", 0, 16, 1, (v) => v + " px");
+  slider("Плитки: плотность (меньше — стекло)", "tileop", 35, 100, 5, (v) => v + "%");
+}
+// перетащить файл на стол — сразу фоном
+desk.addEventListener("dragover", (e) => { if ([...(e.dataTransfer?.types || [])].includes("Files")) { e.preventDefault(); desk.classList.add("drop"); } });
+desk.addEventListener("dragleave", () => desk.classList.remove("drop"));
+desk.addEventListener("drop", (e) => { e.preventDefault(); desk.classList.remove("drop"); bgSetFile(e.dataTransfer?.files?.[0]); });
+bgApplySettings();
+bgLoad().then((rec) => { if (rec) bgShow(rec); });
 
 fit(); render();
 requestAnimationFrame(frame);
