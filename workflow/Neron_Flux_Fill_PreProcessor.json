@@ -1,8 +1,8 @@
 {
   "id": "aff23af9-e8f4-41f8-8e4c-0854e355b753",
   "revision": 0,
-  "last_node_id": 59,
-  "last_link_id": 122,
+  "last_node_id": 60,
+  "last_link_id": 126,
   "nodes": [
     {
       "id": 9,
@@ -133,11 +133,6 @@
       "properties": {
         "previewExposures": [
           {
-            "name": "$$canvas-image-preview",
-            "sourceNodeId": "52",
-            "sourcePreviewName": "$$canvas-image-preview"
-          },
-          {
             "name": "$$canvas-image-preview_1",
             "sourceNodeId": "3",
             "sourcePreviewName": "$$canvas-image-preview"
@@ -221,10 +216,10 @@
       "title": "English",
       "properties": {},
       "widgets_values": [
-        "================================================================================\n🛠️ FLUX-FILL ADAPTIVE PRE-PROCESSOR | By neron5480922\n================================================================================\n\nThis micro-workflow perfectly adapts ANY input image (portrait or \nlandscape) to a specified resolution, for example 1024x1024 for \nvideo generators (MiniMax / LTX). \nFlux-Fill automatically outpaints the missing edges, while the custom unsharp \nmasking node sharpens contours.\n\nREQUIRED MODELS & DIRECTORIES:\n\n1. Diffusion Model (Flux Fill):\n   • Filename: flux1-fill-dev.safetensors\n   • Directory: ComfyUI/models/unet/\n   • Source: Search for \"flux1-fill-dev\" on Civitai or Hugging Face.\n\n2. CLIP Text Encoders:\n   • Filename 1: clip_l.safetensors\n   • Filename 2: t5xxl_fp16.safetensors (or fp8_e4m3fn for low VRAM)\n   • Directory: ComfyUI/models/clip/\n\n3. VAE Model:\n   • Filename: ae.safetensors (Official Flux VAE)\n   • Directory: ComfyUI/models/vae/\n\nHOW TO USE IT:\n1. Load your raw photo into the \"Load Image\" node.\n2. Set target_width and target_height to your desired size (e.g., 1024).\n3. In the text field (inside the generator subgraph), you can type 2-3 words \n   describing the background to outpaint (e.g., \"living room, apartment interior\").\n4. Click Queue Prompt. get a picture !\n================================================================================\n"
+        "================================================================================\n🛠️ FLUX-FILL ADAPTIVE PRE-PROCESSOR | By neron5480922\n================================================================================\n\nThis micro-workflow perfectly adapts ANY input image (portrait or \nlandscape) to a specified resolution, for example 1024x1024 for \nvideo generators (MiniMax / LTX). \nFlux-Fill automatically outpaints the missing edges, while the custom unsharp \nmasking node sharpens contours.\n\nREQUIRED MODELS & DIRECTORIES:\n\n1. Diffusion Model (Flux Fill):\n   • Filename: flux1-fill-dev.safetensors\n   • Directory: ComfyUI/models/unet/\n   • Source: Search for \"flux1-fill-dev\" on Civitai or Hugging Face.\n\n2. CLIP Text Encoders:\n   • Filename 1: clip_l.safetensors\n   • Filename 2: t5xxl_fp16.safetensors (or fp8_e4m3fn for low VRAM)\n   • Directory: ComfyUI/models/clip/\n\n3. VAE Model:\n   • Filename: ae.safetensors (Official Flux VAE)\n   • Directory: ComfyUI/models/vae/\n\nHOW TO USE IT:\n1. Load your raw photo into the \"Load Image\" node.\n2. Set target_width and target_height to your desired size (e.g., 1024).\n3. In the text field (inside the generator subgraph), you can type 2-3 words \n   describing the background to outpaint (e.g., \"living room, apartment interior\").\n4. Click Queue Prompt. get a picture !\n\nCUSTOM NODES: ComfyUI-KJNodes (Image Pad For Outpaint Target Size).\nManager → Install Missing Custom Nodes installs it.\nv1.1: the original photo is pasted back untouched — Flux only paints the new edges.\n================================================================================\n"
       ],
       "widgets_values_named": {
-        "text": "================================================================================\n🛠️ FLUX-FILL ADAPTIVE PRE-PROCESSOR | By neron5480922\n================================================================================\n\nThis micro-workflow perfectly adapts ANY input image (portrait or \nlandscape) to a specified resolution, for example 1024x1024 for \nvideo generators (MiniMax / LTX). \nFlux-Fill automatically outpaints the missing edges, while the custom unsharp \nmasking node sharpens contours.\n\nREQUIRED MODELS & DIRECTORIES:\n\n1. Diffusion Model (Flux Fill):\n   • Filename: flux1-fill-dev.safetensors\n   • Directory: ComfyUI/models/unet/\n   • Source: Search for \"flux1-fill-dev\" on Civitai or Hugging Face.\n\n2. CLIP Text Encoders:\n   • Filename 1: clip_l.safetensors\n   • Filename 2: t5xxl_fp16.safetensors (or fp8_e4m3fn for low VRAM)\n   • Directory: ComfyUI/models/clip/\n\n3. VAE Model:\n   • Filename: ae.safetensors (Official Flux VAE)\n   • Directory: ComfyUI/models/vae/\n\nHOW TO USE IT:\n1. Load your raw photo into the \"Load Image\" node.\n2. Set target_width and target_height to your desired size (e.g., 1024).\n3. In the text field (inside the generator subgraph), you can type 2-3 words \n   describing the background to outpaint (e.g., \"living room, apartment interior\").\n4. Click Queue Prompt. get a picture !\n================================================================================\n"
+        "text": "================================================================================\n🛠️ FLUX-FILL ADAPTIVE PRE-PROCESSOR | By neron5480922\n================================================================================\n\nThis micro-workflow perfectly adapts ANY input image (portrait or \nlandscape) to a specified resolution, for example 1024x1024 for \nvideo generators (MiniMax / LTX). \nFlux-Fill automatically outpaints the missing edges, while the custom unsharp \nmasking node sharpens contours.\n\nREQUIRED MODELS & DIRECTORIES:\n\n1. Diffusion Model (Flux Fill):\n   • Filename: flux1-fill-dev.safetensors\n   • Directory: ComfyUI/models/unet/\n   • Source: Search for \"flux1-fill-dev\" on Civitai or Hugging Face.\n\n2. CLIP Text Encoders:\n   • Filename 1: clip_l.safetensors\n   • Filename 2: t5xxl_fp16.safetensors (or fp8_e4m3fn for low VRAM)\n   • Directory: ComfyUI/models/clip/\n\n3. VAE Model:\n   • Filename: ae.safetensors (Official Flux VAE)\n   • Directory: ComfyUI/models/vae/\n\nHOW TO USE IT:\n1. Load your raw photo into the \"Load Image\" node.\n2. Set target_width and target_height to your desired size (e.g., 1024).\n3. In the text field (inside the generator subgraph), you can type 2-3 words \n   describing the background to outpaint (e.g., \"living room, apartment interior\").\n4. Click Queue Prompt. get a picture !\n\nCUSTOM NODES: ComfyUI-KJNodes (Image Pad For Outpaint Target Size).\nManager → Install Missing Custom Nodes installs it.\nv1.1: the original photo is pasted back untouched — Flux only paints the new edges.\n================================================================================\n"
       },
       "color": "#223",
       "bgcolor": "#335"
@@ -248,10 +243,10 @@
       "title": "РУССКИЙ ЯЗЫК",
       "properties": {},
       "widgets_values": [
-        "================================================================================\n🛠️ FLUX-FILL АДАПТИВНЫЙ ПРЕПРОЦЕССОР (1024x1024) | Автор: neron5480922\n================================================================================\n\nЭтот микро-процесс идеально подгоняет ЛЮБОЕ изображение (вертикальное или \nгоризонтальное)  под заданное значение , например 1024x1024 для видеогенераторов (MiniMax / LTX). \nFlux-Fill автоматически дорисовывает края кадра без швов, а финальный блок \nматематической резкости убирает ИИ-мыло, подготавливая четкий референс.\n\nСПИСОК МОДЕЛЕЙ И КУДА ИХ СКАЧАТЬ:\n\n1. Модель диффузии (Flux Fill):\n   • Имя файла: flux1-fill-dev.safetensors\n   • Папка: ComfyUI/models/unet/\n   • Ссылка: Ищите \"flux1-fill-dev\" на Civitai или Hugging Face (Black Forest Labs).\n\n2. Текстовые энкодеры CLIP:\n   • Имя файла 1: clip_l.safetensors\n   • Имя файла 2: t5xxl_fp16.safetensors (или fp8_e4m3fn для экономии памяти)\n   • Папка: ComfyUI/models/clip/\n\n3. VAE модель:\n   • Имя файла: ae.safetensors (родной VAE от Flux)\n   • Папка: ComfyUI/models/vae/\n\nИНСТРУКЦИЯ ПО ПРИМЕНЕНИЮ:\n1. Загрузите исходное фото в ноду \"Загрузить изображение\".\n2. Выставите target_width и target_height на 1024.\n3. В поле text (внутри ноды генератора) можно написать 2-3 слова описания фона, \n   который нужно дорисовать (например: \"living room, apartment interior\").\n4. Нажмите Queue Prompt. получите картинку !\n================================================================================\n"
+        "================================================================================\n🛠️ FLUX-FILL АДАПТИВНЫЙ ПРЕПРОЦЕССОР (1024x1024) | Автор: neron5480922\n================================================================================\n\nЭтот микро-процесс идеально подгоняет ЛЮБОЕ изображение (вертикальное или \nгоризонтальное)  под заданное значение , например 1024x1024 для видеогенераторов (MiniMax / LTX). \nFlux-Fill автоматически дорисовывает края кадра без швов, а финальный блок \nматематической резкости убирает ИИ-мыло, подготавливая четкий референс.\n\nСПИСОК МОДЕЛЕЙ И КУДА ИХ СКАЧАТЬ:\n\n1. Модель диффузии (Flux Fill):\n   • Имя файла: flux1-fill-dev.safetensors\n   • Папка: ComfyUI/models/unet/\n   • Ссылка: Ищите \"flux1-fill-dev\" на Civitai или Hugging Face (Black Forest Labs).\n\n2. Текстовые энкодеры CLIP:\n   • Имя файла 1: clip_l.safetensors\n   • Имя файла 2: t5xxl_fp16.safetensors (или fp8_e4m3fn для экономии памяти)\n   • Папка: ComfyUI/models/clip/\n\n3. VAE модель:\n   • Имя файла: ae.safetensors (родной VAE от Flux)\n   • Папка: ComfyUI/models/vae/\n\nИНСТРУКЦИЯ ПО ПРИМЕНЕНИЮ:\n1. Загрузите исходное фото в ноду \"Загрузить изображение\".\n2. Выставите target_width и target_height на 1024.\n3. В поле text (внутри ноды генератора) можно написать 2-3 слова описания фона, \n   который нужно дорисовать (например: \"living room, apartment interior\").\n4. Нажмите Queue Prompt. получите картинку !\n\nНУЖНЫЕ НОДЫ: ComfyUI-KJNodes (Image Pad For Outpaint Target Size).\nСтавится через Manager → Install Missing Custom Nodes.\nv1.1: исходное фото вклеивается обратно без изменений — Flux дорисовывает только края.\n================================================================================\n"
       ],
       "widgets_values_named": {
-        "text": "================================================================================\n🛠️ FLUX-FILL АДАПТИВНЫЙ ПРЕПРОЦЕССОР (1024x1024) | Автор: neron5480922\n================================================================================\n\nЭтот микро-процесс идеально подгоняет ЛЮБОЕ изображение (вертикальное или \nгоризонтальное)  под заданное значение , например 1024x1024 для видеогенераторов (MiniMax / LTX). \nFlux-Fill автоматически дорисовывает края кадра без швов, а финальный блок \nматематической резкости убирает ИИ-мыло, подготавливая четкий референс.\n\nСПИСОК МОДЕЛЕЙ И КУДА ИХ СКАЧАТЬ:\n\n1. Модель диффузии (Flux Fill):\n   • Имя файла: flux1-fill-dev.safetensors\n   • Папка: ComfyUI/models/unet/\n   • Ссылка: Ищите \"flux1-fill-dev\" на Civitai или Hugging Face (Black Forest Labs).\n\n2. Текстовые энкодеры CLIP:\n   • Имя файла 1: clip_l.safetensors\n   • Имя файла 2: t5xxl_fp16.safetensors (или fp8_e4m3fn для экономии памяти)\n   • Папка: ComfyUI/models/clip/\n\n3. VAE модель:\n   • Имя файла: ae.safetensors (родной VAE от Flux)\n   • Папка: ComfyUI/models/vae/\n\nИНСТРУКЦИЯ ПО ПРИМЕНЕНИЮ:\n1. Загрузите исходное фото в ноду \"Загрузить изображение\".\n2. Выставите target_width и target_height на 1024.\n3. В поле text (внутри ноды генератора) можно написать 2-3 слова описания фона, \n   который нужно дорисовать (например: \"living room, apartment interior\").\n4. Нажмите Queue Prompt. получите картинку !\n================================================================================\n"
+        "text": "================================================================================\n🛠️ FLUX-FILL АДАПТИВНЫЙ ПРЕПРОЦЕССОР (1024x1024) | Автор: neron5480922\n================================================================================\n\nЭтот микро-процесс идеально подгоняет ЛЮБОЕ изображение (вертикальное или \nгоризонтальное)  под заданное значение , например 1024x1024 для видеогенераторов (MiniMax / LTX). \nFlux-Fill автоматически дорисовывает края кадра без швов, а финальный блок \nматематической резкости убирает ИИ-мыло, подготавливая четкий референс.\n\nСПИСОК МОДЕЛЕЙ И КУДА ИХ СКАЧАТЬ:\n\n1. Модель диффузии (Flux Fill):\n   • Имя файла: flux1-fill-dev.safetensors\n   • Папка: ComfyUI/models/unet/\n   • Ссылка: Ищите \"flux1-fill-dev\" на Civitai или Hugging Face (Black Forest Labs).\n\n2. Текстовые энкодеры CLIP:\n   • Имя файла 1: clip_l.safetensors\n   • Имя файла 2: t5xxl_fp16.safetensors (или fp8_e4m3fn для экономии памяти)\n   • Папка: ComfyUI/models/clip/\n\n3. VAE модель:\n   • Имя файла: ae.safetensors (родной VAE от Flux)\n   • Папка: ComfyUI/models/vae/\n\nИНСТРУКЦИЯ ПО ПРИМЕНЕНИЮ:\n1. Загрузите исходное фото в ноду \"Загрузить изображение\".\n2. Выставите target_width и target_height на 1024.\n3. В поле text (внутри ноды генератора) можно написать 2-3 слова описания фона, \n   который нужно дорисовать (например: \"living room, apartment interior\").\n4. Нажмите Queue Prompt. получите картинку !\n\nНУЖНЫЕ НОДЫ: ComfyUI-KJNodes (Image Pad For Outpaint Target Size).\nСтавится через Manager → Install Missing Custom Nodes.\nv1.1: исходное фото вклеивается обратно без изменений — Flux дорисовывает только края.\n================================================================================\n"
       },
       "color": "#223",
       "bgcolor": "#335"
@@ -299,8 +294,8 @@
         "version": 1,
         "state": {
           "lastGroupId": 0,
-          "lastNodeId": 59,
-          "lastLinkId": 122,
+          "lastNodeId": 60,
+          "lastLinkId": 126,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -405,7 +400,7 @@
             "name": "IMAGE0",
             "type": "IMAGE",
             "linkIds": [
-              107
+              126
             ],
             "localized_name": "IMAGE0",
             "pos": [
@@ -861,7 +856,7 @@
                 "type": "IMAGE",
                 "slot_index": 0,
                 "links": [
-                  106
+                  124
                 ]
               }
             ],
@@ -869,105 +864,6 @@
               "Node name for S&R": "VAEDecode",
               "cnr_id": "comfy-core",
               "ver": "0.3.64"
-            }
-          },
-          {
-            "id": 52,
-            "type": "GLSLShader",
-            "pos": [
-              794.8633514603205,
-              -68.92416699275007
-            ],
-            "size": [
-              273.7855540960769,
-              134
-            ],
-            "flags": {
-              "collapsed": true
-            },
-            "order": 11,
-            "mode": 4,
-            "inputs": [
-              {
-                "localized_name": "image0",
-                "name": "images.image0",
-                "type": "IMAGE",
-                "link": 106
-              },
-              {
-                "localized_name": "image1",
-                "name": "images.image1",
-                "shape": 7,
-                "type": "IMAGE",
-                "link": null
-              },
-              {
-                "localized_name": "u_float0",
-                "name": "floats.u_float0",
-                "shape": 7,
-                "type": "FLOAT",
-                "link": null
-              },
-              {
-                "localized_name": "u_int0",
-                "name": "ints.u_int0",
-                "shape": 7,
-                "type": "INT",
-                "link": null
-              },
-              {
-                "localized_name": "u_bool0",
-                "name": "bools.u_bool0",
-                "shape": 7,
-                "type": "BOOLEAN",
-                "link": null
-              },
-              {
-                "localized_name": "u_curve0",
-                "name": "curves.u_curve0",
-                "shape": 7,
-                "type": "CURVE",
-                "link": null
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "IMAGE0",
-                "name": "IMAGE0",
-                "type": "IMAGE",
-                "links": [
-                  107
-                ]
-              },
-              {
-                "localized_name": "IMAGE1",
-                "name": "IMAGE1",
-                "type": "IMAGE",
-                "links": null
-              },
-              {
-                "localized_name": "IMAGE2",
-                "name": "IMAGE2",
-                "type": "IMAGE",
-                "links": null
-              },
-              {
-                "localized_name": "IMAGE3",
-                "name": "IMAGE3",
-                "type": "IMAGE",
-                "links": null
-              }
-            ],
-            "properties": {
-              "Node name for S&R": "GLSLShader"
-            },
-            "widgets_values": [
-              "#version 300 es\nprecision highp float;\n\nuniform sampler2D u_image0;\nuniform vec2 u_resolution;\n\nin vec2 v_texCoord;\nlayout(location = 0) out vec4 fragColor0;\n\nvoid main() {\n    vec2 texelSize = 1.0 / u_resolution;\n    \n    // Получаем цвета соседних пикселей\n    vec4 top_left  = texture(u_image0, v_texCoord + vec2(-1.0,  1.0) * texelSize);\n    vec4 top_mid   = texture(u_image0, v_texCoord + vec2( 0.0,  1.0) * texelSize);\n    vec4 top_right = texture(u_image0, v_texCoord + vec2( 1.0,  1.0) * texelSize);\n    \n    vec4 mid_left  = texture(u_image0, v_texCoord + vec2(-1.0,  0.0) * texelSize);\n    vec4 center    = texture(u_image0, v_texCoord + vec2( 0.0,  0.0) * texelSize);\n    vec4 mid_right = texture(u_image0, v_texCoord + vec2( 1.0,  0.0) * texelSize);\n    \n    vec4 bot_left  = texture(u_image0, v_texCoord + vec2(-1.0, -1.0) * texelSize);\n    vec4 bot_mid   = texture(u_image0, v_texCoord + vec2( 0.0, -1.0) * texelSize);\n    vec4 bot_right = texture(u_image0, v_texCoord + vec2( 1.0, -1.0) * texelSize);\n    \n    // Матрица резкости (Sharpen Kernel) с силой ~10%\n    // Сумма всех коэффициентов строго равна 1.0, чтобы не менять общую яркость\n    vec4 sharpened = center * 1.8 \n                   - top_mid * 0.1 - bot_mid * 0.1 - mid_left * 0.1 - mid_right * 0.1\n                   - top_left * 0.1 - top_right * 0.1 - bot_left * 0.1 - bot_right * 0.1;\n                   \n    fragColor0 = clamp(sharpened, 0.0, 1.0);\n}\n",
-              "from_input"
-            ],
-            "widgets_values_named": {
-              "fragment_shader": "#version 300 es\nprecision highp float;\n\nuniform sampler2D u_image0;\nuniform vec2 u_resolution;\n\nin vec2 v_texCoord;\nlayout(location = 0) out vec4 fragColor0;\n\nvoid main() {\n    vec2 texelSize = 1.0 / u_resolution;\n    \n    // Получаем цвета соседних пикселей\n    vec4 top_left  = texture(u_image0, v_texCoord + vec2(-1.0,  1.0) * texelSize);\n    vec4 top_mid   = texture(u_image0, v_texCoord + vec2( 0.0,  1.0) * texelSize);\n    vec4 top_right = texture(u_image0, v_texCoord + vec2( 1.0,  1.0) * texelSize);\n    \n    vec4 mid_left  = texture(u_image0, v_texCoord + vec2(-1.0,  0.0) * texelSize);\n    vec4 center    = texture(u_image0, v_texCoord + vec2( 0.0,  0.0) * texelSize);\n    vec4 mid_right = texture(u_image0, v_texCoord + vec2( 1.0,  0.0) * texelSize);\n    \n    vec4 bot_left  = texture(u_image0, v_texCoord + vec2(-1.0, -1.0) * texelSize);\n    vec4 bot_mid   = texture(u_image0, v_texCoord + vec2( 0.0, -1.0) * texelSize);\n    vec4 bot_right = texture(u_image0, v_texCoord + vec2( 1.0, -1.0) * texelSize);\n    \n    // Матрица резкости (Sharpen Kernel) с силой ~10%\n    // Сумма всех коэффициентов строго равна 1.0, чтобы не менять общую яркость\n    vec4 sharpened = center * 1.8 \n                   - top_mid * 0.1 - bot_mid * 0.1 - mid_left * 0.1 - mid_right * 0.1\n                   - top_left * 0.1 - top_right * 0.1 - bot_left * 0.1 - bot_right * 0.1;\n                   \n    fragColor0 = clamp(sharpened, 0.0, 1.0);\n}\n",
-              "size_mode": "from_input"
             }
           },
           {
@@ -1025,7 +921,8 @@
                 "name": "IMAGE",
                 "type": "IMAGE",
                 "links": [
-                  103
+                  103,
+                  123
                 ]
               },
               {
@@ -1033,7 +930,8 @@
                 "name": "MASK",
                 "type": "MASK",
                 "links": [
-                  104
+                  104,
+                  125
                 ]
               }
             ],
@@ -1044,13 +942,13 @@
               1024,
               1024,
               24,
-              "nearest-exact"
+              "lanczos"
             ],
             "widgets_values_named": {
               "target_width": 1024,
               "target_height": 1024,
               "feathering": 24,
-              "upscale_method": "nearest-exact"
+              "upscale_method": "lanczos"
             }
           },
           {
@@ -1158,18 +1056,64 @@
               "type": "flux",
               "device": "default"
             }
+          },
+          {
+            "id": 60,
+            "type": "ImageCompositeMasked",
+            "pos": [
+              794.86,
+              -68.92
+            ],
+            "size": [
+              270,
+              146
+            ],
+            "flags": {
+              "collapsed": true
+            },
+            "order": 11,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "destination",
+                "type": "IMAGE",
+                "link": 123
+              },
+              {
+                "name": "source",
+                "type": "IMAGE",
+                "link": 124
+              },
+              {
+                "name": "mask",
+                "shape": 7,
+                "type": "MASK",
+                "link": 125
+              }
+            ],
+            "outputs": [
+              {
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  126
+                ]
+              }
+            ],
+            "title": "оригинал + дорисовка / original + fill",
+            "properties": {
+              "Node name for S&R": "ImageCompositeMasked",
+              "cnr_id": "comfy-core"
+            },
+            "widgets_values": [
+              0,
+              0,
+              false
+            ]
           }
         ],
         "groups": [],
         "links": [
-          {
-            "id": 106,
-            "origin_id": 8,
-            "origin_slot": 0,
-            "target_id": 52,
-            "target_slot": 0,
-            "type": "IMAGE"
-          },
           {
             "id": 86,
             "origin_id": 39,
@@ -1307,14 +1251,6 @@
             "type": "MASK"
           },
           {
-            "id": 107,
-            "origin_id": 52,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 0,
-            "type": "IMAGE"
-          },
-          {
             "id": 112,
             "origin_id": -10,
             "origin_slot": 3,
@@ -1337,6 +1273,38 @@
             "target_id": 49,
             "target_slot": 3,
             "type": "INT"
+          },
+          {
+            "id": 123,
+            "origin_id": 49,
+            "origin_slot": 0,
+            "target_id": 60,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 124,
+            "origin_id": 8,
+            "origin_slot": 0,
+            "target_id": 60,
+            "target_slot": 1,
+            "type": "IMAGE"
+          },
+          {
+            "id": 125,
+            "origin_id": 49,
+            "origin_slot": 1,
+            "target_id": 60,
+            "target_slot": 2,
+            "type": "MASK"
+          },
+          {
+            "id": 126,
+            "origin_id": 60,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "IMAGE"
           }
         ],
         "extra": {
