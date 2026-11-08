@@ -717,7 +717,7 @@ applyTheme();
 
 // ================== 🖼 СВОЙ ФОН: фото / гифка / видео (хранится только в этом браузере) ==================
 const BGS = "neron-studio-bg-settings";
-let bgSet = { dim: .45, blur: 0, tileop: 82 };
+let bgSet = { dim: .45, blur: 0, tileop: 82, canvas: true };
 try { Object.assign(bgSet, JSON.parse(localStorage.getItem(BGS) || "{}")); } catch (_) {}
 const bgLayer = document.getElementById("bgLayer"), bgImg = document.getElementById("bgImg"), bgVid = document.getElementById("bgVid");
 let bgURL = null, bgName = "";
@@ -739,7 +739,10 @@ function bgApplySettings() {
   const root = document.documentElement.style;
   root.setProperty("--bgdim", String(bgSet.dim)); root.setProperty("--bgblur", bgSet.blur + "px"); root.setProperty("--tileop", bgSet.tileop + "%");
   try { localStorage.setItem(BGS, JSON.stringify(bgSet)); } catch (_) {}
+  tellComfy();
 }
+// Neron Theme в ComfyUI показывает тот же фон под холстом — сообщаем ему о каждой смене
+function tellComfy() { try { if (parent !== window) parent.postMessage({ neronStudio: "bg-changed" }, "*"); } catch (_) {} }
 function bgShow(rec) {
   if (bgURL) { URL.revokeObjectURL(bgURL); bgURL = null; }
   bgImg.hidden = bgVid.hidden = true; bgVid.removeAttribute("src");
@@ -752,11 +755,11 @@ function bgShow(rec) {
 async function bgSetFile(file) {
   if (!file || !/^(image|video)\//.test(file.type)) { toast("Фоном может быть фото, гифка или видео."); return; }
   const rec = { blob: file, type: file.type, name: file.name };
-  bgShow(rec); await bgStore(rec);
+  bgShow(rec); await bgStore(rec); tellComfy();
   toast(`Фон: ${file.name}. Затемнение и прозрачность — в «🎨 Тема».`);
   if (!themesBox.hidden) fillThemes();
 }
-async function bgClear() { bgShow(null); await bgStore(null); if (!themesBox.hidden) fillThemes(); toast("Свой фон убран."); }
+async function bgClear() { bgShow(null); await bgStore(null); tellComfy(); if (!themesBox.hidden) fillThemes(); toast("Свой фон убран."); }
 function bgPick() {
   const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*,video/*"; inp.hidden = true;
   inp.onchange = () => { bgSetFile(inp.files?.[0]); inp.remove(); };
@@ -780,6 +783,13 @@ function bgPanel(box) {
     r.oninput = () => { bgSet[key] = Number(r.value); val.textContent = fmt(bgSet[key]); bgApplySettings(); };
     wrap.append(r); box.append(wrap);
   };
+  const cw = document.createElement("label"); cw.className = "slider"; cw.htmlFor = "bg-canvas";
+  cw.style.gridTemplateColumns = "auto 1fr"; cw.style.alignItems = "center";
+  const cb = document.createElement("input"); cb.type = "checkbox"; cb.id = "bg-canvas"; cb.checked = bgSet.canvas !== false;
+  cb.style.gridColumn = "auto"; cb.style.width = "auto";
+  cb.onchange = () => { bgSet.canvas = cb.checked; bgApplySettings(); };
+  const ct = document.createElement("span"); ct.textContent = "И под холстом ComfyUI (нужна Neron Theme)"; ct.style.color = "var(--text)";
+  cw.append(cb, ct); box.append(cw);
   slider("Затемнение фона", "dim", 0, .85, .05, (v) => Math.round(v * 100) + "%");
   slider("Размытие фона", "blur", 0, 16, 1, (v) => v + " px");
   slider("Плитки: плотность (меньше — стекло)", "tileop", 35, 100, 5, (v) => v + "%");
