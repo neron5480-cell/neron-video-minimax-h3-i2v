@@ -330,7 +330,14 @@ const VIEWS = {
 };
 const BY = {};                                         // BY[папка][id] → плитка
 for (const [v, def] of Object.entries(VIEWS)) BY[v] = Object.fromEntries(def.tiles.map((d) => [d.id, d]));
-const KEY = "neron-studio-layout-v2";
+const KEY = "neron-studio-layout-v2";                  // раскладка — своя у каждой папки
+// папка, в которой ни один процесс не установлен (например «Тест» без альфа-пакетов), — не показывается
+function subtreeWf(v, out = []) { for (const d of VIEWS[v].tiles) { if (d.wf) out.push(d.wf); if (d.go) subtreeWf(d.go, out); } return out; }
+function shown(id) {
+  const d = BY[view][id]; if (!d || !d.go || !available) return true;
+  const wf = subtreeWf(d.go); return !(wf.length && wf.every((w) => available[w] === false));
+}
+const vis = () => layout.filter((it) => shown(it.id));
 const LOOK_KEY = "neron-studio-look";
 let look = { scale: 1, tile: "", accent: "" };
 try { Object.assign(look, JSON.parse(localStorage.getItem(LOOK_KEY) || "{}")); } catch (_) {}
@@ -377,7 +384,7 @@ function px(it) {
 // Сначала ставим «главную» плитку (которую тянут), остальные — на своё место или ниже, если занято.
 function settle(first) {
   const placed = [];
-  const order = layout.filter((it) => it !== first).sort((a, b) => a.y - b.y || a.x - b.x);
+  const order = vis().filter((it) => it !== first).sort((a, b) => a.y - b.y || a.x - b.x);
   for (const it of (first ? [first] : []).concat(order)) {
     it.w = Math.min(it.w, cols); it.x = Math.max(0, Math.min(it.x, cols - it.w)); it.y = Math.max(0, it.y);
     while (placed.some((p) => hit(p, it))) it.y++;
@@ -387,7 +394,7 @@ function settle(first) {
 // «⊞ Выровнять»: каждую плитку — как можно выше, без дыр.
 function compact() {
   const placed = [];
-  for (const it of [...layout].sort((a, b) => a.y - b.y || a.x - b.x)) {
+  for (const it of [...vis()].sort((a, b) => a.y - b.y || a.x - b.x)) {
     it.w = Math.min(it.w, cols); it.x = Math.max(0, Math.min(it.x, cols - it.w));
     it.y = 0;
     while (placed.some((p) => hit(p, it))) it.y++;
@@ -397,7 +404,8 @@ function compact() {
 function render(animate) {
   const g = geom();
   let bottom = 0, k = 0;
-  for (const it of layout) {
+  const now = vis();
+  for (const it of now) {
     const el = els.get(it.id) || make(it);
     if (!el.classList.contains("dragging") && !el.classList.contains("resizing")) {
       const p = px(it);
@@ -409,7 +417,7 @@ function render(animate) {
     }
     bottom = Math.max(bottom, (it.y + it.h) * g.sy);
   }
-  for (const [id, el] of els) if (!layout.find((it) => it.id === id)) { el.remove(); els.delete(id); }
+  for (const [id, el] of els) if (!now.find((it) => it.id === id)) { el.remove(); els.delete(id); painters = painters.filter((q) => q.id !== id); }
   markAvailable();
   desk.style.height = bottom + "px";
 }
@@ -497,7 +505,11 @@ function markAvailable() {
 }
 if (INSIDE) {
   fetch("neron_studio/available", { cache: "no-store" }).catch(() => fetch("/neron_studio/available"))
-    .then((r) => r && r.ok ? r.json() : null).then((a) => { available = a; markAvailable(); }).catch(() => {});
+    .then((r) => r && r.ok ? r.json() : null).then((a) => {
+      available = a;
+      if (a && layout.some((it) => !shown(it.id))) pack(vis().sort((p, q) => p.y - q.y || p.x - q.x));   // без дыры на месте спрятанной папки
+      render(); markAvailable();
+    }).catch(() => {});
   addEventListener("message", (e) => { if (e?.data?.neronStudioToast) toast(String(e.data.neronStudioToast)); });
 }
 
@@ -557,7 +569,7 @@ function restore(it) {
 }
 const drawer = document.getElementById("drawer");
 function fillDrawer() {
-  const off = VIEWS[view].tiles.filter((d) => !layout.find((it) => it.id === d.id));
+  const off = VIEWS[view].tiles.filter((d) => !layout.find((it) => it.id === d.id) && shown(d.id));
   drawer.innerHTML = "";
   const h = document.createElement("h2"); h.textContent = u("drawerH");
   const p = document.createElement("p"); p.textContent = off.length ? u("drawerP") : u("drawerNone");
