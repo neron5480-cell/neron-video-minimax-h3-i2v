@@ -5,7 +5,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-const VERSION = "2026.11.08·7";                 // видно в подсказке монеты и на полосе — какая версия загружена
+const VERSION = "2026.11.08·8";                 // видно в подсказке монеты и на полосе — какая версия загружена
 const POS_KEY = "neron-studio-coin-pos";
 // язык: как выбран на столе, иначе — по языку системы (русский/украинский/белорусский/казахский → RU, остальное → EN)
 const LANG_KEY = "neron-studio-lang";
@@ -98,6 +98,7 @@ function css() {
   box-shadow: 0 0 18px rgba(255,122,26,.45); padding: 7px 16px; }
 #neron-studio-bar button.nsb-run:hover { color: #0e0a07; background: #f0c75a; }
 #neron-studio-bar button.nsb-x { padding: 6px 9px; color: #a8957e; }
+#neron-studio-bar button.nsb-up { color: #f0c75a; border-color: #c8873a; }
 #neron-studio-bar .nsb-clock { font: 600 12px ui-monospace, Consolas, monospace; color: #a8957e; white-space: nowrap; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; max-width: 26vw; }
 #neron-studio-bar .nsb-clock.run { color: #ffb347; } #neron-studio-bar .nsb-clock.ok { color: #8fd99a; } #neron-studio-bar .nsb-clock.err { color: #ff8a80; }
@@ -160,7 +161,7 @@ function buildBar() {
     const b = document.createElement("div");
     b.id = "neron-studio-bar";
     b.innerHTML = `<div class="nsb-coin" title="Neron Studio ${VERSION}">N</div><span class="nsb-name">NERON STUDIO</span>
-      <span class="nsb-sep"></span><span class="nsb-proc"></span><span class="nsb-sep"></span>
+      <span class="nsb-sep"></span><span class="nsb-proc"></span><button type="button" class="nsb-up" hidden></button><span class="nsb-sep"></span>
       <button type="button" class="nsb-home"></button>
       <button type="button" class="nsb-run"></button>
       <button type="button" class="nsb-stop" hidden></button>
@@ -171,6 +172,7 @@ function buildBar() {
     b.querySelector(".nsb-run").onclick = runQueue;
     b.querySelector(".nsb-stop").onclick = () => { try { api.interrupt?.(); } catch (_) {} };
     b.querySelector(".nsb-x").onclick = () => exitStudioMode();
+    b.querySelector(".nsb-up").onclick = exitSubgraph;
     document.body.append(b);
     M.bar = b;
     barText();
@@ -182,6 +184,7 @@ function barText() {                                               // подпи
     set(".nsb-home", L("🏠 Стол", "🏠 Desktop"), L("Вернуться на рабочий стол", "Back to the desktop"));
     set(".nsb-run", L("▶ Создать", "▶ Create"), L("Запустить этот процесс (как «Запустить» ComfyUI)", "Run this workflow (same as ComfyUI «Run»)"));
     set(".nsb-stop", L("■ Стоп", "■ Stop"), L("Остановить генерацию", "Stop generation"));
+    set(".nsb-up", L("⤴ Наверх", "⤴ Up"), L("Выйти из подграфа на основной холст", "Leave the subgraph, back to the main canvas"));
     set(".nsb-x", null, L("Снять оформление Studio — обычный ComfyUI", "Leave the Studio look — plain ComfyUI"));
 }
 function coinTip() {
@@ -255,7 +258,20 @@ function activeKey() {
 function rememberTab(title) {
     setTimeout(() => { const k = activeKey(); if (k) { TABS[k] = title; saveTabs(); } }, 400);
 }
+// подграф: штатная навигация спрятана чистым экраном — даём свою кнопку «⤴ Наверх»
+function rootGraph() { try { return app.graph?.rootGraph || app.graph; } catch (_) { return null; } }
+function inSubgraph() { try { const g = app.canvas?.graph, r = rootGraph(); return !!(g && r && g !== r); } catch (_) { return false; } }
+function exitSubgraph() {
+    try { app.extensionManager?.command?.execute?.("Comfy.Graph.ExitSubgraph"); } catch (_) {}
+    setTimeout(() => {                                                  // команды нет в этой сборке — сразу на основной холст
+        if (inSubgraph()) { try { app.canvas.setGraph(rootGraph()); app.canvas.setDirty?.(true, true); } catch (_) {} }
+        upButton();
+    }, 200);
+}
+function upButton() { const u = M.bar?.querySelector(".nsb-up"); if (u) u.hidden = !(M.on && inSubgraph()); }
+
 function followTabs() {
+    upButton();
     if (Date.now() - (M.since || 0) < 1200) return;                     // вкладка только что открыта — даём ей встать
     const k = activeKey();
     if (k === null) return;                                             // не знаем вкладку — ничего не трогаем
@@ -280,7 +296,7 @@ function enterStudioMode(title, quiet) {
 
 function exitStudioMode(quiet) {
     M.on = false;
-    if (!quiet) { const k = activeKey(); if (k && TABS[k]) { delete TABS[k]; saveTabs(); } }
+    if (!quiet) { TABS = {}; saveTabs(); }                       // «✕» — выход из Studio целиком; вернётся только через стол
     try { localStorage.setItem(MODE_KEY, JSON.stringify({ on: false, title: M.title })); } catch (_) {}
     if (M.bar) M.bar.hidden = true;
     const coin = document.getElementById("neron-studio-coin"); if (coin) coin.hidden = false;
