@@ -58,6 +58,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .drawer h3 { margin: 14px 0 6px; font: 600 13px var(--f-body); color: var(--text); }
 .row2 { display: flex; gap: 6px; flex-wrap: wrap; }
 .row2 button { flex: 1; min-width: 120px; }
+.colors { margin-top: 8px; }
+.drawer label.item.color { display: flex; flex: 1; min-width: 130px; gap: 8px; align-items: center; padding: 7px 10px; margin-top: 6px; cursor: pointer;
+  border-radius: 9px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font: 500 13px var(--f-body); }
+.drawer label.item.color:hover { border-color: var(--bronze); }
+.item.color input { width: 30px; height: 24px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; cursor: pointer; flex: none; }
 .slider { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; margin-top: 8px; font-size: 12px; color: var(--muted); }
 .slider input { grid-column: 1 / -1; width: 100%; accent-color: var(--bronze); }
 .desk.drop { outline: 2px dashed var(--gold); outline-offset: 6px; border-radius: 14px; }
@@ -325,7 +330,11 @@ const VIEWS = {
 };
 const BY = {};                                         // BY[папка][id] → плитка
 for (const [v, def] of Object.entries(VIEWS)) BY[v] = Object.fromEntries(def.tiles.map((d) => [d.id, d]));
-const KEY = "neron-studio-layout-v2";                  // раскладка — своя у каждой папки
+const KEY = "neron-studio-layout-v2";
+const LOOK_KEY = "neron-studio-look";
+let look = { scale: 1, tile: "", accent: "" };
+try { Object.assign(look, JSON.parse(localStorage.getItem(LOOK_KEY) || "{}")); } catch (_) {}
+function saveLook() { try { localStorage.setItem(LOOK_KEY, JSON.stringify(look)); } catch (_) {} }                  // раскладка — своя у каждой папки
 
 // ---------- раскладка ----------
 let cols = 12;
@@ -357,7 +366,7 @@ const desk = document.getElementById("desk");
 const els = new Map();
 
 function geom() {
-  const W = desk.clientWidth, gap = 12, row = innerWidth < 700 ? 84 : 96;
+  const W = desk.clientWidth, gap = look.scale < .8 ? 8 : 12, row = Math.round((innerWidth < 700 ? 84 : 96) * look.scale);
   const cw = (W - gap * (cols - 1)) / cols;
   return { W, gap, row, cw, sx: cw + gap, sy: row + gap };
 }
@@ -576,7 +585,8 @@ function toast(text, act, fn) {
 
 // ---------- ширина экрана: 12 / 8 / 4 колонки ----------
 function fit() {
-  const want = innerWidth >= 1100 ? 12 : innerWidth >= 700 ? 8 : 4;
+  const base = innerWidth >= 1100 ? 12 : innerWidth >= 700 ? 8 : 4;
+  const want = Math.max(4, Math.min(24, Math.round(base / look.scale)));   // меньше плитки — больше колонок
   if (want !== cols) { cols = want; compact(); }
   else settle(null);
 }
@@ -918,6 +928,17 @@ function applyTheme() {
   const root = document.documentElement;
   for (const [k, val] of Object.entries(v)) root.style.setProperty(k, val);
   root.style.colorScheme = light ? "light" : "dark";
+  if (look.tile) {
+    const lt = lumC(look.tile) > .35;
+    root.style.setProperty("--panel", look.tile);
+    root.style.setProperty("--panel-2", mixc(look.tile, lt ? "#000000" : "#ffffff", .08));
+    root.style.setProperty("--line", mixc(look.tile, lt ? "#000000" : "#ffffff", .22));
+  }
+  if (look.accent) {
+    root.style.setProperty("--bronze", look.accent);
+    root.style.setProperty("--gold", mixc(look.accent, "#ffffff", .3));
+    root.style.setProperty("--ember", look.accent);
+  }
   readCol();
   document.getElementById("themeBtn").title = tx(["Тема стола: ", "Desk theme: "]) + (note || tName(t));
 }
@@ -925,6 +946,7 @@ const themesBox = document.getElementById("themes");
 function fillThemes() {
   const cur = engine()?.current;
   themesBox.innerHTML = `<h2>${tx(["Тема стола", "Desk theme"])}</h2>`;
+  lookPanel(themesBox);
   bgPanel(themesBox);
   const h = document.createElement("h3"); h.textContent = tx(["🎨 Цвета — темы Neron Theme", "🎨 Colors — Neron Theme themes"]); themesBox.append(h);
   const p = document.createElement("p"); p.textContent = tx(["«Как в ComfyUI» — стол переключается вместе с нодой Neron Theme.", "«As in ComfyUI» — the desk follows the Neron Theme node."]); themesBox.append(p);
@@ -993,6 +1015,33 @@ function bgPick() {
   inp.onchange = () => { bgSetFile(inp.files?.[0]); inp.remove(); };
   document.body.append(inp); inp.click();
 }
+function lookPanel(box) {                              // размер плиток и свои цвета — поверх любой темы
+  const h = document.createElement("h3"); h.textContent = tx(["🔲 Плитки", "🔲 Tiles"]); box.append(h);
+  const wrap = document.createElement("label"); wrap.className = "slider"; wrap.htmlFor = "look-scale";
+  const val = document.createElement("span"); val.textContent = Math.round(look.scale * 100) + "%";
+  wrap.innerHTML = `<span>${tx(["Размер плиток", "Tile size"])}</span>`; wrap.append(val);
+  const rg = document.createElement("input"); rg.type = "range"; rg.id = "look-scale"; rg.min = .5; rg.max = 1.4; rg.step = .1; rg.value = look.scale;
+  rg.oninput = () => { look.scale = Number(rg.value); val.textContent = Math.round(look.scale * 100) + "%"; saveLook(); fit(); render(); save(); };
+  wrap.append(rg); box.append(wrap);
+  const row = document.createElement("div"); row.className = "row2 colors";
+  const pick = (label, key, fallback) => {
+    const l = document.createElement("label"); l.className = "item color";
+    const c = document.createElement("input"); c.type = "color"; c.value = look[key] || fallback;
+    c.oninput = () => { look[key] = c.value; saveLook(); applyTheme(); };
+    const s2 = document.createElement("span"); s2.textContent = label; l.append(c, s2); row.append(l);
+  };
+  const css = getComputedStyle(document.documentElement);
+  pick(tx(["Цвет плиток", "Tile color"]), "tile", toHex(css.getPropertyValue("--panel")));
+  pick(tx(["Акцент", "Accent"]), "accent", toHex(css.getPropertyValue("--bronze")));
+  box.append(row);
+  if (look.tile || look.accent) {
+    const rs = document.createElement("button"); rs.type = "button"; rs.className = "item";
+    rs.textContent = tx(["↺ Цвета как в теме", "↺ Theme colors"]);
+    rs.onclick = () => { look.tile = look.accent = ""; saveLook(); applyTheme(); fillThemes(); };
+    box.append(rs);
+  }
+}
+function toHex(v) { v = String(v).trim(); return /^#[0-9a-f]{6}$/i.test(v) ? v : /^#[0-9a-f]{3}$/i.test(v) ? "#" + [...v.slice(1)].map((x) => x + x).join("") : "#1b130d"; }
 function bgPanel(box) {
   const h = document.createElement("h3"); h.textContent = tx(["🖼 Свой фон — фото, гифка или видео", "🖼 Your background — photo, GIF or video"]); box.append(h);
   const row = document.createElement("div"); row.className = "row2";
@@ -1034,7 +1083,7 @@ bgLoad().then((rec) => { if (rec) bgShow(rec); });
 // ================== 🧪 «✉ Написать создателю» (папка «Тест») ==================
 // Письмо уходит автору через Web3Forms (ключ публичный: он только разрешает слать письма автору, адреса не раскрывает).
 // К письму — только то, что видно в «Что будет отправлено»: процесс, текст, версия ComfyUI, видеокарта, последняя ошибка.
-const DESK_VERSION = "2026.11.08·7";
+const DESK_VERSION = "2026.11.08·8";
 const W3F_KEY = "6462b9a5-e856-422f-9f27-23875a4277d3";
 const SENT_KEY = "neron-studio-report-at", ERR_KEY = "neron-studio-last-error";
 const RP = {
