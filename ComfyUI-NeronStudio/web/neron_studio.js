@@ -1,17 +1,18 @@
 // 🖥 Neron Studio — монета «N» на холсте ComfyUI и пункт меню: открывает рабочий стол поверх ComfyUI.
 // Монету можно перетащить в любое место (щелчок — открыть стол, потянуть — переставить); место запоминается.
+// «Открыть» на плитке: стол просит процесс → он открывается в ComfyUI новой вкладкой (как перетащенный файл).
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
 const POS_KEY = "neron-studio-coin-pos";
 const SIZE = 46, MARGIN = 6;
-let overlay = null;
+let overlay = null, frame = null;
 
 function openStudio() {
     if (overlay) { overlay.hidden = false; return; }
     overlay = document.createElement("div");
     overlay.style.cssText = "position:fixed;inset:0;z-index:100000;background:#0e0a07;";
-    const frame = document.createElement("iframe");
+    frame = document.createElement("iframe");
     frame.src = api.apiURL("/neron_studio");
     frame.title = "Neron Studio";
     frame.style.cssText = "border:0;width:100%;height:100%;display:block;";
@@ -21,7 +22,38 @@ function openStudio() {
 
 function closeStudio() { if (overlay) overlay.hidden = true; }
 
-addEventListener("message", (e) => { if (e?.data?.neronStudio === "close") closeStudio(); });
+function tellDesk(text) {
+    try { frame?.contentWindow?.postMessage({ neronStudioToast: text }, "*"); } catch (_) {}
+}
+
+// открыть процесс плитки в ComfyUI — тем же путём, что и перетащенный файл: новая вкладка, ваша работа не трогается
+async function openWorkflow(id, title) {
+    let res;
+    try { res = await api.fetchApi(`/neron_studio/workflow/${encodeURIComponent(id)}`, { cache: "no-store" }); }
+    catch (_) { tellDesk("Нет связи с ComfyUI. Перезапустите ComfyUI и попробуйте ещё раз."); return; }
+    if (!res.ok) {
+        tellDesk(`Процесс «${title}» не установлен. Обновите пакет Neron (Manager → Neron → Обновить) и перезапустите ComfyUI.`);
+        return;
+    }
+    let data;
+    try { data = await res.json(); }
+    catch (_) { tellDesk(`Файл процесса «${title}» повреждён. Переустановите пакет Neron.`); return; }
+    const file = (res.headers.get("X-Neron-Workflow") || title || "Neron").replace(/\.json$/i, "");
+    try {
+        await app.loadGraphData(data, true, true, file);
+        closeStudio();
+    } catch (e) {
+        console.error("[Neron Studio] open workflow", e);
+        tellDesk(`ComfyUI не смог открыть «${title}»: ${e?.message || e}`);
+    }
+}
+
+addEventListener("message", (e) => {
+    const d = e?.data;
+    if (!d || !d.neronStudio) return;
+    if (d.neronStudio === "close") closeStudio();
+    if (d.neronStudio === "open" && d.id) openWorkflow(String(d.id), String(d.title || d.id));
+});
 addEventListener("keydown", (e) => { if (e.key === "Escape" && overlay && !overlay.hidden) closeStudio(); });
 
 function clampPos(x, y) {

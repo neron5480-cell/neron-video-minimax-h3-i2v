@@ -121,7 +121,8 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .meta { font: 400 11px var(--f-mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
 .open { flex: none; font: 600 12px var(--f-body); color: var(--ink); background: var(--bronze); border: 0; border-radius: 7px; padding: 6px 11px; cursor: pointer; }
 .open:hover { background: var(--gold); }
-.tile[data-status="soon"] .open { background: transparent; color: var(--soon); border: 1px solid var(--line); }
+.tile[data-status="soon"] .open, .tile.missing .open { background: transparent; color: var(--soon); border: 1px solid var(--line); }
+.open[aria-busy="true"] { opacity: .6; cursor: progress; }
 .grip { position: absolute; right: 2px; bottom: 2px; width: 18px; height: 18px; cursor: nwse-resize; touch-action: none; opacity: .55; }
 .grip::before { content: ""; position: absolute; right: 4px; bottom: 4px; width: 9px; height: 9px;
   border-right: 2px solid var(--bronze); border-bottom: 2px solid var(--bronze); border-radius: 0 0 3px 0; }
@@ -174,7 +175,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
     <button type="button" class="tool" id="close" title="Вернуться в ComfyUI">✕ В ComfyUI</button>
   </div>
 </header>
-<p class="hint">Тяните плитку за шапку, размер — за уголок, ✕ — убрать. Свой фон — перетащите фото или видео на стол. Прототип: «Открыть» пока только показывает процесс.</p>
+<p class="hint">Тяните плитку за шапку, размер — за уголок, ✕ — убрать. Свой фон — перетащите фото или видео на стол. «Открыть» — процесс откроется в ComfyUI новой вкладкой.</p>
 <main class="desk" id="desk" aria-label="Плитки процессов"></main>
 <div class="drawer" id="drawer" hidden></div>
 <div class="drawer" id="themes" hidden></div>
@@ -208,6 +209,7 @@ const TILES = [
   { id: "edit", ico: "✏", t: "Редактор словами", k: "image", s: "soon", meta: "«надень юбку с картинки 2»", paint: "typing", x: 9, y: 5, w: 3, h: 2 },
   { id: "tryon", ico: "👗", t: "Примерочная", k: "image", s: "soon", meta: "фото человека + вещь", paint: "tryon", x: 3, y: 6, w: 3, h: 2 },
   { id: "cutout", ico: "✂", t: "Удаление фона", k: "image", s: "soon", meta: "PNG с прозрачным фоном", paint: "cutout", x: 6, y: 6, w: 3, h: 2 },
+  { id: "ltx", ico: "🎥", t: "LTX Engine · видео", k: "video", s: "ok", meta: "LTX · автопромтер · своя камера", paint: "film", x: 3, y: 8, w: 3, h: 2 },
   { id: "models", ico: "📥", t: "Модели", k: "all", s: "ok", meta: "качает сама · докачка с обрыва", paint: "models", x: 0, y: 7, w: 3, h: 2 },
 ];
 const BY_ID = Object.fromEntries(TILES.map((d) => [d.id, d]));
@@ -294,6 +296,7 @@ function render() {
     bottom = Math.max(bottom, (it.y + it.h) * g.sy);
   }
   for (const [id, el] of els) if (!layout.find((it) => it.id === id)) { el.remove(); els.delete(id); }
+  markAvailable();
   desk.style.height = bottom + "px";
 }
 
@@ -309,15 +312,41 @@ function make(it) {
     <div class="foot"><span class="meta">${d.meta}</span><button class="open" type="button">${d.s === "soon" ? "Скоро" : "Открыть"}</button></div>
     <div class="grip" title="Потяни — размер" aria-hidden="true"></div>`;
   el.querySelector(".x").onclick = () => removeTile(d.id);
-  el.querySelector(".open").onclick = () => toast(d.s === "soon"
-    ? `«${d.t}» — в планах. Плитка уже живёт на столе.`
-    : `Откроется процесс «${d.t}» со всеми настройками (в Studio — внутри ComfyUI).`);
+  el.querySelector(".open").onclick = (e) => openTile(d, e.currentTarget);
   dragOn(el.querySelector(".head"), it, el, "move");
   dragOn(el.querySelector(".grip"), it, el, "size");
   desk.append(el);
   els.set(it.id, el);
   painters.push({ el, canvas: el.querySelector("canvas"), fn: PAINT[d.paint], id: d.id });
   return el;
+}
+
+// ---------- «Открыть»: процесс Neron загружается в ComfyUI новой вкладкой ----------
+const INSIDE = (() => { try { return parent !== window; } catch (_) { return true; } })();
+let available = null;                                  // какие процессы установлены (спрашиваем у ComfyUI)
+function openTile(d, btn) {
+  if (d.s === "soon") { toast(`«${d.t}» — в планах. Плитка уже живёт на столе.`); return; }
+  if (!INSIDE) { toast(`Внутри ComfyUI эта кнопка откроет процесс «${d.t}» новой вкладкой.`); return; }
+  if (available && available[d.id] === false) {
+    toast(`Процесс «${d.t}» не установлен. Обновите пакет Neron в Manager и перезапустите ComfyUI.`); return;
+  }
+  btn.setAttribute("aria-busy", "true"); setTimeout(() => btn.removeAttribute("aria-busy"), 2500);
+  toast(`Открываю «${d.t}»…`);
+  parent.postMessage({ neronStudio: "open", id: d.id, title: d.t }, "*");
+}
+function markAvailable() {
+  if (!available) return;
+  for (const [id, el] of els) {
+    const d = BY_ID[id]; if (d.s === "soon" || !(id in available)) continue;
+    const miss = available[id] === false;
+    el.classList.toggle("missing", miss);
+    el.querySelector(".open").textContent = miss ? "Не установлено" : "Открыть";
+  }
+}
+if (INSIDE) {
+  fetch("neron_studio/available", { cache: "no-store" }).catch(() => fetch("/neron_studio/available"))
+    .then((r) => r && r.ok ? r.json() : null).then((a) => { available = a; markAvailable(); }).catch(() => {});
+  addEventListener("message", (e) => { if (e?.data?.neronStudioToast) toast(String(e.data.neronStudioToast)); });
 }
 
 // ---------- перетаскивание и размер (мышь, палец, перо) ----------
