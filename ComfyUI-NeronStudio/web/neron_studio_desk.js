@@ -5,7 +5,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-const VERSION = "2026.11.08·5";                 // видно в подсказке монеты и на полосе — какая версия загружена
+const VERSION = "2026.11.08·6";                 // видно в подсказке монеты и на полосе — какая версия загружена
 const POS_KEY = "neron-studio-coin-pos";
 const SIZE = 46, MARGIN = 6;
 let overlay = null, frame = null;
@@ -69,7 +69,7 @@ function css() {
     const st = document.createElement("style");
     st.id = "neron-studio-bar-css";
     st.textContent = `
-#neron-studio-bar { position: fixed; z-index: 9998; top: 46px; left: 50%; transform: translateX(-50%);
+#neron-studio-bar { position: fixed; z-index: 9998; top: var(--nsb-top, 46px); left: 50%; transform: translateX(-50%);
   display: flex; align-items: center; gap: 10px; padding: 7px 10px 7px 8px; border-radius: 16px;
   background: color-mix(in srgb, #1b130d 78%, transparent); backdrop-filter: blur(14px) saturate(1.25);
   -webkit-backdrop-filter: blur(14px) saturate(1.25); border: 1px solid #5a3f27;
@@ -91,7 +91,7 @@ function css() {
 #neron-studio-bar .nsb-clock { font: 600 12px ui-monospace, Consolas, monospace; color: #a8957e; white-space: nowrap; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; max-width: 26vw; }
 #neron-studio-bar .nsb-clock.run { color: #ffb347; } #neron-studio-bar .nsb-clock.ok { color: #8fd99a; } #neron-studio-bar .nsb-clock.err { color: #ff8a80; }
-#neron-studio-bar[hidden], #neron-studio-coin[hidden] { display: none !important; }
+#neron-studio-bar[hidden], #neron-studio-coin[hidden], #neron-studio-bar button[hidden] { display: none !important; }
 /* весь ComfyUI в оформлении стола: смысловые цвета интерфейса → стекло и бронза (только пока включено оформление) */
 html.neron-studio-skin, html.neron-studio-skin body, html.neron-studio-skin .dark-theme {
   --background: rgba(22, 15, 10, .72) !important; --card: rgba(36, 25, 16, .78) !important;
@@ -125,6 +125,7 @@ function fmt(ms) {
 function drawClock() {
     const c = M.bar?.querySelector(".nsb-clock");
     if (!c) return;
+    const stop = M.bar?.querySelector(".nsb-stop"); if (stop) stop.hidden = !M.running;
     c.classList.toggle("run", M.running); c.classList.toggle("ok", !M.running && M.result === "ok");
     c.classList.toggle("err", !M.running && (M.result === "error" || M.result === "stop"));
     if (M.running) {
@@ -152,11 +153,13 @@ function buildBar() {
       <span class="nsb-sep"></span><span class="nsb-proc"></span><span class="nsb-sep"></span>
       <button type="button" class="nsb-home" title="Вернуться на рабочий стол">🏠 Стол</button>
       <button type="button" class="nsb-run" title="Запустить этот процесс (как «Запустить» ComfyUI)">▶ Создать</button>
+      <button type="button" class="nsb-stop" title="Остановить генерацию" hidden>■ Стоп</button>
       <span class="nsb-clock">⏱ --:--</span>
       <button type="button" class="nsb-x" title="Снять оформление Studio — обычный ComfyUI">✕</button>`;
     b.querySelector(".nsb-home").onclick = openStudio;
     b.querySelector(".nsb-coin").onclick = openStudio;
     b.querySelector(".nsb-run").onclick = runQueue;
+    b.querySelector(".nsb-stop").onclick = () => { try { api.interrupt?.(); } catch (_) {} };
     b.querySelector(".nsb-x").onclick = () => exitStudioMode();
     document.body.append(b);
     M.bar = b;
@@ -166,6 +169,52 @@ function buildBar() {
 function skin(on, tries = 0) {
     if (typeof window.__neronThemeStudio === "function") { window.__neronThemeStudio(on); return; }
     if (tries < 25) setTimeout(() => skin(on, tries + 1), 200);      // Neron Theme ещё грузится
+}
+
+
+// ---------- чистый экран: только холст, фон и наша полоса — штатными выключателями ComfyUI ----------
+const CHROME_KEY = "neron-studio-chrome-before";
+const CHROME_SETTINGS = ["Comfy.Minimap.Visible", "Comfy.Graph.CanvasMenu"];
+function setting(id, val) {
+    const st = app.extensionManager?.setting;
+    try {
+        if (val === undefined) return st?.get ? st.get(id) : app.ui?.settings?.getSettingValue?.(id);
+        if (st?.set) return st.set(id, val);
+        return app.ui?.settings?.setSettingValue?.(id, val);
+    } catch (_) { return undefined; }
+}
+// режим фокуса ComfyUI (прячет меню, вкладки, панели) — трогаем, только если ComfyUI говорит, включён ли он
+function focusKnown() { try { return typeof app.extensionManager?.focusMode === "boolean"; } catch (_) { return false; } }
+function focusOn() { try { return app.extensionManager.focusMode === true; } catch (_) { return false; } }
+function setFocus(on) {
+    if (!focusKnown() || focusOn() === on) return;
+    try { app.extensionManager.focusMode = on; } catch (_) {}
+    if (focusOn() !== on) {                                       // хранилище не дало записать — штатной командой
+        try { app.extensionManager?.command?.execute?.("Workspace.ToggleFocusMode"); } catch (_) {}
+    }
+}
+function cleanScreen(on) {
+    if (on) {
+        let before = null;
+        try { before = JSON.parse(localStorage.getItem(CHROME_KEY) || "null"); } catch (_) {}
+        if (!before) {                                             // запомнить «как было» один раз
+            before = { focus: focusOn() };
+            for (const id of CHROME_SETTINGS) before[id] = setting(id);
+            try { localStorage.setItem(CHROME_KEY, JSON.stringify(before)); } catch (_) {}
+        }
+        for (const id of CHROME_SETTINGS) setting(id, false);
+        setFocus(true);
+        document.documentElement.style.setProperty("--nsb-top", "12px");
+    } else {
+        let before = null;
+        try { before = JSON.parse(localStorage.getItem(CHROME_KEY) || "null"); } catch (_) {}
+        if (before) {
+            for (const id of CHROME_SETTINGS) if (before[id] !== undefined && before[id] !== null) setting(id, before[id]);
+            setFocus(!!before.focus);
+            try { localStorage.removeItem(CHROME_KEY); } catch (_) {}
+        }
+        document.documentElement.style.removeProperty("--nsb-top");
+    }
 }
 
 // Оформление живёт во вкладках, открытых со стола: переключились на свою вкладку — обычный ComfyUI,
@@ -202,6 +251,7 @@ function enterStudioMode(title, quiet) {
     const coin = document.getElementById("neron-studio-coin"); if (coin) coin.hidden = true;
     skin(true);
     document.documentElement.classList.add("neron-studio-skin");
+    cleanScreen(true);
     drawClock();
 }
 
@@ -213,6 +263,7 @@ function exitStudioMode(quiet) {
     const coin = document.getElementById("neron-studio-coin"); if (coin) coin.hidden = false;
     skin(false);
     document.documentElement.classList.remove("neron-studio-skin");
+    cleanScreen(false);
 }
 
 function hookRun() {
@@ -316,5 +367,8 @@ app.registerExtension({
         } catch (_) {}
         setInterval(followTabs, 700);                                         // оформление — по вкладке
         setTimeout(followTabs, 300);
+        setTimeout(() => {                                                    // закрыли ComfyUI в оформлении стола,
+            if (!M.on && localStorage.getItem(CHROME_KEY)) cleanScreen(false); // а открыта своя вкладка — вернуть как было
+        }, 2500);
     },
 });
