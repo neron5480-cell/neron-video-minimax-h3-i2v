@@ -934,6 +934,13 @@ function applyTheme() {
     root.style.setProperty("--panel-2", mixc(look.tile, lt ? "#000000" : "#ffffff", .08));
     root.style.setProperty("--line", mixc(look.tile, lt ? "#000000" : "#ffffff", .22));
   }
+  // текст на плитках — читаемый на своём цвете плиток (светлые плитки → тёмный текст и наоборот)
+  let lk = document.getElementById("lookcss");
+  if (!lk) { lk = document.createElement("style"); lk.id = "lookcss"; document.head.append(lk); }
+  if (look.tile) {
+    const ink = lumC(look.tile) > .35 ? "#16120d" : "#f6efe4";
+    lk.textContent = `.tile { --text: ${ink}; --muted: ${mixc(ink, look.tile, .32)}; }`;
+  } else lk.textContent = "";
   if (look.accent) {
     root.style.setProperty("--bronze", look.accent);
     root.style.setProperty("--gold", mixc(look.accent, "#ffffff", .3));
