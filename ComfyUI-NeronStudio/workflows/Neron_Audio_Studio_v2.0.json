@@ -1,0 +1,794 @@
+{
+  "id": "42d27bb3-5c98-4448-ad1c-7158454ba3ba",
+  "revision": 0,
+  "last_node_id": 15,
+  "last_link_id": 10,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "NeronVideoCube",
+      "pos": [
+        133.87063725155377,
+        45.41151560685746
+      ],
+      "size": [
+        760,
+        267
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "videos",
+          "type": "NERON_VIDEOS",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "title": "🎬 Видео ×3 / Video ×3",
+      "properties": {
+        "Node name for S&R": "NeronVideoCube"
+      },
+      "widgets_values": [
+        "{\"clips\":[{\"name\":\"muxibosh-its-my-life_283695_14.mp4\",\"subfolder\":\"Neron_Video\",\"type\":\"input\"}]}",
+        ""
+      ],
+      "widgets_values_named": {
+        "cube_json": "{\"clips\":[{\"name\":\"muxibosh-its-my-life_283695_14.mp4\",\"subfolder\":\"Neron_Video\",\"type\":\"input\"}]}",
+        "neron_video_cube": ""
+      }
+    },
+    {
+      "id": 2,
+      "type": "NeronVideoSampler",
+      "pos": [
+        943.8180452154909,
+        44.04548869612732
+      ],
+      "size": [
+        1000,
+        500
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "videos",
+          "shape": 7,
+          "type": "NERON_VIDEOS",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "videos",
+          "type": "NERON_VIDEOS",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "title": "✂ Видео-сэмплер / Video Sampler",
+      "properties": {
+        "Node name for S&R": "NeronVideoSampler"
+      },
+      "widgets_values": [
+        "{\"version\": 1, \"bypass\": true, \"mute\": false, \"pieces\": []}",
+        ""
+      ],
+      "widgets_values_named": {
+        "vsampler_json": "{\"version\": 1, \"bypass\": true, \"mute\": false, \"pieces\": []}",
+        "neron_vsampler": ""
+      }
+    },
+    {
+      "id": 3,
+      "type": "NeronSoundCube",
+      "pos": [
+        374.29738690158183,
+        642.046605971742
+      ],
+      "size": [
+        560,
+        148
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "sounds",
+          "type": "NERON_SOUNDS",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "title": "🎵 Звук ×8 / Sound ×8",
+      "properties": {
+        "Node name for S&R": "NeronSoundCube"
+      },
+      "widgets_values": [
+        "{\"sounds\":[{\"name\":\"Zeromax - Go On _Original Mix__2.mp3\",\"subfolder\":\"Neron_Audio\",\"type\":\"input\",\"start\":0,\"end\":0}]}",
+        ""
+      ],
+      "widgets_values_named": {
+        "cube_json": "{\"sounds\":[{\"name\":\"Zeromax - Go On _Original Mix__2.mp3\",\"subfolder\":\"Neron_Audio\",\"type\":\"input\",\"start\":0,\"end\":0}]}",
+        "neron_sound_cube": ""
+      }
+    },
+    {
+      "id": 4,
+      "type": "NeronSampler",
+      "pos": [
+        971.1385834300936,
+        623.0120893381603
+      ],
+      "size": [
+        960,
+        419
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "sounds",
+          "shape": 7,
+          "type": "NERON_SOUNDS",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "sounds",
+          "type": "NERON_SOUNDS",
+          "links": [
+            4
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "title": "🎛 Сэмплер / Sampler",
+      "properties": {
+        "Node name for S&R": "NeronSampler"
+      },
+      "widgets_values": [
+        "{\"version\":2,\"bypass\":false,\"snap\":\"1/4\",\"master\":1,\"zoom\":142,\"cur\":0,\"layers\":[{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false}],\"bricks\":[],\"sel\":{}}",
+        90,
+        ""
+      ],
+      "widgets_values_named": {
+        "sampler_json": "{\"version\":2,\"bypass\":false,\"snap\":\"1/4\",\"master\":1,\"zoom\":142,\"cur\":0,\"layers\":[{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false},{\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false}],\"bricks\":[],\"sel\":{}}",
+        "bpm": 90,
+        "neron_sampler": ""
+      }
+    },
+    {
+      "id": 5,
+      "type": "NeronMusic",
+      "pos": [
+        -216.08967048115818,
+        1102.4159273811483
+      ],
+      "size": [
+        1100,
+        410
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "sounds",
+          "type": "NERON_SOUNDS",
+          "links": [
+            5
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "bpm",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "title": "🥁🎹 Музыка / Music",
+      "properties": {
+        "Node name for S&R": "NeronMusic",
+        "neron_music_tab": "drums"
+      },
+      "widgets_values": [
+        "default",
+        90,
+        "{\"version\":4,\"bars\":1,\"auto\":false,\"seeded\":true,\"tracks\":[{\"name\":\"Audio Demo\",\"color\":\"#ff9f43\",\"folder\":\"Audio Demo\",\"sample\":\"WA_KBH_Demo.mp3\",\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"vol\":0.8,\"pan\":0},{\"name\":\"ESR_GSFA1_Hiss & Noise Crackles\",\"color\":\"#54a0ff\",\"folder\":\"ESR_GSFA1_Hiss & Noise Crackles\",\"sample\":\"ESR_GSFA1_Hiss_&_Crackle_01_128bpm.wav\",\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"vol\":0.8,\"pan\":0},{\"name\":\"ESR_GSFA1_One_Shots\",\"color\":\"#1dd1a1\",\"folder\":\"ESR_GSFA1_One_Shots\",\"sample\":\"ESR_GSFA1_One_Shot_01_C.wav\",\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"vol\":0.8,\"pan\":0}]}",
+        "{\"version\": 1, \"bars\": 2, \"tracks\": []}",
+        "neron_music",
+        ""
+      ],
+      "widgets_values_named": {
+        "kit_name": "default",
+        "bpm": 90,
+        "pattern_json": "{\"version\":4,\"bars\":1,\"auto\":false,\"seeded\":true,\"tracks\":[{\"name\":\"Audio Demo\",\"color\":\"#ff9f43\",\"folder\":\"Audio Demo\",\"sample\":\"WA_KBH_Demo.mp3\",\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"vol\":0.8,\"pan\":0},{\"name\":\"ESR_GSFA1_Hiss & Noise Crackles\",\"color\":\"#54a0ff\",\"folder\":\"ESR_GSFA1_Hiss & Noise Crackles\",\"sample\":\"ESR_GSFA1_Hiss_&_Crackle_01_128bpm.wav\",\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"vol\":0.8,\"pan\":0},{\"name\":\"ESR_GSFA1_One_Shots\",\"color\":\"#1dd1a1\",\"folder\":\"ESR_GSFA1_One_Shots\",\"sample\":\"ESR_GSFA1_One_Shot_01_C.wav\",\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"vol\":0.8,\"pan\":0}]}",
+        "project_json": "{\"version\": 1, \"bars\": 2, \"tracks\": []}",
+        "save_name": "neron_music",
+        "neron_music": ""
+      }
+    },
+    {
+      "id": 6,
+      "type": "NeronStudio",
+      "pos": [
+        906.4950289603344,
+        1104.6525526973621
+      ],
+      "size": [
+        1100,
+        598
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "sounds",
+          "shape": 7,
+          "type": "NERON_SOUNDS",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "sounds",
+          "type": "NERON_SOUNDS",
+          "links": [
+            6
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "title": "🎛 Студия / Studio",
+      "properties": {
+        "Node name for S&R": "NeronStudio"
+      },
+      "widgets_values": [
+        "{\"version\": 1, \"bypass\": false, \"master\": 1.0, \"eq_on\": true, \"eq\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"ch\": {}}",
+        ""
+      ],
+      "widgets_values_named": {
+        "studio_json": "{\"version\": 1, \"bypass\": false, \"master\": 1.0, \"eq_on\": true, \"eq\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"ch\": {}}",
+        "neron_studio": ""
+      }
+    },
+    {
+      "id": 7,
+      "type": "NeronThemeStudio",
+      "pos": [
+        -481.3381595300812,
+        286.3440383224945
+      ],
+      "size": [
+        632.8248435589114,
+        665
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "NeronThemeStudio",
+        "nts_manual_size": true,
+        "nts_panel_h": 625
+      },
+      "widgets_values": [
+        "{\"v\":1,\"theme\":{\"v\":1,\"id\":\"backlight\",\"name\":\"Подсветка / Backlight\",\"author\":\"Neron\",\"c\":{\"bg\":\"#060609\",\"grid\":\"#0e0e14\",\"title\":\"#16161f\",\"body\":\"#101017\",\"text\":\"#e9e9f2\",\"widget\":\"#0b0b10\",\"line\":\"#2c2c3a\",\"link\":\"#9a8cff\",\"menu\":\"#0b0b10\",\"accent\":\"#7c5cff\"},\"roles\":{\"model\":\"#b06bff\",\"input\":\"#2fb8ff\",\"text\":\"#ffc93c\",\"gen\":\"#ff4f6d\",\"latent\":\"#ff6bd5\",\"image\":\"#3dffb0\",\"audio\":\"#5cff6b\",\"output\":\"#ff9a3c\",\"util\":\"#8a8aa8\"},\"tint\":0.3,\"btint\":0.04,\"glow\":0.8,\"ui\":true,\"opacity\":0.94,\"halo\":0.85,\"wires\":{\"mode\":\"type\",\"custom\":{}},\"life\":{\"level\":1,\"frame\":false,\"wires\":true,\"bgfx\":\"none\",\"work\":true,\"beat\":true,\"speed\":1,\"fps\":0,\"quietRun\":false}},\"tab\":\"install\",\"lastImg\":null,\"sel\":null,\"pick\":null,\"picKey\":null}",
+        ""
+      ],
+      "widgets_values_named": {
+        "theme_json": "{\"v\":1,\"theme\":{\"v\":1,\"id\":\"backlight\",\"name\":\"Подсветка / Backlight\",\"author\":\"Neron\",\"c\":{\"bg\":\"#060609\",\"grid\":\"#0e0e14\",\"title\":\"#16161f\",\"body\":\"#101017\",\"text\":\"#e9e9f2\",\"widget\":\"#0b0b10\",\"line\":\"#2c2c3a\",\"link\":\"#9a8cff\",\"menu\":\"#0b0b10\",\"accent\":\"#7c5cff\"},\"roles\":{\"model\":\"#b06bff\",\"input\":\"#2fb8ff\",\"text\":\"#ffc93c\",\"gen\":\"#ff4f6d\",\"latent\":\"#ff6bd5\",\"image\":\"#3dffb0\",\"audio\":\"#5cff6b\",\"output\":\"#ff9a3c\",\"util\":\"#8a8aa8\"},\"tint\":0.3,\"btint\":0.04,\"glow\":0.8,\"ui\":true,\"opacity\":0.94,\"halo\":0.85,\"wires\":{\"mode\":\"type\",\"custom\":{}},\"life\":{\"level\":1,\"frame\":false,\"wires\":true,\"bgfx\":\"none\",\"work\":true,\"beat\":true,\"speed\":1,\"fps\":0,\"quietRun\":false}},\"tab\":\"install\",\"lastImg\":null,\"sel\":null,\"pick\":null,\"picKey\":null}",
+        "neron_theme": ""
+      }
+    },
+    {
+      "id": 8,
+      "type": "NeronMixer",
+      "pos": [
+        2058.497122029667,
+        77.45105587670989
+      ],
+      "size": [
+        900,
+        789
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "shape": 7,
+          "type": "*",
+          "link": 2
+        },
+        {
+          "name": "bpm",
+          "shape": 7,
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "audio_1",
+          "shape": 7,
+          "type": "AUDIO,NERON_SOUNDS",
+          "link": 4
+        },
+        {
+          "name": "audio_2",
+          "type": "AUDIO,NERON_SOUNDS",
+          "link": 6
+        },
+        {
+          "name": "audio_3",
+          "type": "AUDIO,NERON_SOUNDS",
+          "link": 10
+        },
+        {
+          "name": "audio_4",
+          "type": "AUDIO,NERON_SOUNDS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            7
+          ]
+        },
+        {
+          "name": "saved_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "bpm",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": [
+            9
+          ]
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "title": "🎚 ПУЛЬТ / PULT",
+      "properties": {
+        "Node name for S&R": "NeronMixer"
+      },
+      "widgets_values": [
+        "{\"version\":3,\"repeats\":1,\"master\":0.9,\"bpm\":90,\"bpm_set\":true,\"sync_bpm\":true,\"fit\":true,\"fade\":1.5,\"fit_sec\":311.774,\"video\":{\"name\":\"muxibosh-its-my-life_283695_14.mp4\",\"subfolder\":\"Neron_Video\",\"type\":\"input\"},\"videos\":[{\"name\":\"muxibosh-its-my-life_283695_14.mp4\",\"subfolder\":\"Neron_Video\",\"type\":\"input\"}],\"video_manual\":null,\"tracks\":[{\"slot\":\"audio_2\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0},{\"slot\":\"audio_3\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0},{\"slot\":\"audio_1/1\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0},{\"slot\":\"audio_1\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0},{\"slot\":\"video_audio\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0}]}",
+        "neron_mix",
+        ""
+      ],
+      "widgets_values_named": {
+        "mixer_json": "{\"version\":3,\"repeats\":1,\"master\":0.9,\"bpm\":90,\"bpm_set\":true,\"sync_bpm\":true,\"fit\":true,\"fade\":1.5,\"fit_sec\":311.774,\"video\":{\"name\":\"muxibosh-its-my-life_283695_14.mp4\",\"subfolder\":\"Neron_Video\",\"type\":\"input\"},\"videos\":[{\"name\":\"muxibosh-its-my-life_283695_14.mp4\",\"subfolder\":\"Neron_Video\",\"type\":\"input\"}],\"video_manual\":null,\"tracks\":[{\"slot\":\"audio_2\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0},{\"slot\":\"audio_3\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0},{\"slot\":\"audio_1/1\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0},{\"slot\":\"audio_1\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0},{\"slot\":\"video_audio\",\"vol\":0.8,\"pan\":0,\"mute\":false,\"solo\":false,\"low\":0,\"mid\":0,\"high\":0,\"rev\":0,\"room\":\"hall\",\"off\":0}]}",
+        "save_name": "neron_mix",
+        "neron_mixer": ""
+      }
+    },
+    {
+      "id": 9,
+      "type": "NeronDancerClip",
+      "pos": [
+        4069.400611484347,
+        1037.8068999675797
+      ],
+      "size": [
+        340,
+        478
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "NeronDancerClip"
+      },
+      "widgets_values": [
+        "",
+        8,
+        0,
+        false,
+        30,
+        "полосы",
+        "сиреневая",
+        ""
+      ],
+      "widgets_values_named": {
+        "clip": "",
+        "beats": 8,
+        "shift": 0,
+        "remove_bg": false,
+        "bg_tolerance": 30,
+        "background": "полосы",
+        "bg_color": "сиреневая",
+        "neron_dancer_clip": ""
+      },
+      "color": "#15171d",
+      "bgcolor": "#15171d"
+    },
+    {
+      "id": 10,
+      "type": "NeronVideoCombine",
+      "pos": [
+        2999.5617334201847,
+        80.55586099398143
+      ],
+      "size": [
+        420,
+        476
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "shape": 7,
+          "type": "*",
+          "link": 9
+        },
+        {
+          "name": "images",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 7
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "saved_path",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronVideoCombine"
+      },
+      "widgets_values": [
+        "Neron_Video",
+        "mp4 (как есть, без перекодирования)",
+        18,
+        24,
+        ""
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "Neron_Video",
+        "format": "mp4 (как есть, без перекодирования)",
+        "quality_crf": 18,
+        "fps": 24,
+        "neron_video_player": ""
+      }
+    },
+    {
+      "id": 11,
+      "type": "Note",
+      "pos": [
+        3720.6534475738504,
+        460.90952590657474
+      ],
+      "size": [
+        260,
+        464
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "танцовщица",
+      "properties": {},
+      "widgets_values": [
+        " Neron Dancer (видео) - танцовщица из  ролика\n\nПросто для настроения. Нода никуда не подключается и ничего не считает: она стоит на столе схемы, слушает звук\nNeron-нод . танцует.\n\n- `palette` - цвет волос и наряда (розовая, голубая, сиреневая, рыжая, серебро).\n- `energy` - насколько активно она двигается.\n- Слышит только звук, который играет эта страница (то, что вы запустили кнопкой PLAY). Ничего не записывает и не отправляет.\n\nНода показывает ваш видеоролик с танцем и подгоняет его под музыку: слушает звук Neron-нод, определяет темп по ударам и меняет скорость ролика так, чтобы шаги попадали в такт. Музыка остановилась - ролик плавно замирает. Никуда не подключается, в очереди (Queue) не участвует.\n\n**Как пользоваться**\n1. Добавьте ноду: NeronAudio -> Neron Dancer (видео).\n2. Положите ролик в папку `input/Neron_Dancers` или нажмите ЗАГРУЗИТЬ. Выберите его в списке (⟳ обновляет список).\n3. Включите музыку в любой Neron-ноде.\n\n**Правила для роликов** (чтобы не перегружать браузер; при загрузке кнопкой проверяются автоматически)\n- размер до 40 МБ;\n- длина до 20 секунд (лучше 4-10);\n- картинка не больше 1280 пикселей по большей стороне (хватает 480-720);\n- форматы: webm, mp4, m4v, mov, gif. Лучше всего webm (VP9) или mp4 (h264).\n- лучший ролик - зацикленный танец, где конец плавно переходит в начало.\n\n**Поля**\n- `beats` - сколько ударов музыки укладывается в один круг вашего ролика (например, танец из 8 шагов - 8).\n- `shift` - сдвиг ролика от 0 до 1, чтобы удар музыки попал на нужное движение.\n- `remove_bg` - убрать однотонный фон (цвет берётся по углам кадра). `bg_tolerance` - насколько близкие к фону цвета считать фоном. Если у ролика прозрачный фон (webm с альфа-каналом), эта галочка не нужна.\n\n- `background` - свой фон за танцовщицей: `полосы` (полосы летят навстречу из глубины), `сетка` (неоновая сетка вдаль), `лучи` (вращающиеся лучи) или `нет`. Фон двигается быстрее, когда музыка громче, и вспыхивает на удар. Когда фон выбран, однотонный фон ролика (например, зелёный) вырезается автоматически, галочку `remove_bg` отдельно включать не нужно.\n- `bg_color` - цвет фона: розовая, голубая, сиреневая, рыжая, серебро.\n\n**Чистый экран.** По умолчанию нода выглядит как просто картинка: без заголовка, рамки и ползунков. Наведите мышь - сверху выедут все настройки (ролик, фон, цвет, ударов в круге, сдвиг, вырезание фона), снизу покажется темп. Кнопка ⚙ внизу справа закрепляет панель. Ноду можно перетаскивать за саму картинку. Если хотите обычный вид с заголовком и полями, снимите галочку «ЧИСТЫЙ ЭКРАН» в панели настроек.\n\nСкорость ролика подстраивается в пределах примерно от x0.45 до x2.2; если нужна больше - измените `beats` (вдвое больше или меньше).\n"
+      ],
+      "widgets_values_named": {
+        "text": " Neron Dancer (видео) - танцовщица из  ролика\n\nПросто для настроения. Нода никуда не подключается и ничего не считает: она стоит на столе схемы, слушает звук\nNeron-нод . танцует.\n\n- `palette` - цвет волос и наряда (розовая, голубая, сиреневая, рыжая, серебро).\n- `energy` - насколько активно она двигается.\n- Слышит только звук, который играет эта страница (то, что вы запустили кнопкой PLAY). Ничего не записывает и не отправляет.\n\nНода показывает ваш видеоролик с танцем и подгоняет его под музыку: слушает звук Neron-нод, определяет темп по ударам и меняет скорость ролика так, чтобы шаги попадали в такт. Музыка остановилась - ролик плавно замирает. Никуда не подключается, в очереди (Queue) не участвует.\n\n**Как пользоваться**\n1. Добавьте ноду: NeronAudio -> Neron Dancer (видео).\n2. Положите ролик в папку `input/Neron_Dancers` или нажмите ЗАГРУЗИТЬ. Выберите его в списке (⟳ обновляет список).\n3. Включите музыку в любой Neron-ноде.\n\n**Правила для роликов** (чтобы не перегружать браузер; при загрузке кнопкой проверяются автоматически)\n- размер до 40 МБ;\n- длина до 20 секунд (лучше 4-10);\n- картинка не больше 1280 пикселей по большей стороне (хватает 480-720);\n- форматы: webm, mp4, m4v, mov, gif. Лучше всего webm (VP9) или mp4 (h264).\n- лучший ролик - зацикленный танец, где конец плавно переходит в начало.\n\n**Поля**\n- `beats` - сколько ударов музыки укладывается в один круг вашего ролика (например, танец из 8 шагов - 8).\n- `shift` - сдвиг ролика от 0 до 1, чтобы удар музыки попал на нужное движение.\n- `remove_bg` - убрать однотонный фон (цвет берётся по углам кадра). `bg_tolerance` - насколько близкие к фону цвета считать фоном. Если у ролика прозрачный фон (webm с альфа-каналом), эта галочка не нужна.\n\n- `background` - свой фон за танцовщицей: `полосы` (полосы летят навстречу из глубины), `сетка` (неоновая сетка вдаль), `лучи` (вращающиеся лучи) или `нет`. Фон двигается быстрее, когда музыка громче, и вспыхивает на удар. Когда фон выбран, однотонный фон ролика (например, зелёный) вырезается автоматически, галочку `remove_bg` отдельно включать не нужно.\n- `bg_color` - цвет фона: розовая, голубая, сиреневая, рыжая, серебро.\n\n**Чистый экран.** По умолчанию нода выглядит как просто картинка: без заголовка, рамки и ползунков. Наведите мышь - сверху выедут все настройки (ролик, фон, цвет, ударов в круге, сдвиг, вырезание фона), снизу покажется темп. Кнопка ⚙ внизу справа закрепляет панель. Ноду можно перетаскивать за саму картинку. Если хотите обычный вид с заголовком и полями, снимите галочку «ЧИСТЫЙ ЭКРАН» в панели настроек.\n\nСкорость ролика подстраивается в пределах примерно от x0.45 до x2.2; если нужна больше - измените `beats` (вдвое больше или меньше).\n"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 12,
+      "type": "Note",
+      "pos": [
+        4020.6885396636935,
+        450.87443381673006
+      ],
+      "size": [
+        260,
+        464
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "dancer",
+      "properties": {},
+      "widgets_values": [
+        "Neron Dancer (Video) – A dancer from a video clip\n\nJust for fun. This node doesn’t connect to anything and doesn’t perform any computations; it simply sits on your workspace and listens to the audio.\nIt’s a \"Neron-node\" that dances.\n\n- `palette`: Sets the color of the dancer’s hair and outfit (pink, blue, lilac, red/ginger, or silver).\n- `energy`: Controls how actively she moves.\n- It only listens to the audio playing within this page (triggered by the PLAY button). It does not record or transmit any data.\n\nThe node displays your video clip and synchronizes it with the music: it listens to the audio from a Neron-node, detects the tempo based on the beat, and adjusts the video playback speed so that the dance steps land on the beat. When the music stops, the video smoothly comes to a halt. It does not connect to other nodes and is not part of the processing queue.\n\n**How ​​to use**\n1. Add the node: NeronAudio -> Neron Dancer (Video).\n2. Place your video file in the `input/Neron_Dancers` folder, or click UPLOAD. Select it from the list (use ⟳ to refresh the list).\n3. Start the music using any Neron-node.\n\n**Video Guidelines** (to prevent browser overload; these are checked automatically upon upload)\n- File size: up to 40 MB.\n- Duration: up to 20 seconds (4–10 seconds is ideal).\n- Resolution: maximum 1280 pixels on the longest side (480–720 pixels is sufficient).\n- Supported formats: webm, mp4, m4v, mov, gif. Webm (VP9) or mp4 (h264) are recommended.\n- The best type of video is a looped dance sequence where the end transitions smoothly back into the beginning. **Fields**\n- `beats` — the number of musical beats that fit into one full cycle of your video (e.g., an 8-step dance sequence would be 8).\n- `shift` — an offset for the video (ranging from 0 to 1) used to align the musical beat with the corresponding movement.\n- `remove_bg` — removes a solid-colored background (the color is sampled from the corners of the frame). `bg_tolerance` determines how close a color must be to the background color to be removed. If your video already has a transparent background (such as a WebM file with an alpha channel), this option is not needed.\n\n- `background` — adds a background behind the dancer: `stripes` (stripes moving toward the viewer from the distance), `grid` (a neon grid extending into the distance), `rays` (rotating rays), or `none`. The background moves faster when the music is louder and flashes on the beat. When a background is selected, any solid-colored background in the video (e.g., green screen) is removed automatically; there is no need to enable the `remove_bg` option separately.\n- `bg_color` — the color of the background: pink, light blue, lilac, orange, or silver.\n\n**Clean Screen.** By default, the node appears simply as an image, without a header, border, or sliders. Hover your mouse over it to reveal the settings (video, background, color, beats per cycle, shift, and background removal) at the top, and the tempo at the bottom. The ⚙ button in the bottom-right corner allows you to pin the settings panel in place. You can drag the node by clicking and holding the image itself. If you prefer the standard view—complete with a header and visible input fields—simply uncheck the \"CLEAN SCREEN\" option in the settings panel.\n\nThe video playback speed can be adjusted within a range of approximately x0.45 to x2.2. If you need a speed outside this range, adjust the `beats` value (e.g., by doubling or halving it)."
+      ],
+      "widgets_values_named": {
+        "text": "Neron Dancer (Video) – A dancer from a video clip\n\nJust for fun. This node doesn’t connect to anything and doesn’t perform any computations; it simply sits on your workspace and listens to the audio.\nIt’s a \"Neron-node\" that dances.\n\n- `palette`: Sets the color of the dancer’s hair and outfit (pink, blue, lilac, red/ginger, or silver).\n- `energy`: Controls how actively she moves.\n- It only listens to the audio playing within this page (triggered by the PLAY button). It does not record or transmit any data.\n\nThe node displays your video clip and synchronizes it with the music: it listens to the audio from a Neron-node, detects the tempo based on the beat, and adjusts the video playback speed so that the dance steps land on the beat. When the music stops, the video smoothly comes to a halt. It does not connect to other nodes and is not part of the processing queue.\n\n**How ​​to use**\n1. Add the node: NeronAudio -> Neron Dancer (Video).\n2. Place your video file in the `input/Neron_Dancers` folder, or click UPLOAD. Select it from the list (use ⟳ to refresh the list).\n3. Start the music using any Neron-node.\n\n**Video Guidelines** (to prevent browser overload; these are checked automatically upon upload)\n- File size: up to 40 MB.\n- Duration: up to 20 seconds (4–10 seconds is ideal).\n- Resolution: maximum 1280 pixels on the longest side (480–720 pixels is sufficient).\n- Supported formats: webm, mp4, m4v, mov, gif. Webm (VP9) or mp4 (h264) are recommended.\n- The best type of video is a looped dance sequence where the end transitions smoothly back into the beginning. **Fields**\n- `beats` — the number of musical beats that fit into one full cycle of your video (e.g., an 8-step dance sequence would be 8).\n- `shift` — an offset for the video (ranging from 0 to 1) used to align the musical beat with the corresponding movement.\n- `remove_bg` — removes a solid-colored background (the color is sampled from the corners of the frame). `bg_tolerance` determines how close a color must be to the background color to be removed. If your video already has a transparent background (such as a WebM file with an alpha channel), this option is not needed.\n\n- `background` — adds a background behind the dancer: `stripes` (stripes moving toward the viewer from the distance), `grid` (a neon grid extending into the distance), `rays` (rotating rays), or `none`. The background moves faster when the music is louder and flashes on the beat. When a background is selected, any solid-colored background in the video (e.g., green screen) is removed automatically; there is no need to enable the `remove_bg` option separately.\n- `bg_color` — the color of the background: pink, light blue, lilac, orange, or silver.\n\n**Clean Screen.** By default, the node appears simply as an image, without a header, border, or sliders. Hover your mouse over it to reveal the settings (video, background, color, beats per cycle, shift, and background removal) at the top, and the tempo at the bottom. The ⚙ button in the bottom-right corner allows you to pin the settings panel in place. You can drag the node by clicking and holding the image itself. If you prefer the standard view—complete with a header and visible input fields—simply uncheck the \"CLEAN SCREEN\" option in the settings panel.\n\nThe video playback speed can be adjusted within a range of approximately x0.45 to x2.2. If you need a speed outside this range, adjust the `beats` value (e.g., by doubling or halving it)."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 13,
+      "type": "Note",
+      "pos": [
+        136.03909964392398,
+        -110.93084150261042
+      ],
+      "size": [
+        354,
+        118
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "РУССКИЙ",
+      "properties": {},
+      "widgets_values": [
+        "=== NERON AUDIO STUDIO 2.0 ===\n\nНабор нод для ComfyUI, который превращает его в маленькую студию: режете и склеиваете видео, собираете звук из кусков, пишете бит и мелодию, сводите всё в Пульте с эквалайзером и эхом и сохраняете готовый клип со звуком. Слушать можно сразу на нодах, без Queue.\n\n--------------------------------------------------\n\nКАК УСТРОЕНО: КУБИКИ → ПОСРЕДНИКИ → ПУЛЬТ\n\nКубики (откуда берётся материал):\n🎬 Видео ×3 — до 3 роликов в одной ноде.\n🎵 Звук ×8 — до 8 звуков (mp3, wav и др.).\n🥁🎹 Музыка — барабаны и пианино в одной ноде.\n\nПосредники (что с материалом делают). У каждого есть ⏭ ПРОПУСТИТЬ — материал идёт в Пульт как есть:\n✂ Видео-сэмплер — режете куски роликов и собираете монтаж точно по кадрам.\n🎛 Сэмплер — собираете звук из кусков на сетке по тактам.\n🎛 Студия — каждая дорожка музыки отдельным каналом, поле сборки трека, общий эквалайзер на 10 полос.\n\n🎚 Пульт — сердце: сюда приходит всё. Видео, каналы звука, громкость, эквалайзер, эхо, SAVE WAV / SAVE VIDEO.\n🎨 Neron Theme — ни к чему не подключается: тема для всего ComfyUI (ноды по ролям, провода, подсветка) и живые огни в такт музыке. Наведите на карточку — примерить, клик — поставить.\nVideo Combine — сохраняет готовый ролик и показывает его.\nТанцовщица — просто для настроения (см. заметку рядом с ней).\n\nВсе ноды — в меню NeronAudio. У каждой ноды есть кнопка 📖 с подробной помощью.\n\n--------------------------------------------------\n\nУСТАНОВКА\n\n1. Скопируйте папку NeronAudioStudio в ComfyUI/custom_nodes/.\n2. Полностью перезапустите ComfyUI.\n3. Обновите страницу с очисткой кэша: Ctrl+F5.\n4. Откройте эту схему (Neron_Audio_Studio_v2.0.json) или двойной клик по пустому месту — поиск — Neron.\n\nСкачать: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n\nТребования: современный ComfyUI (Desktop подходит), ffmpeg для видео (уже есть, если стоит VideoHelperSuite или imageio-ffmpeg), браузер Chrome / Edge / ComfyUI Desktop.\n\n--------------------------------------------------\n\nС ЧЕГО НАЧАТЬ\n\n1. 🎬 Видео ×3: выберите ролик в списке или перетащите файл прямо на ноду.\n2. 🎵 Звук ×8: выберите трек. Или напишите бит в 🥁 Музыке.\n3. 🎚 Пульт: ▶ PLAY — музыка сама подстроится под длину ролика и мягко затихнет в конце.\n4. Хотите свой монтаж — отожмите ⏭ в Видео-сэмплере и положите куски роликов вниз.\n5. SAVE VIDEO в Пульте (или Queue) — готовый клип.\n\n--------------------------------------------------\n\nГДЕ ЧТО ЛЕЖИТ\n\nРолики: input/Neron_Video          Звуки: input/Neron_Audio\nСэмплы для барабанов и пианино: input/Neron_Drums/<набор>/<папки со звуками>\nПроекты (СОХРАНИТЬ/ОТКРЫТЬ): output/Neron_Projects\nСвёденный звук: output/Neron_Mixes     Готовые видео: output/Neron_Videos\nСборки монтажа Видео-сэмплера: output/Neron_Videos/_edits (старые удаляются сами)\nРолики танцовщицы: input/Neron_Dancers\n\n--------------------------------------------------\n\nПУЛЬТ — ГЛАВНОЕ\n\nКаждый канал: ▶ ■ M S, громкость, баланс, НИЗ / СЕР / ВЕРХ, ЭХО + помещение (комната / зал / собор), индикатор уровня.\nПО ДЛИНЕ ВИДЕО — музыка ровно под ролик; длинный трек затихает в конце.\nЖёлтая рамка на волне трека — тяните её, чтобы выбрать, какой кусок трека звучит под роликом.\n⚙ ДЛЯ СПЕЦОВ — длина затухания, 🎯 темп под видео.\n\n--------------------------------------------------\n\nЧАСТЫЕ ПРОБЛЕМЫ\n\nНода выглядит странно / нет новых кнопок: Ctrl+F5, при необходимости удалите ноду и добавьте заново.\nПульт молчит: нажмите PLAY, проверьте M, S, MASTER и ⏭ у посредников.\nВ Пульте «Монтаж пуст»: Видео-сэмплер включён, но кусков нет — положите куски или нажмите ⏭.\nSAVE VIDEO не склеивает: нужен ffmpeg.\nОгни темы тормозят: в ноде 🎨 Neron Theme → СОЗДАТЬ выберите ЖИВОСТЬ — СПОКОЙНО или ВЫКЛ.\n\n--------------------------------------------------\n\nОГРАНИЧЕНИЯ\n\nДо 3 роликов, до 8 звуков, до 8 входов в Пульте, до 16 дорожек в Студии.\nСхема версии 1 (Neron_Audio_Studio_v1.0_Beta.json) по-прежнему работает."
+      ],
+      "widgets_values_named": {
+        "text": "=== NERON AUDIO STUDIO 2.0 ===\n\nНабор нод для ComfyUI, который превращает его в маленькую студию: режете и склеиваете видео, собираете звук из кусков, пишете бит и мелодию, сводите всё в Пульте с эквалайзером и эхом и сохраняете готовый клип со звуком. Слушать можно сразу на нодах, без Queue.\n\n--------------------------------------------------\n\nКАК УСТРОЕНО: КУБИКИ → ПОСРЕДНИКИ → ПУЛЬТ\n\nКубики (откуда берётся материал):\n🎬 Видео ×3 — до 3 роликов в одной ноде.\n🎵 Звук ×8 — до 8 звуков (mp3, wav и др.).\n🥁🎹 Музыка — барабаны и пианино в одной ноде.\n\nПосредники (что с материалом делают). У каждого есть ⏭ ПРОПУСТИТЬ — материал идёт в Пульт как есть:\n✂ Видео-сэмплер — режете куски роликов и собираете монтаж точно по кадрам.\n🎛 Сэмплер — собираете звук из кусков на сетке по тактам.\n🎛 Студия — каждая дорожка музыки отдельным каналом, поле сборки трека, общий эквалайзер на 10 полос.\n\n🎚 Пульт — сердце: сюда приходит всё. Видео, каналы звука, громкость, эквалайзер, эхо, SAVE WAV / SAVE VIDEO.\n🎨 Neron Theme — ни к чему не подключается: тема для всего ComfyUI (ноды по ролям, провода, подсветка) и живые огни в такт музыке. Наведите на карточку — примерить, клик — поставить.\nVideo Combine — сохраняет готовый ролик и показывает его.\nТанцовщица — просто для настроения (см. заметку рядом с ней).\n\nВсе ноды — в меню NeronAudio. У каждой ноды есть кнопка 📖 с подробной помощью.\n\n--------------------------------------------------\n\nУСТАНОВКА\n\n1. Скопируйте папку NeronAudioStudio в ComfyUI/custom_nodes/.\n2. Полностью перезапустите ComfyUI.\n3. Обновите страницу с очисткой кэша: Ctrl+F5.\n4. Откройте эту схему (Neron_Audio_Studio_v2.0.json) или двойной клик по пустому месту — поиск — Neron.\n\nСкачать: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n\nТребования: современный ComfyUI (Desktop подходит), ffmpeg для видео (уже есть, если стоит VideoHelperSuite или imageio-ffmpeg), браузер Chrome / Edge / ComfyUI Desktop.\n\n--------------------------------------------------\n\nС ЧЕГО НАЧАТЬ\n\n1. 🎬 Видео ×3: выберите ролик в списке или перетащите файл прямо на ноду.\n2. 🎵 Звук ×8: выберите трек. Или напишите бит в 🥁 Музыке.\n3. 🎚 Пульт: ▶ PLAY — музыка сама подстроится под длину ролика и мягко затихнет в конце.\n4. Хотите свой монтаж — отожмите ⏭ в Видео-сэмплере и положите куски роликов вниз.\n5. SAVE VIDEO в Пульте (или Queue) — готовый клип.\n\n--------------------------------------------------\n\nГДЕ ЧТО ЛЕЖИТ\n\nРолики: input/Neron_Video          Звуки: input/Neron_Audio\nСэмплы для барабанов и пианино: input/Neron_Drums/<набор>/<папки со звуками>\nПроекты (СОХРАНИТЬ/ОТКРЫТЬ): output/Neron_Projects\nСвёденный звук: output/Neron_Mixes     Готовые видео: output/Neron_Videos\nСборки монтажа Видео-сэмплера: output/Neron_Videos/_edits (старые удаляются сами)\nРолики танцовщицы: input/Neron_Dancers\n\n--------------------------------------------------\n\nПУЛЬТ — ГЛАВНОЕ\n\nКаждый канал: ▶ ■ M S, громкость, баланс, НИЗ / СЕР / ВЕРХ, ЭХО + помещение (комната / зал / собор), индикатор уровня.\nПО ДЛИНЕ ВИДЕО — музыка ровно под ролик; длинный трек затихает в конце.\nЖёлтая рамка на волне трека — тяните её, чтобы выбрать, какой кусок трека звучит под роликом.\n⚙ ДЛЯ СПЕЦОВ — длина затухания, 🎯 темп под видео.\n\n--------------------------------------------------\n\nЧАСТЫЕ ПРОБЛЕМЫ\n\nНода выглядит странно / нет новых кнопок: Ctrl+F5, при необходимости удалите ноду и добавьте заново.\nПульт молчит: нажмите PLAY, проверьте M, S, MASTER и ⏭ у посредников.\nВ Пульте «Монтаж пуст»: Видео-сэмплер включён, но кусков нет — положите куски или нажмите ⏭.\nSAVE VIDEO не склеивает: нужен ffmpeg.\nОгни темы тормозят: в ноде 🎨 Neron Theme → СОЗДАТЬ выберите ЖИВОСТЬ — СПОКОЙНО или ВЫКЛ.\n\n--------------------------------------------------\n\nОГРАНИЧЕНИЯ\n\nДо 3 роликов, до 8 звуков, до 8 входов в Пульте, до 16 дорожек в Студии.\nСхема версии 1 (Neron_Audio_Studio_v1.0_Beta.json) по-прежнему работает."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 14,
+      "type": "Note",
+      "pos": [
+        501.8768431692798,
+        -111.00492013982205
+      ],
+      "size": [
+        354,
+        118
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "English",
+      "properties": {},
+      "widgets_values": [
+        "=== NERON AUDIO STUDIO 2.0 ===\n\nA set of nodes that turns ComfyUI into a small studio: cut and join video, build sound from pieces, write beats and melodies, mix everything in the Pult with EQ and reverb, and save a finished clip with sound. You hear everything right on the nodes, no Queue needed.\n\n--------------------------------------------------\n\nHOW IT WORKS: CUBES → MIDDLE NODES → PULT\n\nCubes (where the material comes from):\n🎬 Video ×3 — up to 3 clips in one node.\n🎵 Sound ×8 — up to 8 sounds (mp3, wav, …).\n🥁🎹 Music — drums and piano in one node.\n\nMiddle nodes (what you do with it). Each has ⏭ BYPASS — the material goes to the Pult as it is:\n✂ Video Sampler — cut clip pieces into a frame-accurate edit.\n🎛 Sampler — build sound from pieces on a bar grid.\n🎛 Studio — every music track as its own channel, an arrange field, a 10-band master EQ.\n\n🎚 Pult — the heart: everything comes here. Video, sound channels, volume, EQ, reverb, SAVE WAV / SAVE VIDEO.\n🎨 Neron Theme — not wired to anything: a theme for the whole ComfyUI (nodes by role, wires, backlight) and live lights on the beat. Hover a card to try it, click to apply.\nVideo Combine — saves and shows the finished clip.\nDancer — just for fun (see the note next to her).\n\nAll nodes are in the NeronAudio menu. Every node has a 📖 button with detailed help.\n\n--------------------------------------------------\n\nINSTALLATION\n\n1. Copy the NeronAudioStudio folder into ComfyUI/custom_nodes/.\n2. Restart ComfyUI completely.\n3. Refresh the page with cache clear: Ctrl+F5.\n4. Open this workflow (Neron_Audio_Studio_v2.0.json) or double-click the canvas — search — Neron.\n\nDownload: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n\nRequirements: a modern ComfyUI (Desktop works), ffmpeg for video (already there with VideoHelperSuite or imageio-ffmpeg), Chrome / Edge / ComfyUI Desktop.\n\n--------------------------------------------------\n\nQUICK START\n\n1. 🎬 Video ×3: pick a clip in the list or drop a file onto the node.\n2. 🎵 Sound ×8: pick a track. Or write a beat in 🥁 Music.\n3. 🎚 Pult: ▶ PLAY — the music fits the clip length and fades out at the end.\n4. Want your own edit — release ⏭ in the Video Sampler and drop clip pieces down.\n5. SAVE VIDEO in the Pult (or Queue) — the finished clip.\n\n--------------------------------------------------\n\nWHERE THINGS ARE\n\nClips: input/Neron_Video          Sounds: input/Neron_Audio\nSamples for drums and piano: input/Neron_Drums/<kit>/<sound folders>\nProjects (SAVE/OPEN): output/Neron_Projects\nMixed sound: output/Neron_Mixes     Finished videos: output/Neron_Videos\nVideo Sampler edit builds: output/Neron_Videos/_edits (old ones are removed automatically)\nDancer clips: input/Neron_Dancers\n\n--------------------------------------------------\n\nPULT — THE ESSENTIALS\n\nEvery channel: ▶ ■ M S, volume, pan, LOW / MID / HIGH, REVERB + room (room / hall / cathedral), level meter.\nFIT TO VIDEO — the music matches the clip; long tracks fade out at the end.\nThe yellow frame on a track wave — drag it to choose which part plays under the clip.\n⚙ EXPERT — fade length, 🎯 tempo to video.\n\n--------------------------------------------------\n\nTROUBLESHOOTING\n\nA node looks odd / new buttons missing: Ctrl+F5; if needed delete the node and add it again.\nThe Pult is silent: press PLAY, check M, S, MASTER and ⏭ on the middle nodes.\n\"The edit is empty\" in the Pult: the Video Sampler is on but has no pieces — add pieces or press ⏭.\nSAVE VIDEO does not join: ffmpeg is required.\nTheme lights are slow: in the 🎨 Neron Theme node → CREATE set LIFE to CALM or OFF.\n\n--------------------------------------------------\n\nLIMITATIONS\n\nUp to 3 clips, up to 8 sounds, up to 8 inputs in the Pult, up to 16 tracks in the Studio.\nThe version 1 workflow (Neron_Audio_Studio_v1.0_Beta.json) still works."
+      ],
+      "widgets_values_named": {
+        "text": "=== NERON AUDIO STUDIO 2.0 ===\n\nA set of nodes that turns ComfyUI into a small studio: cut and join video, build sound from pieces, write beats and melodies, mix everything in the Pult with EQ and reverb, and save a finished clip with sound. You hear everything right on the nodes, no Queue needed.\n\n--------------------------------------------------\n\nHOW IT WORKS: CUBES → MIDDLE NODES → PULT\n\nCubes (where the material comes from):\n🎬 Video ×3 — up to 3 clips in one node.\n🎵 Sound ×8 — up to 8 sounds (mp3, wav, …).\n🥁🎹 Music — drums and piano in one node.\n\nMiddle nodes (what you do with it). Each has ⏭ BYPASS — the material goes to the Pult as it is:\n✂ Video Sampler — cut clip pieces into a frame-accurate edit.\n🎛 Sampler — build sound from pieces on a bar grid.\n🎛 Studio — every music track as its own channel, an arrange field, a 10-band master EQ.\n\n🎚 Pult — the heart: everything comes here. Video, sound channels, volume, EQ, reverb, SAVE WAV / SAVE VIDEO.\n🎨 Neron Theme — not wired to anything: a theme for the whole ComfyUI (nodes by role, wires, backlight) and live lights on the beat. Hover a card to try it, click to apply.\nVideo Combine — saves and shows the finished clip.\nDancer — just for fun (see the note next to her).\n\nAll nodes are in the NeronAudio menu. Every node has a 📖 button with detailed help.\n\n--------------------------------------------------\n\nINSTALLATION\n\n1. Copy the NeronAudioStudio folder into ComfyUI/custom_nodes/.\n2. Restart ComfyUI completely.\n3. Refresh the page with cache clear: Ctrl+F5.\n4. Open this workflow (Neron_Audio_Studio_v2.0.json) or double-click the canvas — search — Neron.\n\nDownload: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n\nRequirements: a modern ComfyUI (Desktop works), ffmpeg for video (already there with VideoHelperSuite or imageio-ffmpeg), Chrome / Edge / ComfyUI Desktop.\n\n--------------------------------------------------\n\nQUICK START\n\n1. 🎬 Video ×3: pick a clip in the list or drop a file onto the node.\n2. 🎵 Sound ×8: pick a track. Or write a beat in 🥁 Music.\n3. 🎚 Pult: ▶ PLAY — the music fits the clip length and fades out at the end.\n4. Want your own edit — release ⏭ in the Video Sampler and drop clip pieces down.\n5. SAVE VIDEO in the Pult (or Queue) — the finished clip.\n\n--------------------------------------------------\n\nWHERE THINGS ARE\n\nClips: input/Neron_Video          Sounds: input/Neron_Audio\nSamples for drums and piano: input/Neron_Drums/<kit>/<sound folders>\nProjects (SAVE/OPEN): output/Neron_Projects\nMixed sound: output/Neron_Mixes     Finished videos: output/Neron_Videos\nVideo Sampler edit builds: output/Neron_Videos/_edits (old ones are removed automatically)\nDancer clips: input/Neron_Dancers\n\n--------------------------------------------------\n\nPULT — THE ESSENTIALS\n\nEvery channel: ▶ ■ M S, volume, pan, LOW / MID / HIGH, REVERB + room (room / hall / cathedral), level meter.\nFIT TO VIDEO — the music matches the clip; long tracks fade out at the end.\nThe yellow frame on a track wave — drag it to choose which part plays under the clip.\n⚙ EXPERT — fade length, 🎯 tempo to video.\n\n--------------------------------------------------\n\nTROUBLESHOOTING\n\nA node looks odd / new buttons missing: Ctrl+F5; if needed delete the node and add it again.\nThe Pult is silent: press PLAY, check M, S, MASTER and ⏭ on the middle nodes.\n\"The edit is empty\" in the Pult: the Video Sampler is on but has no pieces — add pieces or press ⏭.\nSAVE VIDEO does not join: ffmpeg is required.\nTheme lights are slow: in the 🎨 Neron Theme node → CREATE set LIFE to CALM or OFF.\n\n--------------------------------------------------\n\nLIMITATIONS\n\nUp to 3 clips, up to 8 sounds, up to 8 inputs in the Pult, up to 16 tracks in the Studio.\nThe version 1 workflow (Neron_Audio_Studio_v1.0_Beta.json) still works."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 15,
+      "type": "NeronDJPult",
+      "pos": [
+        2140.0900369480814,
+        934.9209187855063
+      ],
+      "size": [
+        1180,
+        767
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "deck_a",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "deck_b",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "pad_sounds",
+          "shape": 7,
+          "type": "AUDIO,NERON_SOUNDS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            10
+          ]
+        },
+        {
+          "name": "saved_path",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronDJPult"
+      },
+      "widgets_values": [
+        "{\"version\": 1, \"rec\": null, \"xfade\": 8.0}",
+        "neron_dj_set",
+        ""
+      ],
+      "widgets_values_named": {
+        "dj_json": "{\"version\": 1, \"rec\": null, \"xfade\": 8.0}",
+        "save_name": "neron_dj_set",
+        "neron_dj": ""
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "NERON_VIDEOS"
+    ],
+    [
+      2,
+      2,
+      0,
+      8,
+      0,
+      "NERON_VIDEOS"
+    ],
+    [
+      3,
+      3,
+      0,
+      4,
+      0,
+      "NERON_SOUNDS"
+    ],
+    [
+      4,
+      4,
+      0,
+      8,
+      2,
+      "NERON_SOUNDS"
+    ],
+    [
+      5,
+      5,
+      0,
+      6,
+      0,
+      "NERON_SOUNDS"
+    ],
+    [
+      7,
+      8,
+      0,
+      10,
+      2,
+      "AUDIO"
+    ],
+    [
+      9,
+      8,
+      3,
+      10,
+      0,
+      "VIDEO"
+    ],
+    [
+      6,
+      6,
+      0,
+      8,
+      3,
+      "NERON_SOUNDS"
+    ],
+    [
+      8,
+      8,
+      4,
+      10,
+      3,
+      "FLOAT"
+    ],
+    [
+      10,
+      15,
+      0,
+      8,
+      4,
+      "AUDIO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5445000000000005,
+      "offset": [
+        983.6835285986581,
+        525.7215359739653
+      ]
+    },
+    "frontendVersion": "1.57.4",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

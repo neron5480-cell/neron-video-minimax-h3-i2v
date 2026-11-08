@@ -13,24 +13,39 @@ log = logging.getLogger("Neron.Studio")
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _STATIC = os.path.join(_HERE, "static")
 
-# плитка → процессы Neron по порядку предпочтения (путь внутри пакета Neron)
+# плитка → процессы Neron по порядку предпочтения.
+# «@имя» — копия проверенного процесса, которая лежит в самом Neron Studio (папка workflows) — как есть, без правок;
+# остальное — путь внутри пакета Neron (если стоит весь пакет — берётся его версия).
 _ONE = "ComfyUI-NeronH3One/workflows/Neron_H3_One.json"
 _STORY = "ComfyUI-NeronH3Story/workflows/Neron_H3_Story_AutoPrompter.json"
 _RESTORE = "workflow/Neron_Restore_Studio_Photoshop.json"
 WORKFLOWS = {
-    "one": [_ONE, "Neron_Studio_H3/Neron_H3_Full_Pipeline.json"],
-    "timing": [_ONE, "Neron_Studio_H3/Neron_H3_Full_Pipeline.json"],
-    "models": [_ONE, _STORY],
-    "story": [_STORY, "ComfyUI-NeronH3Story/workflows/Neron_H3_Story.json"],
-    "swap": ["ComfyUI-NeronH3One/workflows/Neron_H3_Swap.json"],
-    "ltx": ["ComfyUI-NeronLTXEngine/workflows/Neron_LTX_AutoPrompter.json",
+    # 🎬 Видео
+    "h3v3": ["@neronVideoMinimaxH3_v3.0.json"],
+    "ltx": ["@Neron_LTX_Engine_AutoPrompter.json",
+            "ComfyUI-NeronLTXEngine/workflows/Neron_LTX_AutoPrompter.json",
             "ComfyUI-NeronLTXEngine/workflows/Neron_LTX_Engine.json"],
-    "clarity": ["ComfyUI-PerceptionRelay/workflows/perception_relay_pult.json",
+    "ltx23": ["@Neron_LTX_2.3_Image_to_Video.json"],
+    "story": [_STORY, "ComfyUI-NeronH3Story/workflows/Neron_H3_Story.json"],
+    "full": ["@Neron_H3_Full_Pipeline.json", "Neron_Studio_H3/Neron_H3_Full_Pipeline.json"],
+    "dialog": ["@neronSmartMiniMaxH3_v1.0.json", "workflow/neronSmartMiniMaxH3_v1.0.json"],
+    "scail": ["@Neron_SCAIL_Wan21_gguf.json"],
+    "clarity": ["@perception_relay_pult.json",
+                "ComfyUI-PerceptionRelay/workflows/perception_relay_pult.json",
                 "ComfyUI-PerceptionRelay/workflows/perception_relay_basic.json"],
-    "audio": ["NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json"],
-    "restore": [_RESTORE],
-    "outpaint": ["workflow/Neron_Flux_Fill_PreProcessor.json", _RESTORE],   # свой процесс: фото → широкий кадр
-    "upscale": [_RESTORE],
+    "raw": ["@Neron_H3_Raw_Engine.json"],
+    # 🖼 Картинки
+    "outpaint": ["@Neron_Flux_Fill_PreProcessor.json", "workflow/Neron_Flux_Fill_PreProcessor.json"],
+    "restore": ["@Neron_Restore_Studio_Photoshop.json", _RESTORE],
+    "upscale": ["@Neron_Restore_Studio_Photoshop.json", _RESTORE],
+    # 🎵 Звук
+    "audio": ["@Neron_Audio_Studio_v2.0.json", "NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json"],
+    # 🧪 Тест (альфа)
+    "one": [_ONE],
+    "timing": [_ONE],
+    "swap": ["ComfyUI-NeronH3One/workflows/Neron_H3_Swap.json"],
+    # служебное
+    "models": [_ONE, _STORY],
 }
 
 
@@ -50,6 +65,11 @@ def _roots():
 def find_workflow(tid):
     """Путь к процессу плитки: пакет Neron целиком (custom_nodes/<пакет>/…) или папка ноды отдельно."""
     for rel in WORKFLOWS.get(tid, []):
+        if rel.startswith("@"):                                      # своя копия в Neron Studio/workflows
+            own = os.path.join(_HERE, "workflows", rel[1:])
+            if os.path.isfile(own):
+                return own
+            continue
         parts = rel.split("/")
         for root in _roots():
             cand = [os.path.join(root, *parts)]                      # папка ноды отдельно: custom_nodes/<папка>/…

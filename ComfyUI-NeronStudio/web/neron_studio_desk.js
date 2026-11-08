@@ -5,8 +5,17 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-const VERSION = "2026.11.08·6";                 // видно в подсказке монеты и на полосе — какая версия загружена
+const VERSION = "2026.11.08·7";                 // видно в подсказке монеты и на полосе — какая версия загружена
 const POS_KEY = "neron-studio-coin-pos";
+// язык: как выбран на столе, иначе — по языку системы (русский/украинский/белорусский/казахский → RU, остальное → EN)
+const LANG_KEY = "neron-studio-lang";
+function lang() {
+    try { const v = localStorage.getItem(LANG_KEY); if (v === "ru" || v === "en") return v; } catch (_) {}
+    return /^(ru|uk|be|kk)\b/i.test(navigator.language || "") ? "ru" : "en";
+}
+const L = (ru, en) => (lang() === "ru" ? ru : en);
+// последняя ошибка ComfyUI — для «✉ Написать создателю» на столе (хранится только в этом браузере)
+const ERR_KEY = "neron-studio-last-error";
 const SIZE = 46, MARGIN = 6;
 let overlay = null, frame = null;
 
@@ -32,14 +41,15 @@ function tellDesk(text) {
 async function openWorkflow(id, title) {
     let res;
     try { res = await api.fetchApi(`/neron_studio/workflow/${encodeURIComponent(id)}`, { cache: "no-store" }); }
-    catch (_) { tellDesk("Нет связи с ComfyUI. Перезапустите ComfyUI и попробуйте ещё раз."); return; }
+    catch (_) { tellDesk(L("Нет связи с ComfyUI. Перезапустите ComfyUI и попробуйте ещё раз.", "No connection to ComfyUI. Restart ComfyUI and try again.")); return; }
     if (!res.ok) {
-        tellDesk(`Процесс «${title}» не установлен. Обновите пакет Neron (Manager → Neron → Обновить) и перезапустите ComfyUI.`);
+        tellDesk(L(`Процесс «${title}» не установлен. Обновите пакет Neron (Manager → Neron → Обновить) и перезапустите ComfyUI.`,
+                   `«${title}» is not installed. Update the Neron pack (Manager → Neron → Update) and restart ComfyUI.`));
         return;
     }
     let data;
     try { data = await res.json(); }
-    catch (_) { tellDesk(`Файл процесса «${title}» повреждён. Переустановите пакет Neron.`); return; }
+    catch (_) { tellDesk(L(`Файл процесса «${title}» повреждён. Переустановите пакет Neron.`, `The «${title}» workflow file is damaged. Reinstall the Neron pack.`)); return; }
     const file = (res.headers.get("X-Neron-Workflow") || title || "Neron").replace(/\.json$/i, "");
     try {
         await app.loadGraphData(data, true, true, file);
@@ -47,7 +57,7 @@ async function openWorkflow(id, title) {
         enterStudioMode(title);
     } catch (e) {
         console.error("[Neron Studio] open workflow", e);
-        tellDesk(`ComfyUI не смог открыть «${title}»: ${e?.message || e}`);
+        tellDesk(L(`ComfyUI не смог открыть «${title}»: `, `ComfyUI could not open «${title}»: `) + (e?.message || e));
     }
 }
 
@@ -132,7 +142,7 @@ function drawClock() {
         const steps = M.total > 1 ? ` · ${M.i}/${M.total}` : "";
         c.textContent = `⏱ ${fmt(Date.now() - M.t0)}${M.stage ? " · " + M.stage : ""}${steps}`;
     } else if (M.t0) {
-        c.textContent = `⏱ ${fmt(M.end - M.t0)} · ` + (M.result === "ok" ? "готово ✓" : M.result === "error" ? "ошибка" : "остановлено");
+        c.textContent = `⏱ ${fmt(M.end - M.t0)} · ` + (M.result === "ok" ? L("готово ✓", "done ✓") : M.result === "error" ? L("ошибка", "error") : L("остановлено", "stopped"));
     } else c.textContent = "⏱ --:--";
 }
 
@@ -151,11 +161,11 @@ function buildBar() {
     b.id = "neron-studio-bar";
     b.innerHTML = `<div class="nsb-coin" title="Neron Studio ${VERSION}">N</div><span class="nsb-name">NERON STUDIO</span>
       <span class="nsb-sep"></span><span class="nsb-proc"></span><span class="nsb-sep"></span>
-      <button type="button" class="nsb-home" title="Вернуться на рабочий стол">🏠 Стол</button>
-      <button type="button" class="nsb-run" title="Запустить этот процесс (как «Запустить» ComfyUI)">▶ Создать</button>
-      <button type="button" class="nsb-stop" title="Остановить генерацию" hidden>■ Стоп</button>
+      <button type="button" class="nsb-home"></button>
+      <button type="button" class="nsb-run"></button>
+      <button type="button" class="nsb-stop" hidden></button>
       <span class="nsb-clock">⏱ --:--</span>
-      <button type="button" class="nsb-x" title="Снять оформление Studio — обычный ComfyUI">✕</button>`;
+      <button type="button" class="nsb-x">✕</button>`;
     b.querySelector(".nsb-home").onclick = openStudio;
     b.querySelector(".nsb-coin").onclick = openStudio;
     b.querySelector(".nsb-run").onclick = runQueue;
@@ -163,7 +173,20 @@ function buildBar() {
     b.querySelector(".nsb-x").onclick = () => exitStudioMode();
     document.body.append(b);
     M.bar = b;
+    barText();
     return b;
+}
+function barText() {                                               // подписи полосы — на языке стола
+    const b = M.bar; if (!b) return;
+    const set = (sel, text, tip) => { const el = b.querySelector(sel); if (text != null) el.textContent = text; el.title = tip; };
+    set(".nsb-home", L("🏠 Стол", "🏠 Desktop"), L("Вернуться на рабочий стол", "Back to the desktop"));
+    set(".nsb-run", L("▶ Создать", "▶ Create"), L("Запустить этот процесс (как «Запустить» ComfyUI)", "Run this workflow (same as ComfyUI «Run»)"));
+    set(".nsb-stop", L("■ Стоп", "■ Stop"), L("Остановить генерацию", "Stop generation"));
+    set(".nsb-x", null, L("Снять оформление Studio — обычный ComfyUI", "Leave the Studio look — plain ComfyUI"));
+}
+function coinTip() {
+    const c = document.getElementById("neron-studio-coin");
+    if (c) c.title = `Neron Studio ${VERSION} — ` + L("щёлкни: открыть стол · потяни: переставить", "click: open desktop · drag: move");
 }
 
 function skin(on, tries = 0) {
@@ -266,13 +289,23 @@ function exitStudioMode(quiet) {
     cleanScreen(false);
 }
 
+function saveError(d) {
+    d = d || {};
+    const cut = (v, n) => String(v ?? "").slice(0, n);
+    const tb = Array.isArray(d.traceback) ? d.traceback.join("").split("\n").filter(Boolean).slice(-14).join("\n") : "";
+    const rec = { at: new Date().toISOString(), workflow: M.on ? M.title : (app.extensionManager?.workflow?.activeWorkflow?.filename || ""),
+        node: cut(d.node_type, 120), node_id: cut(d.node_id, 20), type: cut(d.exception_type, 120),
+        message: cut(d.exception_message, 1500), traceback: cut(tb, 3000) };
+    try { localStorage.setItem(ERR_KEY, JSON.stringify(rec)); } catch (_) {}
+}
+
 function hookRun() {
     const start = () => { M.running = true; M.t0 = Date.now(); M.stage = ""; M.i = 0; M.total = 0; M.result = "";
         clearInterval(M.timer); M.timer = setInterval(drawClock, 500); drawClock(); };
     const finish = (r) => { if (!M.running) return; M.running = false; M.end = Date.now(); M.result = r; clearInterval(M.timer); drawClock(); };
     api.addEventListener("execution_start", start);
     api.addEventListener("execution_success", () => finish("ok"));
-    api.addEventListener("execution_error", () => finish("error"));
+    api.addEventListener("execution_error", (e) => { finish("error"); saveError(e.detail); });
     api.addEventListener("execution_interrupted", () => finish("stop"));
     api.addEventListener("executing", (e) => {
         const d = e.detail, id = (d && typeof d === "object") ? (d.display_node ?? d.node) : d;
@@ -292,6 +325,7 @@ addEventListener("message", (e) => {
     if (!d || !d.neronStudio) return;
     if (d.neronStudio === "close") { closeStudio(); if (M.on) exitStudioMode(); }
     if (d.neronStudio === "open" && d.id) openWorkflow(String(d.id), String(d.title || d.id));
+    if (d.neronStudio === "lang") { barText(); coinTip(); }
 });
 addEventListener("keydown", (e) => { if (e.key === "Escape" && overlay && !overlay.hidden) closeStudio(); });
 
@@ -314,7 +348,7 @@ function addCoin() {
     const b = document.createElement("button");
     b.id = "neron-studio-coin";
     b.type = "button";
-    b.title = `Neron Studio ${VERSION} — щёлкни: открыть стол · потяни: переставить\nclick: open desktop · drag: move`;
+
     b.textContent = "N";
     b.style.cssText = `position:fixed;z-index:9999;width:${SIZE}px;height:${SIZE}px;border-radius:50%;` +
         "border:0;cursor:pointer;font:700 22px Georgia,serif;color:#4a2c06;touch-action:none;user-select:none;" +
@@ -352,6 +386,7 @@ function addCoin() {
     b.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openStudio(); } });
     addEventListener("resize", () => { [x, y] = place(b, x, y); });
     document.body.append(b);
+    coinTip();
 }
 
 app.registerExtension({
@@ -360,6 +395,7 @@ app.registerExtension({
     menuCommands: [{ path: ["Neron"], commands: ["Neron.Studio.Open"] }],
     async setup() {
         addCoin();
+        addEventListener("storage", (e) => { if (e.key === LANG_KEY) { barText(); coinTip(); } });
         hookRun();
         try {                                                     // процесс был открыт со стола — оформление на месте
             const m = JSON.parse(localStorage.getItem(MODE_KEY) || "null");

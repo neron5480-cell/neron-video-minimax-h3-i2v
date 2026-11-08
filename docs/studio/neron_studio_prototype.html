@@ -1,5 +1,9 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Neron Studio</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@600;700&family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -49,7 +53,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .bg-dim { position: absolute; inset: 0; background: var(--ink); opacity: var(--bgdim); }
 .bar, .hint, .desk { position: relative; z-index: 1; }
 .has-bg .tile { background: color-mix(in srgb, var(--panel) var(--tileop), transparent); backdrop-filter: blur(12px) saturate(1.2); -webkit-backdrop-filter: blur(12px) saturate(1.2); }
-.has-bg .tabs, .has-bg .tool { background: color-mix(in srgb, var(--panel) 85%, transparent); backdrop-filter: blur(8px); }
+.has-bg .crumbs, .has-bg .seg, .has-bg .tool, .has-bg .report { background: color-mix(in srgb, var(--panel) 85%, transparent); backdrop-filter: blur(8px); }
 .has-bg .hint { color: var(--text); text-shadow: 0 1px 3px rgba(0, 0, 0, .6); }
 .drawer h3 { margin: 14px 0 6px; font: 600 13px var(--f-body); color: var(--text); }
 .row2 { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -69,16 +73,20 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 }
 .brand h1 { margin: 0; font: 700 26px/1 var(--f-display); letter-spacing: .08em; color: var(--gold); text-wrap: balance; }
 .brand small { display: block; font: 500 11px var(--f-body); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
-.tabs { display: flex; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); flex-wrap: wrap; }
-.tabs button, .tool {
+.crumbs, .seg { display: flex; align-items: center; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); flex-wrap: wrap; min-width: 0; }
+.crumbs .sep { color: var(--muted); padding: 0 2px; }
+.crumbs button[aria-current="page"] { color: var(--gold); cursor: default; }
+.crumbs .back { color: var(--text); border: 1px solid var(--line); }
+.seg button { font: 600 12px var(--f-mono); color: var(--muted); background: transparent; border: 0; border-radius: 7px; padding: 6px 9px; cursor: pointer; }
+.seg button[aria-pressed="true"] { color: var(--ink); background: var(--bronze); }
+.crumbs button, .tool {
   font: 600 13px var(--f-body); color: var(--muted); background: transparent; border: 0; border-radius: 7px;
   padding: 7px 12px; cursor: pointer;
 }
-.tabs button[aria-pressed="true"] { color: var(--ink); background: var(--bronze); }
+
 .tools { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
 .tool { border: 1px solid var(--line); background: var(--panel); color: var(--text); }
-.tool:hover, .tabs button:hover { color: var(--gold); }
-.tabs button[aria-pressed="true"]:hover { color: var(--ink); }
+.tool:hover, .crumbs button:not([aria-current]):hover, .seg button:not([aria-pressed="true"]):hover { color: var(--gold); }
 button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .hint { color: var(--muted); font-size: 12px; margin: -6px 0 14px; }
 
@@ -141,34 +149,61 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   display: flex; gap: 12px; align-items: center; padding: 10px 14px; border-radius: 10px; background: #2a1c12; border: 1px solid var(--bronze);
   box-shadow: 0 12px 40px rgba(0, 0, 0, .6); font-size: 13px; max-width: calc(100vw - 32px); color: var(--text); background: var(--panel-2); }
 .toast button { font: 600 12px var(--f-body); background: var(--bronze); color: var(--ink); border: 0; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+/* папка на столе: кнопка «Открыть ›» — золотом */
+.tile[data-kind="folder"] .open { background: var(--gold); }
+.tile[data-kind="folder"] .open:hover { background: var(--bronze); }
+/* ---------- ✉ написать создателю (папка «Тест») ---------- */
+.report { position: relative; z-index: 1; margin-top: 22px; padding: 16px; border-radius: 14px; border: 1px solid var(--alpha);
+  background: linear-gradient(180deg, var(--panel-2), var(--panel)); box-shadow: 0 10px 30px rgba(0, 0, 0, .45); max-width: 900px; }
+.report h2 { margin: 0 0 4px; font: 700 20px var(--f-display); letter-spacing: .06em; color: var(--gold); }
+.report p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
+.rp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.report label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); min-width: 0; }
+.report .rp-wide { margin-top: 10px; }
+.report select, .report input:not([type="checkbox"]), .report textarea {
+  font: 14px var(--f-body); color: var(--text); background: var(--well); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; min-width: 0; }
+.report textarea { resize: vertical; min-height: 84px; }
+.report select:focus-visible, .report input:focus-visible, .report textarea:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+.rp-check { display: flex !important; align-items: center; gap: 8px; margin-top: 10px; color: var(--text) !important; font-size: 13px !important; }
+.rp-check input { accent-color: var(--bronze); width: 16px; height: 16px; }
+.report details { margin-top: 8px; font-size: 12px; color: var(--muted); }
+.report summary { cursor: pointer; }
+.report pre { margin: 6px 0 0; padding: 10px; border-radius: 8px; background: var(--well); border: 1px solid var(--line); color: var(--text);
+  font: 11px/1.45 var(--f-mono); white-space: pre-wrap; word-break: break-word; max-height: 220px; overflow: auto; }
+.rp-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+.rp-row .open { padding: 8px 16px; font-size: 13px; }
+.rp-row .open:disabled { opacity: .6; cursor: progress; }
+.rp-state { font-size: 13px; color: var(--text); }
 @media (max-width: 700px) {
+  .rp-grid { grid-template-columns: 1fr; }
   .brand h1 { font-size: 22px; }
   .tools { margin-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .tile, .ghost { transition: none; } }
 </style>
+</head>
+<body>
+
 
 <div class="bg-layer" id="bgLayer" hidden><img id="bgImg" alt="" hidden><video id="bgVid" muted loop playsinline autoplay hidden></video><div class="bg-dim"></div></div>
 <header class="bar">
   <div class="brand">
     <div class="coin" aria-hidden="true">N</div>
-    <div><h1>NERON STUDIO</h1><small>рабочий стол · desktop · ComfyUI</small></div>
+    <div><h1>NERON STUDIO</h1><small id="sub"></small></div>
   </div>
-  <nav class="tabs" aria-label="Разделы">
-    <button type="button" data-tab="all" aria-pressed="true">Все</button>
-    <button type="button" data-tab="image" aria-pressed="false">Изображения</button>
-    <button type="button" data-tab="video" aria-pressed="false">Видео</button>
-    <button type="button" data-tab="audio" aria-pressed="false">Аудио</button>
-  </nav>
+  <nav class="crumbs" id="crumbs"></nav>
   <div class="tools">
-    <button type="button" class="tool" id="themeBtn">🎨 Тема</button>
-    <button type="button" class="tool" id="align">⊞ Выровнять</button>
-    <button type="button" class="tool" id="add">＋ Плитка</button>
-    <button type="button" class="tool" id="reset">↺ Как было</button>
+    <div class="seg" id="lang" role="group"><button type="button" data-lang="ru">RU</button><button type="button" data-lang="en">EN</button></div>
+    <button type="button" class="tool" id="themeBtn"></button>
+    <button type="button" class="tool" id="align"></button>
+    <button type="button" class="tool" id="add"></button>
+    <button type="button" class="tool" id="reset"></button>
+    <button type="button" class="tool" id="close"></button>
   </div>
 </header>
-<p class="hint">Тяните плитку за шапку, размер — за уголок, ✕ — убрать. Свой фон — перетащите фото или видео на стол. «Открыть» — процесс откроется в ComfyUI новой вкладкой.</p>
-<main class="desk" id="desk" aria-label="Плитки процессов"></main>
+<p class="hint" id="hint"></p>
+<main class="desk" id="desk"></main>
+<section class="report" id="report" hidden></section>
 <div class="drawer" id="drawer" hidden></div>
 <div class="drawer" id="themes" hidden></div>
 <div class="toast" id="toast" hidden></div>
@@ -186,41 +221,140 @@ function readCol() {
 readCol();
 const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// ---------- плитки: что есть у Neron сегодня (готово), что в работе (альфа), что будет (скоро) ----------
-const TILES = [
-  { id: "one", ico: "🎬", t: "Генератор видео · H3 One", k: "video", s: "ok", meta: "5 режимов · Экстрим → Максимум", paint: "film", x: 0, y: 0, w: 4, h: 3 },
-  { id: "story", ico: "🎞", t: "Длинный ролик · H3 Story", k: "video", s: "ok", meta: "до 45 с · блоки без стыков", paint: "chain", x: 4, y: 0, w: 5, h: 2 },
-  { id: "timing", ico: "⏱", t: "Последний замер", k: "video", s: "ok", meta: "H3 One · 🚀 Быстро · 768×768 · 5 с", paint: "timing", x: 9, y: 0, w: 3, h: 3 },
-  { id: "swap", ico: "🎭", t: "Замена героя", k: "video", s: "alpha", meta: "видео + фото «на кого»", paint: "swap", x: 4, y: 2, w: 3, h: 2 },
-  { id: "clarity", ico: "✨", t: "Улучшение видео", k: "video", s: "ok", meta: "Perception Relay · Clarity", paint: "split", x: 7, y: 2, w: 2, h: 2 },
-  { id: "audio", ico: "🎵", t: "Audio Studio · DJ Pult", k: "audio", s: "ok", meta: "звук, музыка, сведение", paint: "eq", x: 0, y: 3, w: 4, h: 2 },
-  { id: "restore", ico: "🎨", t: "Реставрация и раскраска", k: "image", s: "ok", meta: "Restore Studio · DDColor · CodeFormer", paint: "colorize", x: 9, y: 3, w: 3, h: 2 },
-  { id: "outpaint", ico: "↔", t: "Расширение изображения", k: "image", s: "ok", meta: "смартфон → широкий кадр · Flux Fill", paint: "outpaint", x: 4, y: 4, w: 3, h: 2 },
-  { id: "upscale", ico: "🔍", t: "Улучшить качество", k: "image", s: "ok", meta: "апскейл · лица · шумодав", paint: "loupe", x: 7, y: 4, w: 2, h: 2 },
-  { id: "imagegen", ico: "🖼", t: "Генератор кадра", k: "image", s: "soon", meta: "p-h3-image · текст + образцы", paint: "forming", x: 0, y: 5, w: 3, h: 2 },
-  { id: "edit", ico: "✏", t: "Редактор словами", k: "image", s: "soon", meta: "«надень юбку с картинки 2»", paint: "typing", x: 9, y: 5, w: 3, h: 2 },
-  { id: "tryon", ico: "👗", t: "Примерочная", k: "image", s: "soon", meta: "фото человека + вещь", paint: "tryon", x: 3, y: 6, w: 3, h: 2 },
-  { id: "cutout", ico: "✂", t: "Удаление фона", k: "image", s: "soon", meta: "PNG с прозрачным фоном", paint: "cutout", x: 6, y: 6, w: 3, h: 2 },
-  { id: "ltx", ico: "🎥", t: "LTX Engine · видео", k: "video", s: "ok", meta: "LTX · автопромтер · своя камера", paint: "film", x: 3, y: 8, w: 3, h: 2 },
-  { id: "models", ico: "📥", t: "Модели", k: "all", s: "ok", meta: "качает сама · докачка с обрыва", paint: "models", x: 0, y: 7, w: 3, h: 2 },
-];
-const BY_ID = Object.fromEntries(TILES.map((d) => [d.id, d]));
-const STATUS = { ok: "готово", alpha: "альфа", soon: "скоро" };
-const KEY = "neron-studio-layout-v1";
+// ---------- язык: по языку системы, переключатель RU | EN в полосе (выбор запоминается) ----------
+const LANG_KEY = "neron-studio-lang";
+let lang = (() => {
+  try { const v = localStorage.getItem(LANG_KEY); if (v === "ru" || v === "en") return v; } catch (_) {}
+  return /^(ru|uk|be|kk)\b/i.test(navigator.language || "") ? "ru" : "en";
+})();
+const tx = (v) => (Array.isArray(v) ? v[lang === "ru" ? 0 : 1] : v);
+const UI = {
+  sub: ["рабочий стол · ComfyUI", "desktop · ComfyUI"],
+  hint: ["Тяните плитку за шапку, размер — за уголок, ✕ — убрать. «Открыть ›» — войти в папку; назад — по пути сверху или Esc. Свой фон — перетащите фото или видео на стол.",
+         "Drag a tile by its header, resize it by the corner, ✕ removes it. «Open ›» enters a folder; go back via the path on top or Esc. Drop a photo or video on the desk to make it the background."],
+  theme: ["🎨 Тема", "🎨 Theme"], align: ["⊞ Выровнять", "⊞ Tidy up"], add: ["＋ Плитка", "＋ Tile"], reset: ["↺ Как было", "↺ Reset"],
+  close: ["✕ В ComfyUI", "✕ To ComfyUI"], closeTip: ["Вернуться в ComfyUI", "Back to ComfyUI"],
+  langTip: ["Язык стола", "Desktop language"], back: ["‹ Назад", "‹ Back"], path: ["Путь", "Path"],
+  ok: ["готово", "ready"], alpha: ["альфа", "alpha"], soon: ["скоро", "soon"],
+  open: ["Открыть", "Open"], openF: ["Открыть ›", "Open ›"], soonBtn: ["Скоро", "Soon"], missing: ["Не установлено", "Not installed"],
+  removeTip: ["Убрать со стола", "Remove from the desk"], sizeTip: ["Потяни — размер", "Drag to resize"],
+  tSoon: ["«%» — в планах. Плитка уже живёт на столе.", "«%» is planned. The tile already lives on the desk."],
+  tOutside: ["Внутри ComfyUI эта кнопка откроет процесс «%» новой вкладкой.", "Inside ComfyUI this button opens «%» in a new tab."],
+  tMissing: ["Процесс «%» не установлен. Обновите пакет Neron в Manager и перезапустите ComfyUI.", "«%» is not installed. Update the Neron pack in Manager and restart ComfyUI."],
+  tOpening: ["Открываю «%»…", "Opening «%»…"],
+  tRemoved: ["Плитка «%» убрана.", "Tile «%» removed."], tUndo: ["Вернуть", "Undo"],
+  tAligned: ["Выровнено: плитки сдвинуты вверх, дыр нет.", "Tidied up: tiles moved up, no gaps."],
+  tReset: ["Стол как в первый раз.", "The desk is back to the first-run layout."],
+  drawerH: ["Добавить плитку", "Add a tile"], drawerP: ["Нажмите — плитка встанет на стол.", "Click — the tile goes back on the desk."],
+  drawerNone: ["Все плитки этой папки уже на столе. Уберите любую ✕ — она появится здесь.", "All tiles of this folder are on the desk. Remove one with ✕ and it shows up here."],
+  inFolder: ["в папке: %", "inside: %"],
+};
+const u = (k, arg) => tx(UI[k]).replace("%", arg ?? "");
+
+// ---------- папки и плитки. Плитка либо открывает папку (go), либо процесс (wf). ----------
+// Проверенные процессы — как есть (s: "ok"); на проверку сообществу — в папке «Тест» (s: "alpha").
+const VIEWS = {
+  home: { t: ["Стол", "Desktop"], tiles: [
+    { id: "f-video", ico: "🎬", t: ["Видео", "Video"], s: "ok", go: "video", paint: "film", w: 6, h: 3,
+      meta: ["фото → видео · длинные ролики · диалог · улучшение", "photo → video · long clips · dialogue · enhance"] },
+    { id: "f-image", ico: "🖼", t: ["Картинки", "Images"], s: "ok", go: "image", paint: "outpaint", w: 6, h: 3,
+      meta: ["расширение · реставрация · качество", "outpaint · restoration · quality"] },
+    { id: "f-audio", ico: "🎵", t: ["Звук", "Sound"], s: "ok", go: "audio", paint: "eq", w: 4, h: 2,
+      meta: ["Audio Studio · DJ-пульт · сведение", "Audio Studio · DJ pult · mixing"] },
+    { id: "f-test", ico: "🧪", t: ["Тест", "Test"], s: "alpha", go: "test", paint: "lab", w: 4, h: 2,
+      meta: ["новое на проверку — помоги найти ошибки", "new things to try — help find bugs"] },
+    { id: "models", ico: "📥", t: ["Модели", "Models"], s: "ok", wf: "models", paint: "models", w: 4, h: 2,
+      meta: ["качает сама · докачка с обрыва", "downloads itself · resumes after a drop"] },
+  ] },
+  video: { up: "home", t: ["Видео", "Video"], tiles: [
+    { id: "v-i2v", ico: "🎬", t: ["Фото → видео", "Photo → video"], s: "ok", go: "i2v", paint: "film", w: 5, h: 3,
+      meta: ["MiniMax H3 v3.0 · LTX Engine · LTX 2.3", "MiniMax H3 v3.0 · LTX Engine · LTX 2.3"] },
+    { id: "v-long", ico: "🎞", t: ["Длинный ролик", "Long video"], s: "ok", go: "long", paint: "chain", w: 7, h: 3,
+      meta: ["до 45 с · H3 Story · Full Pipeline", "up to 45 s · H3 Story · Full Pipeline"] },
+    { id: "dialog", ico: "💬", t: ["Диалог", "Dialogue"], s: "ok", wf: "dialog", paint: "talk", w: 4, h: 2,
+      meta: ["Smart MiniMax H3 v1.0 · герои говорят", "Smart MiniMax H3 v1.0 · characters talk"] },
+    { id: "scail", ico: "🕺", t: ["Движение по видео", "Motion from video"], s: "ok", wf: "scail", paint: "pose", w: 4, h: 2,
+      meta: ["SCAIL · Wan 2.1 · позы из ролика", "SCAIL · Wan 2.1 · poses from a clip"] },
+    { id: "clarity", ico: "✨", t: ["Улучшить видео", "Enhance video"], s: "ok", wf: "clarity", paint: "split", w: 4, h: 2,
+      meta: ["Perception Relay · стабилизация · плавность", "Perception Relay · stabilize · smoothness"] },
+    { id: "raw", ico: "⚙", t: ["Для профи · H3 Raw", "For pros · H3 Raw"], s: "ok", wf: "raw", paint: "timing", w: 4, h: 2,
+      meta: ["голый движок H3 · без автопромтера", "bare H3 engine · no autoprompter"] },
+  ] },
+  i2v: { up: "video", t: ["Фото → видео", "Photo → video"], tiles: [
+    { id: "h3v3", ico: "🎥", t: ["MiniMax H3 I2V v3.0", "MiniMax H3 I2V v3.0"], s: "ok", wf: "h3v3", paint: "film", w: 4, h: 3,
+      meta: ["камера · автопромтер · LoRA", "camera · autoprompter · LoRA"] },
+    { id: "ltx", ico: "🎞", t: ["LTX Engine · автопромтер", "LTX Engine · autoprompter"], s: "ok", wf: "ltx", paint: "film", w: 4, h: 3,
+      meta: ["LTX 2.5 · модели качает сама", "LTX 2.5 · downloads its models"] },
+    { id: "ltx23", ico: "📽", t: ["LTX 2.3 · фото → видео", "LTX 2.3 · image → video"], s: "ok", wf: "ltx23", paint: "chain", w: 4, h: 3,
+      meta: ["блоки · кадры перехода", "blocks · transition frames"] },
+  ] },
+  long: { up: "video", t: ["Длинный ролик", "Long video"], tiles: [
+    { id: "story", ico: "🎞", t: ["H3 Story", "H3 Story"], s: "ok", wf: "story", paint: "chain", w: 6, h: 3,
+      meta: ["до 45 с · блоки без стыков · со звуком", "up to 45 s · seamless blocks · with sound"] },
+    { id: "full", ico: "🎬", t: ["Full Pipeline · Auto Director", "Full Pipeline · Auto Director"], s: "ok", wf: "full", paint: "film", w: 6, h: 3,
+      meta: ["автопромтер → H3 → улучшение", "autoprompter → H3 → enhance"] },
+  ] },
+  image: { up: "home", t: ["Картинки", "Images"], tiles: [
+    { id: "outpaint", ico: "↔", t: ["Расширение изображения", "Expand an image"], s: "ok", wf: "outpaint", paint: "outpaint", w: 4, h: 3,
+      meta: ["смартфон → широкий кадр · Flux Fill", "phone photo → wide frame · Flux Fill"] },
+    { id: "restore", ico: "🎨", t: ["Реставрация и раскраска", "Restore & colorize"], s: "ok", wf: "restore", paint: "colorize", w: 4, h: 3,
+      meta: ["Restore Studio · DDColor · CodeFormer", "Restore Studio · DDColor · CodeFormer"] },
+    { id: "upscale", ico: "🔍", t: ["Улучшить качество", "Improve quality"], s: "ok", wf: "upscale", paint: "loupe", w: 4, h: 3,
+      meta: ["апскейл · лица · шумодав", "upscale · faces · denoise"] },
+    { id: "imagegen", ico: "🖼", t: ["Генератор кадра", "Image generator"], s: "soon", paint: "forming", w: 3, h: 2,
+      meta: ["текст + образцы", "text + references"] },
+    { id: "edit", ico: "✏", t: ["Редактор словами", "Edit with words"], s: "soon", paint: "typing", w: 3, h: 2,
+      meta: ["«надень юбку с картинки 2»", "«put on the skirt from picture 2»"] },
+    { id: "tryon", ico: "👗", t: ["Примерочная", "Try-on"], s: "soon", paint: "tryon", w: 3, h: 2,
+      meta: ["фото человека + вещь", "photo of a person + an item"] },
+    { id: "cutout", ico: "✂", t: ["Удаление фона", "Remove background"], s: "soon", paint: "cutout", w: 3, h: 2,
+      meta: ["PNG с прозрачным фоном", "PNG with a transparent background"] },
+  ] },
+  audio: { up: "home", t: ["Звук", "Sound"], tiles: [
+    { id: "audio", ico: "🎵", t: ["Audio Studio 2.0 · DJ-пульт", "Audio Studio 2.0 · DJ pult"], s: "ok", wf: "audio", paint: "eq", w: 8, h: 3,
+      meta: ["звук, музыка, сведение, клип со звуком", "sound, music, mixing, clip with sound"] },
+  ] },
+  test: { up: "home", t: ["Тест", "Test"], report: true, tiles: [
+    { id: "one", ico: "🎬", t: ["H3 One · единый движок", "H3 One · unified engine"], s: "alpha", wf: "one", paint: "film", w: 5, h: 3,
+      meta: ["5 режимов · помоги проверить", "5 modes · help us test it"] },
+    { id: "swap", ico: "🎭", t: ["Замена героя", "Hero swap"], s: "alpha", wf: "swap", paint: "swap", w: 4, h: 3,
+      meta: ["видео + фото «на кого»", "video + photo «who to put in»"] },
+    { id: "timing", ico: "⏱", t: ["Последний замер · H3 One", "Last benchmark · H3 One"], s: "alpha", wf: "timing", paint: "timing", w: 3, h: 3,
+      meta: ["🚀 Быстро · 768×768 · 5 с", "🚀 Fast · 768×768 · 5 s"] },
+  ] },
+};
+const BY = {};                                         // BY[папка][id] → плитка
+for (const [v, def] of Object.entries(VIEWS)) BY[v] = Object.fromEntries(def.tiles.map((d) => [d.id, d]));
+const KEY = "neron-studio-layout-v2";                  // раскладка — своя у каждой папки
 
 // ---------- раскладка ----------
 let cols = 12;
-let layout = defaults();
-try {
-  const saved = JSON.parse(localStorage.getItem(KEY) || "null");
-  if (saved && Array.isArray(saved.items)) layout = saved.items.filter((it) => BY_ID[it.id]);
-} catch (_) {}
-function defaults() { return TILES.map(({ id, x, y, w, h }) => ({ id, x, y, w, h })); }
-function save() { try { localStorage.setItem(KEY, JSON.stringify({ items: layout })); } catch (_) {} }
+let view = "home";
+let LAYOUTS = {};
+try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s === "object") LAYOUTS = s; } catch (_) {}
+const hit = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+function pack(items) {                                 // по порядку: каждую — в первое свободное место
+  const placed = [];
+  for (const it of items) {
+    it.w = Math.min(it.w, cols);
+    search: for (let y = 0; ; y++) for (let x = 0; x + it.w <= cols; x++) {
+      it.x = x; it.y = y;
+      if (!placed.some((p) => hit(p, it))) break search;
+    }
+    placed.push(it);
+  }
+  return items;
+}
+function defaults(v) { return pack(VIEWS[v].tiles.map(({ id, w, h }) => ({ id, x: 0, y: 0, w, h }))); }
+function loadView(v) {
+  const s = LAYOUTS[v];
+  return Array.isArray(s) ? s.filter((it) => BY[v][it.id]).map((it) => ({ ...it })) : defaults(v);
+}
+let layout = loadView(view);
+function save() { LAYOUTS[view] = layout; try { localStorage.setItem(KEY, JSON.stringify(LAYOUTS)); } catch (_) {} }
 
 const desk = document.getElementById("desk");
 const els = new Map();
-let tab = "all";
 
 function geom() {
   const W = desk.clientWidth, gap = 12, row = innerWidth < 700 ? 84 : 96;
@@ -231,8 +365,6 @@ function px(it) {
   const g = geom();
   return { left: it.x * g.sx, top: it.y * g.sy, width: it.w * g.cw + (it.w - 1) * g.gap, height: it.h * g.row + (it.h - 1) * g.gap };
 }
-const hit = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
-
 // Сначала ставим «главную» плитку (которую тянут), остальные — на своё место или ниже, если занято.
 function settle(first) {
   const placed = [];
@@ -253,35 +385,16 @@ function compact() {
     placed.push(it);
   }
 }
-const matches = (id) => tab === "all" || BY_ID[id].k === tab || BY_ID[id].k === "all";
-// Вид вкладки: нужные плитки — плотно наверх (в их порядке), остальные — ниже. Раскладку человека не трогаем.
-function viewLayout() {
-  if (tab === "all") return layout;
-  const copy = layout.map((it) => ({ ...it }));
-  const order = [...copy].sort((a, b) => (matches(b.id) - matches(a.id)) || a.y - b.y || a.x - b.x);
-  const placed = [];
-  for (const it of order) {
-    it.y = 0;
-    while (placed.some((p) => hit(p, it))) it.y++;
-    placed.push(it);
-  }
-  return copy;
-}
-let lastTab = "all";
-function render() {
+function render(animate) {
   const g = geom();
   let bottom = 0, k = 0;
-  const changed = tab !== lastTab; lastTab = tab;
-  for (const it of viewLayout()) {
-    const el = els.get(it.id) || make(layout.find((x) => x.id === it.id));
+  for (const it of layout) {
+    const el = els.get(it.id) || make(it);
     if (!el.classList.contains("dragging") && !el.classList.contains("resizing")) {
       const p = px(it);
       Object.assign(el.style, { left: p.left + "px", top: p.top + "px", width: p.width + "px", height: p.height + "px" });
     }
-    const front = matches(it.id);
-    el.classList.toggle("back", !front);
-    el.classList.toggle("front", front && tab !== "all");
-    if (changed && front && !REDUCED) {                    // нужные «набегают» одна за другой
+    if (animate && !REDUCED) {                         // вошли в папку — плитки «набегают» одна за другой
       el.classList.remove("pop"); el.style.animationDelay = (k++ * 55) + "ms";
       void el.offsetWidth; el.classList.add("pop");
     }
@@ -292,17 +405,55 @@ function render() {
   desk.style.height = bottom + "px";
 }
 
+// ---------- папки: вход, путь «Стол › Видео › …», назад ----------
+const crumbs = document.getElementById("crumbs");
+function trail(v) { const out = []; for (let x = v; x; x = VIEWS[x].up) out.unshift(x); return out; }
+function drawCrumbs() {
+  crumbs.innerHTML = "";
+  crumbs.setAttribute("aria-label", u("path"));
+  if (view !== "home") {
+    const b = document.createElement("button"); b.type = "button"; b.className = "back"; b.textContent = u("back");
+    b.onclick = () => go(VIEWS[view].up); crumbs.append(b);
+  }
+  trail(view).forEach((v, i, all) => {
+    if (i) { const s = document.createElement("span"); s.className = "sep"; s.textContent = "›"; s.setAttribute("aria-hidden", "true"); crumbs.append(s); }
+    const last = i === all.length - 1, b = document.createElement("button");
+    b.type = "button"; b.textContent = (v === "home" ? "🏠 " : "") + tx(VIEWS[v].t);
+    if (last) b.setAttribute("aria-current", "page"); else b.onclick = () => go(v);
+    crumbs.append(b);
+  });
+}
+function clearTiles() { for (const [, el] of els) el.remove(); els.clear(); painters = []; }
+function go(v) {
+  if (!VIEWS[v] || v === view) return;
+  drawer.hidden = true;
+  clearTiles(); view = v; layout = loadView(v); settle(null);
+  drawCrumbs(); render(true); showReport(); scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" });
+}
+addEventListener("keydown", (e) => {
+  if (e.key !== "Escape" || e.target.closest?.("input, textarea, select")) return;
+  if (!drawer.hidden || !themesBox.hidden) { drawer.hidden = themesBox.hidden = true; return; }
+  if (view !== "home") go(VIEWS[view].up);
+});
+
 // ---------- плитка ----------
 function make(it) {
-  const d = BY_ID[it.id];
+  const d = BY[view][it.id];
   const el = document.createElement("section");
   el.className = "tile"; el.dataset.status = d.s; el.dataset.id = d.id;
-  el.setAttribute("aria-label", d.t);
-  el.innerHTML = `<div class="head"><span class="ico" aria-hidden="true">${d.ico}</span><span class="title">${d.t}</span>
-    <span class="chip ${d.s}">${STATUS[d.s]}</span><button class="x" type="button" title="Убрать со стола" aria-label="Убрать ${d.t}">✕</button></div>
+  if (d.go) el.dataset.kind = "folder";
+  el.setAttribute("aria-label", tx(d.t));
+  const kids = d.go ? VIEWS[d.go].tiles.length : 0;
+  const chip = d.go ? `<span class="chip ${d.s}" title="${u("inFolder", kids)}">📁 ${kids}</span>` : `<span class="chip ${d.s}">${u(d.s)}</span>`;
+  el.innerHTML = `<div class="head"><span class="ico" aria-hidden="true">${d.ico}</span><span class="title"></span>
+    ${chip}<button class="x" type="button" title="${u("removeTip")}">✕</button></div>
     <div class="live"><canvas></canvas></div>
-    <div class="foot"><span class="meta">${d.meta}</span><button class="open" type="button">${d.s === "soon" ? "Скоро" : "Открыть"}</button></div>
-    <div class="grip" title="Потяни — размер" aria-hidden="true"></div>`;
+    <div class="foot"><span class="meta"></span><button class="open" type="button"></button></div>
+    <div class="grip" title="${u("sizeTip")}" aria-hidden="true"></div>`;
+  el.querySelector(".title").textContent = tx(d.t);
+  el.querySelector(".meta").textContent = tx(d.meta);
+  el.querySelector(".x").setAttribute("aria-label", `${u("removeTip")}: ${tx(d.t)}`);
+  el.querySelector(".open").textContent = d.go ? u("openF") : d.s === "soon" ? u("soonBtn") : u("open");
   el.querySelector(".x").onclick = () => removeTile(d.id);
   el.querySelector(".open").onclick = (e) => openTile(d, e.currentTarget);
   dragOn(el.querySelector(".head"), it, el, "move");
@@ -313,26 +464,26 @@ function make(it) {
   return el;
 }
 
-// ---------- «Открыть»: процесс Neron загружается в ComfyUI новой вкладкой ----------
+// ---------- «Открыть»: папка — внутрь; процесс Neron — в ComfyUI новой вкладкой ----------
 const INSIDE = (() => { try { return parent !== window; } catch (_) { return true; } })();
 let available = null;                                  // какие процессы установлены (спрашиваем у ComfyUI)
 function openTile(d, btn) {
-  if (d.s === "soon") { toast(`«${d.t}» — в планах. Плитка уже живёт на столе.`); return; }
-  if (!INSIDE) { toast(`Внутри ComfyUI эта кнопка откроет процесс «${d.t}» новой вкладкой.`); return; }
-  if (available && available[d.id] === false) {
-    toast(`Процесс «${d.t}» не установлен. Обновите пакет Neron в Manager и перезапустите ComfyUI.`); return;
-  }
+  if (d.go) { go(d.go); return; }
+  const name = tx(d.t);
+  if (d.s === "soon") { toast(u("tSoon", name)); return; }
+  if (!INSIDE) { toast(u("tOutside", name)); return; }
+  if (available && available[d.wf] === false) { toast(u("tMissing", name)); return; }
   btn.setAttribute("aria-busy", "true"); setTimeout(() => btn.removeAttribute("aria-busy"), 2500);
-  toast(`Открываю «${d.t}»…`);
-  parent.postMessage({ neronStudio: "open", id: d.id, title: d.t }, "*");
+  toast(u("tOpening", name));
+  parent.postMessage({ neronStudio: "open", id: d.wf, title: name }, "*");
 }
 function markAvailable() {
   if (!available) return;
   for (const [id, el] of els) {
-    const d = BY_ID[id]; if (d.s === "soon" || !(id in available)) continue;
-    const miss = available[id] === false;
+    const d = BY[view][id]; if (!d || !d.wf || d.s === "soon" || !(d.wf in available)) continue;
+    const miss = available[d.wf] === false;
     el.classList.toggle("missing", miss);
-    el.querySelector(".open").textContent = miss ? "Не установлено" : "Открыть";
+    el.querySelector(".open").textContent = miss ? u("missing") : u("open");
   }
 }
 if (INSIDE) {
@@ -347,8 +498,8 @@ function dragOn(handle, it0, el, mode) {
   handle.addEventListener("pointerdown", (e) => {
     if (e.button !== 0 || e.target.closest("button")) return;
     e.preventDefault();
-    if (tab !== "all") { toast("Двигать и растягивать плитки — на вкладке «Все». Здесь — только просмотр раздела."); return; }
     const it = layout.find((x) => x.id === it0.id);
+    if (!it) return;
     const g = geom(), r = el.getBoundingClientRect(), dr = desk.getBoundingClientRect();
     const start = { x: e.clientX, y: e.clientY, left: r.left - dr.left, top: r.top - dr.top, w: r.width, h: r.height };
     el.classList.add(mode === "move" ? "dragging" : "resizing");
@@ -380,15 +531,16 @@ function dragOn(handle, it0, el, mode) {
   });
 }
 
-// ---------- удалить / вернуть / ящик ----------
+// ---------- удалить / вернуть / ящик (у каждой папки — свои плитки) ----------
 let lastRemoved = null;
 function removeTile(id) {
   const i = layout.findIndex((it) => it.id === id);
   if (i < 0) return;
-  lastRemoved = layout.splice(i, 1)[0];
+  const removed = { view, it: layout.splice(i, 1)[0] };
+  lastRemoved = removed;
   painters = painters.filter((p) => p.id !== id);
   render(); save(); fillDrawer();
-  toast(`Плитка «${BY_ID[id].t}» убрана.`, "Вернуть", () => restore(lastRemoved));
+  toast(u("tRemoved", tx(BY[view][id].t)), u("tUndo"), () => { if (lastRemoved === removed && view === removed.view) restore(removed.it); });
 }
 function restore(it) {
   if (!it || layout.find((x) => x.id === it.id)) return;
@@ -396,26 +548,23 @@ function restore(it) {
 }
 const drawer = document.getElementById("drawer");
 function fillDrawer() {
-  const off = TILES.filter((d) => !layout.find((it) => it.id === d.id));
-  drawer.innerHTML = `<h2>Добавить плитку</h2><p>${off.length ? "Нажмите — плитка встанет на стол." : "Все плитки уже на столе. Уберите любую ✕ — она появится здесь."}</p>`;
+  const off = VIEWS[view].tiles.filter((d) => !layout.find((it) => it.id === d.id));
+  drawer.innerHTML = "";
+  const h = document.createElement("h2"); h.textContent = u("drawerH");
+  const p = document.createElement("p"); p.textContent = off.length ? u("drawerP") : u("drawerNone");
+  drawer.append(h, p);
   for (const d of off) {
     const b = document.createElement("button"); b.type = "button"; b.className = "item";
-    b.innerHTML = `<span aria-hidden="true">${d.ico}</span><span>${d.t}</span>`;
-    b.onclick = () => { const def = TILES.find((t) => t.id === d.id); restore({ id: d.id, x: 0, y: 0, w: def.w, h: def.h }); };
+    b.innerHTML = `<span aria-hidden="true">${d.ico}</span><span></span>`; b.lastChild.textContent = tx(d.t);
+    b.onclick = () => restore({ id: d.id, x: 0, y: 0, w: d.w, h: d.h });
     drawer.append(b);
   }
 }
-document.getElementById("add").onclick = () => { fillDrawer(); drawer.hidden = !drawer.hidden; };
+document.getElementById("add").onclick = () => { fillDrawer(); themesBox.hidden = true; drawer.hidden = !drawer.hidden; };
 document.addEventListener("pointerdown", (e) => { if (!drawer.hidden && !drawer.contains(e.target) && e.target.id !== "add") drawer.hidden = true; });
-document.getElementById("align").onclick = () => { compact(); render(); save(); toast("Выровнено: плитки сдвинуты вверх, дыр нет."); };
+document.getElementById("align").onclick = () => { compact(); render(); save(); toast(u("tAligned")); };
 document.getElementById("reset").onclick = () => {
-  for (const [, el] of els) el.remove(); els.clear(); painters = [];
-  layout = defaults(); fit(); render(); save(); toast("Стол как в первый раз.");
-};
-for (const b of document.querySelectorAll(".tabs button")) b.onclick = () => {
-  tab = b.dataset.tab;
-  for (const o of document.querySelectorAll(".tabs button")) o.setAttribute("aria-pressed", String(o === b));
-  render();
+  LAYOUTS = {}; clearTiles(); layout = defaults(view); render(true); save(); toast(u("tReset"));
 };
 const toastEl = document.getElementById("toast");
 let toastTimer = 0;
@@ -454,6 +603,53 @@ function scene(ctx, w, h, t, gray) {                     // «кадр»: зак
   ctx.lineTo(w, h); ctx.fill();
 }
 const PAINT = {
+  lab(ctx, w, h, t) {                                     // колба с пузырьками — «Тест»
+    ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
+    const s = Math.min(w, h) * .8, cx = w / 2, top = (h - s) / 2 + s * .05, neck = s * .16, base = s * .7;
+    const flask = () => { ctx.beginPath(); ctx.moveTo(cx - neck / 2, top); ctx.lineTo(cx - neck / 2, top + s * .32); ctx.lineTo(cx - base / 2, top + s * .9);
+      ctx.lineTo(cx + base / 2, top + s * .9); ctx.lineTo(cx + neck / 2, top + s * .32); ctx.lineTo(cx + neck / 2, top); };
+    flask(); ctx.save(); ctx.clip();
+    const lvl = top + s * (.5 + .04 * Math.sin(t * 1.3));
+    const g = ctx.createLinearGradient(0, lvl, 0, top + s * .9); g.addColorStop(0, COL.alpha); g.addColorStop(1, COL.ember);
+    ctx.fillStyle = g; ctx.fillRect(0, lvl, w, h);
+    for (let i = 0; i < 14; i++) {
+      const ph = (t * (.25 + rnd(i) * .3) + rnd(i * 3.3)) % 1, bx = cx + (rnd(i * 7.1) - .5) * base * .6, by = top + s * .9 - ph * (top + s * .9 - lvl);
+      ctx.fillStyle = `rgba(255,240,200,${.7 * (1 - ph)})`; ctx.beginPath(); ctx.arc(bx, by, 1.5 + rnd(i) * 3, 0, 7); ctx.fill();
+    }
+    ctx.restore();
+    flask(); ctx.strokeStyle = COL.gold; ctx.lineWidth = 2; ctx.lineJoin = "round"; ctx.stroke();
+    ctx.fillStyle = COL.gold; ctx.fillRect(cx - neck * .8, top - 3, neck * 1.6, 4);
+  },
+  talk(ctx, w, h, t) {                                    // два героя и реплики по очереди
+    ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
+    const r = Math.min(w, h) * .15;
+    face(ctx, w * .22, h * .55, r, "#f1cdb2", "#2b1a10", "#6b5a4a");
+    face(ctx, w * .78, h * .55, r, "#e8c4a4", "#8a5a2b", "#40352c");
+    const who = Math.floor(t / 2.2) % 2, k = Math.min(1, (t % 2.2) * 2);
+    const bw = w * .42, bh = h * .2, bx = who ? w * .5 : w * .08, by = h * .08;
+    ctx.globalAlpha = k; ctx.fillStyle = who ? COL.bronze : COL.gold;
+    ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 8); ctx.fill();
+    ctx.beginPath(); const tx0 = who ? w * .74 : w * .26; ctx.moveTo(tx0 - 6, by + bh); ctx.lineTo(tx0 + 6, by + bh); ctx.lineTo(tx0, by + bh + 10); ctx.fill();
+    ctx.fillStyle = COL.ink; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(bx + bw / 2 + (i - 1) * 12, by + bh / 2, 3, 0, 7); ctx.fill(); }
+    ctx.globalAlpha = 1;
+  },
+  pose(ctx, w, h, t) {                                    // скелет из ролика → танцующая фигура
+    ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
+    const fig = (cx, col, a) => {
+      const s = Math.min(w * .4, h) * .37, hy = h * .1, sw = Math.sin(t * 3 + a);
+      const hip = [cx, hy + s * 1.1], neck = [cx, hy + s * .3];
+      const P = { lh: [cx - s * .55, hy + s * (.2 + .4 * sw)], rh: [cx + s * .55, hy + s * (.6 - .4 * sw)], lf: [cx - s * .35, hy + s * 2.05], rf: [cx + s * .35 + sw * s * .2, hy + s * 2.05 - Math.max(0, sw) * s * .3] };
+      ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(...neck); ctx.lineTo(...hip); ctx.moveTo(...neck); ctx.lineTo(...P.lh); ctx.moveTo(...neck); ctx.lineTo(...P.rh);
+      ctx.moveTo(...hip); ctx.lineTo(...P.lf); ctx.moveTo(...hip); ctx.lineTo(...P.rf); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx, hy + s * .1, s * .2, 0, 7); ctx.stroke();
+      ctx.fillStyle = COL.gold; for (const q of [neck, hip, P.lh, P.rh, P.lf, P.rf]) { ctx.beginPath(); ctx.arc(q[0], q[1], 3, 0, 7); ctx.fill(); }
+    };
+    fig(w * .27, COL.muted, 0); fig(w * .73, COL.ember, 0);
+    ctx.fillStyle = COL.bronze; ctx.font = "700 16px Golos Text"; ctx.textAlign = "center"; ctx.fillText("→", w / 2, h / 2);
+    ctx.font = "600 10px JetBrains Mono, monospace"; ctx.fillStyle = COL.muted; ctx.textAlign = "left"; ctx.fillText(tx(["позы", "poses"]), 8, h - 8);
+    ctx.textAlign = "right"; ctx.fillStyle = COL.gold; ctx.fillText(tx(["ваш герой", "your hero"]), w - 8, h - 8);
+  },
   film(ctx, w, h, t) {                                    // плёнка с кадрами, плейхед и таймлайн 0–15 с
     ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
     const fw = Math.max(70, h * .9), off = (t * 38) % fw;
@@ -468,7 +664,7 @@ const PAINT = {
     ctx.fillStyle = COL.ember; ctx.fillRect(bx, by, bw * p, 4);
     ctx.fillStyle = COL.gold; ctx.beginPath(); ctx.arc(bx + bw * p, by + 2, 6, 0, 7); ctx.fill();
     ctx.font = "600 11px JetBrains Mono, monospace"; ctx.fillStyle = COL.text; ctx.textAlign = "right";
-    ctx.fillText((p * 15).toFixed(1) + " / 15.0 с", w - 12, by - 8);
+    ctx.fillText((p * 15).toFixed(1) + tx([" / 15.0 с", " / 15.0 s"]), w - 12, by - 8);
   },
   chain(ctx, w, h, t) {                                   // блоки ролика и бегущий по стыкам огонёк
     ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
@@ -477,7 +673,7 @@ const PAINT = {
       const x = 12 + i * (bw + gap);
       ctx.save(); ctx.beginPath(); ctx.roundRect(x, y, bw, bh, 6); ctx.clip(); ctx.translate(x, y); scene(ctx, bw, bh, t + i * 2, false); ctx.restore();
       ctx.font = "600 10px JetBrains Mono, monospace"; ctx.fillStyle = COL.muted; ctx.textAlign = "center";
-      ctx.fillText(`блок ${i + 1}`, x + bw / 2, y + bh + 16);
+      ctx.fillText(tx(["блок ", "block "]) + (i + 1), x + bw / 2, y + bh + 16);
       if (i < n - 1) {
         const sx = x + bw + gap / 2, pulse = .5 + .5 * Math.sin(t * 3 - i);
         ctx.fillStyle = `rgba(255,122,26,${.25 + .6 * pulse})`; ctx.fillRect(sx - 3, y - 4, 6, bh + 8);
@@ -488,24 +684,24 @@ const PAINT = {
     gr.addColorStop(0, "rgba(255,210,120,.55)"); gr.addColorStop(1, "rgba(255,210,120,0)");
     ctx.fillStyle = gr; ctx.fillRect(gx - 40, y - 10, 80, bh + 20);
     ctx.fillStyle = COL.gold; ctx.textAlign = "left"; ctx.font = "600 11px JetBrains Mono, monospace";
-    ctx.fillText(`${(p * 45).toFixed(0).padStart(2, "0")} / 45 с · стык 0,9 с со звуком`, 12, 16);
+    ctx.fillText(`${(p * 45).toFixed(0).padStart(2, "0")}` + tx([" / 45 с · стык 0,9 с со звуком", " / 45 s · 0.9 s seam with sound"]), 12, 16);
   },
   timing(ctx, w, h, t) {                                  // настоящий отчёт H3 One (08.11): этапы в секундах
     ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
-    const rows = [["Текст", 9, COL.bronze], ["Генерация", 137, COL.ember], ["Видео-VAE", 16, COL.gold], ["Звук", 1, COL.ok]];
+    const rows = [[tx(["Текст", "Text"]), 9, COL.bronze], [tx(["Генерация", "Generation"]), 137, COL.ember], [tx(["Видео-VAE", "Video VAE"]), 16, COL.gold], [tx(["Звук", "Sound"]), 1, COL.ok]];
     const total = 163, x0 = 12, lw = Math.min(90, w * .38), bw = w - x0 - lw - 46;
     const grow = REDUCED ? 1 : Math.min(1, (t % 12) / 2.2);
     const big = Math.max(16, Math.min(26, h * .16)), top = big + 8;
     ctx.font = `600 ${big}px JetBrains Mono, monospace`; ctx.fillStyle = COL.gold; ctx.textAlign = "left";
-    ctx.fillText(`${Math.round(total * grow)} с`, x0, top);
-    ctx.font = "400 10px JetBrains Mono, monospace"; ctx.fillStyle = COL.muted; ctx.fillText("весь прогон · 2,7 мин", x0 + big * 3.4, top);
+    ctx.fillText(`${Math.round(total * grow)}` + tx([" с", " s"]), x0, top);
+    ctx.font = "400 10px JetBrains Mono, monospace"; ctx.fillStyle = COL.muted; ctx.fillText(tx(["весь прогон · 2,7 мин", "full run · 2.7 min"]), x0 + big * 3.4, top);
     const y0 = top + 12, step = Math.max(14, (h - y0 - 6) / 4);
     rows.forEach(([name, s, c], i) => {
       const y = y0 + i * step;
       ctx.fillStyle = COL.text; ctx.font = "500 11px Golos Text, sans-serif"; ctx.fillText(name, x0, y + 9);
       ctx.fillStyle = COL.line; ctx.fillRect(x0 + lw, y, bw, 10);
       ctx.fillStyle = c; ctx.fillRect(x0 + lw, y, Math.max(2, bw * (s / 137) * grow), 10);
-      ctx.fillStyle = COL.muted; ctx.font = "400 10px JetBrains Mono, monospace"; ctx.fillText(`${s} с`, x0 + lw + bw + 6, y + 9);
+      ctx.fillStyle = COL.muted; ctx.font = "400 10px JetBrains Mono, monospace"; ctx.fillText(`${s}` + tx([" с", " s"]), x0 + lw + bw + 6, y + 9);
     });
   },
   swap(ctx, w, h, t) {                                    // лицо меняется по сканирующей полосе
@@ -516,8 +712,8 @@ const PAINT = {
     const g = ctx.createLinearGradient(sx - 14, 0, sx + 14, 0);
     g.addColorStop(0, "rgba(255,122,26,0)"); g.addColorStop(.5, "rgba(255,180,90,.9)"); g.addColorStop(1, "rgba(255,122,26,0)");
     ctx.fillStyle = g; ctx.fillRect(sx - 14, 0, 28, h);
-    ctx.font = "600 10px JetBrains Mono, monospace"; ctx.textAlign = "left"; ctx.fillStyle = COL.muted; ctx.fillText("видео", 8, h - 8);
-    ctx.textAlign = "right"; ctx.fillStyle = COL.gold; ctx.fillText("на кого", w - 8, h - 8);
+    ctx.font = "600 10px JetBrains Mono, monospace"; ctx.textAlign = "left"; ctx.fillStyle = COL.muted; ctx.fillText(tx(["видео", "video"]), 8, h - 8);
+    ctx.textAlign = "right"; ctx.fillStyle = COL.gold; ctx.fillText(tx(["на кого", "swap in"]), w - 8, h - 8);
   },
   split(ctx, w, h, t) {                                   // до / после: шум и «ползучая» текстура слева, чисто справа
     const p = .5 + .35 * Math.sin(t * .8), sx = w * p;
@@ -528,8 +724,8 @@ const PAINT = {
     ctx.fillStyle = COL.gold; ctx.fillRect(sx - 1, 0, 2, h);
     ctx.beginPath(); ctx.arc(sx, h / 2, 9, 0, 7); ctx.fill();
     ctx.fillStyle = COL.ink; ctx.font = "700 10px Golos Text"; ctx.textAlign = "center"; ctx.fillText("⇆", sx, h / 2 + 4);
-    ctx.font = "600 10px JetBrains Mono, monospace"; ctx.fillStyle = COL.text; ctx.textAlign = "left"; ctx.fillText("до", 8, 16);
-    ctx.textAlign = "right"; ctx.fillText("после", w - 8, 16);
+    ctx.font = "600 10px JetBrains Mono, monospace"; ctx.fillStyle = COL.text; ctx.textAlign = "left"; ctx.fillText(tx(["до", "before"]), 8, 16);
+    ctx.textAlign = "right"; ctx.fillText(tx(["после", "after"]), w - 8, 16);
   },
   eq(ctx, w, h, t) {                                      // эквалайзер + два «винила» пульта
     ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
@@ -594,11 +790,11 @@ const PAINT = {
       ctx.fillRect(x, y, 3, 3);
     }
     ctx.font = "500 11px Golos Text, sans-serif"; ctx.fillStyle = COL.muted; ctx.textAlign = "left";
-    ctx.fillText("«закат над Римом, 16:9»", 8, h - 8);
+    ctx.fillText(tx(["«закат над Римом, 16:9»", "«sunset over Rome, 16:9»"]), 8, h - 8);
   },
   typing(ctx, w, h, t) {                                  // печатается команда, картинка отзывается
     ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
-    const msg = "надень юбку с картинки 2";
+    const msg = tx(["надень юбку с картинки 2", "put on the skirt from picture 2"]);
     const n = Math.min(msg.length, Math.floor((t * 7) % (msg.length + 14)));
     face(ctx, w * .72, h * .38, Math.min(w, h) * .14, "#f1cdb2", "#3b2312", "#e9e1d4");
     const done = n >= msg.length;
@@ -628,7 +824,7 @@ const PAINT = {
   },
   models(ctx, w, h, t) {                                  // пакеты моделей по режимам и бегущая докачка
     ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
-    const rows = [["🚀 стандарт", 1], ["✨ bf16", 1], ["🔥 Fast H3", ((t * .08) % 1)], ["👑 энкодер int8", 0]];
+    const rows = [[tx(["🚀 стандарт", "🚀 standard"]), 1], ["✨ bf16", 1], ["🔥 Fast H3", ((t * .08) % 1)], [tx(["👑 энкодер int8", "👑 int8 encoder"]), 0]];
     rows.forEach(([n, v], i) => {
       const y = 18 + i * Math.max(22, (h - 24) / 4);
       ctx.font = "500 11px Golos Text, sans-serif"; ctx.fillStyle = COL.text; ctx.textAlign = "left"; ctx.fillText(n, 10, y + 9);
@@ -696,6 +892,9 @@ const THEMES = [
   P("mono", "Монохром", "#c0c0c0", false, { c: { bg: "#0d0d0d", title: "#2b2b2b", body: "#1e1e1e", text: "#eeeeee", widget: "#141414", line: "#4d4d4d", accent: "#ffffff" }, roles: { text: "#bdbdbd", gen: "#e0e0e0" } }),
   P("paper", "Бумага (светлая)", "#3b6fd6", true, { c: { bg: "#ecebe6", title: "#d9d6cc", body: "#f6f5f1", text: "#22242a", widget: "#ffffff", line: "#b8b5aa", accent: "#3b6fd6" } }),
 ];
+const THEME_EN = { aureus: "Neron Aureus (desk)", graphite: "Graphite", neon: "Neon", backlight: "Backlight", sunset: "Sunset",
+  ocean: "Ocean", forest: "Forest", sakura: "Sakura", mono: "Monochrome", paper: "Paper (light)" };
+const tName = (t) => (lang === "ru" ? t.name : THEME_EN[t.id] || t.name);
 const COMFY = "comfy", THEME_KEY = "neron-studio-theme";
 const engine = () => { try { return parent !== window ? parent.__neronThemeEngine : null; } catch (_) { return null; } };
 let themeChoice = COMFY;
@@ -706,7 +905,7 @@ function applyTheme() {
   if (themeChoice === COMFY) {
     const cur = engine()?.current;
     t = cur && cur.c ? { name: cur.name || "Neron Theme", c: cur.c, roles: cur.roles || {} } : THEMES[0];
-    note = cur ? `как в ComfyUI: ${t.name}` : "как в ComfyUI: темы нет — Аурей";
+    note = cur ? tx(["как в ComfyUI: ", "as in ComfyUI: "]) + t.name : tx(["как в ComfyUI: темы нет — Аурей", "as in ComfyUI: no theme — Aureus"]);
   } else t = THEMES.find((x) => x.id === themeChoice) || THEMES[0];
   const c = t.c, light = lumC(c.bg) > .35, R = t.roles || {};
   const v = {
@@ -720,24 +919,24 @@ function applyTheme() {
   for (const [k, val] of Object.entries(v)) root.style.setProperty(k, val);
   root.style.colorScheme = light ? "light" : "dark";
   readCol();
-  document.getElementById("themeBtn").title = "Тема стола: " + (note || t.name);
+  document.getElementById("themeBtn").title = tx(["Тема стола: ", "Desk theme: "]) + (note || tName(t));
 }
 const themesBox = document.getElementById("themes");
 function fillThemes() {
   const cur = engine()?.current;
-  themesBox.innerHTML = `<h2>Тема стола</h2>`;
+  themesBox.innerHTML = `<h2>${tx(["Тема стола", "Desk theme"])}</h2>`;
   bgPanel(themesBox);
-  const h = document.createElement("h3"); h.textContent = "🎨 Цвета — темы Neron Theme"; themesBox.append(h);
-  const p = document.createElement("p"); p.textContent = "«Как в ComfyUI» — стол переключается вместе с нодой Neron Theme."; themesBox.append(p);
+  const h = document.createElement("h3"); h.textContent = tx(["🎨 Цвета — темы Neron Theme", "🎨 Colors — Neron Theme themes"]); themesBox.append(h);
+  const p = document.createElement("p"); p.textContent = tx(["«Как в ComfyUI» — стол переключается вместе с нодой Neron Theme.", "«As in ComfyUI» — the desk follows the Neron Theme node."]); themesBox.append(p);
   const add = (id, name, cols) => {
     const b = document.createElement("button"); b.type = "button"; b.className = "item"; b.setAttribute("aria-pressed", String(themeChoice === id));
     b.innerHTML = `<span class="swatch">${cols.map((x) => `<i style="background:${x}"></i>`).join("")}</span><span>${name}</span>`;
     b.onclick = () => { themeChoice = id; try { localStorage.setItem(THEME_KEY, id); } catch (_) {} applyTheme(); fillThemes(); };
     themesBox.append(b);
   };
-  add(COMFY, "🔗 Как в ComfyUI" + (cur ? ` — ${cur.name || "Neron Theme"}` : " (тема не стоит → Аурей)"),
+  add(COMFY, tx(["🔗 Как в ComfyUI", "🔗 As in ComfyUI"]) + (cur ? ` — ${cur.name || "Neron Theme"}` : tx([" (тема не стоит → Аурей)", " (no theme → Aureus)"])),
       cur?.c ? [cur.c.bg, cur.c.title, cur.c.accent] : ["#0e0a07", "#241910", "#c8873a"]);
-  for (const t of THEMES) add(t.id, t.name, [t.c.bg, t.c.title, t.c.accent]);
+  for (const t of THEMES) add(t.id, tName(t), [t.c.bg, t.c.title, t.c.accent]);
 }
 document.getElementById("themeBtn").onclick = () => { fillThemes(); drawer.hidden = true; themesBox.hidden = !themesBox.hidden; };
 document.addEventListener("pointerdown", (e) => { if (!themesBox.hidden && !themesBox.contains(e.target) && e.target.id !== "themeBtn") themesBox.hidden = true; });
@@ -782,27 +981,29 @@ function bgShow(rec) {
   bgLayer.hidden = false; document.documentElement.classList.add("has-bg");
 }
 async function bgSetFile(file) {
-  if (!file || !/^(image|video)\//.test(file.type)) { toast("Фоном может быть фото, гифка или видео."); return; }
+  if (!file || !/^(image|video)\//.test(file.type)) { toast(tx(["Фоном может быть фото, гифка или видео.", "The background can be a photo, GIF or video."])); return; }
   const rec = { blob: file, type: file.type, name: file.name };
   bgShow(rec); await bgStore(rec); tellComfy();
-  toast(`Фон: ${file.name}. Затемнение и прозрачность — в «🎨 Тема».`);
+  toast(tx(["Фон: ", "Background: "]) + file.name + tx([". Затемнение и прозрачность — в «🎨 Тема».", ". Dimming and transparency — in «🎨 Theme»."]));
   if (!themesBox.hidden) fillThemes();
 }
-async function bgClear() { bgShow(null); await bgStore(null); tellComfy(); if (!themesBox.hidden) fillThemes(); toast("Свой фон убран."); }
+async function bgClear() { bgShow(null); await bgStore(null); tellComfy(); if (!themesBox.hidden) fillThemes(); toast(tx(["Свой фон убран.", "Custom background removed."])); }
 function bgPick() {
   const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*,video/*"; inp.hidden = true;
   inp.onchange = () => { bgSetFile(inp.files?.[0]); inp.remove(); };
   document.body.append(inp); inp.click();
 }
 function bgPanel(box) {
-  const h = document.createElement("h3"); h.textContent = "🖼 Свой фон — фото, гифка или видео"; box.append(h);
+  const h = document.createElement("h3"); h.textContent = tx(["🖼 Свой фон — фото, гифка или видео", "🖼 Your background — photo, GIF or video"]); box.append(h);
   const row = document.createElement("div"); row.className = "row2";
-  const pick = document.createElement("button"); pick.type = "button"; pick.className = "item"; pick.textContent = bgName ? "🔁 Другой файл…" : "📂 Выбрать файл…"; pick.onclick = bgPick;
+  const pick = document.createElement("button"); pick.type = "button"; pick.className = "item"; pick.textContent = bgName ? tx(["🔁 Другой файл…", "🔁 Another file…"]) : tx(["📂 Выбрать файл…", "📂 Choose a file…"]); pick.onclick = bgPick;
   row.append(pick);
-  if (bgName) { const clr = document.createElement("button"); clr.type = "button"; clr.className = "item"; clr.textContent = "✕ Убрать фон"; clr.onclick = bgClear; row.append(clr); }
+  if (bgName) { const clr = document.createElement("button"); clr.type = "button"; clr.className = "item"; clr.textContent = tx(["✕ Убрать фон", "✕ Remove background"]); clr.onclick = bgClear; row.append(clr); }
   box.append(row);
   const note = document.createElement("p"); note.style.marginTop = "6px";
-  note.textContent = bgName ? `Сейчас: ${bgName}. Хранится только в этом браузере. Видео-фон чуть нагружает видеокарту — на слабом компьютере лучше фото.` : "Или просто перетащите файл на стол. Файл никуда не отправляется.";
+  note.textContent = bgName
+    ? tx(["Сейчас: ", "Now: "]) + bgName + tx([". Хранится только в этом браузере. Видео-фон чуть нагружает видеокарту — на слабом компьютере лучше фото.", ". Kept only in this browser. A video background loads the GPU a little — on a weak computer a photo is better."])
+    : tx(["Или просто перетащите файл на стол. Файл никуда не отправляется.", "Or just drop a file on the desk. The file is not sent anywhere."]);
   box.append(note);
   const slider = (label, key, min, max, step, fmt) => {
     const id = "bg-" + key, wrap = document.createElement("label"); wrap.className = "slider"; wrap.htmlFor = id;
@@ -817,11 +1018,11 @@ function bgPanel(box) {
   const cb = document.createElement("input"); cb.type = "checkbox"; cb.id = "bg-canvas"; cb.checked = bgSet.canvas !== false;
   cb.style.gridColumn = "auto"; cb.style.width = "auto";
   cb.onchange = () => { bgSet.canvas = cb.checked; bgApplySettings(); };
-  const ct = document.createElement("span"); ct.textContent = "И под холстом ComfyUI (нужна Neron Theme)"; ct.style.color = "var(--text)";
+  const ct = document.createElement("span"); ct.textContent = tx(["И под холстом ComfyUI (нужна Neron Theme)", "Also under the ComfyUI canvas (needs Neron Theme)"]); ct.style.color = "var(--text)";
   cw.append(cb, ct); box.append(cw);
-  slider("Затемнение фона", "dim", 0, .85, .05, (v) => Math.round(v * 100) + "%");
-  slider("Размытие фона", "blur", 0, 16, 1, (v) => v + " px");
-  slider("Плитки: плотность (меньше — стекло)", "tileop", 35, 100, 5, (v) => v + "%");
+  slider(tx(["Затемнение фона", "Background dimming"]), "dim", 0, .85, .05, (v) => Math.round(v * 100) + "%");
+  slider(tx(["Размытие фона", "Background blur"]), "blur", 0, 16, 1, (v) => v + " px");
+  slider(tx(["Плитки: плотность (меньше — стекло)", "Tiles: density (lower — glass)"]), "tileop", 35, 100, 5, (v) => v + "%");
 }
 // перетащить файл на стол — сразу фоном
 desk.addEventListener("dragover", (e) => { if ([...(e.dataTransfer?.types || [])].includes("Files")) { e.preventDefault(); desk.classList.add("drop"); } });
@@ -830,9 +1031,146 @@ desk.addEventListener("drop", (e) => { e.preventDefault(); desk.classList.remove
 bgApplySettings();
 bgLoad().then((rec) => { if (rec) bgShow(rec); });
 
-fit(); render();
+// ================== 🧪 «✉ Написать создателю» (папка «Тест») ==================
+// Письмо уходит автору через Web3Forms (ключ публичный: он только разрешает слать письма автору, адреса не раскрывает).
+// К письму — только то, что видно в «Что будет отправлено»: процесс, текст, версия ComfyUI, видеокарта, последняя ошибка.
+const DESK_VERSION = "2026.11.08·7";
+const W3F_KEY = "6462b9a5-e856-422f-9f27-23875a4277d3";
+const SENT_KEY = "neron-studio-report-at", ERR_KEY = "neron-studio-last-error";
+const RP = {
+  h: ["✉ Написать создателю", "✉ Write to the author"],
+  lead: ["Что-то не так или есть идея? Пару слов — остальное стол приложит сам. Письмо придёт автору Neron.",
+         "Something wrong or have an idea? A few words — the desk attaches the rest. The message goes to the Neron author."],
+  proc: ["Процесс", "Workflow"], other: ["Другой процесс Neron", "Another Neron workflow"], desk: ["Сам стол Neron Studio", "The Neron Studio desk itself"],
+  msg: ["Что случилось / что предлагаете", "What happened / your idea"],
+  msgPh: ["Например: на «Быстро» картинка двоится с 3-й секунды", "E.g.: on «Fast» the picture doubles from second 3"],
+  contact: ["Как с вами связаться (необязательно)", "How to reach you (optional)"], contactPh: ["почта или Telegram", "email or Telegram"],
+  attach: ["Приложить сведения о системе и последнюю ошибку", "Attach system info and the last error"],
+  preview: ["Что будет отправлено", "What will be sent"],
+  send: ["Отправить", "Send"], sending: ["Отправляю…", "Sending…"],
+  ok: ["Отправлено. Спасибо — это правда помогает!", "Sent. Thank you — it really helps!"],
+  empty: ["Напишите пару слов — что случилось.", "Write a few words about what happened."],
+  wait: ["Чуть подождите: не чаще одного письма в минуту.", "Please wait: one message per minute at most."],
+  fail: ["Не ушло: %. Проверьте интернет и попробуйте ещё раз.", "Not sent: %. Check the internet and try again."],
+  noErr: ["ошибок не было", "no errors so far"], noSys: ["ComfyUI не ответил", "ComfyUI did not answer"],
+};
+const r = (k, a) => tx(RP[k]).replace("%", a ?? "");
+const reportEl = document.getElementById("report");
+let sysCache;                                             // undefined — ещё не спрашивали; null — ComfyUI не ответил
+async function sysInfo() {
+  if (sysCache !== undefined) return sysCache;
+  sysCache = null;
+  try { const res = await fetch("system_stats", { cache: "no-store" }); if (res.ok) sysCache = await res.json(); } catch (_) {}
+  return sysCache;
+}
+function lastErr() { try { return JSON.parse(localStorage.getItem(ERR_KEY) || "null"); } catch (_) { return null; } }
+const gb = (b) => (b ? (b / 1073741824).toFixed(1) + " GB" : "?");
+function sysLines(st) {                                  // всегда по-русски — письмо читает автор
+  if (!st) return ["ComfyUI: не ответил"];
+  const s = st.system || {}, dv = (st.devices || [])[0] || {};
+  return [`ComfyUI: ${s.comfyui_version || "?"} · ${s.os || "?"} · Python ${String(s.python_version || "?").split(" ")[0]}`,
+          `Видеокарта: ${dv.name || "?"} · VRAM ${gb(dv.vram_total)} · ОЗУ ${gb(s.ram_total)}`];
+}
+function errLines(e) {
+  if (!e) return ["Последняя ошибка: не было"];
+  return [`Последняя ошибка: ${e.at || "?"} · процесс «${e.workflow || "?"}» · нода ${e.node || "?"} (#${e.node_id || "?"})`,
+          `${e.type || ""}: ${e.message || ""}`.trim(), e.traceback ? "--- traceback ---\n" + e.traceback : ""].filter(Boolean);
+}
+function buildReport() {
+  reportEl.innerHTML = "";
+  const h = document.createElement("h2"); h.textContent = r("h");
+  const p = document.createElement("p"); p.textContent = r("lead");
+  const grid = document.createElement("div"); grid.className = "rp-grid";
+  const field = (label, ctl) => { const l = document.createElement("label"); const s = document.createElement("span"); s.textContent = label; l.append(s, ctl); return l; };
+  const sel = document.createElement("select"); sel.id = "rpProc";
+  for (const d of VIEWS.test.tiles) sel.append(new Option(tx(d.t), d.t[0]));
+  sel.append(new Option(r("other"), "Другой процесс Neron"), new Option(r("desk"), "Стол Neron Studio"));
+  const contact = document.createElement("input"); contact.id = "rpContact"; contact.maxLength = 120; contact.placeholder = r("contactPh"); contact.autocomplete = "email";
+  grid.append(field(r("proc"), sel), field(r("contact"), contact));
+  const msg = document.createElement("textarea"); msg.id = "rpMsg"; msg.rows = 4; msg.maxLength = 4000; msg.placeholder = r("msgPh");
+  const msgL = field(r("msg"), msg); msgL.className = "rp-wide";
+  const chk = document.createElement("label"); chk.className = "rp-check";
+  const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = true;
+  const cbt = document.createElement("span"); cbt.textContent = r("attach"); chk.append(cb, cbt);
+  const det = document.createElement("details"); const sum = document.createElement("summary"); sum.textContent = r("preview");
+  const pre = document.createElement("pre"); det.append(sum, pre);
+  const bot = document.createElement("input"); bot.type = "checkbox"; bot.tabIndex = -1; bot.hidden = true; bot.setAttribute("aria-hidden", "true");
+  const row = document.createElement("div"); row.className = "rp-row";
+  const send = document.createElement("button"); send.type = "button"; send.className = "open"; send.textContent = r("send");
+  const state = document.createElement("span"); state.className = "rp-state"; state.setAttribute("role", "status");
+  row.append(send, state);
+  reportEl.append(h, p, grid, msgL, chk, det, bot, row);
+
+  const body = async () => {
+    const lines = [`Процесс: ${sel.value}`, `Язык стола: ${lang.toUpperCase()} · Neron Studio ${DESK_VERSION}`];
+    if (contact.value.trim()) lines.push(`Контакт: ${contact.value.trim()}`);
+    lines.push("", "Сообщение:", msg.value.trim() || "—");
+    if (cb.checked) lines.push("", ...sysLines(await sysInfo()), "", ...errLines(lastErr()));
+    return lines.join("\n");
+  };
+  const refresh = async () => { pre.textContent = await body(); };
+  for (const el of [sel, contact, msg, cb]) el.addEventListener("input", refresh);
+  det.addEventListener("toggle", refresh);
+  refresh();
+
+  send.onclick = async () => {
+    if (!msg.value.trim()) { state.textContent = r("empty"); msg.focus(); return; }
+    let last = 0; try { last = Number(localStorage.getItem(SENT_KEY) || 0); } catch (_) {}
+    if (Date.now() - last < 60000) { state.textContent = r("wait"); return; }
+    send.disabled = true; state.textContent = r("sending");
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ access_key: W3F_KEY, subject: `Neron Studio · бета · ${sel.value}`, from_name: "Neron Studio",
+          botcheck: bot.checked, message: await body() }),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok || out.success === false) throw new Error(out.message || ("HTTP " + res.status));
+      try { localStorage.setItem(SENT_KEY, String(Date.now())); } catch (_) {}
+      state.textContent = r("ok"); msg.value = ""; refresh();
+    } catch (e) { state.textContent = r("fail", e?.message || e); }
+    finally { send.disabled = false; }
+  };
+}
+function showReport() {
+  const on = !!VIEWS[view].report;
+  reportEl.hidden = !on;
+  if (on) buildReport(); else reportEl.innerHTML = "";
+}
+
+// ================== язык: подписи полосы и переключатель RU | EN ==================
+function applyTexts() {
+  document.documentElement.lang = lang;
+  document.getElementById("sub").textContent = u("sub");
+  document.getElementById("hint").textContent = u("hint");
+  for (const id of ["theme", "align", "add", "reset", "close"]) {
+    const el = document.getElementById(id === "theme" ? "themeBtn" : id); if (el) el.textContent = u(id);
+  }
+  document.getElementById("close").title = u("closeTip");
+  const seg = document.getElementById("lang"); seg.setAttribute("aria-label", u("langTip")); seg.title = u("langTip");
+  for (const b of seg.querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.lang === lang));
+  desk.setAttribute("aria-label", tx(VIEWS[view].t));
+}
+function setLang(l) {
+  if (l === lang) return;
+  lang = l;
+  try { localStorage.setItem(LANG_KEY, l); } catch (_) {}
+  applyTexts(); drawCrumbs(); clearTiles(); render(); showReport(); applyTheme();
+  if (!themesBox.hidden) fillThemes();
+  if (!drawer.hidden) fillDrawer();
+  try { if (parent !== window) parent.postMessage({ neronStudio: "lang", lang: l }, "*"); } catch (_) {}
+}
+for (const b of document.querySelectorAll("#lang button")) b.onclick = () => setLang(b.dataset.lang);
+document.getElementById("close").onclick = () => { try { parent.postMessage({ neronStudio: "close" }, "*"); } catch (_) {} };
+if (parent === window) document.getElementById("close").hidden = true;
+applyTexts(); drawCrumbs(); showReport();
+
+fit(); render(true);
 requestAnimationFrame(frame);
 if (REDUCED) addEventListener("resize", () => requestAnimationFrame(frame));
 document.fonts?.ready.then(() => render());
 })();
 </script>
+
+</body>
+</html>

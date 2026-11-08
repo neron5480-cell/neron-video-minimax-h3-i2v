@@ -1,0 +1,653 @@
+{
+  "id": "857c1f50-c3d8-483f-a253-125b00cb3437",
+  "revision": 0,
+  "last_node_id": 109,
+  "last_link_id": 26,
+  "nodes": [
+    {
+      "id": 101,
+      "type": "LoadVideo",
+      "pos": [
+        85.57673599006316,
+        -108.85654628944789
+      ],
+      "size": [
+        330,
+        320
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "slot_index": 0,
+          "links": [
+            22
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo"
+      },
+      "widgets_values": [
+        "AnimateDiff_00001-audio (1).mp4",
+        "image"
+      ],
+      "widgets_values_named": {
+        "file": "AnimateDiff_00001-audio (1).mp4",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 102,
+      "type": "CreateVideo",
+      "pos": [
+        984.9258295217501,
+        137.15312144541753
+      ],
+      "size": [
+        300,
+        150
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 24
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 25
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": 26
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "slot_index": 0,
+          "links": [
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo"
+      },
+      "widgets_values": [
+        24,
+        "auto",
+        "sRGB",
+        "none"
+      ],
+      "widgets_values_named": {
+        "fps": 24,
+        "bit_depth": "auto",
+        "color_space": "sRGB",
+        "codec": "none"
+      }
+    },
+    {
+      "id": 103,
+      "type": "SaveVideo",
+      "pos": [
+        1307.1826673983994,
+        138.0228842946016
+      ],
+      "size": [
+        420,
+        420
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 13
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "video/relay",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/relay",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 104,
+      "type": "PerceptionRelayCardStabilize",
+      "pos": [
+        74.65129345447329,
+        275.36737869087625
+      ],
+      "size": [
+        368.814453125,
+        130
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "в пульт",
+          "type": "PR_STAGE",
+          "links": [
+            20
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PerceptionRelayCardStabilize"
+      },
+      "widgets_values": [
+        false,
+        0.8,
+        0.6,
+        0.6,
+        0.3,
+        0.8,
+        2,
+        4,
+        0.25,
+        0.035,
+        true,
+        "RAFT large",
+        "0.5",
+        12,
+        true,
+        null
+      ],
+      "widgets_values_named": {
+        "expert": false,
+        "strength_mid": 0.8,
+        "face_keep": 0.6,
+        "strength_fine": 0.6,
+        "fine_cut": 0.3,
+        "chroma": 0.8,
+        "radius": 2,
+        "detail_size": 4,
+        "eye_keep": 0.25,
+        "tolerance": 0.035,
+        "trust_flow_report": true,
+        "engine": "RAFT large",
+        "scale": "0.5",
+        "iterations": 12,
+        "free_vram_before": true,
+        "↺ сброс / reset": null
+      }
+    },
+    {
+      "id": 105,
+      "type": "PerceptionRelayCardPicture",
+      "pos": [
+        95.84270164589212,
+        456.8407517391743
+      ],
+      "size": [
+        341.421875,
+        202
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "в пульт",
+          "type": "PR_STAGE",
+          "links": [
+            21
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PerceptionRelayCardPicture"
+      },
+      "widgets_values": [
+        false,
+        0.8,
+        0.2,
+        0,
+        0,
+        1,
+        true,
+        1,
+        0.03,
+        0,
+        true,
+        true,
+        1,
+        true,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.5,
+        0.8,
+        0.7,
+        0,
+        0.15,
+        true,
+        0.8,
+        2,
+        0.4,
+        2,
+        0.12,
+        1,
+        0,
+        null
+      ],
+      "widgets_values_named": {
+        "expert": false,
+        "strength": 0.8,
+        "black_density": 0.2,
+        "brightness": 0,
+        "contrast": 0,
+        "saturation": 1,
+        "use_edge": true,
+        "passes": 1,
+        "edge_level": 0.03,
+        "texture_keep": 0,
+        "skip_faces": true,
+        "denoise": true,
+        "temporal": 1,
+        "use_tone": true,
+        "black_point": 0,
+        "deep_shadows": 0,
+        "shadows": 0,
+        "transition": 0,
+        "face_fill": 0,
+        "shadow_saturation": 0,
+        "shadow_neutral": 0.5,
+        "stabilize_black": 0.8,
+        "tone_temporal": 0.7,
+        "light_scale": 0,
+        "edge_keep": 0.15,
+        "use_seam": true,
+        "color_snap": 0.8,
+        "snap_radius": 2,
+        "narrow": 0.4,
+        "narrow_radius": 2,
+        "seam_edge_level": 0.12,
+        "seam_temporal": 1,
+        "sharpness": 0,
+        "↺ сброс / reset": null
+      }
+    },
+    {
+      "id": 106,
+      "type": "PerceptionRelayCardMotion",
+      "pos": [
+        84.21588578575735,
+        728.7968853774757
+      ],
+      "size": [
+        332.4244140625,
+        154
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "в пульт",
+          "type": "PR_STAGE",
+          "links": [
+            23
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PerceptionRelayCardMotion"
+      },
+      "widgets_values": [
+        false,
+        "×2: half-frame between frames / полкадра между кадрами",
+        0.6,
+        0.6,
+        true,
+        0.5,
+        1,
+        1,
+        0,
+        0,
+        0.35,
+        true,
+        0.25,
+        0.5,
+        0,
+        0.7,
+        1529438290,
+        "randomize",
+        0.6,
+        2,
+        8,
+        6,
+        null
+      ],
+      "widgets_values_named": {
+        "expert": false,
+        "smoothness": "×2: half-frame between frames / полкадра между кадрами",
+        "deflicker": 0.6,
+        "eye_sharp": 0.6,
+        "use_polish": true,
+        "shutter": 0.5,
+        "exposure": 1,
+        "saturation": 1,
+        "shadow_contrast": 0,
+        "shadow_depth": 0,
+        "shadow_level": 0.35,
+        "use_points": true,
+        "eye_contrast": 0.25,
+        "contour_sharp": 0.5,
+        "grain": 0,
+        "grain_size": 0.7,
+        "seed": 1529438290,
+        "control_after_generate": "randomize",
+        "score_threshold": 0.6,
+        "smooth": 2,
+        "min_track": 8,
+        "max_gap": 6,
+        "↺ сброс / reset": null
+      }
+    },
+    {
+      "id": 109,
+      "type": "PerceptionRelayHub",
+      "pos": [
+        546.5377006879924,
+        125.78366476009124
+      ],
+      "size": [
+        416.2056640625,
+        681
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": 22
+        },
+        {
+          "name": "этап_1",
+          "shape": 7,
+          "type": "PR_STAGE",
+          "link": 20
+        },
+        {
+          "name": "этап_2",
+          "shape": 7,
+          "type": "PR_STAGE",
+          "link": 21
+        },
+        {
+          "name": "этап_3",
+          "shape": 7,
+          "type": "PR_STAGE",
+          "link": 23
+        },
+        {
+          "name": "этап_4",
+          "shape": 7,
+          "type": "PR_STAGE",
+          "link": null
+        },
+        {
+          "name": "этап_5",
+          "shape": 7,
+          "type": "PR_STAGE",
+          "link": null
+        },
+        {
+          "name": "этап_6",
+          "shape": 7,
+          "type": "PR_STAGE",
+          "link": null
+        },
+        {
+          "name": "этап_7",
+          "shape": 7,
+          "type": "PR_STAGE",
+          "link": null
+        },
+        {
+          "name": "этап_8",
+          "shape": 7,
+          "type": "PR_STAGE",
+          "link": null
+        },
+        {
+          "name": "этап_9",
+          "shape": 7,
+          "type": "PR_STAGE",
+          "link": null
+        },
+        {
+          "name": "этап_10",
+          "shape": 7,
+          "type": "PR_STAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "кадры",
+          "type": "IMAGE",
+          "links": [
+            24
+          ]
+        },
+        {
+          "name": "звук",
+          "type": "AUDIO",
+          "links": [
+            25
+          ]
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "links": [
+            26
+          ]
+        },
+        {
+          "name": "последний_кадр",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "сравнение",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "отчёт_для_нас",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PerceptionRelayHub"
+      },
+      "widgets_values": [
+        false,
+        false,
+        "to 1080p / до 1080p",
+        0.6,
+        "side by side / рядом (исходник | результат)",
+        true,
+        0.5,
+        "after / после",
+        "3B int8 · 3.5 GB (default / по умолчанию)",
+        0.5,
+        0.5,
+        0.7,
+        true,
+        0,
+        21,
+        "",
+        "h264",
+        16,
+        true,
+        "—",
+        "",
+        "",
+        null,
+        null,
+        ""
+      ],
+      "widgets_values_named": {
+        "expert": false,
+        "refine": false,
+        "refine_size": "to 1080p / до 1080p",
+        "refine_strength": 0.6,
+        "compare": "side by side / рядом (исходник | результат)",
+        "live": true,
+        "live_frame": 0.5,
+        "live_view": "after / после",
+        "refine_model": "3B int8 · 3.5 GB (default / по умолчанию)",
+        "refine_sensitivity": 0.5,
+        "refine_upscale_detail": 0.5,
+        "refine_stick": 0.7,
+        "refine_protect_edges": true,
+        "refine_face_detail": 0,
+        "refine_window": 21,
+        "job_name": "",
+        "codec": "h264",
+        "crf": 16,
+        "frames_out": true,
+        "rating": "—",
+        "comment": "",
+        "video_path": "",
+        "🔄 обновить окно / refresh live": null,
+        "▶ проиграть 1 с / play 1 s": null,
+        "relay_live": ""
+      }
+    }
+  ],
+  "links": [
+    [
+      13,
+      102,
+      0,
+      103,
+      0,
+      "VIDEO"
+    ],
+    [
+      20,
+      104,
+      0,
+      109,
+      1,
+      "PR_STAGE"
+    ],
+    [
+      21,
+      105,
+      0,
+      109,
+      2,
+      "PR_STAGE"
+    ],
+    [
+      22,
+      101,
+      0,
+      109,
+      0,
+      "VIDEO"
+    ],
+    [
+      23,
+      106,
+      0,
+      109,
+      3,
+      "PR_STAGE"
+    ],
+    [
+      24,
+      109,
+      0,
+      102,
+      0,
+      "IMAGE"
+    ],
+    [
+      25,
+      109,
+      1,
+      102,
+      1,
+      "AUDIO"
+    ],
+    [
+      26,
+      109,
+      2,
+      102,
+      2,
+      "FLOAT"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.1497386913437169,
+      "offset": [
+        296.67077161984724,
+        228.6777106646064
+      ]
+    },
+    "frontendVersion": "1.55.18",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
