@@ -1115,6 +1115,8 @@ const RP = {
   contact: ["Как с вами связаться (необязательно)", "How to reach you (optional)"], contactPh: ["почта или Telegram", "email or Telegram"],
   attach: ["Приложить сведения о системе и последнюю ошибку", "Attach system info and the last error"],
   preview: ["Что будет отправлено", "What will be sent"],
+  ipNote: ["Письмо пересылает сервис Web3Forms — он, как любой сайт, видит IP-адрес отправителя и пишет его в письмо.",
+           "The message is relayed by Web3Forms — like any website it sees the sender's IP address and puts it in the message."],
   send: ["Отправить", "Send"], sending: ["Отправляю…", "Sending…"],
   ok: ["Отправлено. Спасибо — это правда помогает!", "Sent. Thank you — it really helps!"],
   empty: ["Напишите пару слов — что случилось.", "Write a few words about what happened."],
@@ -1137,7 +1139,7 @@ function sysLines(st) {                                  // всегда по-р
   if (!st) return ["ComfyUI: не ответил"];
   const s = st.system || {}, dv = (st.devices || [])[0] || {};
   return [`ComfyUI: ${s.comfyui_version || "?"} · ${s.os || "?"} · Python ${String(s.python_version || "?").split(" ")[0]}`,
-          `Видеокарта: ${dv.name || "?"} · VRAM ${gb(dv.vram_total)} · ОЗУ ${gb(s.ram_total)}`];
+          `Видеокарта: ${String(dv.name || "?").replace(/^\w+:\d+\s+/, "").replace(/\s*:\s*\w+$/, "")} · VRAM ${gb(dv.vram_total)} · ОЗУ ${gb(s.ram_total)}`];
 }
 function errLines(e) {
   if (!e) return ["Последняя ошибка: не было"];
@@ -1161,7 +1163,9 @@ function buildReport() {
   const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = true;
   const cbt = document.createElement("span"); cbt.textContent = r("attach"); chk.append(cb, cbt);
   const det = document.createElement("details"); const sum = document.createElement("summary"); sum.textContent = r("preview");
-  const pre = document.createElement("pre"); det.append(sum, pre);
+  const pre = document.createElement("pre");
+  const ipn = document.createElement("p"); ipn.style.margin = "6px 0 0"; ipn.textContent = r("ipNote");
+  det.append(sum, pre, ipn);
   const bot = document.createElement("input"); bot.type = "checkbox"; bot.tabIndex = -1; bot.hidden = true; bot.setAttribute("aria-hidden", "true");
   const row = document.createElement("div"); row.className = "rp-row";
   const send = document.createElement("button"); send.type = "button"; send.className = "open"; send.textContent = r("send");
