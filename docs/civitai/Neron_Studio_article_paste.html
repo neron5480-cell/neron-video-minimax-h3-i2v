@@ -1,0 +1,114 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neron Studio — статья для Civitai</title>
+<style>:root{color-scheme:light}body{background:#fff;color:#111;font:16px/1.55 system-ui,sans-serif;max-width:760px;margin:24px auto;padding:0 16px}
+.how{background:#fff4e0;border:1px solid #c8873a;border-radius:10px;padding:12px 16px;margin-bottom:24px}</style></head><body>
+<div class="how"><b>Как вставить:</b> выделите текст ниже ЛЕВЫМ кликом от «🇷🇺 Что это» до конца (или Ctrl+A, потом удалите эту рамку в Civitai),
+Ctrl+C → Civitai → поле «Содержание» → Ctrl+V. Заголовки, жирный и списки перенесутся. Оранжевые строки [📷 …] замените своими скриншотами
+(кнопка «картинка» в панели редактора).</div>
+<h1>🇷🇺 Русский</h1>
+<h2>Что это</h2>
+<p>Neron Studio — рабочий стол прямо внутри ComfyUI. Не процесс и не нода, а пространство: плитки, папки, свой фон — и все процессы Neron в одном месте.</p>
+<p>Открыли стол → выбрали папку → нажали «Открыть» → процесс загрузился в ComfyUI уже в оформлении стола: сверху одна полоса с кнопками «▶ Создать», «■ Стоп» и часами, лишние панели спрятаны, под нодами — ваш фон.</p>
+<p>Сделано для тех, кто открыл ComfyUI впервые и не хочет разбираться в лапше. Профи ничего не теряют: «✕» — и перед вами обычный ComfyUI.</p>
+<p style="color:#c8873a"><i>[📷 Процесс, открытый со стола: полоса NERON STUDIO сверху, ноды на фоне]</i></p>
+<h2>Что умеет</h2>
+<p><b>Папки вместо каши.</b> На стартовом экране — только Видео, Картинки, Звук и Модели. Внутри папок — плитки по задачам, внутри задач — варианты процесса и модели. Сверху путь «Стол › Видео › Фото → видео», назад — по пути, кнопкой «‹ Назад» или Esc.</p>
+<p><b>Живые плитки.</b> Каждая плитка показывает, что делает процесс: плёнка крутится, кадр расширяется, эквалайзер играет. Плитки можно перетаскивать, растягивать за уголок, убирать ✕ и возвращать через «＋ Плитка». «⊞ Выровнять» убирает дыры. Раскладка запоминается — своя у каждой папки.</p>
+<p><b>Свой фон.</b> Фото, гифка или видео на весь экран — просто перетащите файл на стол. Тот же фон встаёт и под холст ComfyUI, ноды становятся «стеклом». Затемнение, размытие и прозрачность плиток — ползунками.</p>
+<p><b>Темы, размер и цвет.</b> Темы из Neron Theme (или «как в ComfyUI»), размер плиток 50–140 %, свой цвет плиток и акцента. Текст на плитках сам становится читаемым на любом цвете.</p>
+<p><b>Два языка.</b> Русский или английский — сам, по языку системы. Переключатель RU | EN рядом с «Темой».</p>
+<p><b>Своё оформление процесса.</b> «▶ Создать» запускает, часы показывают этап и время, «⤴ Наверх» выводит из подграфа, «🏠 Стол» — обратно на стол, «✕» — обычный ComfyUI.</p>
+<p style="color:#c8873a"><i>[📷 Папка «Видео»: Фото → видео, Длинный ролик, Диалог, Движение по видео, Улучшить видео, Для профи]</i></p>
+<h2>Что внутри (проверенные процессы Neron)</h2>
+<p>🎬 <b>Видео</b></p>
+<ul>
+<li>Фото → видео: MiniMax H3 I2V v3.0 · LTX Engine (автопромтер) · LTX 2.3 Image-to-Video</li>
+<li>Длинный ролик: H3 Story (до 45 с) · Full Pipeline (Auto Director)</li>
+<li>Диалог: Smart MiniMax H3 v1.0</li>
+<li>Движение по видео: SCAIL (Wan 2.1)</li>
+<li>Улучшить видео: Perception Relay</li>
+<li>Для профи: H3 Raw Engine</li>
+</ul>
+<p>🖼 <b>Картинки</b></p>
+<ul>
+<li>Расширение изображения (Flux-Fill Pre-Processor v1.1)</li>
+<li>Реставрация и раскраска · Улучшить качество (Restore Studio)</li>
+<li>Скоро: генератор кадра, редактор словами, примерочная, удаление фона</li>
+</ul>
+<p>🎵 <b>Звук</b> — Audio Studio 2.0 (DJ-пульт, сведение, клип со звуком)</p>
+<p>Процессы лежат внутри пакета как есть — те же, что выложены на Civitai.</p>
+<h2>Установка — 3 шага</h2>
+<p>1. ComfyUI → <b>Manager</b> → <b>Custom Nodes Manager</b> → в поиске <b>Neron</b> → <b>Install</b> (уже стоит — <b>Update</b>).</p>
+<p>2. Полностью перезапустите ComfyUI.</p>
+<p>3. На холсте появится золотая монета <b>N</b> (её можно перетащить куда удобно) — щёлкните. Или меню <b>Neron → Neron Studio</b>.</p>
+<p>Не нашли в Manager? <b>Manager → Install via Git URL</b> и вставьте:</p>
+<p><a href="https://github.com/neron5480-cell/neron-video-minimax-h3-i2v">https://github.com/neron5480-cell/neron-video-minimax-h3-i2v</a></p>
+<h2>Важно знать</h2>
+<ul>
+<li>Стол не скачивает модели сам. Нужные модели и ноды для каждого процесса — в заметках внутри процесса (у многих есть 📥 «Модели», которые качают сами).</li>
+<li>Если процесса нет в вашей установке, на плитке будет «Не установлено» — обновите пакет Neron.</li>
+<li>Ваш фон хранится только в вашем браузере и никуда не отправляется.</li>
+<li>Проверено на ComfyUI Desktop 0.44.2 (Windows, RTX 5070 Ti 16 ГБ).</li>
+</ul>
+<h2>Частые вопросы</h2>
+<p><b>Нет монеты N.</b> Перезапустите ComfyUI полностью и обновите страницу (Ctrl+F5). Ставили архивом вручную — удалите старую папку перед распаковкой новой.</p>
+<p><b>Пропали меню и вкладки ComfyUI.</b> Это оформление стола. Нажмите «✕» на полосе сверху — вернётся обычный ComfyUI.</p>
+<p><b>Зашёл в подграф и не выйти.</b> Кнопка «⤴ Наверх» на полосе.</p>
+<p><b>Плитки слишком большие.</b> «🎨 Тема» → «🔲 Плитки» → «Размер плиток».</p>
+<p><b>Хочу менять процесс, а не просто запускать.</b> «✕» — и правьте в обычном ComfyUI, как всегда.</p>
+<hr>
+<p>Автор: neron5480922. Отзывы и идеи — в комментариях. 🙏</p>
+<hr><h1>🇬🇧 English</h1>
+<h2>What it is</h2>
+<p>Neron Studio is a desktop right inside ComfyUI. Not a workflow and not a node — a space: tiles, folders, your own background, and every Neron workflow in one place.</p>
+<p>Open the desk → pick a folder → press «Open» → the workflow loads into ComfyUI already in the desk look: one bar on top with «▶ Create», «■ Stop» and a clock, extra panels hidden, your background under the nodes.</p>
+<p>Made for people who open ComfyUI for the first time and don&#x27;t want to untangle the spaghetti. Pros lose nothing: press «✕» and it&#x27;s plain ComfyUI again.</p>
+<p style="color:#c8873a"><i>[📷 A workflow opened from the desk: the NERON STUDIO bar on top, nodes over the background]</i></p>
+<h2>What it does</h2>
+<p><b>Folders instead of chaos.</b> The start screen has only Video, Images, Sound and Models. Folders hold tiles by task; tasks hold the workflow and model variants. A path on top — «Desktop › Video › Photo → video»; go back via the path, «‹ Back» or Esc.</p>
+<p><b>Live tiles.</b> Every tile shows what the workflow does: film rolls, a frame expands, an equalizer plays. Drag tiles, resize them by the corner, remove with ✕ and bring back with «＋ Tile». «⊞ Tidy up» closes the gaps. The layout is remembered — per folder.</p>
+<p><b>Your own background.</b> A photo, GIF or video, full screen — just drop the file on the desk. The same background goes under the ComfyUI canvas, nodes turn to glass. Dimming, blur and tile transparency — with sliders.</p>
+<p><b>Themes, size and color.</b> Neron Theme themes (or «as in ComfyUI»), tile size 50–140 %, your own tile and accent color. Tile text stays readable on any color.</p>
+<p><b>Two languages.</b> Russian or English — picked automatically from your system language. RU | EN switch next to «Theme».</p>
+<p><b>Its own workflow look.</b> «▶ Create» runs it, the clock shows the stage and time, «⤴ Up» leaves a subgraph, «🏠 Desktop» goes back to the desk, «✕» — plain ComfyUI.</p>
+<p style="color:#c8873a"><i>[📷 The Video folder: Photo → video, Long video, Dialogue, Motion from video, Enhance video, For pros]</i></p>
+<h2>What&#x27;s inside (tested Neron workflows)</h2>
+<p>🎬 <b>Video</b></p>
+<ul>
+<li>Photo → video: MiniMax H3 I2V v3.0 · LTX Engine (autoprompter) · LTX 2.3 Image-to-Video</li>
+<li>Long video: H3 Story (up to 45 s) · Full Pipeline (Auto Director)</li>
+<li>Dialogue: Smart MiniMax H3 v1.0</li>
+<li>Motion from video: SCAIL (Wan 2.1)</li>
+<li>Enhance video: Perception Relay</li>
+<li>For pros: H3 Raw Engine</li>
+</ul>
+<p>🖼 <b>Images</b></p>
+<ul>
+<li>Expand an image (Flux-Fill Pre-Processor v1.1)</li>
+<li>Restore &amp; colorize · Improve quality (Restore Studio)</li>
+<li>Coming: image generator, edit with words, try-on, background removal</li>
+</ul>
+<p>🎵 <b>Sound</b> — Audio Studio 2.0 (DJ pult, mixing, clip with sound)</p>
+<p>The workflows ship inside the pack as they are — the same ones published on Civitai.</p>
+<h2>Install — 3 steps</h2>
+<p>1. ComfyUI → <b>Manager</b> → <b>Custom Nodes Manager</b> → search <b>Neron</b> → <b>Install</b> (already installed — <b>Update</b>).</p>
+<p>2. Fully restart ComfyUI.</p>
+<p>3. A golden <b>N</b> coin appears on the canvas (drag it anywhere) — click it. Or the menu <b>Neron → Neron Studio</b>.</p>
+<p>Not in Manager? <b>Manager → Install via Git URL</b> and paste:</p>
+<p><a href="https://github.com/neron5480-cell/neron-video-minimax-h3-i2v">https://github.com/neron5480-cell/neron-video-minimax-h3-i2v</a></p>
+<h2>Good to know</h2>
+<ul>
+<li>The desk doesn&#x27;t download models by itself. The models and nodes each workflow needs are listed in the notes inside it (many have a 📥 «Models» window that downloads them for you).</li>
+<li>If a workflow isn&#x27;t in your install, its tile says «Not installed» — update the Neron pack.</li>
+<li>Your background is kept only in your browser and is never sent anywhere.</li>
+<li>Tested on ComfyUI Desktop 0.44.2 (Windows, RTX 5070 Ti 16 GB).</li>
+</ul>
+<h2>FAQ</h2>
+<p><b>No N coin.</b> Fully restart ComfyUI and refresh the page (Ctrl+F5). Installed from a zip by hand — delete the old folder before unpacking the new one.</p>
+<p><b>ComfyUI menus and tabs are gone.</b> That&#x27;s the desk look. Press «✕» on the top bar — plain ComfyUI is back.</p>
+<p><b>Went into a subgraph and can&#x27;t get out.</b> The «⤴ Up» button on the bar.</p>
+<p><b>Tiles are too big.</b> «🎨 Theme» → «🔲 Tiles» → «Tile size».</p>
+<p><b>I want to edit the workflow, not just run it.</b> Press «✕» and edit in plain ComfyUI as usual.</p>
+<hr>
+<p>Author: neron5480922. Feedback and ideas — in the comments. 🙏</p>
+</body></html>
