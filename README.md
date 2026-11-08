@@ -67,6 +67,17 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 
 ---
 
+## 🖥 NERON STUDIO — свой рабочий стол внутри ComfyUI (новое)
+
+Плитки, папки и свой фон — и все процессы Neron в один клик. После установки на холсте появится золотая монета **N** (её можно перетащить), или меню **Neron → Neron Studio**.
+
+- **Папки:** Видео · Картинки · Звук · Модели; внутри — плитки по задачам и варианты процесса. Путь сверху, назад — «‹ Назад» или Esc.
+- **Живые плитки:** перетаскиваются, растягиваются, убираются и возвращаются; раскладка запоминается.
+- **Свой фон:** фото, гифка или видео — и на столе, и под холстом ComfyUI (нужна Neron Theme). Размер плиток 50–140 %, свой цвет плиток и акцента.
+- **Процесс в оформлении стола:** «▶ Создать», «■ Стоп», часы, «⤴ Наверх» из подграфа, «🏠 Стол»; «✕» — обычный ComfyUI.
+- **RU / EN** — по языку системы, переключатель на столе.
+- Проверенные процессы лежат внутри как есть (`ComfyUI-NeronStudio/workflows`). Модели к ним — по заметкам в самих процессах.
+
 ## 🎬 Проект 1: NERON H3 ENGINE v2.0 «Hard» (Видео-генерация, новый)
 
 👋 Нода и воркфлоу лежат в папке **[`ComfyUI-NeronH3Engine`](ComfyUI-NeronH3Engine/)**.
@@ -289,6 +300,17 @@ If you installed nodes manually before and now install by link, **delete the old
 4. Write to me in the comments on Civitai and attach a piece of the console.
 
 ---
+
+## 🖥 NERON STUDIO — your own desktop inside ComfyUI (new)
+
+Tiles, folders and your own background — and every Neron workflow one click away. After install a golden **N** coin appears on the canvas (drag it anywhere), or use the menu **Neron → Neron Studio**.
+
+- **Folders:** Video · Images · Sound · Models; inside — tiles by task and workflow variants. A path on top; go back with «‹ Back» or Esc.
+- **Live tiles:** drag, resize, remove and bring back; the layout is remembered.
+- **Your own background:** a photo, GIF or video — on the desk and under the ComfyUI canvas (needs Neron Theme). Tile size 50–140 %, your own tile and accent colors.
+- **Workflow in the desk look:** «▶ Create», «■ Stop», a clock, «⤴ Up» out of a subgraph, «🏠 Desktop»; «✕» — plain ComfyUI.
+- **RU / EN** — from the system language, with a switch on the desk.
+- Tested workflows ship inside as they are (`ComfyUI-NeronStudio/workflows`). Their models — see the notes inside each workflow.
 
 ## 🎬 Project 1: NERON H3 ENGINE v2.0 "Hard" (Video Generation, new)
 

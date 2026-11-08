@@ -1,5 +1,19 @@
 # Changelog / История изменений
 
+## 🖥 Neron Studio — рабочий стол внутри ComfyUI / desktop inside ComfyUI (main 2.2.0, 08.11.2026)
+
+**RU:**
+- **🖥 Neron Studio** — монета **N** на холсте и меню Neron → Neron Studio: стол с папками (Видео · Картинки · Звук · Модели), живыми плитками и своим фоном (фото / гифка / видео). «Открыть» загружает процесс новой вкладкой в оформлении стола: «▶ Создать», «■ Стоп», часы, «⤴ Наверх» из подграфа; «✕» — обычный ComfyUI.
+- Размер плиток 50–140 %, свои цвета плиток и акцента, темы Neron Theme. RU / EN по языку системы + переключатель.
+- Внутри — проверенные процессы как есть: MiniMax H3 I2V v3.0, LTX Engine, LTX 2.3 I2V, H3 Full Pipeline, Smart MiniMax H3 v1.0, SCAIL (Wan 2.1), Perception Relay, H3 Raw Engine, Flux-Fill Pre-Processor v1.1, Restore Studio, Audio Studio 2.0.
+- **🎨 Neron Theme:** фон стола под холстом ComfyUI, тема «Neron Studio» для оформления процессов.
+
+**EN:**
+- **🖥 Neron Studio** — an **N** coin on the canvas and the Neron → Neron Studio menu: a desktop with folders (Video · Images · Sound · Models), live tiles and your own background (photo / GIF / video). «Open» loads a workflow in a new tab in the desk look: «▶ Create», «■ Stop», a clock, «⤴ Up» out of a subgraph; «✕» — plain ComfyUI.
+- Tile size 50–140 %, your own tile and accent colors, Neron Theme themes. RU / EN from the system language + a switch.
+- Inside — tested workflows as they are (see the RU list).
+- **🎨 Neron Theme:** the desk background under the ComfyUI canvas, a «Neron Studio» theme for the workflow look.
+
 ## 🎬 Neron H3 Story — длинные ролики H3 до 45 с / long H3 videos up to 45 s (main, 06.11.2026)
 
 **RU:**

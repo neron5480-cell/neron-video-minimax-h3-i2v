@@ -1,0 +1,535 @@
+{
+  "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
+  "revision": 0,
+  "last_node_id": 827,
+  "last_link_id": 1614,
+  "nodes": [
+    {
+      "id": 175,
+      "type": "VHS_VideoCombine",
+      "pos": [
+        -2902.478750053387,
+        6981.9100289490825
+      ],
+      "size": [
+        407.1960717521629,
+        570.6377412574936
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 1612
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 1613
+        },
+        {
+          "name": "meta_batch",
+          "shape": 7,
+          "type": "VHS_BatchManager",
+          "link": null
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Filenames",
+          "type": "VHS_FILENAMES",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VHS_VideoCombine",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "frame_rate": true,
+            "loop_count": true,
+            "filename_prefix": true,
+            "format": true,
+            "pingpong": true,
+            "save_output": true,
+            "pix_fmt": true,
+            "crf": true,
+            "save_metadata": true,
+            "trim_to_audio": true
+          },
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": {
+        "frame_rate": 24,
+        "loop_count": 0,
+        "filename_prefix": "AnimateDiff",
+        "format": "video/h264-mp4",
+        "pix_fmt": "yuv420p",
+        "crf": 19,
+        "save_metadata": true,
+        "trim_to_audio": true,
+        "pingpong": false,
+        "save_output": true,
+        "videopreview": {
+          "hidden": false,
+          "paused": false,
+          "params": {
+            "filename": "AnimateDiff_00001-audio.mp4",
+            "subfolder": "",
+            "type": "output",
+            "format": "video/h264-mp4",
+            "frame_rate": 24,
+            "workflow": "AnimateDiff_00001.png",
+            "fullpath": "C:\\Users\\home\\AppData\\Local\\Comfy-Desktop\\ComfyUI-Shared\\output\\AnimateDiff_00001-audio.mp4",
+            "metadata": {
+              "kind": "video",
+              "width": 1280,
+              "height": 736,
+              "duration": 14.958333333333334,
+              "fps": 24,
+              "frame_count": 359
+            },
+            "id": "0002153f-0acf-400e-9ed9-08094c68c77b"
+          }
+        }
+      },
+      "widgets_values_named": {
+        "frame_rate": 24,
+        "loop_count": 0,
+        "filename_prefix": "AnimateDiff",
+        "format": "video/h264-mp4",
+        "pix_fmt": "yuv420p",
+        "crf": 19,
+        "save_metadata": true,
+        "trim_to_audio": true,
+        "pingpong": false,
+        "save_output": true,
+        "videopreview": {
+          "hidden": false,
+          "paused": false,
+          "params": {
+            "filename": "AnimateDiff_00001-audio.mp4",
+            "subfolder": "",
+            "type": "output",
+            "format": "video/h264-mp4",
+            "frame_rate": 24,
+            "workflow": "AnimateDiff_00001.png",
+            "fullpath": "C:\\Users\\home\\AppData\\Local\\Comfy-Desktop\\ComfyUI-Shared\\output\\AnimateDiff_00001-audio.mp4",
+            "metadata": {
+              "kind": "video",
+              "width": 1280,
+              "height": 736,
+              "duration": 14.958333333333334,
+              "fps": 24,
+              "frame_count": 359
+            },
+            "id": "0002153f-0acf-400e-9ed9-08094c68c77b"
+          }
+        }
+      },
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 821,
+      "type": "LoadImage",
+      "pos": [
+        -3831.796019930794,
+        6989.0341896590335
+      ],
+      "size": [
+        309.06640625,
+        314
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1610
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "ComfyUI_00001_.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "ComfyUI_00001_.png",
+        "upload": "image"
+      },
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 823,
+      "type": "CR Prompt Text",
+      "pos": [
+        -3515.588365391496,
+        6985.220100159558
+      ],
+      "size": [
+        210,
+        321.4817703981971
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            1611
+          ]
+        },
+        {
+          "name": "show_help",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "title": "ПРОМТ",
+      "properties": {
+        "Node name for S&R": "CR Prompt Text"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "widgets_values_named": {
+        "prompt": ""
+      },
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 824,
+      "type": "NeronMiniMaxH3Generator",
+      "pos": [
+        -3294.5810159519283,
+        6983.940067405251
+      ],
+      "size": [
+        375.658203125,
+        682
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prompt",
+          "shape": 7,
+          "type": "STRING",
+          "link": 1611
+        },
+        {
+          "name": "ref_image_0",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 1610
+        },
+        {
+          "name": "ref_image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "ref_image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "ref_image_3",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "ref_video",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "ref_video_audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "ref_audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "width",
+          "shape": 7,
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "height",
+          "shape": 7,
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "length_in",
+          "shape": 7,
+          "type": "INT",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "IMAGE",
+          "links": [
+            1612
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            1613
+          ]
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "links": [
+            1614
+          ]
+        },
+        {
+          "name": "frames_count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronMiniMaxH3Generator"
+      },
+      "widgets_values": [
+        "",
+        false,
+        "Turbo / Турбо",
+        15,
+        "Ручной / Manual",
+        "Кино 16:9 (1344x768)",
+        1280,
+        736,
+        32,
+        false,
+        "None / Не выбрано",
+        1,
+        false,
+        "None / Не выбрано",
+        1,
+        false,
+        "None / Не выбрано",
+        1,
+        true,
+        0,
+        "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+        "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "minimax_h3_video_vae_fp16.safetensors",
+        "minimax_h3_audio_vae_fp32.safetensors",
+        "minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors",
+        20,
+        8,
+        495339771143028,
+        "randomize",
+        "",
+        null,
+        null
+      ],
+      "widgets_values_named": {
+        "_spacer": "",
+        "expert_mode": false,
+        "MODE / РЕЖИМ": "Turbo / Турбо",
+        "SECONDS / СЕКУНДЫ": 15,
+        "resolution_mode": "Ручной / Manual",
+        "resolution_preset": "Кино 16:9 (1344x768)",
+        "manual_width": 1280,
+        "manual_height": 736,
+        "divisible_by": 32,
+        "slot_1_enabled": false,
+        "slot_1_lora": "None / Не выбрано",
+        "slot_1_strength": 1,
+        "slot_2_enabled": false,
+        "slot_2_lora": "None / Не выбрано",
+        "slot_2_strength": 1,
+        "slot_3_enabled": false,
+        "slot_3_lora": "None / Не выбрано",
+        "slot_3_strength": 1,
+        "FREE AFTER RUN / ОЧИСТКА ПОСЛЕ": true,
+        "decode_tile_size": 0,
+        "unet_model": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+        "clip_model": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "vae_video_model": "minimax_h3_video_vae_fp16.safetensors",
+        "vae_audio_model": "minimax_h3_audio_vae_fp32.safetensors",
+        "turbo_lora_model": "minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors",
+        "normal_steps": 20,
+        "turbo_steps": 8,
+        "seed": 495339771143028,
+        "control_after_generate": "randomize",
+        "🔄 Reset to Defaults / Сброс": null,
+        "📖 Help / Справка": null
+      },
+      "color": "#4a2f1e",
+      "bgcolor": "#2e1c10"
+    },
+    {
+      "id": 825,
+      "type": "PreviewImage",
+      "pos": [
+        -2480.7964682384973,
+        6979.696915704597
+      ],
+      "size": [
+        357.64499505882293,
+        328.98613482685596
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 1614
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "title": "Последний кадр",
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      },
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 827,
+      "type": "Note",
+      "pos": [
+        -3831.853790707326,
+        7356.825289073535
+      ],
+      "size": [
+        522.4192336589026,
+        310.93914350112664
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "🛑 ВНИМАНИЕ! ПРОЧТИ МЕНЯ!  -  ATTENTION! READ ME! 🛑",
+      "properties": {},
+      "widgets_values": [
+        "  🛑 ВНИМАНИЕ! ПРОЧТИ МЕНЯ! 🛑\n\n### ПЕРЕД НАЧАЛОМ РАБОТЫ ОБЯЗАТЕЛЬНО ПРОЧИТАЙТЕ СПРАВКУ!\nНажмите кнопку \"📖 Help / Справка\" в самом низу ноды Генератора. Там расписаны все настройки, физика работы модели и советы по разрешению.\n\n### 💡 ГИБКОСТЬ НАСТРОЕК\nГенератор поддерживает замену моделей на более легкие версии. Если ваше железо не тянет стандартные файлы (указанные ниже), зайдите в EXPERT MODE (Экспертный режим) внутри ноды и выберите более слабую модель (например, FP8 / GGUF).\n\n### 📦 БАЗОВЫЕ МОДЕЛИ H3 (Скачать и разложить по путям)\n*   **UNET:** minimax_h3_fl2va_pruned_int8_convrot.safetensors (в models/diffusion_models/)\n    Ссылка: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors\n\n*   **CLIP:** qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors (в models/text_encoders/)\n    Ссылка: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors\n\n*   **VAE Video:** minimax_h3_video_vae_fp16.safetensors (в models/vae/)\n    Ссылка: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors\n\n*   **VAE Audio:** minimax_h3_audio_vae_fp32.safetensors (в models/vae/)\n    Ссылка: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors\n\n*   **Turbo LoRA:** minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors (в models/loras/)\n    Ссылка: https://huggingface.co/lightx2v/Minimax-h3-Turbo/resolve/main/minimax_h3_fl2v_turbo_8step_v1.0_bf16.safetensors\n\n*(Модели для LLM здесь не нужны, так как в этом воркфлоу нет Автопромптера)*\n\n### 🛠 КАСТОМНЫЕ НОДЫ (Установить через ComfyUI Manager или в custom_nodes)\n*   Neron Studio: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n*   ComfyUI-VideoHelperSuite: https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite\n*   Comfyroll Studio: https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes\n\n================================================================================\n\n# 🛑 ATTENTION! READ ME! 🛑\n\n### BEFORE YOU START, PLEASE READ THE HELP!\nClick the \"📖 Help / Справка\" button at the bottom of the Generator node. It contains all settings, model physics, and resolution tips.\n\n### 💡 FLEXIBILITY\nThe Generator supports swapping models for lighter versions. If your hardware struggles with the default files (listed below), open EXPERT MODE inside the node and select a weaker model (e.g., FP8 / GGUF).\n\n### 📦 H3 BASE MODELS (Download and place in ComfyUI paths)\n*   **UNET:** minimax_h3_fl2va_pruned_int8_convrot.safetensors (to models/diffusion_models/)\n    Link: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors\n\n*   **CLIP:** qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors (to models/text_encoders/)\n    Link: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors\n\n*   **VAE Video:** minimax_h3_video_vae_fp16.safetensors (to models/vae/)\n    Link: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors\n\n*   **VAE Audio:** minimax_h3_audio_vae_fp32.safetensors (to models/vae/)\n    Link: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors\n\n*   **Turbo LoRA:** minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors (to models/loras/)\n    Link: https://huggingface.co/lightx2v/Minimax-h3-Turbo/resolve/main/minimax_h3_fl2v_turbo_8step_v1.0_bf16.safetensors\n\n*(LLM models are NOT needed here, as there is no AutoPrompter in this workflow)*\n\n### 🛠 CUSTOM NODES (Install via ComfyUI Manager or into custom_nodes)\n*   Neron Studio: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n*   ComfyUI-VideoHelperSuite: https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite\n*   Comfyroll Studio: https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes"
+      ],
+      "widgets_values_named": {
+        "text": "  🛑 ВНИМАНИЕ! ПРОЧТИ МЕНЯ! 🛑\n\n### ПЕРЕД НАЧАЛОМ РАБОТЫ ОБЯЗАТЕЛЬНО ПРОЧИТАЙТЕ СПРАВКУ!\nНажмите кнопку \"📖 Help / Справка\" в самом низу ноды Генератора. Там расписаны все настройки, физика работы модели и советы по разрешению.\n\n### 💡 ГИБКОСТЬ НАСТРОЕК\nГенератор поддерживает замену моделей на более легкие версии. Если ваше железо не тянет стандартные файлы (указанные ниже), зайдите в EXPERT MODE (Экспертный режим) внутри ноды и выберите более слабую модель (например, FP8 / GGUF).\n\n### 📦 БАЗОВЫЕ МОДЕЛИ H3 (Скачать и разложить по путям)\n*   **UNET:** minimax_h3_fl2va_pruned_int8_convrot.safetensors (в models/diffusion_models/)\n    Ссылка: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors\n\n*   **CLIP:** qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors (в models/text_encoders/)\n    Ссылка: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors\n\n*   **VAE Video:** minimax_h3_video_vae_fp16.safetensors (в models/vae/)\n    Ссылка: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors\n\n*   **VAE Audio:** minimax_h3_audio_vae_fp32.safetensors (в models/vae/)\n    Ссылка: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors\n\n*   **Turbo LoRA:** minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors (в models/loras/)\n    Ссылка: https://huggingface.co/lightx2v/Minimax-h3-Turbo/resolve/main/minimax_h3_fl2v_turbo_8step_v1.0_bf16.safetensors\n\n*(Модели для LLM здесь не нужны, так как в этом воркфлоу нет Автопромптера)*\n\n### 🛠 КАСТОМНЫЕ НОДЫ (Установить через ComfyUI Manager или в custom_nodes)\n*   Neron Studio: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n*   ComfyUI-VideoHelperSuite: https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite\n*   Comfyroll Studio: https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes\n\n================================================================================\n\n# 🛑 ATTENTION! READ ME! 🛑\n\n### BEFORE YOU START, PLEASE READ THE HELP!\nClick the \"📖 Help / Справка\" button at the bottom of the Generator node. It contains all settings, model physics, and resolution tips.\n\n### 💡 FLEXIBILITY\nThe Generator supports swapping models for lighter versions. If your hardware struggles with the default files (listed below), open EXPERT MODE inside the node and select a weaker model (e.g., FP8 / GGUF).\n\n### 📦 H3 BASE MODELS (Download and place in ComfyUI paths)\n*   **UNET:** minimax_h3_fl2va_pruned_int8_convrot.safetensors (to models/diffusion_models/)\n    Link: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors\n\n*   **CLIP:** qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors (to models/text_encoders/)\n    Link: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors\n\n*   **VAE Video:** minimax_h3_video_vae_fp16.safetensors (to models/vae/)\n    Link: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors\n\n*   **VAE Audio:** minimax_h3_audio_vae_fp32.safetensors (to models/vae/)\n    Link: https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors\n\n*   **Turbo LoRA:** minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors (to models/loras/)\n    Link: https://huggingface.co/lightx2v/Minimax-h3-Turbo/resolve/main/minimax_h3_fl2v_turbo_8step_v1.0_bf16.safetensors\n\n*(LLM models are NOT needed here, as there is no AutoPrompter in this workflow)*\n\n### 🛠 CUSTOM NODES (Install via ComfyUI Manager or into custom_nodes)\n*   Neron Studio: https://github.com/neron5480-cell/neron-video-minimax-h3-i2v\n*   ComfyUI-VideoHelperSuite: https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite\n*   Comfyroll Studio: https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      1610,
+      821,
+      0,
+      824,
+      1,
+      "IMAGE"
+    ],
+    [
+      1611,
+      823,
+      0,
+      824,
+      0,
+      "STRING"
+    ],
+    [
+      1612,
+      824,
+      0,
+      175,
+      0,
+      "IMAGE"
+    ],
+    [
+      1613,
+      824,
+      1,
+      175,
+      1,
+      "AUDIO"
+    ],
+    [
+      1614,
+      824,
+      2,
+      825,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "frontendVersion": "1.55.17",
+    "VHS_KeepIntermediate": true,
+    "VHS_MetadataImage": true,
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 1.3310000000000015,
+      "offset": [
+        3960.0671666134713,
+        -6760.937145247316
+      ]
+    }
+  },
+  "version": 0.4
+}
