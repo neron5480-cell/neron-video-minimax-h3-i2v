@@ -77,7 +77,15 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
               width .28s cubic-bezier(.2, .8, .2, 1), height .28s cubic-bezier(.2, .8, .2, 1), opacity .25s, filter .25s;
 }
 .tile.dragging, .tile.resizing { transition: none; z-index: 20; box-shadow: 0 22px 60px rgba(0, 0, 0, .7), 0 0 0 1px var(--bronze); }
-.tile.dim { opacity: .22; filter: saturate(.4); }
+.desk { perspective: 1400px; }
+/* вкладка: нужные плитки «выезжают» вперёд, остальные уходят вглубь */
+.tile { transition-property: left, top, width, height, opacity, filter, transform; transition-duration: .55s, .55s, .28s, .28s, .45s, .45s, .55s; }
+.tile.back { opacity: .32; filter: blur(1.6px) saturate(.35); transform: translateZ(-140px) scale(.94); z-index: 0; }
+.tile.front { z-index: 2; transform: translateZ(0) scale(1); }
+.tile.pop { animation: pop .6s cubic-bezier(.2, 1.4, .3, 1) both; }
+@keyframes pop { 0% { transform: translateZ(-90px) scale(.9); } 100% { transform: translateZ(0) scale(1); } }
+.tile.back .head { cursor: default; }
+.tile.back .grip { display: none; }
 .tile:hover { border-color: #5a3f27; }
 .head { display: flex; align-items: center; gap: 8px; padding: 9px 10px 7px 12px; cursor: grab; user-select: none; touch-action: none; }
 .tile.dragging .head { cursor: grabbing; }
@@ -226,17 +234,38 @@ function compact() {
     placed.push(it);
   }
 }
+const matches = (id) => tab === "all" || BY_ID[id].k === tab || BY_ID[id].k === "all";
+// Вид вкладки: нужные плитки — плотно наверх (в их порядке), остальные — ниже. Раскладку человека не трогаем.
+function viewLayout() {
+  if (tab === "all") return layout;
+  const copy = layout.map((it) => ({ ...it }));
+  const order = [...copy].sort((a, b) => (matches(b.id) - matches(a.id)) || a.y - b.y || a.x - b.x);
+  const placed = [];
+  for (const it of order) {
+    it.y = 0;
+    while (placed.some((p) => hit(p, it))) it.y++;
+    placed.push(it);
+  }
+  return copy;
+}
+let lastTab = "all";
 function render() {
   const g = geom();
-  let bottom = 0;
-  for (const it of layout) {
-    const el = els.get(it.id) || make(it);
+  let bottom = 0, k = 0;
+  const changed = tab !== lastTab; lastTab = tab;
+  for (const it of viewLayout()) {
+    const el = els.get(it.id) || make(layout.find((x) => x.id === it.id));
     if (!el.classList.contains("dragging") && !el.classList.contains("resizing")) {
       const p = px(it);
       Object.assign(el.style, { left: p.left + "px", top: p.top + "px", width: p.width + "px", height: p.height + "px" });
     }
-    const d = BY_ID[it.id];
-    el.classList.toggle("dim", tab !== "all" && d.k !== tab && d.k !== "all");
+    const front = matches(it.id);
+    el.classList.toggle("back", !front);
+    el.classList.toggle("front", front && tab !== "all");
+    if (changed && front && !REDUCED) {                    // нужные «набегают» одна за другой
+      el.classList.remove("pop"); el.style.animationDelay = (k++ * 55) + "ms";
+      void el.offsetWidth; el.classList.add("pop");
+    }
     bottom = Math.max(bottom, (it.y + it.h) * g.sy);
   }
   for (const [id, el] of els) if (!layout.find((it) => it.id === id)) { el.remove(); els.delete(id); }
@@ -272,6 +301,7 @@ function dragOn(handle, it0, el, mode) {
   handle.addEventListener("pointerdown", (e) => {
     if (e.button !== 0 || e.target.closest("button")) return;
     e.preventDefault();
+    if (tab !== "all") { toast("Двигать и растягивать плитки — на вкладке «Все». Здесь — только просмотр раздела."); return; }
     const it = layout.find((x) => x.id === it0.id);
     const g = geom(), r = el.getBoundingClientRect(), dr = desk.getBoundingClientRect();
     const start = { x: e.clientX, y: e.clientY, left: r.left - dr.left, top: r.top - dr.top, w: r.width, h: r.height };
