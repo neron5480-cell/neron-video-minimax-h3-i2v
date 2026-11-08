@@ -781,7 +781,7 @@ function bgPanel(box) {
   if (bgName) { const clr = document.createElement("button"); clr.type = "button"; clr.className = "item"; clr.textContent = "✕ Убрать фон"; clr.onclick = bgClear; row.append(clr); }
   box.append(row);
   const note = document.createElement("p"); note.style.marginTop = "6px";
-  note.textContent = bgName ? `Сейчас: ${bgName}. Хранится только в этом браузере.` : "Или просто перетащите файл на стол. Файл никуда не отправляется.";
+  note.textContent = bgName ? `Сейчас: ${bgName}. Хранится только в этом браузере. Видео-фон чуть нагружает видеокарту — на слабом компьютере лучше фото.` : "Или просто перетащите файл на стол. Файл никуда не отправляется.";
   box.append(note);
   const slider = (label, key, min, max, step, fmt) => {
     const id = "bg-" + key, wrap = document.createElement("label"); wrap.className = "slider"; wrap.htmlFor = id;
