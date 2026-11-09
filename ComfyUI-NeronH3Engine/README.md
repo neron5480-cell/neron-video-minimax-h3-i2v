@@ -77,47 +77,70 @@ H3 работать так, как её обучали.
 
 # 🎬 Neron H3 Engine v2.0 — Hard (EN)
 
-The second release of Raw Engine. v1.0 is the light engine for low resolutions and speed;
-v2.0 is the "hard" one — the best quality MiniMax H3 can give on a regular home PC.
-No upscales, no tricks, no post-processing — honest generation inside the model passport.
+The second release of Raw Engine. If v1.0 is the light engine for low resolutions and speed,
+v2.0 is the "hard" one: the maximum quality MiniMax H3 can give on an ordinary home
+computer. No upscales, no tricks, no post-processing — honest generation inside the model passport.
 
 ### ⚡ WHAT'S NEW
-* New standalone node **Neron H3 Engine** (the old generator is untouched).
-* Modes: ⚡ Turbo (12 steps, turbo LoRA) · Quality (40 steps) · Maximum (50 steps + bf16 model).
-* Model passport presets: up to 1344×768, up to 15 s. Anything bigger is clamped, no errors.
-* Staged memory, protected VAE decode, live run clock, expert mode, bilingual 📖 Help.
+* **New Neron H3 Engine node.** Our own, written from scratch; the old generator is untouched.
+* **Three modes:**
+  - ⚡ Turbo — 12 steps with the turbo LoRA. Drafts, motion, composition.
+  - Quality — the full model, 40 steps. Small details and sound are noticeably cleaner.
+  - Maximum — 50 steps + the uncompressed model (bf16), if downloaded.
+* **Model passport.** Presets made exactly for H3: up to 1344×768, up to 15 seconds.
+  Give it more (even 8K) — the node shrinks it to the model's maximum by itself, without errors.
+* **Memory in turns.** Models are loaded one at a time and unloaded after their stage.
+* **Protected VAE.** Not enough video memory to decode — the node retries in tiles,
+  smaller and smaller. A finished generation is not lost at the last step.
+* **Generation clock** right on the node: time, stage, step and how much is left.
+* **Expert mode:** models, 2 LoRAs of your own, seed, manual size, fine settings.
+  A beginner sees only the mode, size and duration.
+* **Help in two languages** — the 📖 button right on the node.
 
 ### 🪶 WORKS WITH LIGHT MODELS TOO
-Heavy models are optional. The engine works with quantized versions (int8, fp8 and others),
-and even with them the quality is higher than in Lite, at the cost of somewhat longer
-generation. A way to raise quality without room or memory for full models: in our tests,
-on the same quantized models the picture improves by 20–35% on average.
+Heavy models are not required. The engine also works with quantized versions
+(int8, fp8 and others) — and even with them the quality is higher than in Lite, though generation
+takes somewhat longer. This is a way out for those who have no room or memory for the full models
+but want better quality: in our tests, on the same quantized models
+the picture gets better by 20–35% on average.
 
 ### 🔬 ENGINE PRINCIPLES
-* **No upscale.** No latent or pixel upscale, no second "small → big" pass.
-  One sampler pass straight at the target size.
-* **Strict model passport.** 768 short edge, area ≤ 1344×768, multiples of 32, 24 fps,
-  frames on the 17k+5 grid, up to 362 frames (15 s).
-* **Full-precision attention** (pytorch attention). INT8 attention is optional.
+The node does not invent a new model — it removes everything that cuts quality and lets
+H3 work the way it was trained.
+
+* **No upscale.** No latent upscale, no pixel upscale, no second "small → big" pass.
+  One sampler pass straight at the target size. What the model drew is what you get.
+* **Strictly the model passport.** Short side 768, area ≤ 1344×768, sides divisible by 32,
+  24 fps, frames on the 17k+5 grid, up to 362 frames (15 s). Anything bigger is shrunk,
+  keeping the proportions.
+* **Full-precision attention** (pytorch attention). INT8 attention is faster but causes morphing
+  at the end of the clip and crooked text — off by default, can be turned on in expert mode.
 * **Sigma shift 12 / 3** (video / audio) via MiniMaxH3SigmaShift.
 * **Sampling:** res_multistep + simple, BasicGuider, SamplerCustomAdvanced, denoise 1.0.
-  Turbo 12 steps + turbo LoRA ×0.8 · Quality 40 · Maximum 50 + bf16.
-* **References at full resolution.** No references → pure text-to-video.
-* **Whole-frame VAE decode**, tiled fallback 768 → 192 only on OOM.
-* **Staged memory:** one model in memory at a time.
-* **Native ComfyUI nodes only** — no custom samplers or model patches.
+  Turbo — 12 steps, turbo LoRA ×0.8. Quality — 40 steps without the LoRA.
+  Maximum — 50 steps + bf16 instead of int8.
+* **References at full resolution** (ref_image_size = max in Quality and Maximum).
+  Without references — pure text-to-video.
+* **Whole-frame decoding**, no seams. Tiles 768 → 192 — only when memory runs short.
+* **Memory by stages:** CLIP → unload → UNET → unload → video VAE → unload →
+  audio VAE → unload.
+* **Native ComfyUI nodes only.** No home-made samplers and no model patches.
 
-### ⏱ TIMING
-RTX 5070 Ti 16 GB, 48 GB RAM, 5 s 1344×768: Turbo ~7 min, Quality ~21 min.
-Quality over time. Need speed — use v1.0 Lite.
+### ⏱ HONESTLY ABOUT TIME
+Measured on an RTX 5070 Ti 16 GB, 48 GB RAM, 5 seconds 1344×768:
+* Turbo — ~7 min
+* Quality — ~21 min
+This node is for those who value quality over time. With heavy models in Maximum
+it brings even an RTX 5090 to its knees. Need speed — take v1.0 Lite.
 
-### 📦 REQUIREMENTS
-* Recent ComfyUI with MiniMax H3 support.
-* Neron H3 Engine node, VideoHelperSuite, Comfyroll.
-* H3 models (UNET, CLIP, video & audio VAE, turbo LoRA) — links on the canvas.
+### 📦 WHAT YOU NEED
+* A recent ComfyUI with MiniMax H3 support.
+* The Neron H3 Engine node, VideoHelperSuite, Comfyroll.
+* H3 models (UNET, CLIP, video and audio VAE, turbo LoRA) — links are on the canvas.
   Quantized versions work too.
-* Maximum mode: bf16 model (40 GB) and plenty of RAM / pagefile on a fast drive.
-* Save as video/h264-mp4 in Video Combine, not gif.
+* For Maximum mode — the bf16 model (40 GB) and spare RAM / a page file on a fast drive.
+* Save in Video Combine as video/h264-mp4 (not gif — it kills the quality).
+
 
 ### 🧩 INSTALLATION
 * **One link:** ComfyUI Manager → Install via Git URL →
@@ -125,4 +148,4 @@ Quality over time. Need speed — use v1.0 Lite.
   All Neron nodes are installed, this one included.
 * **Manually:** copy the `ComfyUI-NeronH3Engine` folder into `ComfyUI/custom_nodes/` and restart ComfyUI.
 * The node is in the **Neron/H3** menu. Ready workflow: `workflows/Neron_H3_Engine.json`.
-* The folder used to be called `NeronH3Engine Full`. If you have it installed, delete it to avoid two copies.
+* The folder used to be called `NeronH3Engine Full`. If you have it installed, delete it so there are no two copies.

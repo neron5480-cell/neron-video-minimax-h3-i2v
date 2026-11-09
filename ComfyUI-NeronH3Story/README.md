@@ -58,30 +58,61 @@ MiniMax H3»), перехлёст вырезается, звук сводитс�
 
 ## 🇬🇧 English
 
-**What it is.** A MiniMax H3 video **5–45 s long, with sound**, made as a **chain of blocks** joined without visible
-seams: every next block starts from the last ~0.9 s of the previous one **with its sound** (native "Add Guide for
-MiniMax H3"); the overlap is cut and the audio crossfaded.
+**What it is.** A MiniMax H3 video **5–45 seconds long, with sound**. H3 itself makes up to ~15 s; longer, it
+"drifts". The node builds the video as a **chain of blocks** and joins them so that no seams are visible — neither
+in the picture nor in the sound: every next block starts from the last ~0.9 s of the previous one **together with
+their sound** (the native ComfyUI node "Add Guide for MiniMax H3"); the overlap is cut out and the sound is blended
+smoothly.
 
-**Nodes:** 🎬 engine (5–45 s video, 5–15 s blocks, one model load, keep appearance) · 🖼 Frames (four windows inside
-the node: first / two middle / last, click or drop, any size) · 📝 Story AutoPrompter (one scenario → a prompt per
-part with timing, physics, sound; camera like Fixed Camera H3 — locked unless the scenario asks for a move; middle
-pictures appear where the scenario says and keep their look) · 🎞 Block (own text, pictures, LoRAs) · 🎨 LoRA set.
+**Nodes**
+- **🎬 Neron H3 Story** — the engine: video length 5–45 s, block 5–15 s (a maximum; the video is split into even
+  blocks, up to 12); the model loads once for the whole video. 🔒 Keep appearance — the first frame goes as a
+  reference into every block.
+- **🖼 Neron H3 Frames** — four windows right inside the node: first frame, two middle frames, last frame. Click a
+  window or drop a file onto it; pictures of any size. One wire instead of four "Load Image" nodes.
+- **📝 Neron H3 Story AutoPrompter** — one scenario in your own words (any language) → a plan and a prompt for every
+  part: continuation of the seam, actions by the second, physics, sound. Camera as in ⚡ Fixed Camera H3: AUTO — it
+  stays still until the scenario asks for a move ("the camera circles her and stops at her side"). Middle pictures
+  appear where the scenario says ("image 3") and keep their look to the end. It uses the LLM server of our
+  🎬 Neron AutoPrompter (Qwen 3.5 9B, downloads itself).
+- **🎞 Neron H3 Block** — one part: its own text, its own pictures, its own LoRAs.
+- **🎨 Neron H3 LoRA Set** — up to 3 LoRAs with strength; sets chain into each other.
 
-**Three ways:** with the AutoPrompter (`Neron_H3_Story_AutoPrompter.json`), without it using 🎞 Blocks
-(`Neron_H3_Story_Expert.json`), or simple prompts (`Neron_H3_Story.json`).
+**Three ways to work** (workflows in `workflows/`)
+1. **With the AutoPrompter** — `Neron_H3_Story_AutoPrompter.json`: 🖼 Frames + scenario + 🎨 LoRAs for the whole
+   video → 📝 AutoPrompter → engine. The simplest way.
+2. **Without the AutoPrompter, by blocks** — `Neron_H3_Story_Expert.json`: you write every part yourself in a
+   🎞 Block node; every block has its own pictures and its own LoRAs. Full control.
+3. **Very simple** — `Neron_H3_Story.json`: a picture + one text per block straight into the engine.
 
-**Models** download themselves (📥 Models). **Modes:** 🚀 Fast 6 steps · ⚡ Turbo 12 (default) · Quality 40 ·
-Maximum 50 + bf16.
+You can mix them too: with the AutoPrompter, in the engine's expert mode plug a 🎞 Block into the part you need —
+an empty text keeps the AutoPrompter's prompt and adds that block's LoRAs; your own text replaces the prompt.
 
-**Speed, honestly:** tuned for **quality** — on auto it uses the fullest model you have (bf16 if present), even in
-Fast. Author's PC (RTX 5070 Ti 16 GB): Turbo int8, 30 s (4 blocks) incl. AutoPrompter — 1 h 18 min; Turbo on full (bf16) models — 1 h 30 min; Fast 6 steps,
-30 s portrait — 44 min. To speed up: a lighter model of your own in expert mode (int8 / fp8), INT8 fast attention,
-Fast with fewer steps, a smaller frame, fewer seams.
+**Models.** Downloads them itself: the "📥 Models" button on the engine (the window opens by itself if something is
+missing), resumes after a dropped connection, checks free space. The H3 model comes from the official Comfy-Org
+page, the turbo LoRA from its authors, lightx2v. Whatever is already there (even another version) is not downloaded
+again. All models are on "🤖 auto".
 
-**Tip:** in complex scenes give a **landscape** first frame — with a portrait one H3 sometimes drifts (e.g. a white
-tiger from a picture turns orange); landscape holds.
+**Modes**
+- 🚀 **Fast** — fast LoRA, 6 steps (4 / 6 / 8 / 10 in expert mode). Cartoons, 3D, trying out a story.
+- ⚡ **Turbo** — 12 steps, the default.
+- **Quality** — 40 steps. **Maximum** — 50 steps + the bf16 model.
 
-**Needs:** a recent ComfyUI; for the AutoPrompter — the 🎬 Neron AutoPrompter folder.
+**About speed — honestly.** The workflow is tuned for **quality**: on "auto" the engine takes the fullest model you
+have (bf16, if downloaded), and even 🚀 Fast runs on it. That is why it takes long. Measured on the author's PC
+(RTX 5070 Ti 16 GB): Turbo int8, a 30 s video (4 blocks) together with the AutoPrompter — 1 h 18 min; Turbo on full
+models (bf16) — 1 h 30 min; 🚀 Fast 6 steps, a 30 s portrait video — 44 min. You can speed it up:
+- in the engine's ⚙ expert mode pick your own lighter model (int8 / fp8 — anything the usual Load Diffusion Model
+  loads);
+- turn on "fast INT8 attention";
+- 🚀 Fast and fewer steps; a smaller frame; a shorter video or longer blocks (fewer seams).
+
+**Tip.** In complex scenes (several characters, a creature from a picture) it is better to give a **landscape**
+first frame: with a portrait one H3 sometimes goes off — for example, a white tiger from the picture turns orange.
+A landscape one holds.
+
+**Needs:** a recent ComfyUI (with the "Add Guide for MiniMax H3" node); for the AutoPrompter — the
+🎬 Neron AutoPrompter folder.
 
 ---
 
