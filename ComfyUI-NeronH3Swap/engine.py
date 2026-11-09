@@ -90,13 +90,27 @@ def base(name):
 
 
 def find_file(kind, name):
+    """Имя модели для загрузчика ComfyUI или None.
+    1) ищем в списке ComfyUI (вдруг лежит в подпапке); 2) список бывает неполным (кэш, лишние папки моделей
+    Comfy Desktop) — тогда спрашиваем ComfyUI напрямую по имени: окно «Модели» видит файл именно так."""
     try:
         import folder_paths
+    except Exception:
+        return None
+    try:
         for f in folder_paths.get_filename_list(kind):
             if base(f) == base(name):
                 return f
-    except Exception:
-        pass
+    except Exception as e:
+        log.warning("%s список «%s»: %s", TAG, kind, e)
+    for n in (name, base(name)):
+        try:
+            p = folder_paths.get_full_path(kind, n)
+            if p and __import__("os").path.isfile(p):
+                log.info("%s «%s» нет в списке ComfyUI, но файл на месте: %s", TAG, n, p)
+                return n
+        except Exception:
+            pass
     return None
 
 
