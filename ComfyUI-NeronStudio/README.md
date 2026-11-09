@@ -8,7 +8,7 @@
 **Как открыть.** Золотая монета **«N»** на холсте (её можно перетащить в любое место) или меню **Neron → Neron Studio**.
 Закрыть — «✕ В ComfyUI» или Esc.
 
-**Папки.** Стол › **Видео** · **Картинки** · **Звук** · **Модели**; внутри — плитки по задачам (Фото → видео,
+**Папки.** Стол › **Видео** · **Картинки** · **Звук**; внутри — плитки по задачам (Фото → видео,
 Длинный ролик, Диалог…), а в них — варианты процесса. Путь «Стол › Видео › …» сверху: нажми на любое звено, чтобы
 вернуться. Назад — «‹ Назад» или Esc. Папка, в которой не установлен ни один процесс, сама прячется.
 
@@ -50,7 +50,7 @@ workflow one click away. Adds no nodes. 📖 Details with screenshots: [article 
 **How to open.** The gold **«N»** coin on the canvas (you can drag it anywhere) or the menu **Neron → Neron Studio**.
 Close with «✕ To ComfyUI» or Esc.
 
-**Folders.** Desktop › **Video** · **Images** · **Sound** · **Models**; inside — tiles by task (Photo → video,
+**Folders.** Desktop › **Video** · **Images** · **Sound**; inside — tiles by task (Photo → video,
 Long video, Dialogue…), and inside those — workflow variants. The path "Desktop › Video › …" is at the top: click any
 part of it to go back. Back — «‹ Back» or Esc. A folder with no installed workflow hides itself.
 

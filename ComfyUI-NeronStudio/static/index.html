@@ -266,8 +266,6 @@ const VIEWS = {
       meta: ["расширение · реставрация · качество", "outpaint · restoration · quality"] },
     { id: "f-audio", ico: "🎵", t: ["Звук", "Sound"], s: "ok", go: "audio", paint: "eq", w: 4, h: 2,
       meta: ["Audio Studio · DJ-пульт · сведение", "Audio Studio · DJ pult · mixing"] },
-    { id: "models", ico: "📥", t: ["Модели", "Models"], s: "ok", wf: "models", paint: "models", w: 4, h: 2,
-      meta: ["качает сама · докачка с обрыва", "downloads itself · resumes after a drop"] },
   ] },
   video: { up: "home", t: ["Видео", "Video"], tiles: [
     { id: "v-i2v", ico: "🎬", t: ["Фото → видео", "Photo → video"], s: "ok", go: "i2v", paint: "film", w: 5, h: 3,
@@ -817,19 +815,6 @@ const PAINT = {
     face(ctx, w / 2, h * .42, Math.min(w, h) * .16, "#f1cdb2", "#2b1a10", "#6b5a4a");
     ctx.fillStyle = "rgba(255,180,90,.9)"; ctx.fillRect(w * Math.min(1, k) - 1, 0, 2, h);
   },
-  models(ctx, w, h, t) {                                  // пакеты моделей по режимам и бегущая докачка
-    ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
-    const rows = [[tx(["🚀 стандарт", "🚀 standard"]), 1], ["✨ bf16", 1], ["🔥 Fast H3", ((t * .08) % 1)], [tx(["👑 энкодер int8", "👑 int8 encoder"]), 0]];
-    rows.forEach(([n, v], i) => {
-      const y = 18 + i * Math.max(22, (h - 24) / 4);
-      ctx.font = "500 11px Golos Text, sans-serif"; ctx.fillStyle = COL.text; ctx.textAlign = "left"; ctx.fillText(n, 10, y + 9);
-      const x = Math.min(120, w * .45), bw = w - x - 44;
-      ctx.fillStyle = COL.line; ctx.fillRect(x, y, bw, 9);
-      ctx.fillStyle = v >= 1 ? COL.ok : COL.ember; ctx.fillRect(x, y, bw * v, 9);
-      ctx.font = "400 10px JetBrains Mono, monospace"; ctx.fillStyle = COL.muted;
-      ctx.fillText(v >= 1 ? "✓" : v > 0 ? `${Math.round(v * 100)}%` : "—", x + bw + 6, y + 9);
-    });
-  },
 };
 
 // ---------- общий цикл: рисуем только видимое, с учётом плотности экрана ----------
@@ -1075,7 +1060,7 @@ bgLoad().then((rec) => { if (rec) bgShow(rec); });
 // ================== 🧪 «✉ Написать создателю» (папка «Тест») ==================
 // Письмо уходит автору через Web3Forms (ключ публичный: он только разрешает слать письма автору, адреса не раскрывает).
 // К письму — только то, что видно в «Что будет отправлено»: процесс, текст, версия ComfyUI, видеокарта, последняя ошибка.
-const DESK_VERSION = "2026.11.09·1";
+const DESK_VERSION = "2026.11.09·2";
 const W3F_KEY = "6462b9a5-e856-422f-9f27-23875a4277d3";
 const SENT_KEY = "neron-studio-report-at", ERR_KEY = "neron-studio-last-error";
 const RP = {

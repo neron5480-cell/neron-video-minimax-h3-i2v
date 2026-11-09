@@ -39,8 +39,6 @@ WORKFLOWS = {
     # 🎵 Звук
     "audio": ["@Neron_Audio_Studio_v2.0.json", "NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json"],
     # 🧪 Тест (альфа) — пока пусто
-    # служебное
-    "models": [_STORY],
 }
 
 
