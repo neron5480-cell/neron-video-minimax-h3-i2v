@@ -110,6 +110,19 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 
 ---
 
+## 🎭 NERON H3 ЗАМЕНА ГЕРОЯ — тот же клип, другой человек (тест, ветка dev)
+
+👋 Нода и процесс лежат в папке **[`ComfyUI-NeronH3Swap`](ComfyUI-NeronH3Swap/)**.
+
+*   Клип (Load Video) + фото «на кого» (Load Image) → тот же танец, камера, фон и звук, но с человеком с фото.
+*   Меняется **только человек под маской** (SAM 3.1 находит и ведёт его по клипу), вне маски — пиксели оригинала.
+*   Модель H3 **Ref2VA** + LoRA замены **Character Swap V1.5** (Akatz Labs); модели качает сама — только нужные ей.
+*   Экспериментально: лицо и мимика иногда «плывут». Заменяйте себя и тех, кто согласен.
+
+Подробно — в **[README внутри папки](ComfyUI-NeronH3Swap/README.md)**.
+
+---
+
 ## 🎬 Проект 2: NERON STUDIO H3 (Готовый процесс видео-генерации, v1.0 «Lite»)
 
 👋 Все ноды, воркфлоу и инструкции лежат в папке **[`Neron_Studio_H3`](Neron_Studio_H3/)**.
@@ -238,6 +251,7 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 | Подготовить первый кадр | **🖼 Neron Studio Image Processor** — пресеты подрезаются по центру, Сброс и Справка | Interactive Image Processor (пресеты растягивают картинку); Smart Load & Resize Image и Manual Color & Upscale Panel — *legacy*, тот же код |
 | Сгенерировать видео H3 | **🎬 Neron H3 Engine** — качество | 🎥 Neron MiniMax H3 Generator (Lite) — для воркфлоу Neron Studio H3 |
 | Длинный ролик H3 (5–45 с) | **🎬 Neron H3 Story** + **🖼 Кадры** + **📝 Story AutoPrompter** (или ноды **🎞 Блок**) | — |
+| Заменить человека в готовом клипе | **🎭 Neron H3 Замена героя** (тест, ветка dev) | — |
 | Изменить готовое видео (вставки, картинки, переходы) | **🎛 Neron Edit Pult** + кубики 🎬 Видео ×3 и 🖼 Картинки ×4 (тест, ветка dev) | — |
 | Сгенерировать видео LTX 2.5 | **🎬 Neron LTX Engine** — первый / промежуточные / последний кадр, звук, модели качает сам; **🎬 Neron LTX AutoPrompter** — промпт под LTX с физикой и камерой, LLM качает сам | — |
 | Написать промпт | **🎬 Neron AutoPrompter** — промпт под H3 по картинке и брифу | 🎬 Neron Dialog Autoprompter и 🧠 Multi-Image LLM — диалоговый режим |
@@ -371,6 +385,19 @@ The same quality H3 engine, but a **5–45 s video with sound** — a chain of b
 
 ---
 
+## 🎭 NERON H3 HERO SWAP — the same clip, another person (test, dev branch)
+
+👋 The node and workflow live in the **[`ComfyUI-NeronH3Swap`](ComfyUI-NeronH3Swap/)** folder.
+
+*   A clip (Load Video) + a photo of the new person (Load Image) → the same dance, camera, background and sound, with the person from the photo.
+*   **Only the masked person changes** (SAM 3.1 finds and tracks them); outside the mask — the original pixels.
+*   The H3 **Ref2VA** model + the **Character Swap V1.5** LoRA (Akatz Labs); downloads only the models it needs.
+*   Experimental: face and expressions can drift. Swap yourself and people who agreed.
+
+Details — in the **[README inside the folder](ComfyUI-NeronH3Swap/README.md)**.
+
+---
+
 ## 🎬 Project 2: NERON STUDIO H3 (Ready-made video pipeline, v1.0 "Lite")
 
 👋 All nodes, workflows and instructions live in the **[`Neron_Studio_H3`](Neron_Studio_H3/)** folder.
@@ -499,6 +526,7 @@ Details in the **[README inside NeronVideoEditor](NeronVideoEditor/README.md)**.
 | Prepare the first frame | **🖼 Neron Studio Image Processor** — presets are center-cropped, Reset and Help | Interactive Image Processor (presets stretch the picture); Smart Load & Resize Image and Manual Color & Upscale Panel — *legacy*, same code |
 | Generate H3 video | **🎬 Neron H3 Engine** — quality | 🎥 Neron MiniMax H3 Generator (Lite) — for the Neron Studio H3 workflows |
 | Long H3 video (5–45 s) | **🎬 Neron H3 Story** + **🖼 Frames** + **📝 Story AutoPrompter** (or **🎞 Block** nodes) | — |
+| Swap the person in a ready clip | **🎭 Neron H3 Hero Swap** (test, dev branch) | — |
 | Change a ready video (inserts, pictures, transitions) | **🎛 Neron Edit Pult** + the 🎬 Video ×3 and 🖼 Pictures ×4 cubes (test, dev branch) | — |
 | Generate LTX 2.5 video | **🎬 Neron LTX Engine** — first / middle / last frames, audio, downloads its models; **🎬 Neron LTX AutoPrompter** — an LTX prompt with physics and camera, downloads its LLM | — |
 | Write the prompt | **🎬 Neron AutoPrompter** — an H3 prompt from a picture and a brief | 🎬 Neron Dialog Autoprompter and 🧠 Multi-Image LLM — dialog mode |

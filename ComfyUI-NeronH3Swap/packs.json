@@ -1,0 +1,73 @@
+{
+  "_comment": "Модели для 🎭 Neron H3 Замена героя — только то, что нужно ЭТОЙ ноде. alternatives — другие версии того же файла: если лежит любая, файл не качается. Models for Hero Swap only.",
+  "default": "swap",
+  "packs": {
+    "swap": {
+      "title": "Замена героя · MiniMax H3 Ref2VA / Hero Swap · MiniMax H3 Ref2VA",
+      "description": "Всё для замены героя в клипе:\n• модель H3 Ref2VA (int8) — та, что умеет «видео + фото → видео». Это ОТДЕЛЬНЫЙ файл, не тот, что у H3 Story / Engine (fl2va);\n• текстовый энкодер, VAE видео и звука — общие с другими нодами H3 (если уже лежат — не качаю);\n• турбо-LoRA 8 шагов (lightx2v);\n• LoRA «Character Swap V1.5» от Akatz Labs — учит модель именно ЗАМЕНЕ героя (лицензия MiniMax H3, качаю с их страницы);\n• SAM 3.1 — находит человека и ведёт его маской по клипу (Comfy-Org).\n\nEN: Everything for swapping a hero in a clip: the H3 Ref2VA model (a SEPARATE file from Story/Engine's fl2va), the shared text encoder and VAEs, the 8-step turbo LoRA, Akatz Labs' Character Swap V1.5 LoRA (MiniMax H3 license, downloaded from their page) and SAM 3.1 for the person mask. Files you already have are skipped.",
+      "known_size_note": "точный размер окно узнаёт у сервера перед скачиванием / the exact size is checked before downloading",
+      "files": [
+        {
+          "role": "unet",
+          "kind": "diffusion_models",
+          "repo": "Comfy-Org/MiniMax-H3",
+          "gated": false,
+          "path": "diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors"
+        },
+        {
+          "role": "clip",
+          "kind": "text_encoders",
+          "repo": "Comfy-Org/MiniMax-H3",
+          "gated": false,
+          "path": "text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+          "alternatives": [
+            "qwen3vl_32b_minimax_h3_int8_convrot.safetensors"
+          ]
+        },
+        {
+          "role": "vae_video",
+          "kind": "vae",
+          "repo": "Comfy-Org/MiniMax-H3",
+          "gated": false,
+          "path": "vae/minimax_h3_video_vae_fp16.safetensors",
+          "alternatives": [
+            "minimax_h3_video_vae_int8_convrot.safetensors"
+          ]
+        },
+        {
+          "role": "vae_audio",
+          "kind": "vae",
+          "repo": "Comfy-Org/MiniMax-H3",
+          "gated": false,
+          "path": "vae/minimax_h3_audio_vae_fp32.safetensors"
+        },
+        {
+          "role": "turbo_lora",
+          "kind": "loras",
+          "repo": "lightx2v/Minimax-h3-Turbo",
+          "gated": false,
+          "path": "minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors",
+          "alternatives": [
+            "minimax_h3_fl2v_turbo_8step_v1.1_768p_comfyui_bf16.safetensors",
+            "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors"
+          ]
+        },
+        {
+          "role": "swap_lora",
+          "kind": "loras",
+          "repo": "akatz-ai/MiniMax-H3-Character-Swap-LoRA",
+          "gated": false,
+          "path": "h3_character_swap_v1.5.safetensors",
+          "note": "Akatz Labs · MiniMax H3 Community License"
+        },
+        {
+          "role": "sam",
+          "kind": "checkpoints",
+          "repo": "Comfy-Org/sam3.1",
+          "gated": false,
+          "path": "checkpoints/sam3.1_multiplex_fp16.safetensors"
+        }
+      ]
+    }
+  }
+}
