@@ -99,7 +99,7 @@ def find_file(kind, name):
         return None
     try:
         for f in folder_paths.get_filename_list(kind):
-            if base(f) == base(name):
+            if base(f).lower() == base(name).lower():          # Windows: регистр букв в имени не важен
                 return f
     except Exception as e:
         log.warning("%s список «%s»: %s", TAG, kind, e)
@@ -185,6 +185,16 @@ def grid_down(n):
     while n % 17 != 5:
         n -= 1
     return n
+
+
+def grid_fit(want, have):
+    """Длина по сетке 17k+5: ближайшая к желаемой (5 с → 124 кадра = 5,17 с), но не длиннее клипа и паспорта."""
+    up = min(int(want), MAX_FRAMES)
+    while up % 17 != 5:
+        up += 1
+    if up <= min(int(have), MAX_FRAMES):
+        return up
+    return grid_down(min(int(want), int(have)))
 
 
 def canvas(w, h, short):

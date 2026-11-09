@@ -31,20 +31,43 @@ AUTO_TIP = ("🤖 авто — файл из пакета (или его дру�
 
 
 def swap_prompt(who, what, hint=""):
-    """Текст для модели — наш, по смыслу рецепта автора LoRA: облик — с фото, игра — из клипа, сцена — нетронута."""
+    """Текст для модели — в РОДНОМ формате брифа MiniMax H3 (subject_definitions / summary / retention_analysis /
+    detailed_description): так пишет её собственный улучшатель промптов, на таких текстах она и LoRA замены
+    учились. Слова — наши: облик — с фото, игра — из клипа, сцена — нетронута."""
     t = TARGET.get(who, "the main person")
     if what == WHAT[1]:
-        look = ("Take only the face, facial features, skin tone and hairstyle from <Picture 1>; keep the body, "
-                "clothing and accessories of the original person from <Video 1>.")
+        look = ("facial features, face shape, skin tone and hairstyle from <Picture 1>; the body, clothing and "
+                "accessories stay as worn by the original person in <Video 1>")
+        keep_look = "face and hairstyle"
     else:
-        look = ("Take the face, facial features, hairstyle, skin tone, body build and clothing from <Picture 1>.")
-    p = (f"Replace {t} in <Video 1> with the person from <Picture 1>. {look} The performance comes from <Video 1>: "
-         "the same pose, position and scale in frame, gaze, facial expressions, gestures, mouth movements and timing, "
-         "moment by moment. Keep the camera, framing, background, lighting, objects and all other people exactly as "
-         "in <Video 1>. Use <Picture 1> for appearance only — not its background, pose or framing. "
-         "One continuous shot, no cuts.")
+        look = ("facial features, face shape, hairstyle, hair color, skin tone, body build and clothing from "
+                "<Picture 1>")
+        keep_look = "face, hairstyle, body build and clothing"
     hint = (hint or "").strip()
-    return p + (" " + hint if hint else "")
+    return (
+        f"Replace {t} in <Video 1> with the person shown in <Picture 1>.\n\n"
+        "subject_definitions:\n"
+        f"<Subject 1> is the new person: appearance comes from <Picture 1> ({look}); the performance comes from "
+        f"{t} in <Video 1>. <Picture 1> supplies appearance only, not its pose, expression, background or framing.\n"
+        "<Subject 2> is everything else in <Video 1>: the background, lighting, objects and all other people.\n"
+        "<Video 1> is the source video being edited; it supplies the composition, camera movement, timing and "
+        "every action.\n\n"
+        "summary:\n"
+        f"[video editing + reference generation] An edited version of <Video 1> in which {t} is replaced by "
+        "<Subject 1>, who performs exactly the same movements, while <Subject 2> and the camera stay unchanged.\n\n"
+        "retention_analysis:\n"
+        f"<Subject 1>: fully_preserved - keep the {keep_look} of <Picture 1> in every frame, from every angle and "
+        "with every expression; do not drift back to the original person's look.\n"
+        "<Subject 2>: fully_preserved - unchanged.\n"
+        "<Video 1>: partially_preserved - keep framing, camera motion, timing and duration; change only the "
+        "replaced person's appearance.\n\n"
+        "detailed_description:\n"
+        "[Shot 1] Same composition and viewpoint as <Video 1>. <Subject 1> stands where the original person "
+        "stands, at the same scale, and matches the original performance moment by moment: posture, gestures, "
+        "head turns, gaze, blinking, facial expressions and mouth movements. Lighting, shading and color of "
+        "<Subject 1> follow the scene of <Video 1>. Hair and clothing move naturally. Keep the crop and shot "
+        "scale of <Video 1>; do not copy the background or pose of <Picture 1>. One continuous shot, no cuts."
+        + (f"\n\n{hint}" if hint else ""))
 
 
 def _files(kind):
@@ -208,7 +231,7 @@ class NeronH3HeroSwap:
         frames, fps, audio = comp.images, float(comp.frame_rate), comp.audio
         frames = E.to_24(frames.float(), fps)
         n_src = int(frames.shape[0])
-        length = E.grid_down(min(n_src, int(round(float(seconds) * E.FPS))))
+        length = E.grid_fit(int(round(float(seconds) * E.FPS)), n_src)
         if not length:
             raise E.FriendlyError(f"{E.TAG} Клип слишком короткий: нужно хотя бы 2 секунды.\n\nEN: The clip is too "
                                   f"short — at least 2 seconds.")
