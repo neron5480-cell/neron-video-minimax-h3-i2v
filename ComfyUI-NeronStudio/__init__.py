@@ -16,7 +16,6 @@ _STATIC = os.path.join(_HERE, "static")
 # плитка → процессы Neron по порядку предпочтения.
 # «@имя» — копия проверенного процесса, которая лежит в самом Neron Studio (папка workflows) — как есть, без правок;
 # остальное — путь внутри пакета Neron (если стоит весь пакет — берётся его версия).
-_ONE = "ComfyUI-NeronH3One/workflows/Neron_H3_One.json"
 _STORY = "ComfyUI-NeronH3Story/workflows/Neron_H3_Story_AutoPrompter.json"
 _RESTORE = "workflow/Neron_Restore_Studio_Photoshop.json"
 WORKFLOWS = {
@@ -33,19 +32,15 @@ WORKFLOWS = {
     "clarity": ["@perception_relay_pult.json",
                 "ComfyUI-PerceptionRelay/workflows/perception_relay_pult.json",
                 "ComfyUI-PerceptionRelay/workflows/perception_relay_basic.json"],
-    "raw": ["@Neron_H3_Raw_Engine.json"],
     # 🖼 Картинки
     "outpaint": ["@Neron_Flux_Fill_PreProcessor.json", "workflow/Neron_Flux_Fill_PreProcessor.json"],
     "restore": ["@Neron_Restore_Studio_Photoshop.json", _RESTORE],
     "upscale": ["@Neron_Restore_Studio_Photoshop.json", _RESTORE],
     # 🎵 Звук
     "audio": ["@Neron_Audio_Studio_v2.0.json", "NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json"],
-    # 🧪 Тест (альфа)
-    "one": [_ONE],
-    "timing": [_ONE],
-    "swap": ["ComfyUI-NeronH3One/workflows/Neron_H3_Swap.json"],
+    # 🧪 Тест (альфа) — пока пусто
     # служебное
-    "models": [_ONE, _STORY],
+    "models": [_STORY],
 }
 
 

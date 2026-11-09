@@ -1,5 +1,17 @@
 # Changelog / История изменений
 
+## 🧹 Порядок в движках H3 (dev, 09.11.2026)
+
+**RU:**
+- Оставляем пять процессов H3, у каждого своя роль: ⚡ **Full Pipeline** (быстро, автопромтер, низкие разрешения), 🎥 **MiniMax H3 I2V v3.0** (камера, LoRA), 💎 **H3 Engine v2.0 «Хард»** (максимум качества), 🎞 **H3 Story** (до 45 с), 🎬 **Smart MiniMax «Диалог»** (режиссёр сцены разговора).
+- Сняты из dev: **H3 One** (вместе с 🎭 Подменой / Swap) и **⚡ H3 Engine Fast**. В main их не было — у людей ничего не меняется. Код Swap и заметки — `docs/archive/H3_Swap/`.
+- Neron Studio 2026.11.09·1: со стола убраны плитки H3 One, «Последний замер», «Замена героя», папка «Тест» (пока пустая) и «Для профи · H3 Raw» (Raw Engine остаётся в main и на Civitai). «📥 Модели» открывает H3 Story.
+
+**EN:**
+- Five H3 workflows stay, each with its own role: Full Pipeline (fast), MiniMax H3 I2V v3.0 (camera), H3 Engine v2.0 "Hard" (max quality), H3 Story (up to 45 s), Smart MiniMax "Dialogue".
+- Removed from dev: H3 One (with Swap) and H3 Engine Fast. They were never in main. Swap code and notes: `docs/archive/H3_Swap/`.
+- Neron Studio 2026.11.09·1: desk tiles for H3 One, Last benchmark, Hero swap, the Test folder (empty for now) and H3 Raw removed (Raw Engine stays in main and on Civitai).
+
 ## 🎭 Neron H3 Подмена / Swap — альфа (dev, 07.11.2026)
 
 **RU:**
