@@ -232,6 +232,13 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 | [`neron_dialog_autoprompter`](neron_dialog_autoprompter/) | Neron Dialog Autoprompter, Neron Multi-Image LLM | `workflow/neronSmartMiniMaxH3_v1.0.json` |
 | [`restore_studio`](restore_studio/) | Restore Studio, Live Preview | `workflow/Neron_Restore_Studio_Photoshop.json` |
 
+## ❓ Частые вопросы
+
+**Автопромтер не пишет откровенные сцены. Какую модель взять «без цензуры»?**
+Советов по моделям без цензуры я не даю: ноды Neron сделаны для обычного творческого видео — природа, люди,
+сценки, клипы. Автопромтер работает с любой vision-моделью GGUF, которую вы положите в `models/LLM`, так что
+выбор модели — ваше решение и ваша ответственность.
+
 ---
 <br><br>
 
@@ -465,6 +472,13 @@ These nodes stay in the root for backward compatibility: old workflows keep work
 | [`ComfyUI-Interactive-Processor`](ComfyUI-Interactive-Processor/) | Interactive Image Processor + **shared image code** for all image nodes | `workflow/neronVideoMinimaxH3_v2.0.json`, `workflow/neronSmartMiniMaxH3_v1.0.json` |
 | [`neron_dialog_autoprompter`](neron_dialog_autoprompter/) | Neron Dialog Autoprompter, Neron Multi-Image LLM | `workflow/neronSmartMiniMaxH3_v1.0.json` |
 | [`restore_studio`](restore_studio/) | Restore Studio, Live Preview | `workflow/Neron_Restore_Studio_Photoshop.json` |
+
+## ❓ FAQ
+
+**The AutoPrompter refuses explicit scenes. Which "uncensored" model should I use?**
+I don't give advice on uncensored models: Neron nodes are made for general creative video — nature, people,
+scenes, music clips. The AutoPrompter works with any vision GGUF model you put in `models/LLM`, so which model
+to use is your own choice and responsibility.
 
 ---
 
