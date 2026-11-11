@@ -28,6 +28,8 @@
 1. **SAM 3.1** (ноды SAM3_Detect / SAM3_VideoTrack / SAM3_TrackToMask) находит человека в первом кадре и ведёт
    его маской по клипу. Кадры, где трекер потерял человека, берут маску соседних кадров. Маска расширяется по
    площади и на ±2 кадра по времени, чтобы влезли волосы, одежда и смаз движения.
+   В режиме **«🙂 лицо и причёска»** (0.4) маска — только по голове (SAM ищет «head» у выбранного человека):
+   тело, одежда и движения остаются настоящими пикселями клипа, меняется только голова.
 2. **Силуэт вместо оригинала (идея Романа, 0.2).** До генерации человек в клипе-образце закрашивается чёрным
    силуэтом. Модели нечего копировать — облик она берёт с фото, а силуэт по-прежнему задаёт движение, место в
    кадре и ритм. Без этого H3 повторяла оригинал и брала с фото только цвет. В ⚙ эксперте — серый силуэт,
@@ -99,6 +101,8 @@ person.
 1. **SAM 3.1** (SAM3_Detect / SAM3_VideoTrack / SAM3_TrackToMask) finds the person in the first frame and tracks
    the mask through the clip. Frames where the tracker lost the person take the mask of the nearest frames. The
    mask grows in area and by ±2 frames in time, so hair, clothes and motion blur fit inside.
+   In the **«🙂 face & hair»** mode (0.4) the mask covers only the head (SAM looks for the chosen person's «head»):
+   the body, clothes and motion stay the clip's real pixels; only the head changes.
 2. **A silhouette instead of the original (Roman's idea, 0.2).** Before generation the person in the reference
    clip is blanked to a black silhouette. The model has nothing to copy — it takes the look from the photo, while
    the silhouette still drives the motion, position and rhythm. Without this H3 repeated the original and took

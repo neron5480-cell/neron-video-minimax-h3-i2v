@@ -1,5 +1,11 @@
 # Changelog / История изменений
 
+## 🎭 Замена героя 0.4 — «лицо и причёска» по-настоящему (dev, 11.11.2026)
+
+**RU:** Проверки Романа: скелет Ref2VA не понимает (переносит палки в кадр буквально, и чёрные, и цветные). Лучший прогон — ◻ серый силуэт + запас маски 12: без ореола, одежда с фото. Вопрос Романа «а если только лицо?» нашёл огрех: режим «🙂 лицо и причёска» менял только текст, а маска закрывала всего человека. Теперь маска — только по голове (SAM ищет «head» у выбранного человека; не нашла — верх фигуры), тело и одежда — пиксели клипа. Свой текст: «закрашена только голова — нарисуй голову с фото, тело и одежда без изменений».
+
+**EN:** Roman's tests: Ref2VA does not understand a skeleton (copies the sticks literally). Best run — gray silhouette + mask margin 12. Roman's question «what about only the face?» found a flaw: «face & hair» changed only the prompt while the mask covered the whole person. Now the mask covers only the head (SAM «head» of the chosen person; fallback — the top of the figure); body and clothes stay the clip's pixels. A dedicated head prompt.
+
 ## 🎭 Замена героя 0.3 — 🦴 скелет (dev, 11.11.2026)
 
 **0.3.1 RU:** ещё вариант (идея Романа) — **🦴⬛ чёрный скелет**: скелет толстыми чёрными палками, «силуэт толщиной в скелет» (толщина ≈ 7 % роста человека в кадре). **EN:** one more variant — a thick black stick figure, a silhouette as thin as the skeleton.
