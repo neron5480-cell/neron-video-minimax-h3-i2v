@@ -36,11 +36,10 @@ def silhouette_prompt(who, what, fill, hint=""):
     shape = {E.FILL[0]: "a solid black silhouette", E.FILL[1]: "a flat gray silhouette",
              E.FILL[2]: "a blurred silhouette"}.get(fill, "a silhouette")
     t = TARGET.get(who, "the main person")
-    if what == WHAT[1]:
-        look = "facial features, face shape, skin tone and hairstyle from <Picture 1>; clothing that suits the scene"
-    else:
-        look = "facial features, face shape, hairstyle, hair color, skin tone, body build and clothing from <Picture 1>"
     hint = (hint or "").strip()
+    if what == WHAT[1]:
+        return head_prompt(t, shape, hint)
+    look = "facial features, face shape, hairstyle, hair color, skin tone, body build and clothing from <Picture 1>"
     return (
         f"In <Video 1>, {t} has been removed and replaced by {shape}. Fill the silhouette with the person shown in "
         "<Picture 1>.\n\n"
@@ -65,6 +64,33 @@ def silhouette_prompt(who, what, fill, hint=""):
         "face is expressive, with mouth movements that follow the speech or singing in the soundtrack. Lighting and "
         "color of <Subject 1> match the scene. Do not copy the background or pose of <Picture 1>. One continuous "
         "shot, no cuts."
+        + (f"\n\n{hint}" if hint else ""))
+
+
+def head_prompt(t, shape, hint=""):
+    """«Лицо и причёска»: в <Video 1> закрашена только голова — модель рисует голову с <Picture 1>."""
+    return (
+        f"In <Video 1>, the head of {t} has been replaced by {shape}. Fill it with the head of the person shown in "
+        "<Picture 1>; the body, clothing and everything else stay exactly as in <Video 1>.\n\n"
+        "subject_definitions:\n"
+        "<Subject 1> is the head of the person from <Picture 1>: facial features, face shape, skin tone, hairstyle "
+        "and hair color.\n"
+        f"<Subject 2> is the body and clothing of {t} in <Video 1>, plus the background, lighting and other people.\n"
+        "<Video 1> is the source video: the shape gives the exact position, size, tilt and turns of the head over "
+        "time; the soundtrack gives the timing of speech or singing.\n\n"
+        "summary:\n"
+        "[video editing + reference generation] An edited version of <Video 1> in which the head becomes "
+        "<Subject 1>, naturally joined to the neck and shoulders of <Subject 2>, while <Subject 2> stays unchanged.\n\n"
+        "retention_analysis:\n"
+        "<Subject 1>: fully_preserved - the face and hair of <Picture 1> in every frame and from every angle.\n"
+        "<Subject 2>: fully_preserved - unchanged body, clothing, pose and background.\n"
+        "<Video 1>: partially_preserved - keep framing, camera motion, timing and head motion; no black, gray or "
+        "blurred areas remain in the result.\n\n"
+        "detailed_description:\n"
+        "[Shot 1] Same composition and camera as <Video 1>. The head of <Subject 1> turns, tilts and nods exactly "
+        "as in <Video 1>; skin tone of the face matches the neck; the face is expressive, with mouth movements that "
+        "follow the speech or singing in the soundtrack. Lighting and color match the scene. One continuous shot, "
+        "no cuts."
         + (f"\n\n{hint}" if hint else ""))
 
 
@@ -354,7 +380,7 @@ class NeronH3HeroSwap:
             out, out_audio, preview, report = E.generate(
                 frames, audio, photo, text, SHORT.get(quality, 480), int(seed), int(steps), float(swap_strength),
                 models, who, float(threshold), int(expand_px), bool(keep_outside), int(feather_px), ref_quality,
-                bool(fast_attention), sound == SOUND[0], ref_fill)
+                bool(fast_attention), sound == SOUND[0], ref_fill, what == WHAT[1])
         except Exception:
             E.free("после ошибки / after error")
             raise

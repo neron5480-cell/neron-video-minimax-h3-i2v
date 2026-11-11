@@ -300,8 +300,33 @@ def feather(m, px):
     return torch.cat(out, 0).clamp(0, 1)
 
 
-def person_mask(frames, sam_name, who, threshold, expand_px, report):
-    """→ маска [N,H,W] 0/1 (расширенная) и картинка-проверка первого кадра."""
+def _heads_for(people, heads):
+    """Каждому выбранному человеку — его голова: та, что больше всего лежит внутри его маски.
+    Головы не нашлось — верх фигуры (≈ 22 % роста): лучше грубая голова, чем весь человек."""
+    out = []
+    for p in people:
+        best, score = None, 0.3
+        for h in heads:
+            a = float(h.sum())
+            if a <= 0:
+                continue
+            sc = float((h * p).sum()) / a
+            if sc > score:
+                best, score = h, sc
+        if best is None:
+            ys = torch.nonzero(p.sum(1) > 0).flatten()
+            best = torch.zeros_like(p)
+            if ys.numel():
+                y1, y2 = int(ys.min()), int(ys.max()) + 1
+                top = y1 + max(1, int((y2 - y1) * 0.22))
+                best[y1:top] = p[y1:top]
+        out.append(best)
+    return torch.stack(out, 0)
+
+
+def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False):
+    """→ маска [N,H,W] 0/1 (расширенная), картинка-проверка первого кадра и точная маска.
+    head=True — «лицо и причёска»: маска только по голове выбранного человека, тело и одежда — из клипа."""
     send("Ищу человека / Finding the person")
     model, clip = node("CheckpointLoaderSimple", ckpt_name=sam_name)[:2]
     cond = node("CLIPTextEncode", clip=clip, text="person")[0]
@@ -317,8 +342,18 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report):
                             f"clip where the person is visible from the start, or lower the detection threshold.")
     chosen = _pick(det, who)
     report.append(f"Людей в первом кадре: {det.shape[0]}, меняю: {len(chosen)} ({who.split(' / ')[0]})")
+    init = det[chosen]
+    if head:
+        hcond = node("CLIPTextEncode", clip=clip, text="head")[0]
+        hd = node("SAM3_Detect", model=model, image=frames[:1], conditioning=hcond, threshold=float(threshold),
+                  refine_iterations=2, individual_masks=True)[0]
+        if hd.dim() == 2:
+            hd = hd[None]
+        hd = (hd.float().cpu() > 0.5).float()
+        init = _heads_for(init, list(hd))
+        report.append(f"Только голова: голов в кадре {hd.shape[0]}, маска — по голове, тело и одежда из клипа")
     send("Веду маску по клипу / Tracking the person", 0, int(frames.shape[0]))
-    track = node("SAM3_VideoTrack", images=frames, model=model, initial_mask=det[chosen],
+    track = node("SAM3_VideoTrack", images=frames, model=model, initial_mask=init,
                  detection_threshold=0.5, max_objects=len(chosen), detect_interval=1)[0]
     masks = node("SAM3_TrackToMask", track_data=track, object_indices="")[0]
     del model, clip, cond, track
@@ -452,7 +487,7 @@ def skeleton_reference(src, mask, pose, tight=None, black=False):
 # ---------------- главное ----------------
 
 def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strength, models, who, threshold,
-             expand_px, keep_outside, feather_px, ref_quality, fast_attention, sound_original, fill=FILL[0]):
+             expand_px, keep_outside, feather_px, ref_quality, fast_attention, sound_original, fill=FILL[0], head=False):
     """frames [N,H,W,3] уже 24 к/с и обрезаны по сетке. → (кадры, звук, превью маски, отчёт)."""
     t0 = time.time()
     report = []
@@ -463,7 +498,7 @@ def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strengt
 
     send("Подготовка клипа / Preparing the clip")
     src = resize(frames, w, h)
-    mask, preview, tight = person_mask(src, models["sam"], who, threshold, expand_px, report)
+    mask, preview, tight = person_mask(src, models["sam"], who, threshold, expand_px, report, head)
     if fill in SKELETONS:
         black = fill == BLACK_SKELETON
         ref = skeleton_reference(src, mask, pose_frames(src, tight, models["pose"], report), tight, black)
