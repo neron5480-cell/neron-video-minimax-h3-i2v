@@ -13,11 +13,12 @@ log = logging.getLogger("Neron.H3.Swap")
 NOT_FOUND = "__not_found__"
 AUTO_MODEL = "🤖 авто — из пакета / auto — from pack"
 ROLES = {"unet": "diffusion_models", "clip": "text_encoders", "vae_video": "vae", "vae_audio": "vae",
-         "turbo_lora": "loras", "swap_lora": "loras", "sam": "checkpoints"}
+         "turbo_lora": "loras", "swap_lora": "loras", "sam": "checkpoints", "pose": "checkpoints"}
 ROLE_NAMES = {"unet": "модель H3 Ref2VA / H3 Ref2VA model", "clip": "текстовый энкодер / text encoder",
               "vae_video": "VAE видео / video VAE", "vae_audio": "VAE звука / audio VAE",
               "turbo_lora": "турбо-LoRA / turbo LoRA", "swap_lora": "LoRA замены / swap LoRA",
-              "sam": "SAM 3.1 (маска человека / person mask)"}
+              "sam": "SAM 3.1 (маска человека / person mask)",
+              "pose": "SDPose (скелет для режима 🦴 / skeleton for 🦴 mode)"}
 
 WHAT = ["🧍 весь облик / whole look", "🙂 лицо и причёска / face & hair"]
 QUALITY = ["⚡ 480p — быстрее, для 16 ГБ / faster", "🎯 768p — как у автора LoRA, тяжелее / heavier"]
@@ -64,6 +65,42 @@ def silhouette_prompt(who, what, fill, hint=""):
         "face is expressive, with mouth movements that follow the speech or singing in the soundtrack. Lighting and "
         "color of <Subject 1> match the scene. Do not copy the background or pose of <Picture 1>. One continuous "
         "shot, no cuts."
+        + (f"\n\n{hint}" if hint else ""))
+
+
+def skeleton_prompt(who, what, hint=""):
+    """Текст для режима «🦴 скелет»: в <Video 1> человека нет — пустая сцена и цветной скелет позы поверх."""
+    t = TARGET.get(who, "the main person")
+    if what == WHAT[1]:
+        look = "facial features, face shape, skin tone and hairstyle from <Picture 1>; clothing that suits the scene"
+    else:
+        look = "facial features, face shape, hairstyle, hair color, skin tone, body build and clothing from <Picture 1>"
+    hint = (hint or "").strip()
+    return (
+        f"In <Video 1>, {t} has been erased from the scene; only a colored pose skeleton (a stick figure with joints, "
+        "hands and face points) remains, showing where the person is and how they move. Put the person shown in "
+        "<Picture 1> onto this skeleton.\n\n"
+        "subject_definitions:\n"
+        f"<Subject 1> is the person from <Picture 1> ({look}). <Subject 1> stands exactly on the skeleton in "
+        "<Video 1>, in every frame: head on the head points, shoulders, elbows, wrists, hips, knees and feet on the "
+        "joints.\n"
+        "<Subject 2> is the scene of <Video 1>: background, lighting, objects and other people.\n"
+        "<Video 1> is the source video: the skeleton gives the exact position, scale, pose and movement over time; "
+        "the face points give head turns and mouth opening; the soundtrack gives the timing of speech or singing.\n\n"
+        "summary:\n"
+        "[pose-driven video editing + reference generation] An edited version of <Video 1> in which <Subject 1>, a "
+        "real person, performs exactly the movements of the skeleton, while <Subject 2> stays unchanged.\n\n"
+        "retention_analysis:\n"
+        "<Subject 1>: fully_preserved - the look and the clothing of <Picture 1> in every frame and from every angle.\n"
+        "<Subject 2>: fully_preserved - unchanged.\n"
+        "<Video 1>: partially_preserved - keep framing, camera motion, timing and the skeleton's motion; the skeleton "
+        "lines and dots themselves are never drawn in the result.\n\n"
+        "detailed_description:\n"
+        "[Shot 1] Same composition and camera as <Video 1>. <Subject 1> is a natural, fully detailed person whose "
+        "body follows the skeleton moment by moment: posture, gestures, head turns and steps. The body shape and "
+        "clothing come from <Picture 1>, not from the empty area around the skeleton. The face is expressive, with "
+        "mouth movements that follow the speech or singing in the soundtrack. Lighting and color of <Subject 1> "
+        "match the scene. Do not copy the background or pose of <Picture 1>. One continuous shot, no cuts."
         + (f"\n\n{hint}" if hint else ""))
 
 
@@ -228,7 +265,12 @@ class NeronH3HeroSwap:
                                      "⬛ чёрный — по умолчанию; ◻ серый или 🌫 размытие — если модель рисует тёмную "
                                      "фигуру; «оригинал» — как в 0.1 (для сравнения).\n\nEN: Blank out the person in "
                                      "the reference video before generation, so the model cannot copy them; the "
-                                     "silhouette still drives the motion.")),
+                                     "silhouette still drives the motion.\n\n🦴 скелет (0.3): человек стёрт "
+                                     "в фон, поверх — его скелет (SDPose). Форма платья не видна, только поза: "
+                                     "одежда берётся с фото. Нужна модель SDPose («📥 Модели»).\n\nEN: 🦴 skeleton: "
+                                     "the person is erased, only their pose skeleton remains; clothing comes from "
+                                     "the photo. Needs the SDPose model.")),
+                "pose_model": _model_combo("pose", "SDPose (скелет / skeleton)"),
             },
             "optional": {
                 "prompt": ("STRING", {"forceInput": True,
@@ -243,9 +285,14 @@ class NeronH3HeroSwap:
                  feather_px=12, threshold=0.35, ref_quality="match", fast_attention=True, unet_model=AUTO_MODEL,
                  clip_model=AUTO_MODEL, vae_video_model=AUTO_MODEL, vae_audio_model=AUTO_MODEL,
                  turbo_lora_model=AUTO_MODEL, swap_lora_model=AUTO_MODEL, sam_model=AUTO_MODEL, ref_fill=None,
-                 prompt=None):
+                 pose_model=AUTO_MODEL, prompt=None):
         notes = []
-        for need in ("MiniMaxH3ReferenceToVideo", "MiniMaxH3AddGuide", "SAM3_Detect", "SAM3_VideoTrack"):
+        ref_fill = ref_fill if ref_fill in E.FILL else E.FILL[0]
+        skeleton = ref_fill == E.SKELETON
+        needs = ["MiniMaxH3ReferenceToVideo", "MiniMaxH3AddGuide", "SAM3_Detect", "SAM3_VideoTrack"]
+        if skeleton:
+            needs += ["SDPoseKeypointExtractor", "SDPoseDrawKeypoints"]
+        for need in needs:
             if not E.has_node(need):
                 raise E.FriendlyError(f"{E.TAG} В ComfyUI нет ноды «{need}». Обнови ComfyUI — нужны MiniMax H3 и "
                                       f"SAM3.\n\nEN: ComfyUI lacks «{need}». Update ComfyUI.")
@@ -253,6 +300,8 @@ class NeronH3HeroSwap:
         # ---- модели ----
         picked = {"unet": unet_model, "clip": clip_model, "vae_video": vae_video_model, "vae_audio": vae_audio_model,
                   "turbo_lora": turbo_lora_model, "swap_lora": swap_lora_model, "sam": sam_model}
+        if skeleton:
+            picked["pose"] = pose_model
         models = {}
         for role, v in picked.items():
             if v in (None, "", AUTO_MODEL, NOT_FOUND):
@@ -287,11 +336,12 @@ class NeronH3HeroSwap:
         if audio is not None:
             audio = E.fit_audio(audio, length / E.FPS)
 
-        ref_fill = ref_fill if ref_fill in E.FILL else E.FILL[0]
         if (prompt or "").strip():
             text = prompt.strip()
         elif ref_fill == E.FILL[3]:
             text = swap_prompt(who, what, hint)
+        elif skeleton:
+            text = skeleton_prompt(who, what, hint)
         else:
             text = silhouette_prompt(who, what, ref_fill, hint)
         notes.append("Текст: " + ("свой" if (prompt or "").strip() else f"{what.split(' / ')[0]} · "

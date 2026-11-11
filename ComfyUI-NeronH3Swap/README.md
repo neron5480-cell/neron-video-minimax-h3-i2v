@@ -32,6 +32,9 @@
    силуэтом. Модели нечего копировать — облик она берёт с фото, а силуэт по-прежнему задаёт движение, место в
    кадре и ритм. Без этого H3 повторяла оригинал и брала с фото только цвет. В ⚙ эксперте — серый силуэт,
    размытие или «оригинал» (как в 0.1, для сравнения).
+   **🦴 Скелет (0.3, тоже идея Романа).** Силуэт задаёт и форму одежды: пышные рукава и юбка — модель рисует
+   что-то пышное. В режиме «скелет» человек стирается в фон, поверх рисуется его скелет (родные ноды SDPose:
+   тело, кисти, ступни, точки лица). Модель видит только позу, одежда берётся с фото. Нужна модель SDPose.
 3. **MiniMax H3 Ref2VA** получает клип с силуэтом как `<Video 1>`, фото как `<Picture 1>`, звук клипа — образцом
    и целью.
 4. **Дорисовка по маске:** в латент кладётся закодированный клип (тоже с силуэтом), а маска человека говорит
@@ -51,7 +54,8 @@
 - `minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors` — турбо-LoRA (lightx2v);
 - `h3_character_swap_v1.5.safetensors` — LoRA замены (Akatz Labs, лицензия MiniMax H3 Community License; качается
   со страницы автора, мы её не переупаковываем);
-- `sam3.1_multiplex_fp16.safetensors` — SAM 3.1 (Comfy-Org).
+- `sam3.1_multiplex_fp16.safetensors` — SAM 3.1 (Comfy-Org);
+- `sdpose_wholebody_fp16.safetensors` — SDPose (Comfy-Org), скелет позы — нужен только для режима «🦴 скелет».
 
 **Честно.**
 - Модель замены экспериментальная — так пишет и её автор. Лицо, мимика, перекрытия и склейки иногда «плывут»;
@@ -99,6 +103,10 @@ person.
    clip is blanked to a black silhouette. The model has nothing to copy — it takes the look from the photo, while
    the silhouette still drives the motion, position and rhythm. Without this H3 repeated the original and took
    only color from the photo. In ⚙ expert — a gray silhouette, blur or «original» (as in 0.1, for comparison).
+   **🦴 Skeleton (0.3, also Roman's idea).** The silhouette also sets the clothing shape: puffy sleeves and a skirt
+   make the model draw something puffy. In the «skeleton» mode the person is erased into the background and their
+   skeleton is drawn on top (native SDPose nodes: body, hands, feet, face points). The model sees only the pose;
+   clothing comes from the photo. Needs the SDPose model.
 3. **MiniMax H3 Ref2VA** gets the silhouette clip as `<Video 1>`, the photo as `<Picture 1>`, and the clip's sound
    as a reference and a target.
 4. **Masked repaint:** the latent holds the encoded clip (with the silhouette too), and the person mask tells the
@@ -118,7 +126,8 @@ Memory goes in turns, as in Neron H3 Engine: SAM → unload → text → unload 
 - `minimax_h3_fl2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors` — turbo LoRA (lightx2v);
 - `h3_character_swap_v1.5.safetensors` — the swap LoRA (Akatz Labs, MiniMax H3 Community License; downloaded from
   the author's page, we do not repackage it);
-- `sam3.1_multiplex_fp16.safetensors` — SAM 3.1 (Comfy-Org).
+- `sam3.1_multiplex_fp16.safetensors` — SAM 3.1 (Comfy-Org);
+- `sdpose_wholebody_fp16.safetensors` — SDPose (Comfy-Org), the pose skeleton — only the «🦴 skeleton» mode needs it.
 
 **Honestly.**
 - The swap model is experimental — its author says so too. Face, expressions, occlusions and cuts can drift; exact

@@ -1,5 +1,11 @@
 # Changelog / История изменений
 
+## 🎭 Замена героя 0.3 — 🦴 скелет (dev, 11.11.2026)
+
+**RU:** Проверка Романа: 0.2 (чёрный силуэт) **заменяет человека полностью** — лицо с фото, движение, губы под песню. Но силуэт задаёт и форму одежды (пышные рукава и юбка → модель рисует шубу), а широкая маска даёт тёмный ореол. Новый режим в ⚙ эксперте «человек в образце» → **🦴 скелет** (идея Романа): человек стирается в фон (цветами улицы вокруг), поверх рисуется его скелет — родные ноды SDPose (тело, кисти, ступни, точки лица), поза ищется в рамке из маски SAM. Свой текст: «натяни человека с фото на скелет, линий скелета в результате нет». Модель SDPose (`sdpose_wholebody_fp16`, Comfy-Org) — в «📥 Модели», нужна только для этого режима. По умолчанию по-прежнему чёрный силуэт.
+
+**EN:** Roman's test: 0.2 (black silhouette) **swaps the person completely** — face from the photo, motion, lips to the song. But the silhouette also sets the clothing shape (puffy sleeves and skirt → the model draws a fur coat), and the wide mask leaves a dark halo. New expert mode «person in reference» → **🦴 skeleton** (Roman's idea): the person is erased into the background and their pose skeleton is drawn on top — native SDPose nodes (body, hands, feet, face points), searched inside the SAM mask box. A dedicated prompt. The SDPose model (`sdpose_wholebody_fp16`, Comfy-Org) is in «📥 Models», needed only for this mode. Black silhouette stays the default.
+
 ## 🎭 Замена героя 0.2 — силуэт вместо оригинала (dev, 11.11.2026)
 
 **RU:** Идея Романа: до генерации человек в видео-образце закрашивается чёрным силуэтом — модели нечего копировать, облик она берёт с фото, а силуэт задаёт движение. Свой текст для модели под силуэт. В ⚙ эксперте «человек в образце»: чёрный / серый / размытие / оригинал. mask_preview показывает маску и кадр с силуэтом. В 0.1 H3 повторяла оригинал и брала с фото только цвет.

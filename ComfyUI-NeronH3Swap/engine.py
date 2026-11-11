@@ -340,13 +340,14 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report):
     preview = frames[:1].clone()
     tint = torch.tensor([1.0, 0.45, 0.1])
     preview[0] = preview[0] * (1 - 0.45 * grown[0, ..., None]) + tint * 0.45 * grown[0, ..., None]
-    return grown, preview
+    return grown, preview, masks
 
 
 # ---------------- образец без оригинала: человек закрашен ----------------
 
 FILL = ["⬛ чёрный силуэт / black silhouette", "◻ серый силуэт / gray silhouette", "🌫 размытие / blur",
-        "— оригинал, без закраски / original"]
+        "— оригинал, без закраски / original", "🦴 скелет / skeleton"]
+SKELETON = FILL[4]
 
 
 def blank_person(frames, mask, fill):
@@ -368,6 +369,72 @@ def blank_person(frames, mask, fill):
     return frames * (1 - m) + filler * m
 
 
+# ---------------- 🦴 скелет вместо силуэта (идея Романа, 0.3) ----------------
+
+def erase_person(frames, mask, step=8):
+    """Стереть человека: зона маски заполняется цветами фона вокруг (нормированное размытие на малом размере).
+    Получается пустая улица без формы платья — модели нечего копировать, даже очертания."""
+    out = []
+    for i in range(0, frames.shape[0], 16):
+        c = frames[i:i + 16].movedim(-1, 1).float()
+        keep = 1 - mask[i:i + 16, None].float()
+        num = F.avg_pool2d(c * keep, step, ceil_mode=True)
+        den = F.avg_pool2d(keep, step, ceil_mode=True)
+        for _ in range(64):
+            if bool((den > 1e-3).all()):
+                break
+            num = F.avg_pool2d(num, 5, stride=1, padding=2, count_include_pad=False)
+            den = F.avg_pool2d(den, 5, stride=1, padding=2, count_include_pad=False)
+        fill = num / den.clamp_min(1e-4)
+        fill = F.avg_pool2d(fill, 3, stride=1, padding=1, count_include_pad=False)
+        fill = F.interpolate(fill, size=c.shape[-2:], mode="bilinear", align_corners=False)
+        out.append((c * keep + fill * (1 - keep)).movedim(1, -1))
+    return torch.cat(out, 0).clamp(0, 1)
+
+
+def _bboxes(tight, pad=0.12):
+    """Рамка человека на каждом кадре (из точной маски SAM) — SDPose ищет позу именно в ней."""
+    n, h, w = tight.shape
+    out = []
+    for i in range(n):
+        ys, xs = torch.nonzero(tight[i] > 0.5, as_tuple=True)
+        if ys.numel() == 0:
+            out.append([])
+            continue
+        y1, y2, x1, x2 = int(ys.min()), int(ys.max()) + 1, int(xs.min()), int(xs.max()) + 1
+        py, px = int((y2 - y1) * pad), int((x2 - x1) * pad)
+        y1, y2, x1, x2 = max(0, y1 - py), min(h, y2 + py), max(0, x1 - px), min(w, x2 + px)
+        out.append([{"x": x1, "y": y1, "width": x2 - x1, "height": y2 - y1}])
+    return out
+
+
+def pose_frames(src, tight, pose_name, report):
+    """SDPose (родные ноды) → цветной скелет [N,H,W,3] на чёрном фоне: тело, кисти, ступни, точки лица."""
+    send("Строю скелет / Building the skeleton", 0, int(src.shape[0]))
+    model, _, vae = node("CheckpointLoaderSimple", ckpt_name=pose_name)[:3]
+    bb = _bboxes(tight)
+    kps = node("SDPoseKeypointExtractor", model=model, vae=vae, image=src, batch_size=16, bboxes=bb)[0]
+    stick = max(2, int(round(4 * min(src.shape[1], src.shape[2]) / 768.0)))
+    pose = node("SDPoseDrawKeypoints", keypoints=kps, draw_body=True, draw_hands=True, draw_face=True,
+                draw_feet=True, stick_width=stick, face_point_size=2, score_threshold=0.3, draw_head=True)[0]
+    del model, vae, kps
+    free("SDPose выгружен")
+    pose = pose.float().cpu()[..., :3]
+    if tuple(pose.shape[1:3]) != tuple(src.shape[1:3]):
+        pose = resize(pose, int(src.shape[2]), int(src.shape[1]))
+    empty = int(sum(1 for b in bb if not b))
+    lit = (pose.amax(-1) > 0.04).flatten(1).any(1)
+    report.append(f"Скелет: {int(lit.sum())} из {pose.shape[0]} кадров" + (f", без маски {empty}" if empty else ""))
+    return pose
+
+
+def skeleton_reference(src, mask, pose):
+    """Образец «🦴 скелет»: человек стёрт в фон, поверх — его скелет. Форма тела и одежды не видна, только поза."""
+    clean = erase_person(src, mask)
+    a = (pose.amax(-1, keepdim=True) > 0.04).float()
+    return clean * (1 - a) + pose * a
+
+
 # ---------------- главное ----------------
 
 def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strength, models, who, threshold,
@@ -382,9 +449,15 @@ def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strengt
 
     send("Подготовка клипа / Preparing the clip")
     src = resize(frames, w, h)
-    mask, preview = person_mask(src, models["sam"], who, threshold, expand_px, report)
-    ref = blank_person(src, mask, fill)
-    if fill != FILL[3]:
+    mask, preview, tight = person_mask(src, models["sam"], who, threshold, expand_px, report)
+    if fill == SKELETON:
+        ref = skeleton_reference(src, mask, pose_frames(src, tight, models["pose"], report))
+        report.append("Образец: человек стёрт в фон, поверх — его скелет (SDPose): модель видит только позу")
+        preview = torch.cat([preview, ref[:1]], 0)
+    else:
+        ref = blank_person(src, mask, fill)
+    del tight
+    if fill not in (FILL[3], SKELETON):
         report.append(f"Образец: человек закрашен ({fill.split(' / ')[0]}) — облик оригинала модели не виден, "
                       f"движение — по силуэту")
         preview = torch.cat([preview, ref[:1]], 0)

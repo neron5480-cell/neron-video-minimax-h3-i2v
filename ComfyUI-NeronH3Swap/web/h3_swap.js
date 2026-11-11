@@ -26,7 +26,7 @@ const GROUPS = [
     { name: "ТОНКАЯ НАСТРОЙКА / ADVANCED", widgets: ["ref_quality", "fast_attention"],
       fill: "rgba(120, 200, 160, 0.15)", border: "rgba(120, 200, 160, 0.75)", label: "rgba(190, 255, 220, 1.0)" },
     { name: "МОДЕЛИ / MODELS", widgets: ["unet_model", "clip_model", "vae_video_model", "vae_audio_model",
-                                          "turbo_lora_model", "swap_lora_model", "sam_model"],
+                                          "turbo_lora_model", "swap_lora_model", "sam_model", "pose_model"],
       fill: "rgba(200, 120, 120, 0.15)", border: "rgba(200, 120, 120, 0.75)", label: "rgba(255, 190, 190, 1.0)" },
     { name: "ОБРАЗЕЦ / REFERENCE", widgets: ["ref_fill"],
       fill: "rgba(180, 120, 220, 0.15)", border: "rgba(180, 120, 220, 0.75)", label: "rgba(230, 200, 255, 1.0)" },
@@ -531,6 +531,8 @@ const HELP_TEXT = `
 • SAM 3.1 находит человека в первом кадре и ведёт его маской по клипу.
 • ДО генерации человек в клипе-образце закрашивается чёрным силуэтом (идея Романа):
   модели нечего копировать — облик она берёт с фото, а силуэт задаёт движение.
+• 🦴 Скелет (⚙ эксперт → «человек в образце»): человек стирается в фон, поверх рисуется его
+  скелет (SDPose). Модель видит только позу — без формы платья, одежда берётся с фото.
 • MiniMax H3 Ref2VA получает клип с силуэтом как <Video 1> и фото как <Picture 1>
   и перерисовывает ТОЛЬКО то, что под маской (дорисовка по маске).
 • LoRA «Character Swap V1.5» (Akatz Labs) учит модель именно замене героя.
@@ -578,6 +580,8 @@ HOW IT WORKS
 • SAM 3.1 finds the person in the first frame and tracks the mask through the clip.
 • BEFORE generation the person in the reference clip is blanked to a black silhouette
   (Roman's idea): nothing to copy — the look comes from the photo, the silhouette drives the motion.
+• 🦴 Skeleton (⚙ expert → «person in reference»): the person is erased into the background and their
+  pose skeleton (SDPose) is drawn on top. The model sees only the pose — no dress shape; clothing comes from the photo.
 • MiniMax H3 Ref2VA gets the silhouette clip as <Video 1> and the photo as <Picture 1>
   and repaints ONLY what is under the mask.
 • The «Character Swap V1.5» LoRA (Akatz Labs) teaches the model to swap.
