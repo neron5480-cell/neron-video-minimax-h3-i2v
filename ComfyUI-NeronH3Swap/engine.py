@@ -491,9 +491,16 @@ def blur_person(frames, mask, blur=0.5):
     for i in range(0, frames.shape[0], 16):
         c = frames[i:i + 16].movedim(-1, 1)
         k = max(3, int(round(min(c.shape[2], c.shape[3]) / 12 * max(0.05, float(blur)))) | 1)
-        b = F.avg_pool2d(F.avg_pool2d(c, k, stride=1, padding=k // 2), k, stride=1, padding=k // 2)
+        b = _box(_box(c, k), k)
         out.append(b.movedim(1, -1))
     return frames * (1 - m) + torch.cat(out, 0) * m
+
+
+def _box(c, k):
+    """Квадратное среднее k×k — двумя проходами (строка, столбец): ровно то же, что avg_pool2d(k), но в k раз
+    быстрее. На 768p, 16:9 и 15 с полное окно считалось на процессоре минутами."""
+    c = F.avg_pool2d(c, (k, 1), stride=1, padding=(k // 2, 0))
+    return F.avg_pool2d(c, (1, k), stride=1, padding=(0, k // 2))
 
 
 # ---------------- главное ----------------
