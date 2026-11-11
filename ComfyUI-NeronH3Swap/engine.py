@@ -343,10 +343,35 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report):
     return grown, preview
 
 
+# ---------------- образец без оригинала: человек закрашен ----------------
+
+FILL = ["⬛ чёрный силуэт / black silhouette", "◻ серый силуэт / gray silhouette", "🌫 размытие / blur",
+        "— оригинал, без закраски / original"]
+
+
+def blank_person(frames, mask, fill):
+    """Идея Романа: убрать из видео-образца облик исходного человека ДО генерации — модели нечего копировать,
+    а силуэт по-прежнему танцует (движение, место в кадре, ритм остаются). Заполнит его модель — человеком с фото."""
+    if fill == FILL[3]:
+        return frames
+    m = mask[..., None]
+    if fill == FILL[2]:
+        out = []
+        for i in range(0, frames.shape[0], 16):
+            c = frames[i:i + 16].movedim(-1, 1)
+            k = max(3, (min(c.shape[2], c.shape[3]) // 12) | 1)
+            b = F.avg_pool2d(F.avg_pool2d(c, k, stride=1, padding=k // 2), k, stride=1, padding=k // 2)
+            out.append(b.movedim(1, -1))
+        filler = torch.cat(out, 0)
+    else:
+        filler = torch.full_like(frames, 0.0 if fill == FILL[0] else 0.5)
+    return frames * (1 - m) + filler * m
+
+
 # ---------------- главное ----------------
 
 def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strength, models, who, threshold,
-             expand_px, keep_outside, feather_px, ref_quality, fast_attention, sound_original):
+             expand_px, keep_outside, feather_px, ref_quality, fast_attention, sound_original, fill=FILL[0]):
     """frames [N,H,W,3] уже 24 к/с и обрезаны по сетке. → (кадры, звук, превью маски, отчёт)."""
     t0 = time.time()
     report = []
@@ -358,6 +383,11 @@ def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strengt
     send("Подготовка клипа / Preparing the clip")
     src = resize(frames, w, h)
     mask, preview = person_mask(src, models["sam"], who, threshold, expand_px, report)
+    ref = blank_person(src, mask, fill)
+    if fill != FILL[3]:
+        report.append(f"Образец: человек закрашен ({fill.split(' / ')[0]}) — облик оригинала модели не виден, "
+                      f"движение — по силуэту")
+        preview = torch.cat([preview, ref[:1]], 0)
 
     # ---- 1. условия: текст + клип + фото + звук ----
     send("Текст и образцы / Text & references")
@@ -366,7 +396,7 @@ def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strengt
     avae = node("VAELoader", vae_name=models["vae_audio"])[0]
     params = {"clip": clip, "vae": vae, "audio_vae": avae, "prompt": prompt, "width": w, "height": h, "length": n,
               "ref_image_size": ref_quality, "ref_images": {"ref_image_0": photo[:1]},
-              "ref_videos": {"ref_video_0": src}}
+              "ref_videos": {"ref_video_0": ref}}
     clip_audio = fit_audio(audio, n / FPS) if audio is not None else None
     if clip_audio is not None:
         params["ref_audios"] = {"ref_audio_0": clip_audio}
@@ -379,7 +409,7 @@ def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strengt
     # ---- 2. дорисовка по маске: исходный клип в латенте, меняется только человек ----
     send("Кодирую клип / Encoding the clip")
     video_lat, audio_lat = latent["samples"].tensors
-    src_lat = vae.encode(src)
+    src_lat = vae.encode(ref)                       # и в латенте под маской оригинала нет
     if tuple(src_lat.shape) != tuple(video_lat.shape):
         raise FriendlyError(f"{TAG} Размер латента клипа {tuple(src_lat.shape)} не совпал с ожидаемым "
                             f"{tuple(video_lat.shape)}. Обнови ComfyUI.\n\nEN: Clip latent shape mismatch. Update ComfyUI.")

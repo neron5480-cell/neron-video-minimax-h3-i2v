@@ -30,6 +30,43 @@ AUTO_TIP = ("🤖 авто — файл из пакета (или его дру�
             "EN: auto — the pack's file (or another version you have). Missing — press «📥 Models».")
 
 
+def silhouette_prompt(who, what, fill, hint=""):
+    """Текст для режима «силуэт»: в <Video 1> человек закрашен — модель заполняет его человеком с <Picture 1>."""
+    shape = {E.FILL[0]: "a solid black silhouette", E.FILL[1]: "a flat gray silhouette",
+             E.FILL[2]: "a blurred silhouette"}.get(fill, "a silhouette")
+    t = TARGET.get(who, "the main person")
+    if what == WHAT[1]:
+        look = "facial features, face shape, skin tone and hairstyle from <Picture 1>; clothing that suits the scene"
+    else:
+        look = "facial features, face shape, hairstyle, hair color, skin tone, body build and clothing from <Picture 1>"
+    hint = (hint or "").strip()
+    return (
+        f"In <Video 1>, {t} has been removed and replaced by {shape}. Fill the silhouette with the person shown in "
+        "<Picture 1>.\n\n"
+        "subject_definitions:\n"
+        f"<Subject 1> is the person from <Picture 1> ({look}). <Subject 1> occupies exactly the silhouette in "
+        "<Video 1>, in every frame.\n"
+        "<Subject 2> is everything outside the silhouette in <Video 1>: background, lighting, objects and other "
+        "people.\n"
+        "<Video 1> is the source video: the silhouette gives the exact position, scale, body shape, pose and "
+        "movement over time; the soundtrack gives the timing of speech or singing.\n\n"
+        "summary:\n"
+        "[video editing + reference generation] An edited version of <Video 1> in which the silhouette becomes "
+        "<Subject 1>, a real person who moves exactly as the silhouette moves, while <Subject 2> stays unchanged.\n\n"
+        "retention_analysis:\n"
+        "<Subject 1>: fully_preserved - the look of <Picture 1> in every frame and from every angle.\n"
+        "<Subject 2>: fully_preserved - unchanged.\n"
+        "<Video 1>: partially_preserved - keep framing, camera motion, timing and the silhouette's motion; no "
+        "black, gray or blurred areas remain in the result.\n\n"
+        "detailed_description:\n"
+        "[Shot 1] Same composition and camera as <Video 1>. <Subject 1> is a natural, fully detailed person filling "
+        "the silhouette: body posture, gestures, head turns and steps follow the silhouette moment by moment; the "
+        "face is expressive, with mouth movements that follow the speech or singing in the soundtrack. Lighting and "
+        "color of <Subject 1> match the scene. Do not copy the background or pose of <Picture 1>. One continuous "
+        "shot, no cuts."
+        + (f"\n\n{hint}" if hint else ""))
+
+
 def swap_prompt(who, what, hint=""):
     """Текст для модели — в РОДНОМ формате брифа MiniMax H3 (subject_definitions / summary / retention_analysis /
     detailed_description): так пишет её собственный улучшатель промптов, на таких текстах она и LoRA замены
@@ -108,7 +145,7 @@ class NeronH3HeroSwap:
     CATEGORY = "Neron/H3"
     FUNCTION = "generate"
     RETURN_TYPES = ("VIDEO", "IMAGE", "AUDIO", "IMAGE", "INT")
-    RETURN_NAMES = ("video", "frames", "audio", "mask_preview", "frames_count")
+    RETURN_NAMES = ("video", "frames", "audio", "mask_preview", "frames_count")   # mask_preview: маска + образец
     OUTPUT_NODE = False
     DESCRIPTION = ("Замена героя: тот же клип (танец, камера, фон, звук), но с человеком с фото. Меняется только "
                    "человек под маской, всё остальное — пиксели оригинала. Заменяйте себя и тех, кто согласен.\n"
@@ -184,6 +221,14 @@ class NeronH3HeroSwap:
                 "turbo_lora_model": _model_combo("turbo_lora", "турбо-LoRA / turbo LoRA"),
                 "swap_lora_model": _model_combo("swap_lora", "LoRA замены / swap LoRA"),
                 "sam_model": _model_combo("sam", "SAM 3.1"),
+                # новое — строго в конец: сохранённые схемы хранят значения по порядку
+                "ref_fill": (E.FILL, _exp("человек в образце / person in reference", default=E.FILL[0],
+                             tooltip="Идея Романа: ДО генерации закрасить человека в видео-образце. Модели нечего "
+                                     "копировать — облик берётся с фото, а силуэт по-прежнему задаёт движение.\n"
+                                     "⬛ чёрный — по умолчанию; ◻ серый или 🌫 размытие — если модель рисует тёмную "
+                                     "фигуру; «оригинал» — как в 0.1 (для сравнения).\n\nEN: Blank out the person in "
+                                     "the reference video before generation, so the model cannot copy them; the "
+                                     "silhouette still drives the motion.")),
             },
             "optional": {
                 "prompt": ("STRING", {"forceInput": True,
@@ -197,7 +242,8 @@ class NeronH3HeroSwap:
                  sound=SOUND[0], hint="", seed=904234, steps=8, swap_strength=1.0, expand_px=64, keep_outside=True,
                  feather_px=12, threshold=0.35, ref_quality="match", fast_attention=True, unet_model=AUTO_MODEL,
                  clip_model=AUTO_MODEL, vae_video_model=AUTO_MODEL, vae_audio_model=AUTO_MODEL,
-                 turbo_lora_model=AUTO_MODEL, swap_lora_model=AUTO_MODEL, sam_model=AUTO_MODEL, prompt=None):
+                 turbo_lora_model=AUTO_MODEL, swap_lora_model=AUTO_MODEL, sam_model=AUTO_MODEL, ref_fill=None,
+                 prompt=None):
         notes = []
         for need in ("MiniMaxH3ReferenceToVideo", "MiniMaxH3AddGuide", "SAM3_Detect", "SAM3_VideoTrack"):
             if not E.has_node(need):
@@ -241,14 +287,20 @@ class NeronH3HeroSwap:
         if audio is not None:
             audio = E.fit_audio(audio, length / E.FPS)
 
-        text = (prompt or "").strip() or swap_prompt(who, what, hint)
+        ref_fill = ref_fill if ref_fill in E.FILL else E.FILL[0]
+        if (prompt or "").strip():
+            text = prompt.strip()
+        elif ref_fill == E.FILL[3]:
+            text = swap_prompt(who, what, hint)
+        else:
+            text = silhouette_prompt(who, what, ref_fill, hint)
         notes.append("Текст: " + ("свой" if (prompt or "").strip() else f"{what.split(' / ')[0]} · "
                                   f"{who.split(' / ')[0]}"))
         try:
             out, out_audio, preview, report = E.generate(
                 frames, audio, photo, text, SHORT.get(quality, 480), int(seed), int(steps), float(swap_strength),
                 models, who, float(threshold), int(expand_px), bool(keep_outside), int(feather_px), ref_quality,
-                bool(fast_attention), sound == SOUND[0])
+                bool(fast_attention), sound == SOUND[0], ref_fill)
         except Exception:
             E.free("после ошибки / after error")
             raise

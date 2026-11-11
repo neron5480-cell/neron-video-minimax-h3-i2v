@@ -1,5 +1,11 @@
 # Changelog / История изменений
 
+## 🎭 Замена героя 0.2 — силуэт вместо оригинала (dev, 11.11.2026)
+
+**RU:** Идея Романа: до генерации человек в видео-образце закрашивается чёрным силуэтом — модели нечего копировать, облик она берёт с фото, а силуэт задаёт движение. Свой текст для модели под силуэт. В ⚙ эксперте «человек в образце»: чёрный / серый / размытие / оригинал. mask_preview показывает маску и кадр с силуэтом. В 0.1 H3 повторяла оригинал и брала с фото только цвет.
+
+**EN:** Roman's idea: the person in the reference video is blanked to a black silhouette before generation — nothing to copy, the look comes from the photo, the silhouette drives the motion. A dedicated prompt. Expert «person in reference»: black / gray / blur / original. mask_preview shows the mask and the silhouette frame.
+
 ## 🧹 Порядок в движках H3 (dev, 09.11.2026)
 
 **RU:**

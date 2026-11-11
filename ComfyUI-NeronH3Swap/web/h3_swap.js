@@ -28,6 +28,8 @@ const GROUPS = [
     { name: "МОДЕЛИ / MODELS", widgets: ["unet_model", "clip_model", "vae_video_model", "vae_audio_model",
                                           "turbo_lora_model", "swap_lora_model", "sam_model"],
       fill: "rgba(200, 120, 120, 0.15)", border: "rgba(200, 120, 120, 0.75)", label: "rgba(255, 190, 190, 1.0)" },
+    { name: "ОБРАЗЕЦ / REFERENCE", widgets: ["ref_fill"],
+      fill: "rgba(180, 120, 220, 0.15)", border: "rgba(180, 120, 220, 0.75)", label: "rgba(230, 200, 255, 1.0)" },
 ];
 function wv(node, name) {
     const w = node.widgets?.find((x) => x.name === name);
@@ -512,7 +514,7 @@ const HELP_TEXT = `
 2. В «Load Image» — фото «на кого»: лицо хорошо видно, ровный свет;
    для «весь облик» — человек в полный рост.
 3. Выбери, кого менять, что менять, качество и длину. Run.
-4. Выход mask_preview — первый кадр с оранжевой маской: видно, кого нашла нода.
+4. Выход mask_preview — первый кадр с оранжевой маской (кого нашла нода) и тот же кадр с силуэтом.
 
 ПАРА В КАДРЕ
 Одно фото — один человек. Пару меняем по очереди: сначала «⬅ левый» с фото 1,
@@ -527,7 +529,9 @@ const HELP_TEXT = `
 
 КАК УСТРОЕНО
 • SAM 3.1 находит человека в первом кадре и ведёт его маской по клипу.
-• MiniMax H3 Ref2VA получает клип как <Video 1> и фото как <Picture 1>
+• ДО генерации человек в клипе-образце закрашивается чёрным силуэтом (идея Романа):
+  модели нечего копировать — облик она берёт с фото, а силуэт задаёт движение.
+• MiniMax H3 Ref2VA получает клип с силуэтом как <Video 1> и фото как <Picture 1>
   и перерисовывает ТОЛЬКО то, что под маской (дорисовка по маске).
 • LoRA «Character Swap V1.5» (Akatz Labs) учит модель именно замене героя.
 • После генерации вне маски вклеиваются настоящие пиксели клипа.
@@ -558,7 +562,7 @@ HOW TO USE
 2. «Load Image» — the photo of the new person: face clearly visible, even light;
    a full-body photo for «whole look».
 3. Choose who, what, quality and length. Run.
-4. mask_preview shows the first frame with the orange mask — who was found.
+4. mask_preview shows the first frame with the orange mask (who was found) and the same frame with the silhouette.
 
 A COUPLE IN FRAME
 One photo — one person. Swap a couple in two runs: «⬅ leftmost» with photo 1,
@@ -572,7 +576,9 @@ WHERE TO START
 
 HOW IT WORKS
 • SAM 3.1 finds the person in the first frame and tracks the mask through the clip.
-• MiniMax H3 Ref2VA gets the clip as <Video 1> and the photo as <Picture 1>
+• BEFORE generation the person in the reference clip is blanked to a black silhouette
+  (Roman's idea): nothing to copy — the look comes from the photo, the silhouette drives the motion.
+• MiniMax H3 Ref2VA gets the silhouette clip as <Video 1> and the photo as <Picture 1>
   and repaints ONLY what is under the mask.
 • The «Character Swap V1.5» LoRA (Akatz Labs) teaches the model to swap.
 • After generation the real clip pixels are pasted back outside the mask.
