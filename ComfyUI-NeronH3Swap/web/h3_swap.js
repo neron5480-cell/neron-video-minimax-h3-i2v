@@ -17,8 +17,10 @@ const ROUTE = "/neron_h3swap";
 const GROUPS = [
     { name: "⚙️ EXPERT MODE / ЭКСПЕРТ", widgets: ["expert"],
       fill: "rgba(255, 200, 100, 0.22)", border: "rgba(255, 200, 100, 0.95)", label: "rgba(255, 235, 160, 1.0)", thick: 2.5 },
-    { name: "ЗАМЕНА / SWAP", widgets: ["who", "what", "quality", "seconds", "sound"],
+    { name: "ЗАМЕНА / SWAP", widgets: ["who", "what", "seconds", "sound"],
       fill: "rgba( 90, 140, 200, 0.15)", border: "rgba( 90, 140, 200, 0.75)", label: "rgba(180, 215, 255, 1.0)" },
+    { name: "РАЗМЕР / SIZE", widgets: ["quality", "shape", "manual_width", "manual_height"],
+      fill: "rgba(120, 170, 120, 0.15)", border: "rgba(120, 170, 120, 0.75)", label: "rgba(200, 245, 200, 1.0)" },
     { name: "ТЕКСТ И СИЛА / TEXT & STRENGTH", widgets: ["hint", "swap_strength", "steps", "seed", "control_after_generate"],
       fill: "rgba(200, 160,  90, 0.15)", border: "rgba(200, 160,  90, 0.75)", label: "rgba(255, 225, 170, 1.0)" },
     { name: "МАСКА / MASK", widgets: ["expand_px", "keep_outside", "feather_px", "threshold"],
@@ -155,8 +157,16 @@ function drawGroupLabels(node, ctx) {
 // ---------- эксперт: главное видно всегда, остальное — по переключателю ----------
 
 // ---------- эксперт: главное видно всегда, остальное — по переключателю ----------
+const SIZE_WIDGETS = ["quality", "shape", "manual_width", "manual_height"];
+function wiredSize(node) {
+    // провода width + height главнее — тогда качество, форма и ручной размер не работают и прячутся
+    const linked = (n) => (node.inputs || []).some((i) => i.name === n && i.link != null);
+    return linked("width") && linked("height");
+}
 function applyExpert(node, specs) {
     const ex = wv(node, "expert") === true;
+    const manual = String(wv(node, "shape") || "").startsWith("✏");
+    const wired = wiredSize(node);
     let prevHidden = false;
     for (const w of node.widgets || []) {
         if (w.name === "control_after_generate" || w.name === "control_before_generate") {
@@ -165,7 +175,9 @@ function applyExpert(node, specs) {
         }
         const o = specs[w.name];
         if (!o) { prevHidden = false; continue; }
-        const hide = !ex && !o.h3_main;
+        let hide = !ex && !o.h3_main;
+        if (w.name === "manual_width" || w.name === "manual_height") hide = !manual;   // только при «✏ ручной»
+        if (wired && SIZE_WIDGETS.includes(w.name)) hide = true;
         if (w.hidden !== hide) w.hidden = hide;
         prevHidden = hide;
     }
@@ -521,6 +533,13 @@ const HELP_TEXT = `
    (в ⚙ эксперте «управление после генерации» = fixed).
 2. Тот же сид, 768p — чистовик: резко и естественно (≈11 мин на 5 с).
 
+РАЗМЕР КАДРА
+• Качество 480p / 768p — короткая сторона кадра.
+• Форма кадра: «как в клипе» — без изменений; 16:9, 9:16, 1:1, 4:3, 3:4, 21:9 — клип встаёт
+  в кадр целиком, а пустые края модель дорисует (вертикальное видео со смартфона → широкий 16:9).
+• ✏ ручной — свои ширина и высота (больше паспорта H3 не будет, форма сохранится).
+• Провода width + height главнее: с ними качество, форма и ручной размер прячутся и не работают.
+
 ПАРА В КАДРЕ
 Одно фото — один человек. Пару меняем по очереди: сначала «⬅ левый» с фото 1,
 потом результат снова в ноду — «➡ правый» с фото 2.
@@ -574,6 +593,13 @@ RECIPE (tested)
 1. 480p, 5 s — a quick try (≈4 min on 16 GB). Like it — keep the seed
    (⚙ expert «control after generate» = fixed).
 2. Same seed at 768p — the final: sharp and natural (≈11 min for 5 s).
+
+FRAME SIZE
+• Quality 480p / 768p — the short side of the frame.
+• Frame shape: «as in clip» — unchanged; 16:9, 9:16, 1:1, 4:3, 3:4, 21:9 — the whole clip fits inside
+  and the model paints the empty borders (a phone vertical video → a wide 16:9 shot).
+• ✏ manual — your own width and height (clamped to the H3 passport, same shape).
+• Wired width + height win: then quality, shape and manual size hide and are ignored.
 
 A COUPLE IN FRAME
 One photo — one person. Swap a couple in two runs: «⬅ leftmost» with photo 1,
@@ -673,8 +699,9 @@ app.registerExtension({
                                                   computeSize: () => [0, CLOCK_ROOM], mouse() { return false; } });
             node.widgets.splice(node.widgets.indexOf(spacer), 1);
             node.widgets.unshift(spacer);
-            const ew = getWidget(node, "expert");
-            if (ew) {
+            for (const name of ["expert", "shape"]) {
+                const ew = getWidget(node, name);
+                if (!ew) continue;
                 const cb = ew.callback;
                 ew.callback = function () { const rr = cb?.apply(this, arguments); applyExpert(node, specs); return rr; };
             }
@@ -688,6 +715,13 @@ app.registerExtension({
             fetchStatus().then((s) => {
                 if (s && !s.all_present && !DL.autoShown) { DL.autoShown = true; openModelsDialog(true); }
             });
+            return r;
+        };
+        const origConn = nodeType.prototype.onConnectionsChange;
+        nodeType.prototype.onConnectionsChange = function () {
+            const r = origConn?.apply(this, arguments);
+            clearTimeout(this.__neronWire);
+            this.__neronWire = setTimeout(() => applyExpert(this, specs), 30);
             return r;
         };
         nodeType.prototype.onConfigure = function () {

@@ -23,6 +23,15 @@ WHAT = ["🧍 весь облик / whole look", "🙂 лицо и причёс�
 QUALITY = ["⚡ 480p — быстрее, для 16 ГБ / faster", "🎯 768p — как у автора LoRA, тяжелее / heavier"]
 SHORT = {QUALITY[0]: 480, QUALITY[1]: 768}
 SOUND = ["🎵 оригинал / original", "✨ сгенерировать / generate"]
+SHAPES = {"🎬 как в клипе / as in clip": None,
+          "16:9 · кино / cinema": (16, 9),
+          "9:16 · телефон / phone": (9, 16),
+          "1:1 · квадрат / square": (1, 1),
+          "4:3 · классика / classic": (4, 3),
+          "3:4 · портрет / portrait": (3, 4),
+          "21:9 · широкий / wide": (21, 9),
+          "✏ ручной / manual": "manual"}
+SHAPE_NAMES = list(SHAPES)
 TARGET = {E.WHO[0]: "the main person", E.WHO[1]: "the person on the left", E.WHO[2]: "the person on the right",
           E.WHO[3]: "the person in the center", E.WHO[4]: "every person"}
 
@@ -158,10 +167,6 @@ class NeronH3HeroSwap:
                          tooltip="🧍 весь облик — лицо, причёска, телосложение и одежда с фото.\n🙂 лицо и причёска — "
                                  "одежда и тело остаются из клипа.\n\nEN: whole look — face, hair, body and clothes "
                                  "from the photo; face & hair — clothes and body stay from the clip.")),
-                "quality": (QUALITY, _main("качество / quality", default=QUALITY[0],
-                            tooltip="480p — быстрее и легче для видеокарты 16 ГБ. 768p — как у автора LoRA, заметно "
-                                    "тяжелее (клип идёт в расчёт целиком рядом с роликом).\n\nEN: 480p — faster, "
-                                    "lighter on 16 GB; 768p — the LoRA author's size, much heavier.")),
                 "seconds": ("FLOAT", _main("не длиннее, с / max seconds", default=5.0, min=2.0, max=15.0, step=0.5,
                             display="slider",
                             tooltip="Сколько секунд клипа взять (от начала). Начни с 5 с — проверь, что замена "
@@ -170,6 +175,24 @@ class NeronH3HeroSwap:
                 "sound": (SOUND, _main("звук / sound", default=SOUND[0],
                           tooltip="🎵 оригинал — звук клипа как есть, байт в байт. ✨ сгенерировать — звук делает H3.\n\n"
                                   "EN: original — the clip's sound as is; generate — H3 makes it.")),
+                "quality": (QUALITY, _main("качество / quality", default=QUALITY[0],
+                            tooltip="480p — быстрее и легче для видеокарты 16 ГБ. 768p — как у автора LoRA, заметно "
+                                    "тяжелее (клип идёт в расчёт целиком рядом с роликом).\n\nEN: 480p — faster, "
+                                    "lighter on 16 GB; 768p — the LoRA author's size, much heavier.")),
+                "shape": (SHAPE_NAMES, _main("форма кадра / frame shape", default=SHAPE_NAMES[0],
+                          tooltip="🎬 как в клипе — без изменений. Другая форма — клип встаёт в кадр целиком, а пустые "
+                                  "края модель дорисует (например, из вертикального видео со смартфона — широкий "
+                                  "кадр 16:9). Размер — по «качеству» (короткая сторона 480 или 768).\n✏ ручной — "
+                                  "свои ширина и высота.\nПровода width/height главнее — тогда эти поля не работают.\n\n"
+                                  "EN: as in clip — unchanged. Another shape — the clip fits inside and the model "
+                                  "paints the empty borders (phone vertical → 16:9). Size follows «quality». Manual — "
+                                  "your own width/height. Wired width/height win over these fields.")),
+                "manual_width": ("INT", _main("ручной · ширина / manual width", default=1344, min=256, max=4096,
+                                 step=32, tooltip="Только при «✏ ручной». Больше паспорта H3 (1344×768 по площади) "
+                                                  "не будет — уменьшится с той же формой.\n\nEN: Only with manual; "
+                                                  "clamped to the H3 passport area, same shape.")),
+                "manual_height": ("INT", _main("ручной · высота / manual height", default=768, min=256, max=4096,
+                                  step=32, tooltip="Только при «✏ ручной».\n\nEN: Only with manual.")),
                 "hint": ("STRING", _exp("уточнение / hint", default="", multiline=True,
                          tooltip="Необязательно, лучше по-английски. Например: «She wears the red dress from "
                                  "<Picture 1>». Дописывается к тексту, который нода пишет сама.\n\nEN: Optional, "
@@ -225,6 +248,11 @@ class NeronH3HeroSwap:
                                         "clip's real sharp pixels again. One more short SAM pass.")),
             },
             "optional": {
+                "width": ("INT", {"forceInput": True,
+                                  "tooltip": "Внешняя ширина. С проводами width + height качество, форма и ручной "
+                                             "размер не работают. Больше паспорта H3 не будет.\n\nEN: External "
+                                             "width; with width + height wired, quality/shape/manual are ignored."}),
+                "height": ("INT", {"forceInput": True, "tooltip": "Внешняя высота. EN: External height."}),
                 "prompt": ("STRING", {"forceInput": True,
                                       "tooltip": "Профи: свой текст целиком вместо текста ноды. Назови <Video 1> и "
                                                  "<Picture 1>.\n\nEN: Your own full prompt; mention <Video 1> and "
@@ -237,7 +265,8 @@ class NeronH3HeroSwap:
                  feather_px=12, threshold=0.35, ref_quality="match", fast_attention=True, unet_model=AUTO_MODEL,
                  clip_model=AUTO_MODEL, vae_video_model=AUTO_MODEL, vae_audio_model=AUTO_MODEL,
                  turbo_lora_model=AUTO_MODEL, swap_lora_model=AUTO_MODEL, sam_model=AUTO_MODEL,
-                 blur_strength=0.5, tight_edges=True, prompt=None):
+                 blur_strength=0.5, tight_edges=True, shape=None, manual_width=1344, manual_height=768,
+                 width=None, height=None, prompt=None):
         notes = []
         for need in ("MiniMaxH3ReferenceToVideo", "MiniMaxH3AddGuide", "SAM3_Detect", "SAM3_VideoTrack"):
             if not E.has_node(need):
@@ -287,9 +316,24 @@ class NeronH3HeroSwap:
         notes.append(f"Запас маски: {margin} пикс." + ("" if int(expand_px) > 0 else " (авто)"))
         notes.append("Текст: " + ("свой" if (prompt or "").strip() else f"{what.split(' / ')[0]} · "
                                   f"{who.split(' / ')[0]}"))
+        # ---- размер кадра: провода → ручной → форма → как в клипе ----
+        short = SHORT.get(quality, 480)
+        form = SHAPES.get(shape)
+        if width is not None and height is not None and int(width) > 0 and int(height) > 0:
+            size = E.fit_size(int(width), int(height))
+            notes.append(f"Размер с проводов: {int(width)}×{int(height)} → {size[0]}×{size[1]} (качество и форма "
+                         f"на ноде не работают)")
+        elif form == "manual":
+            size = E.fit_size(int(manual_width), int(manual_height))
+            notes.append(f"Ручной размер: {int(manual_width)}×{int(manual_height)} → {size[0]}×{size[1]}")
+        elif form:
+            size = E.shape_size(form[0], form[1], short)
+            notes.append(f"Форма кадра {shape.split(' / ')[0]} → {size[0]}×{size[1]}")
+        else:
+            size = short
         try:
             out, out_audio, preview, report = E.generate(
-                frames, audio, photo, text, SHORT.get(quality, 480), int(seed), int(steps), float(swap_strength),
+                frames, audio, photo, text, size, int(seed), int(steps), float(swap_strength),
                 models, who, float(threshold), margin, bool(keep_outside), int(feather_px), ref_quality,
                 bool(fast_attention), sound == SOUND[0], head,
                 float(blur_strength), bool(tight_edges))
