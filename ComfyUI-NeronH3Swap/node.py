@@ -307,6 +307,12 @@ class NeronH3HeroSwap:
                                   "мало — модель начнёт повторять лицо оригинала. Пробуй 0.5–0.8.\n\nEN: Only for 🌫 "
                                   "blur. 1.0 — no features visible. Lower — face contours show through: a more "
                                   "natural fit, but too low and the model copies the original face. Try 0.5–0.8.")),
+                "tight_edges": ("BOOLEAN", _exp("точные края / tight edges", default=True,
+                                tooltip="После генерации SAM ещё раз находит НОВОГО человека, и вклеивается только "
+                                        "он. Полоса запаса вокруг снова — настоящие резкие пиксели клипа: края не "
+                                        "«плывут». +ещё один короткий проход SAM.\n\nEN: After generation SAM finds "
+                                        "the NEW person and only they are pasted in; the margin band becomes the "
+                                        "clip's real sharp pixels again. One more short SAM pass.")),
             },
             "optional": {
                 "prompt": ("STRING", {"forceInput": True,
@@ -321,7 +327,8 @@ class NeronH3HeroSwap:
                  feather_px=12, threshold=0.35, ref_quality="match", fast_attention=True, unet_model=AUTO_MODEL,
                  clip_model=AUTO_MODEL, vae_video_model=AUTO_MODEL, vae_audio_model=AUTO_MODEL,
                  turbo_lora_model=AUTO_MODEL, swap_lora_model=AUTO_MODEL, sam_model=AUTO_MODEL, ref_fill=None,
-                 pose_model=AUTO_MODEL, blur_strength=1.0, prompt=None):
+                 pose_model=AUTO_MODEL, blur_strength=1.0, tight_edges=True,
+                 prompt=None):
         notes = []
         ref_fill = ref_fill if ref_fill in E.FILL else E.FILL[0]
         skeleton = ref_fill in E.SKELETONS
@@ -387,7 +394,7 @@ class NeronH3HeroSwap:
                 frames, audio, photo, text, SHORT.get(quality, 480), int(seed), int(steps), float(swap_strength),
                 models, who, float(threshold), int(expand_px), bool(keep_outside), int(feather_px), ref_quality,
                 bool(fast_attention), sound == SOUND[0], ref_fill, what == WHAT[1],
-                float(blur_strength))
+                float(blur_strength), bool(tight_edges))
         except Exception:
             E.free("после ошибки / after error")
             raise

@@ -1,5 +1,11 @@
 # Changelog / История изменений
 
+## 🎭 Замена героя 0.5 — точные края (dev, 11.11.2026)
+
+**RU:** Проверки Романа: 🌫 размытие — лучший образец; ⭐ эталон — весь облик, размытие 0.5, запас 25. «Сила размытия» — это смесь оригинал ↔ фото (ниже 0.4 возвращается оригинал). Огрех: модель перерисовывает всю полосу запаса вместе с улицей — края кажутся чуть расплывчатыми. Теперь **две маски**: модель рисует в широкой зоне, а после генерации SAM ещё раз находит НОВОГО человека в готовом видео, и вклеивается только он (плюс место старого); полоса запаса снова — настоящие резкие пиксели клипа. Переключатель «точные края» в ⚙ (вкл.). Запас маски теперь круглый, по контуру, без ступенек.
+
+**EN:** Roman's tests: blur is the best reference; ⭐ reference run — whole look, blur 0.5, margin 25. «Blur strength» mixes original ↔ photo. Fix for soft edges: two masks — the model paints in the wide zone, then SAM finds the NEW person in the result and only they (plus the old person's place) are pasted; the margin band is the clip's real sharp pixels again. Expert «tight edges» (on). The mask margin is now round, following the contour.
+
 ## 🎭 Замена героя 0.4 — «лицо и причёска» по-настоящему (dev, 11.11.2026)
 
 **0.4.1 RU:** проверка Романа — для головы лучший 🌫 размытие (лицо с фото, свет и поворот как в клипе, без «бантика», картинка чётче). Новая ручка в ⚙ эксперте «сила размытия» 0.1–1.0 (идея Романа: слабее — проступают контуры лица). **EN:** blur is the best for the head; new expert «blur strength» 0.1–1.0.

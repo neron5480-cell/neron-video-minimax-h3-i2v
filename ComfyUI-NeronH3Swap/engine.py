@@ -274,14 +274,28 @@ def _fill_gaps(m):
     return out, holes
 
 
+def _disk(r):
+    y, x = torch.meshgrid(torch.arange(-r, r + 1), torch.arange(-r, r + 1), indexing="ij")
+    return ((x * x + y * y) <= r * r + r).float()[None, None]
+
+
 def dilate(m, px, frames_r=2):
-    """Расширить маску на px пикселей и на ±frames_r кадров (движение, смаз, волосы)."""
+    """Расширить маску на px пикселей (КРУГЛО, по контуру — без ступенек) и на ±frames_r кадров.
+    Большой запас считаем на уменьшенной маске: быстро, а точность края ±несколько пикс. прячет мягкий край."""
     m = m.float()
     if px > 0:
-        k = 2 * px + 1
+        s = max(1, px // 8)
+        r = max(1, int(round(px / s)))
+        disk = _disk(r)
         out = []
         for i in range(0, m.shape[0], 16):
-            out.append(F.max_pool2d(m[i:i + 16, None], k, stride=1, padding=px)[:, 0])
+            c = m[i:i + 16, None]
+            h, w = c.shape[-2:]
+            small = F.max_pool2d(c, s, ceil_mode=True) if s > 1 else c
+            g = (F.conv2d(small, disk.to(small.dtype), padding=r) > 0.5).float()
+            if s > 1:
+                g = F.interpolate(g, scale_factor=s, mode="nearest")[..., :h, :w]
+            out.append(torch.maximum(g, c)[:, 0])
         m = torch.cat(out, 0)
     if frames_r > 0 and m.shape[0] > 1:
         m = F.max_pool1d(m.permute(1, 2, 0).reshape(-1, 1, m.shape[0]), 2 * frames_r + 1, stride=1,
@@ -322,6 +336,38 @@ def _heads_for(people, heads):
                 best[y1:top] = p[y1:top]
         out.append(best)
     return torch.stack(out, 0)
+
+
+def new_person_mask(video, sam_name, old, threshold, head, report):
+    """Точные края (0.5): SAM ещё раз — уже по ГОТОВОМУ видео, ищет нового человека (или голову) там, где был
+    старый. → маска [N,H,W] или None. Нужна, чтобы вклеивать сгенерированное только по человеку, а полоса запаса
+    вокруг снова стала настоящими резкими пикселями клипа."""
+    send("Уточняю края / Refining edges", 0, int(video.shape[0]))
+    model, clip = node("CheckpointLoaderSimple", ckpt_name=sam_name)[:2]
+    cond = node("CLIPTextEncode", clip=clip, text="head" if head else "person")[0]
+    det = node("SAM3_Detect", model=model, image=video[:1], conditioning=cond, threshold=float(threshold),
+               refine_iterations=2, individual_masks=True)[0]
+    if det.dim() == 2:
+        det = det[None]
+    det = (det.float().cpu() > 0.5).float()
+    o = old[0]
+    keep = [i for i in range(det.shape[0]) if float(det[i].sum()) > 0 and
+            float((det[i] * o).sum()) / float(det[i].sum()) > 0.3]
+    if not keep:
+        del model, clip, cond
+        free("SAM выгружен")
+        report.append("Точные края: нового человека SAM не нашла — вклейка по зоне маски")
+        return None
+    track = node("SAM3_VideoTrack", images=video, model=model, initial_mask=det[keep],
+                 detection_threshold=0.5, max_objects=len(keep), detect_interval=1)[0]
+    masks = node("SAM3_TrackToMask", track_data=track, object_indices="")[0]
+    del model, clip, cond, track
+    free("SAM выгружен")
+    masks = (masks.float().cpu() > 0.5).float()
+    if masks.shape[0] != video.shape[0] or float(masks.sum()) == 0:
+        return None
+    masks, _ = _fill_gaps(masks)
+    return masks
 
 
 def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False):
@@ -487,7 +533,8 @@ def skeleton_reference(src, mask, pose, tight=None, black=False):
 # ---------------- главное ----------------
 
 def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strength, models, who, threshold,
-             expand_px, keep_outside, feather_px, ref_quality, fast_attention, sound_original, fill=FILL[0], head=False, blur=1.0):
+             expand_px, keep_outside, feather_px, ref_quality, fast_attention, sound_original, fill=FILL[0], head=False, blur=1.0,
+             tight_edges=True):
     """frames [N,H,W,3] уже 24 к/с и обрезаны по сетке. → (кадры, звук, превью маски, отчёт)."""
     t0 = time.time()
     report = []
@@ -509,7 +556,6 @@ def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strengt
         ref = blank_person(src, mask, fill, blur)
         if fill == FILL[2]:
             report.append(f"Размытие: сила {float(blur):.2f}")
-    del tight
     if fill not in (FILL[3],) + SKELETONS:
         report.append(f"Образец: человек закрашен ({fill.split(' / ')[0]}) — облик оригинала модели не виден, "
                       f"движение — по силуэту")
@@ -598,7 +644,21 @@ def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strengt
     m = min(int(video.shape[0]), int(src.shape[0]))
     video, src_m, msk = video[:m], src[:m], mask[:m]
     if keep_outside:
-        soft = feather(msk, max(0, int(round(feather_px * min(w, h) / 768.0))))[..., None]
+        paste = msk
+        if tight_edges:
+            try:
+                new = new_person_mask(video[:m, ..., :3].contiguous(), models["sam"], tight[:m], threshold, head,
+                                      report)
+                if new is not None:
+                    edge = max(2, int(round(6 * min(w, h) / 768.0)))
+                    paste = dilate(torch.maximum(tight[:m], new[:m]), edge, frames_r=1) * msk
+                    report.append(f"Точные края: вклеиваю только человека ({float(paste.mean()) * 100:.0f}% кадра "
+                                  f"вместо {float(msk.mean()) * 100:.0f}%), полоса запаса — снова клип")
+            except Exception as e:
+                free("после ошибки SAM")
+                log.warning("%s точные края: %s", TAG, e)
+                report.append(f"Точные края не вышли ({e}) — вклейка по зоне маски")
+        soft = feather(paste, max(0, int(round(feather_px * min(w, h) / 768.0))))[..., None]
         video = src_m * (1 - soft) + video[..., :3] * soft
         report.append("Вне маски — настоящие пиксели клипа (фон как в оригинале)")
     report.append(f"Готово: {m} кадров за {time.time() - t0:.0f} с")
