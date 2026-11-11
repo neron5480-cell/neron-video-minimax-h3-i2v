@@ -301,6 +301,12 @@ class NeronH3HeroSwap:
                                      "чёрными палками (силуэт толщиной в скелет).\nEN: the same, drawn as a thick "
                                      "black stick figure.")),
                 "pose_model": _model_combo("pose", "SDPose (скелет / skeleton)"),
+                "blur_strength": ("FLOAT", _exp("сила размытия / blur strength", default=1.0, min=0.1, max=1.0,
+                                  step=0.05, tooltip="Только для 🌫 размытия. 1.0 — черт не видно совсем. Меньше — "
+                                  "проступают контуры лица и свет: новое лицо ложится естественнее, но если слишком "
+                                  "мало — модель начнёт повторять лицо оригинала. Пробуй 0.5–0.8.\n\nEN: Only for 🌫 "
+                                  "blur. 1.0 — no features visible. Lower — face contours show through: a more "
+                                  "natural fit, but too low and the model copies the original face. Try 0.5–0.8.")),
             },
             "optional": {
                 "prompt": ("STRING", {"forceInput": True,
@@ -315,7 +321,7 @@ class NeronH3HeroSwap:
                  feather_px=12, threshold=0.35, ref_quality="match", fast_attention=True, unet_model=AUTO_MODEL,
                  clip_model=AUTO_MODEL, vae_video_model=AUTO_MODEL, vae_audio_model=AUTO_MODEL,
                  turbo_lora_model=AUTO_MODEL, swap_lora_model=AUTO_MODEL, sam_model=AUTO_MODEL, ref_fill=None,
-                 pose_model=AUTO_MODEL, prompt=None):
+                 pose_model=AUTO_MODEL, blur_strength=1.0, prompt=None):
         notes = []
         ref_fill = ref_fill if ref_fill in E.FILL else E.FILL[0]
         skeleton = ref_fill in E.SKELETONS
@@ -380,7 +386,8 @@ class NeronH3HeroSwap:
             out, out_audio, preview, report = E.generate(
                 frames, audio, photo, text, SHORT.get(quality, 480), int(seed), int(steps), float(swap_strength),
                 models, who, float(threshold), int(expand_px), bool(keep_outside), int(feather_px), ref_quality,
-                bool(fast_attention), sound == SOUND[0], ref_fill, what == WHAT[1])
+                bool(fast_attention), sound == SOUND[0], ref_fill, what == WHAT[1],
+                float(blur_strength))
         except Exception:
             E.free("после ошибки / after error")
             raise

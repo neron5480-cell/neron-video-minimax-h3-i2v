@@ -387,7 +387,7 @@ BLACK_SKELETON = FILL[5]
 SKELETONS = (SKELETON, BLACK_SKELETON)
 
 
-def blank_person(frames, mask, fill):
+def blank_person(frames, mask, fill, blur=1.0):
     """Идея Романа: убрать из видео-образца облик исходного человека ДО генерации — модели нечего копировать,
     а силуэт по-прежнему танцует (движение, место в кадре, ритм остаются). Заполнит его модель — человеком с фото."""
     if fill == FILL[3]:
@@ -397,7 +397,7 @@ def blank_person(frames, mask, fill):
         out = []
         for i in range(0, frames.shape[0], 16):
             c = frames[i:i + 16].movedim(-1, 1)
-            k = max(3, (min(c.shape[2], c.shape[3]) // 12) | 1)
+            k = max(3, int(round(min(c.shape[2], c.shape[3]) / 12 * max(0.05, float(blur)))) | 1)
             b = F.avg_pool2d(F.avg_pool2d(c, k, stride=1, padding=k // 2), k, stride=1, padding=k // 2)
             out.append(b.movedim(1, -1))
         filler = torch.cat(out, 0)
@@ -487,7 +487,7 @@ def skeleton_reference(src, mask, pose, tight=None, black=False):
 # ---------------- главное ----------------
 
 def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strength, models, who, threshold,
-             expand_px, keep_outside, feather_px, ref_quality, fast_attention, sound_original, fill=FILL[0], head=False):
+             expand_px, keep_outside, feather_px, ref_quality, fast_attention, sound_original, fill=FILL[0], head=False, blur=1.0):
     """frames [N,H,W,3] уже 24 к/с и обрезаны по сетке. → (кадры, звук, превью маски, отчёт)."""
     t0 = time.time()
     report = []
@@ -506,7 +506,9 @@ def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strengt
                       (", толстые чёрные палки" if black else ", цветной") + "): модель видит только позу")
         preview = torch.cat([preview, ref[:1]], 0)
     else:
-        ref = blank_person(src, mask, fill)
+        ref = blank_person(src, mask, fill, blur)
+        if fill == FILL[2]:
+            report.append(f"Размытие: сила {float(blur):.2f}")
     del tight
     if fill not in (FILL[3],) + SKELETONS:
         report.append(f"Образец: человек закрашен ({fill.split(' / ')[0]}) — облик оригинала модели не виден, "

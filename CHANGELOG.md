@@ -2,6 +2,8 @@
 
 ## 🎭 Замена героя 0.4 — «лицо и причёска» по-настоящему (dev, 11.11.2026)
 
+**0.4.1 RU:** проверка Романа — для головы лучший 🌫 размытие (лицо с фото, свет и поворот как в клипе, без «бантика», картинка чётче). Новая ручка в ⚙ эксперте «сила размытия» 0.1–1.0 (идея Романа: слабее — проступают контуры лица). **EN:** blur is the best for the head; new expert «blur strength» 0.1–1.0.
+
 **RU:** Проверки Романа: скелет Ref2VA не понимает (переносит палки в кадр буквально, и чёрные, и цветные). Лучший прогон — ◻ серый силуэт + запас маски 12: без ореола, одежда с фото. Вопрос Романа «а если только лицо?» нашёл огрех: режим «🙂 лицо и причёска» менял только текст, а маска закрывала всего человека. Теперь маска — только по голове (SAM ищет «head» у выбранного человека; не нашла — верх фигуры), тело и одежда — пиксели клипа. Свой текст: «закрашена только голова — нарисуй голову с фото, тело и одежда без изменений».
 
 **EN:** Roman's tests: Ref2VA does not understand a skeleton (copies the sticks literally). Best run — gray silhouette + mask margin 12. Roman's question «what about only the face?» found a flaw: «face & hair» changed only the prompt while the mask covered the whole person. Now the mask covers only the head (SAM «head» of the chosen person; fallback — the top of the figure); body and clothes stay the clip's pixels. A dedicated head prompt.

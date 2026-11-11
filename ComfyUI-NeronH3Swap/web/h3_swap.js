@@ -28,7 +28,7 @@ const GROUPS = [
     { name: "МОДЕЛИ / MODELS", widgets: ["unet_model", "clip_model", "vae_video_model", "vae_audio_model",
                                           "turbo_lora_model", "swap_lora_model", "sam_model", "pose_model"],
       fill: "rgba(200, 120, 120, 0.15)", border: "rgba(200, 120, 120, 0.75)", label: "rgba(255, 190, 190, 1.0)" },
-    { name: "ОБРАЗЕЦ / REFERENCE", widgets: ["ref_fill"],
+    { name: "ОБРАЗЕЦ / REFERENCE", widgets: ["ref_fill", "blur_strength"],
       fill: "rgba(180, 120, 220, 0.15)", border: "rgba(180, 120, 220, 0.75)", label: "rgba(230, 200, 255, 1.0)" },
 ];
 function wv(node, name) {
