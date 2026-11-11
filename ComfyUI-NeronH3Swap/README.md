@@ -21,13 +21,17 @@
    генерации» = fixed).
 2. Тот же сид на 768p — чистовик: резко и естественно, около 11 минут на 5 секунд.
 
+**Размер кадра.** «Качество» 480p / 768p — короткая сторона; форма всегда как у клипа. Входы **width / height**
+главнее: кадр будет не больше width × height (форма клипа), «качество» прячется. Больше паспорта H3 не будет.
+Сменить форму кадра (вертикальное → широкое) — отдельный шаг, не в этой ноде: так нет швов.
+
 **Пара в кадре.** Одно фото — один человек. Пару меняем за два прогона: сначала «⬅ левый» с фото 1, потом
 результат снова подаём в ноду и меняем «➡ правый» с фото 2.
 
 **⚙ Эксперт — главное.**
 - **Сила размытия** (0.5 — лучшее по проверкам). 1.0 — больше от фото. 0.4 — смесь оригинала и фото
   («двойник»). Ниже 0.4 модель узнаёт оригинал и повторяет его.
-- **Запас маски:** 0 — авто (лицо 5, весь облик 25). Меньше — одежда ближе к клипу, больше — модели свободнее.
+- **Запас маски:** 0 — авто (лицо 1, весь облик 25). Меньше — одежда ближе к клипу, больше — модели свободнее.
 - **Точные края** (вкл.) — после генерации SAM находит нового человека, и вклеивается только он: фон вокруг
   остаётся резким, как в клипе.
 
@@ -91,13 +95,17 @@
 1. 480p, 5 s — a quick try, about 4 minutes. Like it — keep the seed (⚙ expert «control after generate» = fixed).
 2. The same seed at 768p — the final: sharp and natural, about 11 minutes for 5 seconds.
 
+**Frame size.** «Quality» 480p / 768p — the short side; the shape always follows the clip. The **width / height**
+inputs win: the frame fits inside width × height (clip shape) and «quality» hides. Never above the H3 passport.
+Changing the frame shape (vertical → wide) is a separate step, not in this node: no seams.
+
 **A couple in frame.** One photo — one person. Swap a couple in two runs: first «⬅ leftmost» with photo 1, then
 feed the result back and swap «➡ rightmost» with photo 2.
 
 **⚙ Expert — the main things.**
 - **Blur strength** (0.5 — best in tests). 1.0 — more of the photo. 0.4 — a mix of the original and the photo
   («look-alike»). Below 0.4 the model recognises the original and repeats it.
-- **Mask margin:** 0 — auto (face 5, whole look 25). Less — clothing closer to the clip, more — more freedom.
+- **Mask margin:** 0 — auto (face 1, whole look 25). Less — clothing closer to the clip, more — more freedom.
 - **Tight edges** (on) — after generation SAM finds the new person and only they are pasted in: the background
   around stays as sharp as in the clip.
 

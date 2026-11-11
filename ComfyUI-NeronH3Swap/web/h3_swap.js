@@ -19,7 +19,7 @@ const GROUPS = [
       fill: "rgba(255, 200, 100, 0.22)", border: "rgba(255, 200, 100, 0.95)", label: "rgba(255, 235, 160, 1.0)", thick: 2.5 },
     { name: "ЗАМЕНА / SWAP", widgets: ["who", "what", "seconds", "sound"],
       fill: "rgba( 90, 140, 200, 0.15)", border: "rgba( 90, 140, 200, 0.75)", label: "rgba(180, 215, 255, 1.0)" },
-    { name: "РАЗМЕР / SIZE", widgets: ["quality", "shape", "manual_width", "manual_height"],
+    { name: "РАЗМЕР / SIZE", widgets: ["quality"],
       fill: "rgba(120, 170, 120, 0.15)", border: "rgba(120, 170, 120, 0.75)", label: "rgba(200, 245, 200, 1.0)" },
     { name: "ТЕКСТ И СИЛА / TEXT & STRENGTH", widgets: ["hint", "swap_strength", "steps", "seed", "control_after_generate"],
       fill: "rgba(200, 160,  90, 0.15)", border: "rgba(200, 160,  90, 0.75)", label: "rgba(255, 225, 170, 1.0)" },
@@ -157,7 +157,7 @@ function drawGroupLabels(node, ctx) {
 // ---------- эксперт: главное видно всегда, остальное — по переключателю ----------
 
 // ---------- эксперт: главное видно всегда, остальное — по переключателю ----------
-const SIZE_WIDGETS = ["quality", "shape", "manual_width", "manual_height"];
+const SIZE_WIDGETS = ["quality"];
 function wiredSize(node) {
     // провода width + height главнее — тогда качество, форма и ручной размер не работают и прячутся
     const linked = (n) => (node.inputs || []).some((i) => i.name === n && i.link != null);
@@ -165,7 +165,6 @@ function wiredSize(node) {
 }
 function applyExpert(node, specs) {
     const ex = wv(node, "expert") === true;
-    const manual = String(wv(node, "shape") || "").startsWith("✏");
     const wired = wiredSize(node);
     let prevHidden = false;
     for (const w of node.widgets || []) {
@@ -176,7 +175,6 @@ function applyExpert(node, specs) {
         const o = specs[w.name];
         if (!o) { prevHidden = false; continue; }
         let hide = !ex && !o.h3_main;
-        if (w.name === "manual_width" || w.name === "manual_height") hide = !manual;   // только при «✏ ручной»
         if (wired && SIZE_WIDGETS.includes(w.name)) hide = true;
         if (w.hidden !== hide) w.hidden = hide;
         prevHidden = hide;
@@ -534,11 +532,10 @@ const HELP_TEXT = `
 2. Тот же сид, 768p — чистовик: резко и естественно (≈11 мин на 5 с).
 
 РАЗМЕР КАДРА
-• Качество 480p / 768p — короткая сторона кадра.
-• Форма кадра: «как в клипе» — без изменений; 16:9, 9:16, 1:1, 4:3, 3:4, 21:9 — клип встаёт
-  в кадр целиком, а пустые края модель дорисует (вертикальное видео со смартфона → широкий 16:9).
-• ✏ ручной — свои ширина и высота (больше паспорта H3 не будет, форма сохранится).
-• Провода width + height главнее: с ними качество, форма и ручной размер прячутся и не работают.
+• Качество 480p / 768p — короткая сторона кадра; форма — всегда как у клипа.
+• Провода width + height главнее: кадр будет не больше width × height (форма клипа),
+  а «качество» прячется и не работает. Больше паспорта H3 не будет.
+• Сменить форму (вертикальное → широкое) — отдельный шаг, не в этой ноде: так нет швов.
 
 ПАРА В КАДРЕ
 Одно фото — один человек. Пару меняем по очереди: сначала «⬅ левый» с фото 1,
@@ -547,7 +544,7 @@ const HELP_TEXT = `
 ⚙ ЭКСПЕРТ — главное
 • Сила размытия (0.5 — лучшее). 1.0 — больше от фото. 0.4 — смесь оригинала и фото
   («двойник»). Ниже 0.4 модель узнаёт оригинал и повторяет его.
-• Запас маски: 0 — авто (лицо 5, весь облик 25). Меньше — одежда ближе к клипу,
+• Запас маски: 0 — авто (лицо 1, весь облик 25). Меньше — одежда ближе к клипу,
   больше — модели свободнее.
 • Точные края (вкл.) — после генерации SAM находит нового человека, и вклеивается
   только он: фон вокруг остаётся резким, как в клипе.
@@ -595,11 +592,10 @@ RECIPE (tested)
 2. Same seed at 768p — the final: sharp and natural (≈11 min for 5 s).
 
 FRAME SIZE
-• Quality 480p / 768p — the short side of the frame.
-• Frame shape: «as in clip» — unchanged; 16:9, 9:16, 1:1, 4:3, 3:4, 21:9 — the whole clip fits inside
-  and the model paints the empty borders (a phone vertical video → a wide 16:9 shot).
-• ✏ manual — your own width and height (clamped to the H3 passport, same shape).
-• Wired width + height win: then quality, shape and manual size hide and are ignored.
+• Quality 480p / 768p — the short side of the frame; the shape always follows the clip.
+• Wired width + height win: the frame fits inside width × height (clip shape) and «quality»
+  hides and is ignored. Never above the H3 passport.
+• Changing the shape (vertical → wide) is a separate step, not in this node: no seams.
 
 A COUPLE IN FRAME
 One photo — one person. Swap a couple in two runs: «⬅ leftmost» with photo 1,
@@ -608,7 +604,7 @@ then feed the result back — «➡ rightmost» with photo 2.
 ⚙ EXPERT — the main things
 • Blur strength (0.5 — best). 1.0 — more of the photo. 0.4 — a mix of the original and the
   photo («look-alike»). Below 0.4 the model recognises the original and repeats it.
-• Mask margin: 0 — auto (face 5, whole look 25). Less — clothing closer to the clip,
+• Mask margin: 0 — auto (face 1, whole look 25). Less — clothing closer to the clip,
   more — more freedom for the model.
 • Tight edges (on) — after generation SAM finds the new person and only they are pasted in:
   the background around stays as sharp as in the clip.
@@ -658,6 +654,47 @@ function showHelpDialog() {
 }
 
 // сброс: всё к заводским, кроме выбранных файлов моделей (их пользователь подбирал сам)
+// ---------- значения по ИМЕНАМ ----------
+// ComfyUI раскладывает сохранённые значения по полям по НОМЕРАМ. При смене вкладки / выходе из трея это иногда
+// сдвигалось на одно поле (в «секундах» — сид, в списках — чужие слова, нода краснела). Поэтому храним ещё и
+// по именам (properties.neron_values), после загрузки раскладываем по именам и проверяем каждое поле.
+const NAMED = "neron_values";
+function comboList(w) {
+    const v = w.options?.values;
+    try { return typeof v === "function" ? v(w) : v; } catch (_) { return null; }
+}
+function saneWidget(w, o) {
+    if (w.type === "combo") {
+        const list = comboList(w);
+        if (Array.isArray(list) && list.length && !list.includes(w.value))
+            w.value = (o && list.includes(o.default)) ? o.default : list[0];
+        return;
+    }
+    if (!o || !("default" in o)) return;
+    const d = o.default;
+    if (typeof d === "number") {
+        const v = typeof w.value === "number" ? w.value : NaN;
+        if (!isFinite(v) || (o.min != null && v < o.min) || (o.max != null && v > o.max)) w.value = d;
+    } else if (typeof d === "boolean") {
+        if (typeof w.value !== "boolean") w.value = d;
+    } else if (typeof d === "string") {
+        if (typeof w.value !== "string") w.value = d;
+    }
+}
+function namedValues(node, specs) {
+    const out = {};
+    for (const w of node.widgets || [])
+        if (w.name && (specs[w.name] || w.name === "control_after_generate")) out[w.name] = w.value;
+    return out;
+}
+function restoreNamed(node, specs, named) {
+    for (const w of node.widgets || []) {
+        if (!w.name || !(specs[w.name] || w.name === "control_after_generate")) continue;
+        if (named && Object.prototype.hasOwnProperty.call(named, w.name)) w.value = named[w.name];
+        saneWidget(w, specs[w.name]);
+    }
+}
+
 function resetAll(node, specs) {
     for (const w of node.widgets || []) {
         const o = specs[w.name];
@@ -699,7 +736,7 @@ app.registerExtension({
                                                   computeSize: () => [0, CLOCK_ROOM], mouse() { return false; } });
             node.widgets.splice(node.widgets.indexOf(spacer), 1);
             node.widgets.unshift(spacer);
-            for (const name of ["expert", "shape"]) {
+            for (const name of ["expert"]) {
                 const ew = getWidget(node, name);
                 if (!ew) continue;
                 const cb = ew.callback;
@@ -724,9 +761,21 @@ app.registerExtension({
             this.__neronWire = setTimeout(() => applyExpert(this, specs), 30);
             return r;
         };
-        nodeType.prototype.onConfigure = function () {
+        const origSerialize = nodeType.prototype.onSerialize;
+        nodeType.prototype.onSerialize = function (o) {
+            const r = origSerialize?.apply(this, arguments);
+            try {
+                o.properties = o.properties || {};
+                o.properties[NAMED] = namedValues(this, specs);
+            } catch (_) {}
+            return r;
+        };
+        nodeType.prototype.onConfigure = function (info) {
             const r = origConfigure?.apply(this, arguments);
-            for (const t of [50, 300, 800]) setTimeout(() => applyExpert(this, specs), t);
+            const named = info?.properties?.[NAMED] || this.properties?.[NAMED];
+            const fix = () => { restoreNamed(this, specs, named); applyExpert(this, specs); };
+            fix();
+            for (const t of [0, 50, 300, 800]) setTimeout(fix, t);
             return r;
         };
         nodeType.prototype.onResize = function () {

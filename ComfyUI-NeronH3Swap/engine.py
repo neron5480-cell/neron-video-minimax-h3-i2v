@@ -224,40 +224,16 @@ def fit_size(w, h):
     return w2, h2
 
 
-def shape_size(rw, rh, short):
-    """Пресет формы (16:9, 9:16…) при качестве short → размер генерации."""
-    return canvas(rw * 1000, rh * 1000, short)
-
-
-def _soft_blur(c, k):
-    k = max(3, k | 1)
-    return F.avg_pool2d(F.avg_pool2d(c, k, stride=1, padding=k // 2, count_include_pad=False), k, stride=1,
-                        padding=k // 2, count_include_pad=False)
-
-
-def place(fit, W, H, x0, y0):
-    """Клип (уже вписанный, sw×sh) → холст W×H. Пустые края — растянутые края клипа, сильно размытые: модели
-    видно «тут продолжение улицы», а людей и деталей там нет. Края модель дорисует сама."""
-    sh, sw = int(fit.shape[1]), int(fit.shape[2])
-    pad = (x0, W - sw - x0, y0, H - sh - y0)
-    side = torch.ones(1, 1, H, W)
-    side[..., y0:y0 + sh, x0:x0 + sw] = 0
-    out = []
-    for i in range(0, fit.shape[0], 16):
-        c = fit[i:i + 16].movedim(-1, 1)
-        p = F.pad(c, pad, mode="replicate")
-        # сильное размытие — на картинке в 8 раз меньше (быстро), потом обратно
-        small = F.interpolate(p, size=(max(8, H // 8), max(8, W // 8)), mode="area")
-        b = F.interpolate(_soft_blur(small, max(3, min(W, H) // 48)), size=(H, W), mode="bilinear",
-                          align_corners=False)
-        out.append((p * (1 - side) + b * side).movedim(1, -1))
-    return torch.cat(out, 0).clamp(0, 1), side[0, 0]
-
-
-def pad_mask(m, W, H, x0, y0):
-    out = torch.zeros(m.shape[0], H, W, dtype=m.dtype)
-    out[:, y0:y0 + m.shape[1], x0:x0 + m.shape[2]] = m
-    return out
+def fit_clip(cw, ch, bw, bh):
+    """Провода width/height → кадр с формой КЛИПА, вписанный в bw×bh (и в паспорт H3), кратно 32."""
+    # кратно 32 с ближайшим округлением (форма клипа держится точно), а если вылезли за рамку — чуть меньше
+    k = min(bw / float(cw), bh / float(ch))
+    for _ in range(60):
+        w, h = fit_size(cw * k, ch * k)
+        if w <= max(bw, 256) and h <= max(bh, 256):
+            return w, h
+        k *= 0.97
+    return w, h
 
 
 def resize(frames, w, h):
@@ -514,32 +490,12 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
     n = int(frames.shape[0])
     cw, ch = int(frames.shape[2]), int(frames.shape[1])
     w, h = canvas(cw, ch, size) if isinstance(size, int) else (int(size[0]), int(size[1]))
-    # клип вписывается в кадр целиком; если форма другая — пустые края дорисует модель (смартфон → широкий)
-    k = min(w / cw, h / ch)
-    sw, sh = max(2, int(round(cw * k / 2)) * 2), max(2, int(round(ch * k / 2)) * 2)
-    if abs(sw - w) <= 16 and abs(sh - h) <= 16:
-        sw, sh = w, h
-    x0, y0 = (w - sw) // 2, (h - sh) // 2
     report.append(f"Размер генерации {w}×{h}, {n} кадров ({n / FPS:.2f} с), {steps} шагов")
     free("перед стартом")
 
     send("Подготовка клипа / Preparing the clip")
-    fit = resize(frames, sw, sh)
-    mask, preview, tight = person_mask(fit, models["sam"], who, threshold, expand_px, report, head)
-    side = None
-    if (sw, sh) != (w, h):
-        src, side = place(fit, w, h, x0, y0)
-        preview = place(preview, w, h, x0, y0)[0]
-        mask = torch.maximum(pad_mask(mask, w, h, x0, y0), side[None])
-        tight = pad_mask(tight, w, h, x0, y0)
-        prompt = (prompt + "\n\nThe frame is " + ("wider" if w * ch > h * cw else "taller") + " than the original "
-                  "clip: the blurred borders of <Video 1> are empty space — extend the same scene, background and "
-                  "lighting naturally into them, so the whole frame looks like one real shot.")
-        report.append(f"Новая форма кадра: клип {cw}×{ch} вписан как {sw}×{sh}, края модель дорисует "
-                      f"({float(side.mean()) * 100:.0f}% кадра)")
-    else:
-        src = fit
-    del fit
+    src = resize(frames, w, h)               # форма — как у клипа; разница в несколько пикс. — обрезка по центру
+    mask, preview, tight = person_mask(src, models["sam"], who, threshold, expand_px, report, head)
     ref = blur_person(src, mask, blur)
     report.append(f"Образец: {'голова' if head else 'человек'} размыт(а), сила {float(blur):.2f} — черт оригинала "
                   f"модель не видит, свет и движение остаются")
@@ -630,8 +586,6 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
     if keep_outside:
         paste = msk
         fpx = max(0, int(round(feather_px * min(w, h) / 768.0)))
-        # дорисованные края — целиком от модели; шов с клипом прячем, заходя на край клипа на ширину мягкого края
-        edge_side = dilate(side[None], fpx, frames_r=0)[0] if side is not None else None
         if tight_edges:
             try:
                 new = new_person_mask(video[:m, ..., :3].contiguous(), models["sam"], msk, threshold, head,
@@ -647,8 +601,6 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
                 free("после ошибки SAM")
                 log.warning("%s точные края: %s", TAG, e)
                 report.append(f"Точные края не вышли ({e}) — вклейка по зоне маски")
-        if edge_side is not None:
-            paste = torch.maximum(paste, edge_side[None])
         soft = feather(paste, fpx)[..., None]
         video = src_m * (1 - soft) + video[..., :3] * soft
         report.append("Вне маски — настоящие пиксели клипа (фон как в оригинале)")
