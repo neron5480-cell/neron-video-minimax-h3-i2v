@@ -13,12 +13,11 @@ log = logging.getLogger("Neron.H3.Swap")
 NOT_FOUND = "__not_found__"
 AUTO_MODEL = "🤖 авто — из пакета / auto — from pack"
 ROLES = {"unet": "diffusion_models", "clip": "text_encoders", "vae_video": "vae", "vae_audio": "vae",
-         "turbo_lora": "loras", "swap_lora": "loras", "sam": "checkpoints", "pose": "checkpoints"}
+         "turbo_lora": "loras", "swap_lora": "loras", "sam": "checkpoints"}
 ROLE_NAMES = {"unet": "модель H3 Ref2VA / H3 Ref2VA model", "clip": "текстовый энкодер / text encoder",
               "vae_video": "VAE видео / video VAE", "vae_audio": "VAE звука / audio VAE",
               "turbo_lora": "турбо-LoRA / turbo LoRA", "swap_lora": "LoRA замены / swap LoRA",
-              "sam": "SAM 3.1 (маска человека / person mask)",
-              "pose": "SDPose (скелет для режима 🦴 / skeleton for 🦴 mode)"}
+              "sam": "SAM 3.1 (маска человека / person mask)"}
 
 WHAT = ["🧍 весь облик / whole look", "🙂 лицо и причёска / face & hair"]
 QUALITY = ["⚡ 480p — быстрее, для 16 ГБ / faster", "🎯 768p — как у автора LoRA, тяжелее / heavier"]
@@ -31,10 +30,10 @@ AUTO_TIP = ("🤖 авто — файл из пакета (или его дру�
             "EN: auto — the pack's file (or another version you have). Missing — press «📥 Models».")
 
 
-def silhouette_prompt(who, what, fill, hint=""):
-    """Текст для режима «силуэт»: в <Video 1> человек закрашен — модель заполняет его человеком с <Picture 1>."""
-    shape = {E.FILL[0]: "a solid black silhouette", E.FILL[1]: "a flat gray silhouette",
-             E.FILL[2]: "a blurred silhouette"}.get(fill, "a silhouette")
+def blur_prompt(who, what, hint=""):
+    """Текст ноды: в <Video 1> человек (или голова) размыт — модель заполняет его человеком с <Picture 1>.
+    Формулировка проверена Романом 11.11 (лучшие прогоны) — менять только с проверкой."""
+    shape = "a blurred silhouette"
     t = TARGET.get(who, "the main person")
     hint = (hint or "").strip()
     if what == WHAT[1]:
@@ -91,84 +90,6 @@ def head_prompt(t, shape, hint=""):
         "as in <Video 1>; skin tone of the face matches the neck; the face is expressive, with mouth movements that "
         "follow the speech or singing in the soundtrack. Lighting and color match the scene. One continuous shot, "
         "no cuts."
-        + (f"\n\n{hint}" if hint else ""))
-
-
-def skeleton_prompt(who, what, hint="", black=False):
-    """Текст для режима «🦴 скелет»: в <Video 1> человека нет — пустая сцена и цветной скелет позы поверх."""
-    t = TARGET.get(who, "the main person")
-    if what == WHAT[1]:
-        look = "facial features, face shape, skin tone and hairstyle from <Picture 1>; clothing that suits the scene"
-    else:
-        look = "facial features, face shape, hairstyle, hair color, skin tone, body build and clothing from <Picture 1>"
-    hint = (hint or "").strip()
-    return (
-        f"In <Video 1>, {t} has been erased from the scene; only "
-        + ("a thick black stick figure" if black else "a colored pose skeleton (a stick figure with joints, hands "
-           "and face points)")
-        + " remains, showing where the person is and how they move. Put the person shown in <Picture 1> onto this "
-        "skeleton.\n\n"
-        "subject_definitions:\n"
-        f"<Subject 1> is the person from <Picture 1> ({look}). <Subject 1> stands exactly on the skeleton in "
-        "<Video 1>, in every frame: head on the head points, shoulders, elbows, wrists, hips, knees and feet on the "
-        "joints.\n"
-        "<Subject 2> is the scene of <Video 1>: background, lighting, objects and other people.\n"
-        "<Video 1> is the source video: the skeleton gives the exact position, scale, pose and movement over time; "
-        "the face points give head turns and mouth opening; the soundtrack gives the timing of speech or singing.\n\n"
-        "summary:\n"
-        "[pose-driven video editing + reference generation] An edited version of <Video 1> in which <Subject 1>, a "
-        "real person, performs exactly the movements of the skeleton, while <Subject 2> stays unchanged.\n\n"
-        "retention_analysis:\n"
-        "<Subject 1>: fully_preserved - the look and the clothing of <Picture 1> in every frame and from every angle.\n"
-        "<Subject 2>: fully_preserved - unchanged.\n"
-        "<Video 1>: partially_preserved - keep framing, camera motion, timing and the skeleton's motion; the skeleton "
-        "lines and dots themselves are never drawn in the result.\n\n"
-        "detailed_description:\n"
-        "[Shot 1] Same composition and camera as <Video 1>. <Subject 1> is a natural, fully detailed person whose "
-        "body follows the skeleton moment by moment: posture, gestures, head turns and steps. The body shape and "
-        "clothing come from <Picture 1>, not from the empty area around the skeleton. The face is expressive, with "
-        "mouth movements that follow the speech or singing in the soundtrack. Lighting and color of <Subject 1> "
-        "match the scene. Do not copy the background or pose of <Picture 1>. One continuous shot, no cuts."
-        + (f"\n\n{hint}" if hint else ""))
-
-
-def swap_prompt(who, what, hint=""):
-    """Текст для модели — в РОДНОМ формате брифа MiniMax H3 (subject_definitions / summary / retention_analysis /
-    detailed_description): так пишет её собственный улучшатель промптов, на таких текстах она и LoRA замены
-    учились. Слова — наши: облик — с фото, игра — из клипа, сцена — нетронута."""
-    t = TARGET.get(who, "the main person")
-    if what == WHAT[1]:
-        look = ("facial features, face shape, skin tone and hairstyle from <Picture 1>; the body, clothing and "
-                "accessories stay as worn by the original person in <Video 1>")
-        keep_look = "face and hairstyle"
-    else:
-        look = ("facial features, face shape, hairstyle, hair color, skin tone, body build and clothing from "
-                "<Picture 1>")
-        keep_look = "face, hairstyle, body build and clothing"
-    hint = (hint or "").strip()
-    return (
-        f"Replace {t} in <Video 1> with the person shown in <Picture 1>.\n\n"
-        "subject_definitions:\n"
-        f"<Subject 1> is the new person: appearance comes from <Picture 1> ({look}); the performance comes from "
-        f"{t} in <Video 1>. <Picture 1> supplies appearance only, not its pose, expression, background or framing.\n"
-        "<Subject 2> is everything else in <Video 1>: the background, lighting, objects and all other people.\n"
-        "<Video 1> is the source video being edited; it supplies the composition, camera movement, timing and "
-        "every action.\n\n"
-        "summary:\n"
-        f"[video editing + reference generation] An edited version of <Video 1> in which {t} is replaced by "
-        "<Subject 1>, who performs exactly the same movements, while <Subject 2> and the camera stay unchanged.\n\n"
-        "retention_analysis:\n"
-        f"<Subject 1>: fully_preserved - keep the {keep_look} of <Picture 1> in every frame, from every angle and "
-        "with every expression; do not drift back to the original person's look.\n"
-        "<Subject 2>: fully_preserved - unchanged.\n"
-        "<Video 1>: partially_preserved - keep framing, camera motion, timing and duration; change only the "
-        "replaced person's appearance.\n\n"
-        "detailed_description:\n"
-        "[Shot 1] Same composition and viewpoint as <Video 1>. <Subject 1> stands where the original person "
-        "stands, at the same scale, and matches the original performance moment by moment: posture, gestures, "
-        "head turns, gaze, blinking, facial expressions and mouth movements. Lighting, shading and color of "
-        "<Subject 1> follow the scene of <Video 1>. Hair and clothing move naturally. Keep the crop and shot "
-        "scale of <Video 1>; do not copy the background or pose of <Picture 1>. One continuous shot, no cuts."
         + (f"\n\n{hint}" if hint else ""))
 
 
@@ -260,10 +181,11 @@ class NeronH3HeroSwap:
                 "swap_strength": ("FLOAT", _exp("сила замены / swap strength", default=1.0, min=0.0, max=1.5,
                                   step=0.05, tooltip="LoRA замены. Автор: 1.0. 0 — для сравнения без неё.\n\nEN: The "
                                                      "swap LoRA strength. Author: 1.0.")),
-                "expand_px": ("INT", _exp("запас маски, пикс. / mask margin, px", default=64, min=0, max=256,
-                              tooltip="На сколько расширить маску человека (при 768p; для 480p — пропорционально). "
-                                      "Мало — обрежет волосы и одежду; много — заденет фон.\n\nEN: Mask growth (at "
-                                      "768p).")),
+                "expand_px": ("INT", _exp("запас маски, пикс. (0 — авто) / mask margin, px (0 — auto)", default=0,
+                              min=0, max=256,
+                              tooltip="0 — авто по проверкам: лицо — 5, весь облик — 25.\nМеньше — одежда ближе к "
+                                      "форме клипа; больше — модели свободнее (одежда больше с фото).\n\nEN: 0 — auto "
+                                      "(face 5, whole look 25). Less — clothing follows the clip; more — freer.")),
                 "keep_outside": ("BOOLEAN", _exp("вне маски — оригинал / keep outside", default=True,
                                  tooltip="После генерации вне маски вклеить настоящие пиксели клипа — фон совпадёт с "
                                          "оригиналом точно.\n\nEN: Paste the real clip pixels outside the mask.")),
@@ -287,26 +209,14 @@ class NeronH3HeroSwap:
                 "swap_lora_model": _model_combo("swap_lora", "LoRA замены / swap LoRA"),
                 "sam_model": _model_combo("sam", "SAM 3.1"),
                 # новое — строго в конец: сохранённые схемы хранят значения по порядку
-                "ref_fill": (E.FILL, _exp("человек в образце / person in reference", default=E.FILL[0],
-                             tooltip="Идея Романа: ДО генерации закрасить человека в видео-образце. Модели нечего "
-                                     "копировать — облик берётся с фото, а силуэт по-прежнему задаёт движение.\n"
-                                     "⬛ чёрный — по умолчанию; ◻ серый или 🌫 размытие — если модель рисует тёмную "
-                                     "фигуру; «оригинал» — как в 0.1 (для сравнения).\n\nEN: Blank out the person in "
-                                     "the reference video before generation, so the model cannot copy them; the "
-                                     "silhouette still drives the motion.\n\n🦴 скелет (0.3): человек стёрт "
-                                     "в фон, поверх — его скелет (SDPose). Форма платья не видна, только поза: "
-                                     "одежда берётся с фото. Нужна модель SDPose («📥 Модели»).\n\nEN: 🦴 skeleton: "
-                                     "the person is erased, only their pose skeleton remains; clothing comes from "
-                                     "the photo. Needs the SDPose model.\n\n🦴⬛ чёрный скелет: то же, но скелет — толстыми "
-                                     "чёрными палками (силуэт толщиной в скелет).\nEN: the same, drawn as a thick "
-                                     "black stick figure.")),
-                "pose_model": _model_combo("pose", "SDPose (скелет / skeleton)"),
-                "blur_strength": ("FLOAT", _exp("сила размытия / blur strength", default=1.0, min=0.1, max=1.0,
-                                  step=0.05, tooltip="Только для 🌫 размытия. 1.0 — черт не видно совсем. Меньше — "
-                                  "проступают контуры лица и свет: новое лицо ложится естественнее, но если слишком "
-                                  "мало — модель начнёт повторять лицо оригинала. Пробуй 0.5–0.8.\n\nEN: Only for 🌫 "
-                                  "blur. 1.0 — no features visible. Lower — face contours show through: a more "
-                                  "natural fit, but too low and the model copies the original face. Try 0.5–0.8.")),
+                "blur_strength": ("FLOAT", _exp("сила размытия / blur strength", default=0.5, min=0.1, max=1.0,
+                                  step=0.05, tooltip="Идея Романа: ДО генерации человек (или голова) в клипе-образце "
+                                  "размывается — модели нечего копировать, а свет, цвета и движение остаются.\n"
+                                  "0.5 — лучшее по проверкам. 1.0 — черт не видно совсем, больше от фото. 0.4 — "
+                                  "смесь оригинала и фото («двойник»). Ниже 0.4 модель повторяет оригинал.\n\nEN: The "
+                                  "person (or head) in the reference clip is blurred before generation — nothing to "
+                                  "copy, light, colors and motion stay. 0.5 — best in tests; 1.0 — more of the photo; "
+                                  "0.4 — a mix of original and photo; below 0.4 the original returns.")),
                 "tight_edges": ("BOOLEAN", _exp("точные края / tight edges", default=True,
                                 tooltip="После генерации SAM ещё раз находит НОВОГО человека, и вклеивается только "
                                         "он. Полоса запаса вокруг снова — настоящие резкие пиксели клипа: края не "
@@ -323,19 +233,13 @@ class NeronH3HeroSwap:
         }
 
     def generate(self, video, photo, expert=False, who=E.WHO[0], what=WHAT[0], quality=QUALITY[0], seconds=5.0,
-                 sound=SOUND[0], hint="", seed=904234, steps=8, swap_strength=1.0, expand_px=64, keep_outside=True,
+                 sound=SOUND[0], hint="", seed=904234, steps=8, swap_strength=1.0, expand_px=0, keep_outside=True,
                  feather_px=12, threshold=0.35, ref_quality="match", fast_attention=True, unet_model=AUTO_MODEL,
                  clip_model=AUTO_MODEL, vae_video_model=AUTO_MODEL, vae_audio_model=AUTO_MODEL,
-                 turbo_lora_model=AUTO_MODEL, swap_lora_model=AUTO_MODEL, sam_model=AUTO_MODEL, ref_fill=None,
-                 pose_model=AUTO_MODEL, blur_strength=1.0, tight_edges=True,
-                 prompt=None):
+                 turbo_lora_model=AUTO_MODEL, swap_lora_model=AUTO_MODEL, sam_model=AUTO_MODEL,
+                 blur_strength=0.5, tight_edges=True, prompt=None):
         notes = []
-        ref_fill = ref_fill if ref_fill in E.FILL else E.FILL[0]
-        skeleton = ref_fill in E.SKELETONS
-        needs = ["MiniMaxH3ReferenceToVideo", "MiniMaxH3AddGuide", "SAM3_Detect", "SAM3_VideoTrack"]
-        if skeleton:
-            needs += ["SDPoseKeypointExtractor", "SDPoseDrawKeypoints"]
-        for need in needs:
+        for need in ("MiniMaxH3ReferenceToVideo", "MiniMaxH3AddGuide", "SAM3_Detect", "SAM3_VideoTrack"):
             if not E.has_node(need):
                 raise E.FriendlyError(f"{E.TAG} В ComfyUI нет ноды «{need}». Обнови ComfyUI — нужны MiniMax H3 и "
                                       f"SAM3.\n\nEN: ComfyUI lacks «{need}». Update ComfyUI.")
@@ -343,8 +247,6 @@ class NeronH3HeroSwap:
         # ---- модели ----
         picked = {"unet": unet_model, "clip": clip_model, "vae_video": vae_video_model, "vae_audio": vae_audio_model,
                   "turbo_lora": turbo_lora_model, "swap_lora": swap_lora_model, "sam": sam_model}
-        if skeleton:
-            picked["pose"] = pose_model
         models = {}
         for role, v in picked.items():
             if v in (None, "", AUTO_MODEL, NOT_FOUND):
@@ -379,21 +281,17 @@ class NeronH3HeroSwap:
         if audio is not None:
             audio = E.fit_audio(audio, length / E.FPS)
 
-        if (prompt or "").strip():
-            text = prompt.strip()
-        elif ref_fill == E.FILL[3]:
-            text = swap_prompt(who, what, hint)
-        elif skeleton:
-            text = skeleton_prompt(who, what, hint, ref_fill == E.BLACK_SKELETON)
-        else:
-            text = silhouette_prompt(who, what, ref_fill, hint)
+        text = prompt.strip() if (prompt or "").strip() else blur_prompt(who, what, hint)
+        head = what == WHAT[1]
+        margin = int(expand_px) if int(expand_px) > 0 else (5 if head else 25)
+        notes.append(f"Запас маски: {margin} пикс." + ("" if int(expand_px) > 0 else " (авто)"))
         notes.append("Текст: " + ("свой" if (prompt or "").strip() else f"{what.split(' / ')[0]} · "
                                   f"{who.split(' / ')[0]}"))
         try:
             out, out_audio, preview, report = E.generate(
                 frames, audio, photo, text, SHORT.get(quality, 480), int(seed), int(steps), float(swap_strength),
-                models, who, float(threshold), int(expand_px), bool(keep_outside), int(feather_px), ref_quality,
-                bool(fast_attention), sound == SOUND[0], ref_fill, what == WHAT[1],
+                models, who, float(threshold), margin, bool(keep_outside), int(feather_px), ref_quality,
+                bool(fast_attention), sound == SOUND[0], head,
                 float(blur_strength), bool(tight_edges))
         except Exception:
             E.free("после ошибки / after error")

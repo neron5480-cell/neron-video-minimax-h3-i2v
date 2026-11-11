@@ -1,5 +1,11 @@
 # Changelog / История изменений
 
+## 🎭 Замена героя 0.6 — только размытие, умолчания по проверкам (dev, 11.11.2026)
+
+**RU:** По проверкам Романа (лучшее — 768p, лицо, размытие 0.5, запас 5, точные края: «шикарно») оставлено только размытие. Убраны чёрный и серый силуэт, «оригинал», оба скелета и модель SDPose — они проиграли размытию. Умолчания: сила размытия 0.5; запас маски «0 — авто» (лицо 5, весь облик 25); точные края вкл. Группа «РАЗМЫТИЕ И КРАЯ». Справка, README и заметка в процессе переписаны: рецепт «480p — проба, тот же сид на 768p — чистовик». Открыть процесс заново — поля изменились.
+
+**EN:** Based on Roman's tests (best — 768p, face, blur 0.5, margin 5, tight edges) only the blur stays; black/gray silhouettes, «original», both skeletons and SDPose are removed. Defaults: blur 0.5; mask margin «0 — auto» (face 5, whole look 25); tight edges on. Help, README and the workflow note rewritten, with the recipe «480p to try, the same seed at 768p for the final». Reopen the workflow — the fields changed.
+
 ## 🎭 Замена героя 0.5 — точные края (dev, 11.11.2026)
 
 **0.5.1 RU:** проверка Романа: в режиме «лицо» края головы плыли. Причины: мягкий край вклейки заходил внутрь — на волосы (волосы смешивались с фоном клипа), а SAM искал только «голову» без волос до плеч. Теперь мягкий переход целиком снаружи человека, по сгенерированному фону; голова ищется как «head» + «hair» в зоне замены. **EN:** head edges were soft: the feather ate into the hair and SAM looked for «head» only. Now the soft transition lies fully outside the person, and the head is found as «head» + «hair».

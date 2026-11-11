@@ -26,9 +26,9 @@ const GROUPS = [
     { name: "ТОНКАЯ НАСТРОЙКА / ADVANCED", widgets: ["ref_quality", "fast_attention"],
       fill: "rgba(120, 200, 160, 0.15)", border: "rgba(120, 200, 160, 0.75)", label: "rgba(190, 255, 220, 1.0)" },
     { name: "МОДЕЛИ / MODELS", widgets: ["unet_model", "clip_model", "vae_video_model", "vae_audio_model",
-                                          "turbo_lora_model", "swap_lora_model", "sam_model", "pose_model"],
+                                          "turbo_lora_model", "swap_lora_model", "sam_model"],
       fill: "rgba(200, 120, 120, 0.15)", border: "rgba(200, 120, 120, 0.75)", label: "rgba(255, 190, 190, 1.0)" },
-    { name: "ОБРАЗЕЦ / REFERENCE", widgets: ["ref_fill", "blur_strength", "tight_edges"],
+    { name: "РАЗМЫТИЕ И КРАЯ / BLUR & EDGES", widgets: ["blur_strength", "tight_edges"],
       fill: "rgba(180, 120, 220, 0.15)", border: "rgba(180, 120, 220, 0.75)", label: "rgba(230, 200, 255, 1.0)" },
 ];
 function wv(node, name) {
@@ -505,101 +505,110 @@ const HELP_TEXT = `
 ===================================================
 
 🇷🇺 ЧТО ЭТО
-Тот же клип — танец, камера, фон, свет, звук — но вместо человека в кадре
-человек с вашего фото. Меняется ТОЛЬКО человек под маской, всё остальное —
-настоящие пиксели оригинала.
+Тот же клип — танец, камера, фон, свет, звук — но с человеком с вашего фото.
+• 🙂 лицо и причёска — новое лицо, а тело, одежда и улица — настоящие пиксели клипа.
+• 🧍 весь облик — новый человек целиком; наряд по форме и цвету клипа.
 
 КАК ПОЛЬЗОВАТЬСЯ
 1. В «Load Video» — клип (любая частота кадров, нода сама сделает 24 к/с).
-2. В «Load Image» — фото «на кого»: лицо хорошо видно, ровный свет;
-   для «весь облик» — человек в полный рост.
+2. В «Load Image» — фото «на кого»: лицо хорошо видно, ровный свет.
 3. Выбери, кого менять, что менять, качество и длину. Run.
-4. Выход mask_preview — первый кадр с оранжевой маской (кого нашла нода) и тот же кадр с силуэтом.
+4. Окно «Маска» — две картинки: оранжевым — кого нашла нода; рядом — что увидела модель
+   (человек или голова размыты).
+
+РЕЦЕПТ (проверен)
+1. 480p, 5 с — быстро пробуешь (≈4 мин на 16 ГБ). Понравилось — запомни сид
+   (в ⚙ эксперте «управление после генерации» = fixed).
+2. Тот же сид, 768p — чистовик: резко и естественно (≈11 мин на 5 с).
 
 ПАРА В КАДРЕ
 Одно фото — один человек. Пару меняем по очереди: сначала «⬅ левый» с фото 1,
 потом результат снова в ноду — «➡ правый» с фото 2.
-«👥 все люди» с одним фото сделает всех одним человеком.
 
-С ЧЕГО НАЧАТЬ
-• 5 секунд, 480p — проверь, что замена держится. Потом длиннее (до 15 с) и 768p.
-• Не узнаётся лицо — фото крупнее и чётче; в ⚙ эксперте «качество фото-образца» = max.
-• Обрезаны волосы / край одежды — прибавь «запас маски».
-• Задет фон рядом с человеком — убавь «запас маски».
+⚙ ЭКСПЕРТ — главное
+• Сила размытия (0.5 — лучшее). 1.0 — больше от фото. 0.4 — смесь оригинала и фото
+  («двойник»). Ниже 0.4 модель узнаёт оригинал и повторяет его.
+• Запас маски: 0 — авто (лицо 5, весь облик 25). Меньше — одежда ближе к клипу,
+  больше — модели свободнее.
+• Точные края (вкл.) — после генерации SAM находит нового человека, и вклеивается
+  только он: фон вокруг остаётся резким, как в клипе.
 
 КАК УСТРОЕНО
-• SAM 3.1 находит человека в первом кадре и ведёт его маской по клипу.
-• ДО генерации человек в клипе-образце закрашивается чёрным силуэтом (идея Романа):
-  модели нечего копировать — облик она берёт с фото, а силуэт задаёт движение.
-• 🦴 Скелет (⚙ эксперт → «человек в образце»): человек стирается в фон, поверх рисуется его
-  скелет (SDPose). Модель видит только позу — без формы платья, одежда берётся с фото.
-• 🦴⬛ Чёрный скелет — то же, но скелет толстыми чёрными палками (силуэт толщиной в скелет).
-• MiniMax H3 Ref2VA получает клип с силуэтом как <Video 1> и фото как <Picture 1>
-  и перерисовывает ТОЛЬКО то, что под маской (дорисовка по маске).
-• LoRA «Character Swap V1.5» (Akatz Labs) учит модель именно замене героя.
-• После генерации вне маски вклеиваются настоящие пиксели клипа.
-• Звук — оригинал клипа, байт в байт.
+• SAM 3.1 находит человека (или его голову с волосами) и ведёт маску по клипу.
+• Идея Романа: ДО генерации человек в клипе-образце РАЗМЫВАЕТСЯ — черт оригинала
+  модели не видно, копировать нечего, а свет, цвета и движение остаются.
+  (Пробовали чёрный и серый силуэт и скелет — размытие вышло лучше всех.)
+• MiniMax H3 Ref2VA получает размытый клип как <Video 1>, фото как <Picture 1>
+  и звук клипа — губы ложатся на песню сами. Перерисовывается только зона маски.
+• LoRA «Character Swap V1.5» (Akatz Labs) + турбо-LoRA, 8 шагов.
+• Вне человека вклеиваются настоящие пиксели клипа. Звук — оригинал, байт в байт.
 
 МОДЕЛИ — «📥 Модели» на ноде, качает только то, что нужно этой ноде:
 модель H3 Ref2VA (отдельный файл, не тот, что у Story / Engine), энкодер и VAE
 (общие с другими нодами H3), турбо-LoRA, LoRA замены, SAM 3.1.
 
 ЧЕСТНО
-• Модель замены — экспериментальная (так пишет и её автор): лицо, мимика,
-  перекрытия и склейки иногда «плывут»; точность губ не обещается.
+• Проверено на одном клипе с одним фото — на других видео возможны сюрпризы
+  (быстрые движения, профиль, перекрытия руками).
 • 768p и длинные клипы тяжелы для 16 ГБ — начни с 480p и 5 с.
 • Заменяйте себя и тех, кто согласен.
 
 Идея процесса — Akatz Labs («H3 Character Swap»), LoRA — их, со своей лицензией
-(MiniMax H3 Community License). Код ноды — Neron.
+(MiniMax H3 Community License). Размытие, точные края и код ноды — Neron.
 
 ===================================================
 
 🇬🇧 WHAT IT IS
-The same clip — dance, camera, background, light, sound — but with the person
-from your photo. ONLY the masked person changes; everything else stays the
-original pixels.
+The same clip — dance, camera, background, light, sound — with the person from your photo.
+• 🙂 face & hair — a new face; body, clothes and street stay the clip's real pixels.
+• 🧍 whole look — a whole new person; the outfit follows the clip's shape and colors.
 
 HOW TO USE
 1. «Load Video» — the clip (any frame rate; the node converts to 24 fps).
-2. «Load Image» — the photo of the new person: face clearly visible, even light;
-   a full-body photo for «whole look».
+2. «Load Image» — the new person's photo: face clearly visible, even light.
 3. Choose who, what, quality and length. Run.
-4. mask_preview shows the first frame with the orange mask (who was found) and the same frame with the silhouette.
+4. The «Mask» window shows two pictures: in orange — who was found; next to it — what the
+   model saw (the person or the head blurred).
+
+RECIPE (tested)
+1. 480p, 5 s — a quick try (≈4 min on 16 GB). Like it — keep the seed
+   (⚙ expert «control after generate» = fixed).
+2. Same seed at 768p — the final: sharp and natural (≈11 min for 5 s).
 
 A COUPLE IN FRAME
 One photo — one person. Swap a couple in two runs: «⬅ leftmost» with photo 1,
 then feed the result back — «➡ rightmost» with photo 2.
-«👥 everyone» with one photo turns everybody into one person.
 
-WHERE TO START
-• 5 seconds at 480p — check the swap holds. Then longer (up to 15 s) and 768p.
-• Face not recognisable — a bigger, sharper photo; in ⚙ expert set photo quality = max.
-• Hair or clothing edges cut — raise «mask margin». Background touched — lower it.
+⚙ EXPERT — the main things
+• Blur strength (0.5 — best). 1.0 — more of the photo. 0.4 — a mix of the original and the
+  photo («look-alike»). Below 0.4 the model recognises the original and repeats it.
+• Mask margin: 0 — auto (face 5, whole look 25). Less — clothing closer to the clip,
+  more — more freedom for the model.
+• Tight edges (on) — after generation SAM finds the new person and only they are pasted in:
+  the background around stays as sharp as in the clip.
 
 HOW IT WORKS
-• SAM 3.1 finds the person in the first frame and tracks the mask through the clip.
-• BEFORE generation the person in the reference clip is blanked to a black silhouette
-  (Roman's idea): nothing to copy — the look comes from the photo, the silhouette drives the motion.
-• 🦴 Skeleton (⚙ expert → «person in reference»): the person is erased into the background and their
-  pose skeleton (SDPose) is drawn on top. The model sees only the pose — no dress shape; clothing comes from the photo.
-• 🦴⬛ Black skeleton — the same, drawn as a thick black stick figure (a silhouette as thin as a skeleton).
-• MiniMax H3 Ref2VA gets the silhouette clip as <Video 1> and the photo as <Picture 1>
-  and repaints ONLY what is under the mask.
-• The «Character Swap V1.5» LoRA (Akatz Labs) teaches the model to swap.
-• After generation the real clip pixels are pasted back outside the mask.
-• Sound — the clip's original, byte for byte.
+• SAM 3.1 finds the person (or their head with hair) and tracks the mask through the clip.
+• Roman's idea: BEFORE generation the person in the reference clip is BLURRED — the original's
+  features are hidden, nothing to copy, while light, colors and motion stay.
+  (We tried black and gray silhouettes and a skeleton — blur came out best.)
+• MiniMax H3 Ref2VA gets the blurred clip as <Video 1>, the photo as <Picture 1> and the clip's
+  sound — lips follow the song by themselves. Only the mask zone is repainted.
+• «Character Swap V1.5» LoRA (Akatz Labs) + turbo LoRA, 8 steps.
+• Outside the person the clip's real pixels are pasted back. Sound — the original, byte for byte.
 
-MODELS — «📥 Models» on the node downloads only what this node needs.
+MODELS — «📥 Models» on the node downloads only what this node needs: the H3 Ref2VA model
+(a separate file from Story / Engine), the encoder and VAEs (shared with other H3 nodes),
+the turbo LoRA, the swap LoRA, SAM 3.1.
 
 HONESTLY
-• The swap model is experimental (its author says so too): face, expressions,
-  occlusions and cuts can drift; exact lip sync is not promised.
+• Tested on one clip with one photo — other videos may surprise
+  (fast moves, profile, hands in front of the face).
 • 768p and long clips are heavy for 16 GB — start with 480p and 5 s.
 • Swap yourself and people who agreed.
 
 Workflow idea — Akatz Labs («H3 Character Swap»); the LoRA is theirs under its own
-license (MiniMax H3 Community License). Node code — Neron.
+license (MiniMax H3 Community License). Blur, tight edges and the node code — Neron.
 `;
 
 function showHelpDialog() {

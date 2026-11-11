@@ -5,13 +5,15 @@
   1. Клип → 24 к/с, длина по сетке H3 (17k+5), размер — в паспорте модели (480p или 768p).
   2. SAM 3.1 (родные ноды SAM3_Detect / SAM3_VideoTrack / SAM3_TrackToMask) находит человека в первом кадре
      и ведёт его маской по всему клипу. Маску расширяем (волосы, одежда, движение) — модели нужен запас.
-  3. Условия: MiniMaxH3ReferenceToVideo — <Video 1> = клип (движение, сцена, свет), <Picture 1> = фото «на кого»,
+  2б. ИДЕЯ РОМАНА: человек (или голова) в клипе-образце РАЗМЫТ — черт оригинала модель не видит, копировать
+     нечего; свет, цвета и движение остаются. (Чёрный/серый силуэт и скелет проверены — размытие лучше.)
+  3. Условия: MiniMaxH3ReferenceToVideo — <Video 1> = размытый клип, <Picture 1> = фото «на кого»,
      звук клипа — образцом (губы и движения ложатся на речь/музыку). MiniMaxH3AddGuide — звук ещё и целью.
   4. ДОРИСОВКА ПО МАСКЕ: латент = закодированный исходный клип, noise_mask = маска человека (в размере латента).
      Сэмплер меняет только то, что под маской, — фон и остальные люди остаются клипом.
   5. Модель H3 **Ref2VA** (отдельный файл, не fl2va!) + турбо-LoRA 8 шагов + LoRA замены V1.5, er_sde / normal.
-  6. НАША ПРАВКА: после раскодировки вне маски вклеиваем НАСТОЯЩИЕ пиксели клипа (мягкий край) — фон совпадает
-     с оригиналом точно, а не «почти» после VAE. Звук — оригинал клипа байт в байт.
+  6. НАША ПРАВКА: точные края — SAM по готовому видео находит нового человека, вклеиваем только его (и место
+     старого), остальное — НАСТОЯЩИЕ пиксели клипа. Звук — оригинал клипа байт в байт.
 Память — по очереди, как в Neron H3 Engine: SAM → выгрузка → текст → выгрузка → модель → выгрузка → VAE.
 """
 import gc
@@ -426,116 +428,27 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False)
     return grown, preview, masks
 
 
-# ---------------- образец без оригинала: человек закрашен ----------------
+# ---------------- образец без оригинала: человек размыт ----------------
 
-FILL = ["⬛ чёрный силуэт / black silhouette", "◻ серый силуэт / gray silhouette", "🌫 размытие / blur",
-        "— оригинал, без закраски / original", "🦴 скелет / skeleton", "🦴⬛ чёрный скелет / black skeleton"]
-SKELETON = FILL[4]
-BLACK_SKELETON = FILL[5]
-SKELETONS = (SKELETON, BLACK_SKELETON)
-
-
-def blank_person(frames, mask, fill, blur=1.0):
-    """Идея Романа: убрать из видео-образца облик исходного человека ДО генерации — модели нечего копировать,
-    а силуэт по-прежнему танцует (движение, место в кадре, ритм остаются). Заполнит его модель — человеком с фото."""
-    if fill == FILL[3]:
-        return frames
+def blur_person(frames, mask, blur=0.5):
+    """Идея Романа: ДО генерации спрятать облик исходного человека в видео-образце — модели нечего копировать.
+    Размытие (лучшее из проверенных: чёрный, серый, скелет) прячет черты, но оставляет свет, тон, цвета одежды,
+    положение и движение — модель вписывает человека с фото естественно и чётче.
+    blur — сила: 1.0 черт не видно; ~0.4 и ниже — модель узнаёт оригинал и начинает его повторять."""
     m = mask[..., None]
-    if fill == FILL[2]:
-        out = []
-        for i in range(0, frames.shape[0], 16):
-            c = frames[i:i + 16].movedim(-1, 1)
-            k = max(3, int(round(min(c.shape[2], c.shape[3]) / 12 * max(0.05, float(blur)))) | 1)
-            b = F.avg_pool2d(F.avg_pool2d(c, k, stride=1, padding=k // 2), k, stride=1, padding=k // 2)
-            out.append(b.movedim(1, -1))
-        filler = torch.cat(out, 0)
-    else:
-        filler = torch.full_like(frames, 0.0 if fill == FILL[0] else 0.5)
-    return frames * (1 - m) + filler * m
-
-
-# ---------------- 🦴 скелет вместо силуэта (идея Романа, 0.3) ----------------
-
-def erase_person(frames, mask, step=8):
-    """Стереть человека: зона маски заполняется цветами фона вокруг (нормированное размытие на малом размере).
-    Получается пустая улица без формы платья — модели нечего копировать, даже очертания."""
     out = []
     for i in range(0, frames.shape[0], 16):
-        c = frames[i:i + 16].movedim(-1, 1).float()
-        keep = 1 - mask[i:i + 16, None].float()
-        num = F.avg_pool2d(c * keep, step, ceil_mode=True)
-        den = F.avg_pool2d(keep, step, ceil_mode=True)
-        for _ in range(64):
-            if bool((den > 1e-3).all()):
-                break
-            num = F.avg_pool2d(num, 5, stride=1, padding=2, count_include_pad=False)
-            den = F.avg_pool2d(den, 5, stride=1, padding=2, count_include_pad=False)
-        fill = num / den.clamp_min(1e-4)
-        fill = F.avg_pool2d(fill, 3, stride=1, padding=1, count_include_pad=False)
-        fill = F.interpolate(fill, size=c.shape[-2:], mode="bilinear", align_corners=False)
-        out.append((c * keep + fill * (1 - keep)).movedim(1, -1))
-    return torch.cat(out, 0).clamp(0, 1)
-
-
-def _bboxes(tight, pad=0.12):
-    """Рамка человека на каждом кадре (из точной маски SAM) — SDPose ищет позу именно в ней."""
-    n, h, w = tight.shape
-    out = []
-    for i in range(n):
-        ys, xs = torch.nonzero(tight[i] > 0.5, as_tuple=True)
-        if ys.numel() == 0:
-            out.append([])
-            continue
-        y1, y2, x1, x2 = int(ys.min()), int(ys.max()) + 1, int(xs.min()), int(xs.max()) + 1
-        py, px = int((y2 - y1) * pad), int((x2 - x1) * pad)
-        y1, y2, x1, x2 = max(0, y1 - py), min(h, y2 + py), max(0, x1 - px), min(w, x2 + px)
-        out.append([{"x": x1, "y": y1, "width": x2 - x1, "height": y2 - y1}])
-    return out
-
-
-def pose_frames(src, tight, pose_name, report):
-    """SDPose (родные ноды) → цветной скелет [N,H,W,3] на чёрном фоне: тело, кисти, ступни, точки лица."""
-    send("Строю скелет / Building the skeleton", 0, int(src.shape[0]))
-    model, _, vae = node("CheckpointLoaderSimple", ckpt_name=pose_name)[:3]
-    bb = _bboxes(tight)
-    kps = node("SDPoseKeypointExtractor", model=model, vae=vae, image=src, batch_size=16, bboxes=bb)[0]
-    stick = max(2, int(round(4 * min(src.shape[1], src.shape[2]) / 768.0)))
-    pose = node("SDPoseDrawKeypoints", keypoints=kps, draw_body=True, draw_hands=True, draw_face=True,
-                draw_feet=True, stick_width=stick, face_point_size=2, score_threshold=0.3, draw_head=True)[0]
-    del model, vae, kps
-    free("SDPose выгружен")
-    pose = pose.float().cpu()[..., :3]
-    if tuple(pose.shape[1:3]) != tuple(src.shape[1:3]):
-        pose = resize(pose, int(src.shape[2]), int(src.shape[1]))
-    empty = int(sum(1 for b in bb if not b))
-    lit = (pose.amax(-1) > 0.04).flatten(1).any(1)
-    report.append(f"Скелет: {int(lit.sum())} из {pose.shape[0]} кадров" + (f", без маски {empty}" if empty else ""))
-    return pose
-
-
-def skeleton_reference(src, mask, pose, tight=None, black=False):
-    """Образец «🦴 скелет»: человек стёрт в фон, поверх — его скелет. Форма тела и одежды не видна, только поза.
-    black=True (идея Романа): скелет — толстыми ЧЁРНЫМИ палками, «силуэт толщиной в скелет» — тот же язык, что
-    сработал в 0.2 (чёрное = заполни человеком), но без формы платья."""
-    clean = erase_person(src, mask)
-    a = (pose.amax(-1) > 0.04).float()
-    if black:
-        r = 3
-        if tight is not None:
-            rows = (tight > 0.5).any(2).float().sum(1)                 # рост человека в кадре, пикс.
-            rows = rows[rows > 0]
-            if rows.numel():
-                r = max(3, int(round(float(rows.median()) * 0.035)))  # толщина конечности ≈ 7 % роста
-        a = dilate(a, r, frames_r=0)
-        return clean * (1 - a[..., None])
-    a = a[..., None]
-    return clean * (1 - a) + pose * a
+        c = frames[i:i + 16].movedim(-1, 1)
+        k = max(3, int(round(min(c.shape[2], c.shape[3]) / 12 * max(0.05, float(blur)))) | 1)
+        b = F.avg_pool2d(F.avg_pool2d(c, k, stride=1, padding=k // 2), k, stride=1, padding=k // 2)
+        out.append(b.movedim(1, -1))
+    return frames * (1 - m) + torch.cat(out, 0) * m
 
 
 # ---------------- главное ----------------
 
 def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strength, models, who, threshold,
-             expand_px, keep_outside, feather_px, ref_quality, fast_attention, sound_original, fill=FILL[0], head=False, blur=1.0,
+             expand_px, keep_outside, feather_px, ref_quality, fast_attention, sound_original, head=False, blur=0.5,
              tight_edges=True):
     """frames [N,H,W,3] уже 24 к/с и обрезаны по сетке. → (кадры, звук, превью маски, отчёт)."""
     t0 = time.time()
@@ -548,20 +461,10 @@ def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strengt
     send("Подготовка клипа / Preparing the clip")
     src = resize(frames, w, h)
     mask, preview, tight = person_mask(src, models["sam"], who, threshold, expand_px, report, head)
-    if fill in SKELETONS:
-        black = fill == BLACK_SKELETON
-        ref = skeleton_reference(src, mask, pose_frames(src, tight, models["pose"], report), tight, black)
-        report.append("Образец: человек стёрт в фон, поверх — его скелет (SDPose" +
-                      (", толстые чёрные палки" if black else ", цветной") + "): модель видит только позу")
-        preview = torch.cat([preview, ref[:1]], 0)
-    else:
-        ref = blank_person(src, mask, fill, blur)
-        if fill == FILL[2]:
-            report.append(f"Размытие: сила {float(blur):.2f}")
-    if fill not in (FILL[3],) + SKELETONS:
-        report.append(f"Образец: человек закрашен ({fill.split(' / ')[0]}) — облик оригинала модели не виден, "
-                      f"движение — по силуэту")
-        preview = torch.cat([preview, ref[:1]], 0)
+    ref = blur_person(src, mask, blur)
+    report.append(f"Образец: {'голова' if head else 'человек'} размыт(а), сила {float(blur):.2f} — черт оригинала "
+                  f"модель не видит, свет и движение остаются")
+    preview = torch.cat([preview, ref[:1]], 0)
 
     # ---- 1. условия: текст + клип + фото + звук ----
     send("Текст и образцы / Text & references")
