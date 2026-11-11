@@ -338,30 +338,32 @@ def _heads_for(people, heads):
     return torch.stack(out, 0)
 
 
-def new_person_mask(video, sam_name, old, threshold, head, report):
+def new_person_mask(video, sam_name, zone, threshold, head, report):
     """Точные края (0.5): SAM ещё раз — уже по ГОТОВОМУ видео, ищет нового человека (или голову) там, где был
     старый. → маска [N,H,W] или None. Нужна, чтобы вклеивать сгенерированное только по человеку, а полоса запаса
     вокруг снова стала настоящими резкими пикселями клипа."""
     send("Уточняю края / Refining edges", 0, int(video.shape[0]))
     model, clip = node("CheckpointLoaderSimple", ckpt_name=sam_name)[:2]
-    cond = node("CLIPTextEncode", clip=clip, text="head" if head else "person")[0]
-    det = node("SAM3_Detect", model=model, image=video[:1], conditioning=cond, threshold=float(threshold),
-               refine_iterations=2, individual_masks=True)[0]
-    if det.dim() == 2:
-        det = det[None]
-    det = (det.float().cpu() > 0.5).float()
-    o = old[0]
-    keep = [i for i in range(det.shape[0]) if float(det[i].sum()) > 0 and
-            float((det[i] * o).sum()) / float(det[i].sum()) > 0.3]
-    if not keep:
-        del model, clip, cond
+    found = []
+    for text in (("head", "hair") if head else ("person",)):        # голова — вместе с волосами до плеч
+        cond = node("CLIPTextEncode", clip=clip, text=text)[0]
+        det = node("SAM3_Detect", model=model, image=video[:1], conditioning=cond, threshold=float(threshold),
+                   refine_iterations=2, individual_masks=True)[0]
+        if det.dim() == 2:
+            det = det[None]
+        det = (det.float().cpu() > 0.5).float()
+        z = zone[0]
+        found += [det[i] for i in range(det.shape[0]) if float(det[i].sum()) > 0 and
+                  float((det[i] * z).sum()) / float(det[i].sum()) > 0.5]       # лежит в зоне замены
+    if not found:
+        del model, clip
         free("SAM выгружен")
         report.append("Точные края: нового человека SAM не нашла — вклейка по зоне маски")
         return None
-    track = node("SAM3_VideoTrack", images=video, model=model, initial_mask=det[keep],
-                 detection_threshold=0.5, max_objects=len(keep), detect_interval=1)[0]
+    track = node("SAM3_VideoTrack", images=video, model=model, initial_mask=torch.stack(found, 0),
+                 detection_threshold=0.5, max_objects=len(found), detect_interval=1)[0]
     masks = node("SAM3_TrackToMask", track_data=track, object_indices="")[0]
-    del model, clip, cond, track
+    del model, clip, track
     free("SAM выгружен")
     masks = (masks.float().cpu() > 0.5).float()
     if masks.shape[0] != video.shape[0] or float(masks.sum()) == 0:
@@ -645,12 +647,15 @@ def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strengt
     video, src_m, msk = video[:m], src[:m], mask[:m]
     if keep_outside:
         paste = msk
+        fpx = max(0, int(round(feather_px * min(w, h) / 768.0)))
         if tight_edges:
             try:
-                new = new_person_mask(video[:m, ..., :3].contiguous(), models["sam"], tight[:m], threshold, head,
+                new = new_person_mask(video[:m, ..., :3].contiguous(), models["sam"], msk, threshold, head,
                                       report)
                 if new is not None:
-                    edge = max(2, int(round(6 * min(w, h) / 768.0)))
+                    # мягкий переход — целиком СНАРУЖИ человека (по сгенерированному фону), а не по волосам:
+                    # иначе край волос смешивается с фоном клипа и «плывёт»
+                    edge = max(2, int(round(6 * min(w, h) / 768.0))) + fpx
                     paste = dilate(torch.maximum(tight[:m], new[:m]), edge, frames_r=1) * msk
                     report.append(f"Точные края: вклеиваю только человека ({float(paste.mean()) * 100:.0f}% кадра "
                                   f"вместо {float(msk.mean()) * 100:.0f}%), полоса запаса — снова клип")
@@ -658,7 +663,7 @@ def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strengt
                 free("после ошибки SAM")
                 log.warning("%s точные края: %s", TAG, e)
                 report.append(f"Точные края не вышли ({e}) — вклейка по зоне маски")
-        soft = feather(paste, max(0, int(round(feather_px * min(w, h) / 768.0))))[..., None]
+        soft = feather(paste, fpx)[..., None]
         video = src_m * (1 - soft) + video[..., :3] * soft
         report.append("Вне маски — настоящие пиксели клипа (фон как в оригинале)")
     report.append(f"Готово: {m} кадров за {time.time() - t0:.0f} с")

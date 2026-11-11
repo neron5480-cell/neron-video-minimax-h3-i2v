@@ -2,6 +2,8 @@
 
 ## 🎭 Замена героя 0.5 — точные края (dev, 11.11.2026)
 
+**0.5.1 RU:** проверка Романа: в режиме «лицо» края головы плыли. Причины: мягкий край вклейки заходил внутрь — на волосы (волосы смешивались с фоном клипа), а SAM искал только «голову» без волос до плеч. Теперь мягкий переход целиком снаружи человека, по сгенерированному фону; голова ищется как «head» + «hair» в зоне замены. **EN:** head edges were soft: the feather ate into the hair and SAM looked for «head» only. Now the soft transition lies fully outside the person, and the head is found as «head» + «hair».
+
 **RU:** Проверки Романа: 🌫 размытие — лучший образец; ⭐ эталон — весь облик, размытие 0.5, запас 25. «Сила размытия» — это смесь оригинал ↔ фото (ниже 0.4 возвращается оригинал). Огрех: модель перерисовывает всю полосу запаса вместе с улицей — края кажутся чуть расплывчатыми. Теперь **две маски**: модель рисует в широкой зоне, а после генерации SAM ещё раз находит НОВОГО человека в готовом видео, и вклеивается только он (плюс место старого); полоса запаса снова — настоящие резкие пиксели клипа. Переключатель «точные края» в ⚙ (вкл.). Запас маски теперь круглый, по контуру, без ступенек.
 
 **EN:** Roman's tests: blur is the best reference; ⭐ reference run — whole look, blur 0.5, margin 25. «Blur strength» mixes original ↔ photo. Fix for soft edges: two masks — the model paints in the wide zone, then SAM finds the NEW person in the result and only they (plus the old person's place) are pasted; the margin band is the clip's real sharp pixels again. Expert «tight edges» (on). The mask margin is now round, following the contour.
