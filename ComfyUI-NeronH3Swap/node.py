@@ -68,7 +68,7 @@ def silhouette_prompt(who, what, fill, hint=""):
         + (f"\n\n{hint}" if hint else ""))
 
 
-def skeleton_prompt(who, what, hint=""):
+def skeleton_prompt(who, what, hint="", black=False):
     """Текст для режима «🦴 скелет»: в <Video 1> человека нет — пустая сцена и цветной скелет позы поверх."""
     t = TARGET.get(who, "the main person")
     if what == WHAT[1]:
@@ -77,9 +77,11 @@ def skeleton_prompt(who, what, hint=""):
         look = "facial features, face shape, hairstyle, hair color, skin tone, body build and clothing from <Picture 1>"
     hint = (hint or "").strip()
     return (
-        f"In <Video 1>, {t} has been erased from the scene; only a colored pose skeleton (a stick figure with joints, "
-        "hands and face points) remains, showing where the person is and how they move. Put the person shown in "
-        "<Picture 1> onto this skeleton.\n\n"
+        f"In <Video 1>, {t} has been erased from the scene; only "
+        + ("a thick black stick figure" if black else "a colored pose skeleton (a stick figure with joints, hands "
+           "and face points)")
+        + " remains, showing where the person is and how they move. Put the person shown in <Picture 1> onto this "
+        "skeleton.\n\n"
         "subject_definitions:\n"
         f"<Subject 1> is the person from <Picture 1> ({look}). <Subject 1> stands exactly on the skeleton in "
         "<Video 1>, in every frame: head on the head points, shoulders, elbows, wrists, hips, knees and feet on the "
@@ -269,7 +271,9 @@ class NeronH3HeroSwap:
                                      "в фон, поверх — его скелет (SDPose). Форма платья не видна, только поза: "
                                      "одежда берётся с фото. Нужна модель SDPose («📥 Модели»).\n\nEN: 🦴 skeleton: "
                                      "the person is erased, only their pose skeleton remains; clothing comes from "
-                                     "the photo. Needs the SDPose model.")),
+                                     "the photo. Needs the SDPose model.\n\n🦴⬛ чёрный скелет: то же, но скелет — толстыми "
+                                     "чёрными палками (силуэт толщиной в скелет).\nEN: the same, drawn as a thick "
+                                     "black stick figure.")),
                 "pose_model": _model_combo("pose", "SDPose (скелет / skeleton)"),
             },
             "optional": {
@@ -288,7 +292,7 @@ class NeronH3HeroSwap:
                  pose_model=AUTO_MODEL, prompt=None):
         notes = []
         ref_fill = ref_fill if ref_fill in E.FILL else E.FILL[0]
-        skeleton = ref_fill == E.SKELETON
+        skeleton = ref_fill in E.SKELETONS
         needs = ["MiniMaxH3ReferenceToVideo", "MiniMaxH3AddGuide", "SAM3_Detect", "SAM3_VideoTrack"]
         if skeleton:
             needs += ["SDPoseKeypointExtractor", "SDPoseDrawKeypoints"]
@@ -341,7 +345,7 @@ class NeronH3HeroSwap:
         elif ref_fill == E.FILL[3]:
             text = swap_prompt(who, what, hint)
         elif skeleton:
-            text = skeleton_prompt(who, what, hint)
+            text = skeleton_prompt(who, what, hint, ref_fill == E.BLACK_SKELETON)
         else:
             text = silhouette_prompt(who, what, ref_fill, hint)
         notes.append("Текст: " + ("свой" if (prompt or "").strip() else f"{what.split(' / ')[0]} · "

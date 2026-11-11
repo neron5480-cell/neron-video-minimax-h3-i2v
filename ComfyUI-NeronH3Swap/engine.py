@@ -346,8 +346,10 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report):
 # ---------------- образец без оригинала: человек закрашен ----------------
 
 FILL = ["⬛ чёрный силуэт / black silhouette", "◻ серый силуэт / gray silhouette", "🌫 размытие / blur",
-        "— оригинал, без закраски / original", "🦴 скелет / skeleton"]
+        "— оригинал, без закраски / original", "🦴 скелет / skeleton", "🦴⬛ чёрный скелет / black skeleton"]
 SKELETON = FILL[4]
+BLACK_SKELETON = FILL[5]
+SKELETONS = (SKELETON, BLACK_SKELETON)
 
 
 def blank_person(frames, mask, fill):
@@ -428,10 +430,22 @@ def pose_frames(src, tight, pose_name, report):
     return pose
 
 
-def skeleton_reference(src, mask, pose):
-    """Образец «🦴 скелет»: человек стёрт в фон, поверх — его скелет. Форма тела и одежды не видна, только поза."""
+def skeleton_reference(src, mask, pose, tight=None, black=False):
+    """Образец «🦴 скелет»: человек стёрт в фон, поверх — его скелет. Форма тела и одежды не видна, только поза.
+    black=True (идея Романа): скелет — толстыми ЧЁРНЫМИ палками, «силуэт толщиной в скелет» — тот же язык, что
+    сработал в 0.2 (чёрное = заполни человеком), но без формы платья."""
     clean = erase_person(src, mask)
-    a = (pose.amax(-1, keepdim=True) > 0.04).float()
+    a = (pose.amax(-1) > 0.04).float()
+    if black:
+        r = 3
+        if tight is not None:
+            rows = (tight > 0.5).any(2).float().sum(1)                 # рост человека в кадре, пикс.
+            rows = rows[rows > 0]
+            if rows.numel():
+                r = max(3, int(round(float(rows.median()) * 0.035)))  # толщина конечности ≈ 7 % роста
+        a = dilate(a, r, frames_r=0)
+        return clean * (1 - a[..., None])
+    a = a[..., None]
     return clean * (1 - a) + pose * a
 
 
@@ -450,14 +464,16 @@ def generate(frames, audio, photo, prompt, size_short, seed, steps, swap_strengt
     send("Подготовка клипа / Preparing the clip")
     src = resize(frames, w, h)
     mask, preview, tight = person_mask(src, models["sam"], who, threshold, expand_px, report)
-    if fill == SKELETON:
-        ref = skeleton_reference(src, mask, pose_frames(src, tight, models["pose"], report))
-        report.append("Образец: человек стёрт в фон, поверх — его скелет (SDPose): модель видит только позу")
+    if fill in SKELETONS:
+        black = fill == BLACK_SKELETON
+        ref = skeleton_reference(src, mask, pose_frames(src, tight, models["pose"], report), tight, black)
+        report.append("Образец: человек стёрт в фон, поверх — его скелет (SDPose" +
+                      (", толстые чёрные палки" if black else ", цветной") + "): модель видит только позу")
         preview = torch.cat([preview, ref[:1]], 0)
     else:
         ref = blank_person(src, mask, fill)
     del tight
-    if fill not in (FILL[3], SKELETON):
+    if fill not in (FILL[3],) + SKELETONS:
         report.append(f"Образец: человек закрашен ({fill.split(' / ')[0]}) — облик оригинала модели не виден, "
                       f"движение — по силуэту")
         preview = torch.cat([preview, ref[:1]], 0)

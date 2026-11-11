@@ -533,6 +533,7 @@ const HELP_TEXT = `
   модели нечего копировать — облик она берёт с фото, а силуэт задаёт движение.
 • 🦴 Скелет (⚙ эксперт → «человек в образце»): человек стирается в фон, поверх рисуется его
   скелет (SDPose). Модель видит только позу — без формы платья, одежда берётся с фото.
+• 🦴⬛ Чёрный скелет — то же, но скелет толстыми чёрными палками (силуэт толщиной в скелет).
 • MiniMax H3 Ref2VA получает клип с силуэтом как <Video 1> и фото как <Picture 1>
   и перерисовывает ТОЛЬКО то, что под маской (дорисовка по маске).
 • LoRA «Character Swap V1.5» (Akatz Labs) учит модель именно замене героя.
@@ -582,6 +583,7 @@ HOW IT WORKS
   (Roman's idea): nothing to copy — the look comes from the photo, the silhouette drives the motion.
 • 🦴 Skeleton (⚙ expert → «person in reference»): the person is erased into the background and their
   pose skeleton (SDPose) is drawn on top. The model sees only the pose — no dress shape; clothing comes from the photo.
+• 🦴⬛ Black skeleton — the same, drawn as a thick black stick figure (a silhouette as thin as a skeleton).
 • MiniMax H3 Ref2VA gets the silhouette clip as <Video 1> and the photo as <Picture 1>
   and repaints ONLY what is under the mask.
 • The «Character Swap V1.5» LoRA (Akatz Labs) teaches the model to swap.
