@@ -246,7 +246,10 @@ def place(fit, W, H, x0, y0):
     for i in range(0, fit.shape[0], 16):
         c = fit[i:i + 16].movedim(-1, 1)
         p = F.pad(c, pad, mode="replicate")
-        b = _soft_blur(p, min(W, H) // 6)
+        # сильное размытие — на картинке в 8 раз меньше (быстро), потом обратно
+        small = F.interpolate(p, size=(max(8, H // 8), max(8, W // 8)), mode="area")
+        b = F.interpolate(_soft_blur(small, max(3, min(W, H) // 48)), size=(H, W), mode="bilinear",
+                          align_corners=False)
         out.append((p * (1 - side) + b * side).movedim(1, -1))
     return torch.cat(out, 0).clamp(0, 1), side[0, 0]
 
