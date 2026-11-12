@@ -1,0 +1,22 @@
+# --- 0.14: своя маска (обводка на первом кадре) ---
+st.clear()
+um = torch.zeros(1, 120, 120); um[0, 20:60, 30:70] = 1                  # обводка в другом размере — подгонится
+calls_um = []
+def fake_um(name, **kw):
+    calls_um.append(name)
+    if name == "SAM3_VideoTrack": st["init"] = kw["initial_mask"]; st["n"] = kw["images"].shape[0]; return ("T",)
+    if name == "SAM3_TrackToMask": return (st["init"].amax(0, keepdim=True).repeat(st["n"], 1, 1),)
+    return fake3(name, **kw)
+E.node = fake_um
+ru = []
+gu, pvu, tu, scu, fcu = E.person_mask(frames6, "sam", E.WHO[0], 0.35, 0, ru, user_mask=um)
+check(tuple(st["init"].shape) == (1, 60, 60) and float(st["init"][0, 15, 20]) == 1 and float(st["init"][0, 40, 50]) == 0,
+      "своя маска: обводка подогнана к кадру и ушла в трекер как есть")
+check(any("Обводка пользователя" in r for r in ru) and not any("Людей в первом кадре" in r for r in ru),
+      "своя маска: людей не ищет и не выбирает — ведёт обведённое")
+try:
+    E.person_mask(frames6, "sam", E.WHO[0], 0.35, 0, [], user_mask=torch.zeros(1, 60, 60)); okk = False
+except E.FriendlyError:
+    okk = True
+check(okk, "пустая обводка — понятная ошибка")
+E.node = fake3

@@ -607,7 +607,9 @@ def blur_person(frames, mask, blur=0.5, scale=None):
     Размытие (лучшее из проверенных: чёрный, серый, скелет) прячет черты, но оставляет свет, тон, цвета одежды,
     положение и движение — модель вписывает человека с фото естественно и чётче.
     blur — сила: 1.0 черт не видно; ~0.4 и ниже — модель узнаёт оригинал и начинает его повторять."""
-    m = mask[..., None]
+    # край размытия — ПЛАВНЫЙ: резкая граница «размыто / резко» (напр. поперёк шеи под продлённым подбородком)
+    # модель рисовала как шов-полосу (Роман: «присмотрись к шее»)
+    m = feather((mask > 0.5).float(), max(2, int(round(0.02 * min(frames.shape[1], frames.shape[2])))))[..., None]
     n = int(frames.shape[0])
     base_k = min(frames.shape[1], frames.shape[2]) / 12 * max(0.05, float(blur))
     ks = [max(3, int(round(base_k * (float(scale[i]) if scale is not None else 1.0))) | 1) for i in range(n)]
