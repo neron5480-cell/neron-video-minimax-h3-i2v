@@ -529,6 +529,57 @@ def blur_person(frames, mask, blur=0.5):
     return frames * (1 - m) + torch.cat(out, 0) * m
 
 
+def clean_plate(src, cover, report, moving=0.05):
+    """ЧИСТЫЙ ФОН из самого клипа: для каждой точки — медиана по кадрам, где её не закрывает человек (cover).
+    Камера стоит, человек двигается — каждая точка стены хоть где-то открыта. Где не открыта ни разу —
+    заполняем цветом соседних точек. Камера движется (фон «плывёт») — None: тогда работаем как раньше.
+    Зачем: тонкие разлетающиеся волосы оригинала SAM не берёт; вокруг нового человека они давали «призрак»
+    (белёсые пятна с серыми разводами) — и в образце для модели, и при вклейке. На чистом фоне их нет."""
+    n, h, w, _ = src.shape
+    plate = torch.zeros(h, w, 3)
+    known = torch.zeros(h, w)
+    for r in range(0, h, 32):
+        s = src[:, r:r + 32, :, :3].float()
+        c = (cover[:, r:r + 32] > 0.5)
+        x = s.clone()
+        x[c] = float("nan")
+        plate[r:r + 32] = torch.nan_to_num(x.nanmedian(dim=0).values, nan=0.0)
+        known[r:r + 32] = (~c).any(0).float()
+    if float(known.mean()) < 0.5:
+        report.append("Чистый фон: человек закрывает больше половины кадра всё время — не собрать, работаю как раньше")
+        return None
+    if float(known.min()) < 1:
+        plate = erase_holes(plate, known)
+    # камера движется? — сравниваем открытый фон каждого кадра с собранным
+    diffs = []
+    for i in range(0, n, max(1, n // 24)):
+        o = cover[i] < 0.5
+        if int(o.sum()) > 100:
+            diffs.append(float((src[i, ..., :3].float() - plate).abs().mean(-1)[o].mean()))
+    d = sorted(diffs)[len(diffs) // 2] if diffs else 1.0
+    if d > moving:
+        report.append(f"Чистый фон: камера движется (расхождение {d:.3f}) — не собираю, работаю как раньше")
+        return None
+    report.append(f"Чистый фон собран из клипа (открыто {float(known.mean()) * 100:.0f}% кадра, расхождение "
+                  f"{d:.3f}): вокруг человека — стена без следов оригинала")
+    return plate.clamp(0, 1)
+
+
+def erase_holes(img, known, step=8):
+    """Дыры (known = 0) — цветом соседних точек (нормированное размытие на малом размере)."""
+    c = img.movedim(-1, 0)[None]
+    k = known[None, None]
+    num = F.avg_pool2d(c * k, step, ceil_mode=True)
+    den = F.avg_pool2d(k, step, ceil_mode=True)
+    for _ in range(64):
+        if bool((den > 1e-3).all()):
+            break
+        num = F.avg_pool2d(num, 5, stride=1, padding=2, count_include_pad=False)
+        den = F.avg_pool2d(den, 5, stride=1, padding=2, count_include_pad=False)
+    fill = F.interpolate(num / den.clamp_min(1e-4), size=c.shape[-2:], mode="bilinear", align_corners=False)
+    return (c * k + fill * (1 - k))[0].movedim(0, -1)
+
+
 def _box(c, k):
     """Квадратное среднее k×k — двумя проходами (строка, столбец): ровно то же, что avg_pool2d(k), но в k раз
     быстрее. На 768p, 16:9 и 15 с полное окно считалось на процессоре минутами."""
@@ -555,9 +606,16 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
     mask, preview, tight = person_mask(src, models["sam"], who, threshold, expand_px, report, head)
     # размываем ТОЛЬКО человека (точная маска + пара пикс.), не фон вокруг: зона перерисовки шире человека, и если
     # размыть всю зону, модель повторяет мыльную стену вокруг — ореол (лог Романа: 73 % кадра вместо 73 %)
-    ref = blur_person(src, dilate(tight, max(2, int(round(0.01 * min(w, h)))), frames_r=1), blur)
+    core = dilate(tight, max(2, int(round(0.01 * min(w, h)))), frames_r=1)
+    ref = blur_person(src, core, blur)
     report.append(f"Образец: {'голова' if head else 'человек'} размыт(а), сила {float(blur):.2f} — черт оригинала "
                   f"модель не видит, свет и движение остаются")
+    # чистый фон: вокруг размытого человека в образце — стена без разлетающихся волос оригинала
+    send("Собираю чистый фон / Building a clean background")
+    plate = clean_plate(src, dilate(mask, max(4, int(round(0.05 * min(w, h)))), frames_r=2), report)
+    if plate is not None:
+        ring = (mask * (1 - core))[..., None]
+        ref = ref * (1 - ring) + plate[None] * ring
     preview = torch.cat([preview, ref[:1]], 0)
 
     # ---- 1. условия: текст + клип + фото + звук ----
@@ -664,8 +722,15 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
                 log.warning("%s точные края: %s", TAG, e)
                 report.append(f"Точные края не вышли ({e}) — вклейка по зоне маски")
         soft = feather(paste, fpx)[..., None]
-        video = src_m * (1 - soft) + video[..., :3] * soft
-        report.append("Вне маски — настоящие пиксели клипа (фон как в оригинале)")
+        bg = src_m
+        if plate is not None:
+            # в зоне вокруг нового человека — чистый фон (без прядей оригинала), дальше — пиксели клипа;
+            # фон собран из того же клипа, поэтому стык зоны не виден
+            zs = feather(msk, max(2, fpx))[..., None]
+            bg = src_m * (1 - zs) + plate[None] * zs
+        video = bg * (1 - soft) + video[..., :3] * soft
+        report.append("Вне маски — настоящие пиксели клипа" + (", вокруг человека — чистый фон" if plate is not None
+                                                              else " (фон как в оригинале)"))
     report.append(f"Готово: {m} кадров за {time.time() - t0:.0f} с")
     send("Готово / Done", 1, 1)
     return video.clamp(0, 1), out_audio, preview, report
