@@ -409,6 +409,25 @@ def fill_holes(m, max_frac=0.04, step=4):
     return m, int(ok.sum())
 
 
+CHIN = 0.18           # насколько продлить маску лица вниз — доля высоты лица
+
+
+def extend_chin(faces, frac=CHIN):
+    """Маска SAM «face» обрывается над подбородком (Роман: «низ срезан») — подбородок и линия челюсти оставались от
+    оригинала, а в «лицо и причёска» вообще считались волосами и стирались. Продлеваем маску вниз на frac её высоты."""
+    out = faces.clone()
+    for i in range(int(faces.shape[0])):
+        rows = torch.nonzero(faces[i].amax(1) > 0.5).flatten()
+        if rows.numel() == 0:
+            continue
+        k = int(round(float(rows.max() - rows.min() + 1) * frac))
+        if k < 1:
+            continue
+        col = F.pad(faces[i][None, None], (0, 0, k, 0))                       # сверху k пустых строк
+        out[i] = torch.maximum(out[i], F.max_pool2d(col, (k + 1, 1), stride=1)[0, 0])  # max по [y-k, y] — тянет вниз
+    return out
+
+
 def _near(m, frac=0.12):
     """Окрестность маски: волосы в танце и смаз выходят за маску трекера — ищем рядом, но не по всему кадру."""
     return dilate(m, max(4, int(round(frac * min(m.shape[1], m.shape[2])))), frames_r=1)
@@ -536,7 +555,7 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False,
     # оставались пряди оригинала
     if face_only:
         # «только лицо» (идея Романа): маска — одно лицо, причёска и всё остальное — из клипа
-        fcs = detect_each_frame(model, clip, frames, ("face",), _near(masks), threshold)
+        fcs = extend_chin(detect_each_frame(model, clip, frames, ("face",), _near(masks), threshold))
         miss = fcs.flatten(1).amax(1) == 0
         for i in torch.nonzero(miss).flatten().tolist():
             fcs[i] = _head_fallback(masks[i])
@@ -567,7 +586,7 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False,
         report.append(f"Маска: залиты дырки внутри (открытый рот, глаза) на {filled} кадрах")
     faces = masks if face_only else detect_each_frame(model, clip, frames, ("face",), _near(masks, 0.06), threshold)
     if not face_only:
-        faces, _ = fill_holes(faces)
+        faces, _ = fill_holes(extend_chin(faces))
     scale = face_scale(faces, report)
     del model, clip, cond
     free("SAM выгружен")
