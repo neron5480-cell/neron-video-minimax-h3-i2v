@@ -648,7 +648,10 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
                 if new is not None:
                     # мягкий переход — целиком СНАРУЖИ человека (по сгенерированному фону), а не по волосам:
                     # иначе край волос смешивается с фоном клипа и «плывёт»
-                    edge = max(2, int(round(6 * min(w, h) / 768.0))) + fpx
+                    # полоса перехода — узкая (в 0.5–0.9 была ~20 пикс. на 480p, и сгенерированный фон в ней
+                    # светлее стены — светлая обводка вокруг головы и плеч); волосы маска теперь держит сама
+                    fpx = max(2, fpx // 2)
+                    edge = max(1, int(round(2 * min(w, h) / 768.0))) + math.ceil(fpx * 1.42)   # квадрат окна по диагонали
                     paste = dilate(torch.maximum(tight[:m], new[:m]), edge, frames_r=1) * msk
                     report.append(f"Точные края: вклеиваю только человека ({float(paste.mean()) * 100:.0f}% кадра "
                                   f"вместо {float(msk.mean()) * 100:.0f}%), полоса запаса — снова клип")
