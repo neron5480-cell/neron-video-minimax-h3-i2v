@@ -183,7 +183,8 @@ class NeronH3HeroSwap:
                                                      "swap LoRA strength. Author: 1.0.")),
                 "expand_px": ("INT", _exp("запас маски, пикс. (0 — авто) / mask margin, px (0 — auto)", default=0,
                               min=0, max=256,
-                              tooltip="0 — авто по проверкам: лицо — 1, весь облик — 25.\nМеньше — одежда ближе к "
+                              tooltip="0 — авто по проверкам: лицо — 1, весь облик — 25. Для всего облика не ставь мало: "
+                                      "тонкие пряди оригинала выйдут за маску и останутся в кадре.\nМеньше — одежда ближе к "
                                       "форме клипа; больше — модели свободнее (одежда больше с фото).\n\nEN: 0 — auto "
                                       "(face 1, whole look 25). Less — clothing follows the clip; more — freer.")),
                 "keep_outside": ("BOOLEAN", _exp("вне маски — оригинал / keep outside", default=True,
@@ -209,14 +210,16 @@ class NeronH3HeroSwap:
                 "swap_lora_model": _model_combo("swap_lora", "LoRA замены / swap LoRA"),
                 "sam_model": _model_combo("sam", "SAM 3.1"),
                 # новое — строго в конец: сохранённые схемы хранят значения по порядку
-                "blur_strength": ("FLOAT", _exp("сила размытия / blur strength", default=0.5, min=0.1, max=1.0,
+                "blur_strength": ("FLOAT", _exp("сила размытия / blur strength", default=0.5, min=0.4, max=1.0,
                                   step=0.05, tooltip="Идея Романа: ДО генерации человек (или голова) в клипе-образце "
                                   "размывается — модели нечего копировать, а свет, цвета и движение остаются.\n"
                                   "0.5 — лучшее по проверкам. 1.0 — черт не видно совсем, больше от фото. 0.4 — "
-                                  "смесь оригинала и фото («двойник»). Ниже 0.4 модель повторяет оригинал.\n\nEN: The "
+                                  "смесь оригинала и фото («двойник»). На крупном плане (лицо на весь кадр) — не "
+                                  "ниже 0.5, иначе лицо с фото теряется.\n\nEN: The "
                                   "person (or head) in the reference clip is blurred before generation — nothing to "
                                   "copy, light, colors and motion stay. 0.5 — best in tests; 1.0 — more of the photo; "
-                                  "0.4 — a mix of original and photo; below 0.4 the original returns.")),
+                                  "0.4 — a mix of original and photo; on a close-up (face fills the frame) keep 0.5+, "
+                                  "or the photo's face is lost.")),
                 "tight_edges": ("BOOLEAN", _exp("точные края / tight edges", default=True,
                                 tooltip="После генерации SAM ещё раз находит НОВОГО человека, и вклеивается только "
                                         "он. Полоса запаса вокруг снова — настоящие резкие пиксели клипа: края не "

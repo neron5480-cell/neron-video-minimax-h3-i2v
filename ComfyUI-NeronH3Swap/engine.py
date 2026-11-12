@@ -495,7 +495,9 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False)
                       "; тело и одежда — из клипа")
         masks = heads
     else:
-        extra = detect_each_frame(model, clip, frames, ("hair",), _near(masks), threshold)
+        # волосы — чувствительнее: тонкие разлетающиеся пряди SAM при обычном пороге не берёт, и они оставались
+        # тёмными волосинками на стене рядом с новым человеком
+        extra = detect_each_frame(model, clip, frames, ("hair",), _near(masks), max(0.1, threshold * 0.6))
         masks = torch.maximum(masks, extra)
         report.append("Волосы — ещё и поиском на каждом кадре (в танце трекер их теряет, оставались пряди оригинала)")
     del model, clip, cond
@@ -652,7 +654,9 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
                     # светлее стены — светлая обводка вокруг головы и плеч); волосы маска теперь держит сама
                     fpx = max(2, fpx // 2)
                     edge = max(1, int(round(2 * min(w, h) / 768.0))) + math.ceil(fpx * 1.42)   # квадрат окна по диагонали
-                    paste = dilate(torch.maximum(tight[:m], new[:m]), edge, frames_r=1) * msk
+                    # место СТАРОГО человека — чуть шире (≈2 % кадра): кончики его прядей уходят под сгенерированное
+                    old = dilate(tight[:m], max(2, int(round(0.02 * min(w, h)))), frames_r=1)
+                    paste = dilate(torch.maximum(old, new[:m]), edge, frames_r=1) * msk
                     report.append(f"Точные края: вклеиваю только человека ({float(paste.mean()) * 100:.0f}% кадра "
                                   f"вместо {float(msk.mean()) * 100:.0f}%), полоса запаса — снова клип")
             except Exception as e:

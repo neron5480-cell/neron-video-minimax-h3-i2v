@@ -543,8 +543,8 @@ const HELP_TEXT = `
 
 ⚙ ЭКСПЕРТ — главное
 • Сила размытия (0.5 — лучшее). 1.0 — больше от фото. 0.4 — смесь оригинала и фото
-  («двойник»). Ниже 0.4 модель узнаёт оригинал и повторяет его.
-• Запас маски: 0 — авто (лицо 1, весь облик 25). Меньше — одежда ближе к клипу,
+  («двойник»). На крупном плане (лицо на весь кадр) — не ниже 0.5, иначе лицо теряется.
+• Запас маски: 0 — авто (лицо 1, весь облик 25). Для всего облика мало не ставь: тонкие пряди оригинала выйдут за маску. Меньше — одежда ближе к клипу,
   больше — модели свободнее.
 • Точные края (вкл.) — после генерации SAM находит нового человека, и вклеивается
   только он: фон вокруг остаётся резким, как в клипе.
@@ -603,8 +603,8 @@ then feed the result back — «➡ rightmost» with photo 2.
 
 ⚙ EXPERT — the main things
 • Blur strength (0.5 — best). 1.0 — more of the photo. 0.4 — a mix of the original and the
-  photo («look-alike»). Below 0.4 the model recognises the original and repeats it.
-• Mask margin: 0 — auto (face 1, whole look 25). Less — clothing closer to the clip,
+  photo («look-alike»). On a close-up (face fills the frame) keep 0.5+, or the face is lost.
+• Mask margin: 0 — auto (face 1, whole look 25). Not low for the whole look: thin strands of the original's hair escape the mask. Less — clothing closer to the clip,
   more — more freedom for the model.
 • Tight edges (on) — after generation SAM finds the new person and only they are pasted in:
   the background around stays as sharp as in the clip.
