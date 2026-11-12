@@ -529,7 +529,7 @@ def blur_person(frames, mask, blur=0.5):
     return frames * (1 - m) + torch.cat(out, 0) * m
 
 
-def clean_plate(src, cover, report, moving=0.05):
+def clean_plate(src, cover, report, moving=0.05, need=None):
     """ЧИСТЫЙ ФОН из самого клипа: для каждой точки — медиана по кадрам, где её не закрывает человек (cover).
     Камера стоит, человек двигается — каждая точка стены хоть где-то открыта. Где не открыта ни разу —
     заполняем цветом соседних точек. Камера движется (фон «плывёт») — None: тогда работаем как раньше.
@@ -545,8 +545,12 @@ def clean_plate(src, cover, report, moving=0.05):
         x[c] = float("nan")
         plate[r:r + 32] = torch.nan_to_num(x.nanmedian(dim=0).values, nan=0.0)
         known[r:r + 32] = (~c).any(0).float()
-    if float(known.mean()) < 0.5:
-        report.append("Чистый фон: человек закрывает больше половины кадра всё время — не собрать, работаю как раньше")
+    # хватает ли открытых точек там, где фон НУЖЕН (вокруг человека), а не по всему кадру
+    where = need if need is not None else torch.ones(h, w)
+    share = float((known * where).sum() / where.sum().clamp_min(1))
+    if share < 0.6:
+        report.append(f"Чистый фон: вокруг человека открыто лишь {share * 100:.0f}% (он почти не двигается) — "
+                      f"не собрать, работаю как раньше")
         return None
     if float(known.min()) < 1:
         plate = erase_holes(plate, known)
@@ -560,7 +564,7 @@ def clean_plate(src, cover, report, moving=0.05):
     if d > moving:
         report.append(f"Чистый фон: камера движется (расхождение {d:.3f}) — не собираю, работаю как раньше")
         return None
-    report.append(f"Чистый фон собран из клипа (открыто {float(known.mean()) * 100:.0f}% кадра, расхождение "
+    report.append(f"Чистый фон собран из клипа (вокруг человека открыто {share * 100:.0f}%, расхождение "
                   f"{d:.3f}): вокруг человека — стена без следов оригинала")
     return plate.clamp(0, 1)
 
@@ -612,7 +616,9 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
                   f"модель не видит, свет и движение остаются")
     # чистый фон: вокруг размытого человека в образце — стена без разлетающихся волос оригинала
     send("Собираю чистый фон / Building a clean background")
-    plate = clean_plate(src, dilate(mask, max(4, int(round(0.05 * min(w, h)))), frames_r=2), report)
+    # «закрыто» — только сам человек с волосами (+2 %), не вся зона: на крупном плане зона — почти весь кадр
+    plate = clean_plate(src, dilate(tight, max(3, int(round(0.02 * min(w, h)))), frames_r=2), report,
+                        need=(mask * (1 - core)).amax(0))
     if plate is not None:
         ring = (mask * (1 - core))[..., None]
         ref = ref * (1 - ring) + plate[None] * ring
