@@ -322,8 +322,26 @@ class NeronH3HeroSwap:
                          "Ref2VA is needed for swaps.")
 
         # ---- клип ----
-        comp = video.get_components()
+        # ПАМЯТЬ: раньше декодировался ВЕСЬ клип в полном размере (у Романа — 59 с Full HD = десятки ГБ ОЗУ), и
+        # Windows падала с «недостаточно ресурсов» (error 1450), когда модель читала веса. Теперь — только нужные
+        # секунды (+ запас), и сразу уменьшаем до размера генерации.
+        full_dur = None
+        try:
+            full_dur = float(video.get_duration())
+        except Exception:
+            pass
+        part = video
+        if hasattr(video, "as_trimmed"):
+            try:
+                t = video.as_trimmed(0, float(seconds) + 1.0, strict_duration=False)
+                if t is not None:
+                    part = t
+            except Exception as e:
+                log.warning("%s обрезка клипа не вышла (%s) — читаю целиком", E.TAG, e)
+        comp = part.get_components()
         frames, fps, audio = comp.images, float(comp.frame_rate), comp.audio
+        del comp, part
+        frames = E.shrink_for(frames, quality_short=SHORT.get(quality, 480), width=width, height=height)
         frames = E.to_24(frames.float(), fps)
         n_src = int(frames.shape[0])
         length = E.grid_fit(int(round(float(seconds) * E.FPS)), n_src)
@@ -331,8 +349,8 @@ class NeronH3HeroSwap:
             raise E.FriendlyError(f"{E.TAG} Клип слишком короткий: нужно хотя бы 2 секунды.\n\nEN: The clip is too "
                                   f"short — at least 2 seconds.")
         frames = frames[:length]
-        notes.append(f"Клип: {n_src / E.FPS:.2f} с при {fps:g} к/с → взято {length} кадров ({length / E.FPS:.2f} с, "
-                     f"сетка H3 17k+5)")
+        notes.append(f"Клип: {full_dur if full_dur else n_src / E.FPS:.2f} с при {fps:g} к/с → прочитано "
+                     f"{n_src / E.FPS:.2f} с → взято {length} кадров ({length / E.FPS:.2f} с, сетка H3 17k+5)")
         if audio is not None:
             audio = E.fit_audio(audio, length / E.FPS)
 

@@ -169,6 +169,25 @@ def decode_video(out, vae):
 
 # ---------------- клип: частота, длина, размер ----------------
 
+def shrink_for(frames, quality_short=480, width=None, height=None):
+    """Сразу после чтения — уменьшить кадры до размера чуть больше нужного (короткая сторона ≤ 1.25 × цели),
+    кусками, без полноразмерной копии в float. Форма та же — дальше размер считается как раньше."""
+    n, h, w = int(frames.shape[0]), int(frames.shape[1]), int(frames.shape[2])
+    target = int(quality_short)
+    if width is not None and height is not None and int(width) > 0 and int(height) > 0:
+        target = max(target, min(int(width), int(height)))
+    short = int(round(target * 1.25))
+    if min(h, w) <= short:
+        return frames
+    k = short / float(min(h, w))
+    nw, nh = max(2, int(round(w * k / 2)) * 2), max(2, int(round(h * k / 2)) * 2)
+    out = []
+    for i in range(0, n, 16):
+        c = frames[i:i + 16, ..., :3].float().movedim(-1, 1)
+        out.append(F.interpolate(c, size=(nh, nw), mode="area").movedim(1, -1).cpu())
+    return torch.cat(out, 0)
+
+
 def to_24(frames, fps):
     """Любая частота кадров → 24 к/с по времени (скорость движения не меняется)."""
     n = int(frames.shape[0])
