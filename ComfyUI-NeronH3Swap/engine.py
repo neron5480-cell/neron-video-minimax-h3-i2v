@@ -442,6 +442,32 @@ def relink_lost(model, cond, frames, masks, threshold):
     return masks, got
 
 
+FACE_REF = 0.18        # размер лица (√площади / короткая сторона) на «обычном» среднем плане — там всё проверено
+FACE_MAX = 2.5         # на сверхкрупном плане размытие сильнее не более чем в 2,5 раза
+
+
+def face_scale(faces, report):
+    """Крупность плана по кадрам → множитель размытия [N] (1 … FACE_MAX), плавно по времени.
+    Лицо не нашлось — берём соседние кадры; нигде не нашлось — 1 (как раньше)."""
+    n, h, w = faces.shape
+    size = (faces.flatten(1).sum(1).sqrt() / float(min(h, w)))
+    ok = size > 0.01
+    if not bool(ok.any()):
+        report.append("Разведка: лицо не нашлось — размытие одинаковое на весь клип")
+        return torch.ones(n)
+    idx = torch.nonzero(ok).flatten()
+    near = idx[torch.argmin((torch.arange(n)[:, None] - idx[None, :]).abs(), dim=1)]
+    size = size[near]                                                   # дыры — по ближайшему кадру с лицом
+    sc = (size / FACE_REF).clamp(1.0, FACE_MAX)
+    if n > 2:
+        sc = F.avg_pool1d(sc[None, None], 9, stride=1, padding=4, count_include_pad=False)[0, 0]
+    big = int((sc > 1.3).sum())
+    report.append(f"Разведка: лицо по кадрам {float(size.min()):.2f}…{float(size.max()):.2f} кадра" +
+                  (f"; крупный план на {big} кадрах — там размытие сильнее (до ×{float(sc.max()):.1f})" if big
+                   else "; план ровный — размытие как обычно"))
+    return sc
+
+
 def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False):
     """→ маска [N,H,W] 0/1 (расширенная), картинка-проверка первого кадра и точная маска.
     head=True — «лицо и причёска»: маска только по голове выбранного человека, тело и одежда — из клипа."""
@@ -500,6 +526,11 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False)
         extra = detect_each_frame(model, clip, frames, ("hair",), _near(masks, 0.06), threshold)
         masks = torch.maximum(masks, extra)
         report.append("Волосы — ещё и поиском на каждом кадре (в танце трекер их теряет, оставались пряди оригинала)")
+    # РАЗВЕДКА (вариант А, идея Романа): размер ЛИЦА на каждом кадре — крупность плана. Одна сила размытия на весь
+    # клип не годится, если план меняется (наезд/отъезд): на сверхкрупном черты огромные, и то же окно размытия
+    # для них слабое — модель узнаёт оригинал. По этой мерке размытие подстраивается под каждый кадр.
+    faces = detect_each_frame(model, clip, frames, ("face",), _near(masks, 0.06), threshold)
+    scale = face_scale(faces, report)
     del model, clip, cond
     free("SAM выгружен")
     px = max(0, int(round(expand_px * min(masks.shape[1], masks.shape[2]) / 768.0)))
@@ -509,23 +540,29 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False)
     preview = frames[:1].clone()
     tint = torch.tensor([1.0, 0.45, 0.1])
     preview[0] = preview[0] * (1 - 0.45 * grown[0, ..., None]) + tint * 0.45 * grown[0, ..., None]
-    return grown, preview, masks
+    return grown, preview, masks, scale
 
 
 # ---------------- образец без оригинала: человек размыт ----------------
 
-def blur_person(frames, mask, blur=0.5):
+def blur_person(frames, mask, blur=0.5, scale=None):
     """Идея Романа: ДО генерации спрятать облик исходного человека в видео-образце — модели нечего копировать.
     Размытие (лучшее из проверенных: чёрный, серый, скелет) прячет черты, но оставляет свет, тон, цвета одежды,
     положение и движение — модель вписывает человека с фото естественно и чётче.
     blur — сила: 1.0 черт не видно; ~0.4 и ниже — модель узнаёт оригинал и начинает его повторять."""
     m = mask[..., None]
+    n = int(frames.shape[0])
+    base_k = min(frames.shape[1], frames.shape[2]) / 12 * max(0.05, float(blur))
+    ks = [max(3, int(round(base_k * (float(scale[i]) if scale is not None else 1.0))) | 1) for i in range(n)]
     out = []
-    for i in range(0, frames.shape[0], 16):
-        c = frames[i:i + 16].movedim(-1, 1)
-        k = max(3, int(round(min(c.shape[2], c.shape[3]) / 12 * max(0.05, float(blur)))) | 1)
-        b = _box(_box(c, k), k)
-        out.append(b.movedim(1, -1))
+    i = 0
+    while i < n:                                     # подряд идущие кадры с одним окном — одним куском
+        j = i + 1
+        while j < n and j - i < 16 and ks[j] == ks[i]:
+            j += 1
+        c = frames[i:j].movedim(-1, 1)
+        out.append(_box(_box(c, ks[i]), ks[i]).movedim(1, -1))
+        i = j
     return frames * (1 - m) + torch.cat(out, 0) * m
 
 
@@ -633,11 +670,11 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
 
     send("Подготовка клипа / Preparing the clip")
     src = resize(frames, w, h)               # форма — как у клипа; разница в несколько пикс. — обрезка по центру
-    mask, preview, tight = person_mask(src, models["sam"], who, threshold, expand_px, report, head)
+    mask, preview, tight, scale = person_mask(src, models["sam"], who, threshold, expand_px, report, head)
     # размываем ТОЛЬКО человека (точная маска + пара пикс.), не фон вокруг: зона перерисовки шире человека, и если
     # размыть всю зону, модель повторяет мыльную стену вокруг — ореол (лог Романа: 73 % кадра вместо 73 %)
     core = dilate(tight, max(2, int(round(0.01 * min(w, h)))), frames_r=1)
-    ref = blur_person(src, core, blur)
+    ref = blur_person(src, core, blur, scale)
     report.append(f"Образец: {'голова' if head else 'человек'} размыт(а), сила {float(blur):.2f} — черт оригинала "
                   f"модель не видит, свет и движение остаются")
     # чистый фон: вокруг размытого человека в образце — стена без разлетающихся волос оригинала

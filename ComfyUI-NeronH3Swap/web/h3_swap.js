@@ -551,6 +551,8 @@ const HELP_TEXT = `
 
 КАК УСТРОЕНО
 • SAM 3.1 находит человека (или его голову с волосами) и ведёт маску по клипу.
+• Разведка: нода мерит размер лица на каждом кадре; на крупном плане (наезд камеры) размытие
+  сильнее — иначе модель узнаёт оригинал сквозь размытие.
 • Идея Романа: ДО генерации человек в клипе-образце РАЗМЫВАЕТСЯ — черт оригинала
   модели не видно, копировать нечего, а свет, цвета и движение остаются.
   (Пробовали чёрный и серый силуэт и скелет — размытие вышло лучше всех.)
@@ -611,6 +613,8 @@ then feed the result back — «➡ rightmost» with photo 2.
 
 HOW IT WORKS
 • SAM 3.1 finds the person (or their head with hair) and tracks the mask through the clip.
+• Scouting: the node measures the face size on every frame; on a close-up (camera zoom) the blur
+  is stronger — otherwise the model recognises the original through the blur.
 • Roman's idea: BEFORE generation the person in the reference clip is BLURRED — the original's
   features are hidden, nothing to copy, while light, colors and motion stay.
   (We tried black and gray silhouettes and a skeleton — blur came out best.)
