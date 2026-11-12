@@ -181,7 +181,8 @@
         "🤖 авто — из пакета / auto — from pack",
         "🤖 авто — из пакета / auto — from pack",
         0.5,
-        true
+        true,
+        "🎯 только человека — точно / person only"
       ]
     },
     {

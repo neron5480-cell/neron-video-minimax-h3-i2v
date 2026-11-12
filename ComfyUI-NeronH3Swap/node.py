@@ -23,6 +23,7 @@ WHAT = ["🧍 весь облик / whole look", "🙂 лицо и причёс�
 QUALITY = ["⚡ 480p — быстрее, для 16 ГБ / faster", "🎯 768p — как у автора LoRA, тяжелее / heavier"]
 SHORT = {QUALITY[0]: 480, QUALITY[1]: 768}
 SOUND = ["🎵 оригинал / original", "✨ сгенерировать / generate"]
+DRAW = ["🎯 только человека — точно / person only", "🖼 весь кадр — чисто / whole frame"]
 TARGET = {E.WHO[0]: "the main person", E.WHO[1]: "the person on the left", E.WHO[2]: "the person on the right",
           E.WHO[3]: "the person in the center", E.WHO[4]: "every person"}
 
@@ -226,6 +227,12 @@ class NeronH3HeroSwap:
                                         "«плывут». +ещё один короткий проход SAM.\n\nEN: After generation SAM finds "
                                         "the NEW person and only they are pasted in; the margin band becomes the "
                                         "clip's real sharp pixels again. One more short SAM pass.")),
+                "draw": (DRAW, _exp("рисовать / draw", default=DRAW[0],
+                         tooltip="🎯 только человека — точно: вокруг остаются настоящие пиксели клипа (бывает ореол по "
+                                 "краю).\n🖼 весь кадр — чисто (идея Романа): модель рисует кадр целиком по размытому "
+                                 "образцу — краёв нет, но фон нарисован заново (очень похож, не пиксель в пиксель).\n\n"
+                                 "EN: person only — exact clip pixels around (an edge halo is possible); whole frame — "
+                                 "the model paints the full frame: no edges, the background is re-painted.")),
             },
             "optional": {
                 "width": ("INT", {"forceInput": True,
@@ -246,7 +253,8 @@ class NeronH3HeroSwap:
                  feather_px=12, threshold=0.35, ref_quality="match", fast_attention=True, unet_model=AUTO_MODEL,
                  clip_model=AUTO_MODEL, vae_video_model=AUTO_MODEL, vae_audio_model=AUTO_MODEL,
                  turbo_lora_model=AUTO_MODEL, swap_lora_model=AUTO_MODEL, sam_model=AUTO_MODEL,
-                 blur_strength=0.5, tight_edges=True, width=None, height=None, prompt=None):
+                 blur_strength=0.5, tight_edges=True, draw=None, width=None, height=None,
+                 prompt=None):
         notes = []
         for need in ("MiniMaxH3ReferenceToVideo", "MiniMaxH3AddGuide", "SAM3_Detect", "SAM3_VideoTrack"):
             if not E.has_node(need):
@@ -307,7 +315,7 @@ class NeronH3HeroSwap:
                 frames, audio, photo, text, size, int(seed), int(steps), float(swap_strength),
                 models, who, float(threshold), margin, bool(keep_outside), int(feather_px), ref_quality,
                 bool(fast_attention), sound == SOUND[0], head,
-                float(blur_strength), bool(tight_edges))
+                float(blur_strength), bool(tight_edges), draw == DRAW[1])
         except Exception:
             E.free("после ошибки / after error")
             raise

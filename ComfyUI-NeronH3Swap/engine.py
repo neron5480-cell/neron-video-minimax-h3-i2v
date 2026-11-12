@@ -656,9 +656,24 @@ def _box(c, k):
 
 # ---------------- главное ----------------
 
+def _masked_latent(latent, vae, ref, mask, report):
+    """Дорисовка по маске: в латенте — закодированный образец, noise_mask — зона человека. Меняется только зона."""
+    send("Кодирую клип / Encoding the clip")
+    video_lat, audio_lat = latent["samples"].tensors
+    src_lat = vae.encode(ref)                       # и в латенте под маской оригинала нет
+    if tuple(src_lat.shape) != tuple(video_lat.shape):
+        raise FriendlyError(f"{TAG} Размер латента клипа {tuple(src_lat.shape)} не совпал с ожидаемым "
+                            f"{tuple(video_lat.shape)}. Обнови ComfyUI.\n\nEN: Clip latent shape mismatch. Update ComfyUI.")
+    lat_mask = F.adaptive_max_pool3d(mask[None, None], tuple(video_lat.shape[2:]))        # [1,1,T,h,w]
+    import comfy.nested_tensor as nt
+    report.append(f"Дорисовка по маске: меняется {float(lat_mask.mean()) * 100:.0f}% латента, остальное — клип")
+    return {**latent, "samples": nt.NestedTensor((src_lat.to(video_lat.device, video_lat.dtype), audio_lat)),
+            "noise_mask": nt.NestedTensor((lat_mask.to(video_lat.device), torch.ones_like(audio_lat)))}
+
+
 def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, models, who, threshold,
              expand_px, keep_outside, feather_px, ref_quality, fast_attention, sound_original, head=False, blur=0.5,
-             tight_edges=True):
+             tight_edges=True, whole_frame=False):
     """frames [N,H,W,3] уже 24 к/с и обрезаны по сетке. → (кадры, звук, превью маски, отчёт)."""
     t0 = time.time()
     report = []
@@ -680,7 +695,7 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
     # чистый фон: вокруг размытого человека в образце — стена без разлетающихся волос оригинала
     send("Собираю чистый фон / Building a clean background")
     # «закрыто» — только сам человек с волосами (+2 %), не вся зона: на крупном плане зона — почти весь кадр
-    plate = clean_plate(src, dilate(tight, max(3, int(round(0.02 * min(w, h)))), frames_r=2), report,
+    plate = None if whole_frame else clean_plate(src, dilate(tight, max(3, int(round(0.02 * min(w, h)))), frames_r=2), report,
                         need=(mask * (1 - core)).amax(0))
     pw = None
     if plate is not None:
@@ -707,19 +722,16 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
         report.append("Звук клипа — образец и цель (губы и движения ложатся на звук)")
 
     # ---- 2. дорисовка по маске: исходный клип в латенте, меняется только человек ----
-    send("Кодирую клип / Encoding the clip")
-    video_lat, audio_lat = latent["samples"].tensors
-    src_lat = vae.encode(ref)                       # и в латенте под маской оригинала нет
-    if tuple(src_lat.shape) != tuple(video_lat.shape):
-        raise FriendlyError(f"{TAG} Размер латента клипа {tuple(src_lat.shape)} не совпал с ожидаемым "
-                            f"{tuple(video_lat.shape)}. Обнови ComfyUI.\n\nEN: Clip latent shape mismatch. Update ComfyUI.")
-    lat_mask = F.adaptive_max_pool3d(mask[None, None], tuple(video_lat.shape[2:]))        # [1,1,T,h,w]
-    import comfy.nested_tensor as nt
-    latent = {**latent, "samples": nt.NestedTensor((src_lat.to(video_lat.device, video_lat.dtype), audio_lat)),
-              "noise_mask": nt.NestedTensor((lat_mask.to(video_lat.device), torch.ones_like(audio_lat)))}
-    report.append(f"Дорисовка по маске: меняется {float(lat_mask.mean()) * 100:.0f}% латента, остальное — клип")
-    del clip, vae, avae, src_lat
-    free("текст и VAE выгружены")
+    if whole_frame:
+        # режим «весь кадр» (идея Романа): ничего не закрепляем — модель рисует кадр целиком по размытому образцу.
+        # Нет стыка «нарисовано / настоящие пиксели» — значит, нет ореола, вуали и призраков; фон — пересказ клипа.
+        report.append("Режим «весь кадр»: модель рисует весь кадр сама, без маски и без вклейки оригинала")
+        del clip, vae, avae
+        free("текст и VAE выгружены")
+    else:
+        latent = _masked_latent(latent, vae, ref, mask, report)
+        del clip, vae, avae
+        free("текст и VAE выгружены")
 
     # ---- 3. генерация ----
     send("Загрузка модели / Loading model")
@@ -771,7 +783,7 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
     # ---- 5. наша правка: вне маски — настоящие пиксели клипа ----
     m = min(int(video.shape[0]), int(src.shape[0]))
     video, src_m, msk = video[:m], src[:m], mask[:m]
-    if keep_outside:
+    if keep_outside and not whole_frame:
         paste = msk
         fpx = max(0, int(round(feather_px * min(w, h) / 768.0)))
         if tight_edges:
