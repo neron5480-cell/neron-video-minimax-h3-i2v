@@ -1,0 +1,213 @@
+diff --git a/ComfyUI-NeronH3Swap/README.md b/ComfyUI-NeronH3Swap/README.md
+index 8447762..75db676 100644
+--- a/ComfyUI-NeronH3Swap/README.md
++++ b/ComfyUI-NeronH3Swap/README.md
+@@ -26,6 +26,10 @@
+ главнее: кадр будет не больше width × height (форма клипа), «качество» прячется. Больше паспорта H3 не будет.
+ Сменить форму кадра (вертикальное → широкое) — отдельный шаг, не в этой ноде: так нет швов.
+ 
++**Своя маска — «что заменить»** (необязательно). Первый кадр клипа картинкой → **Load Image** → правой кнопкой
++«Open in MaskEditor» → кистью обвести, что менять (лицо, голову, одежду, всего человека) → выход **MASK** во вход
++**`clip_mask`**. Нода ведёт по клипу ровно обведённое, без угадывания.
++
+ **Пара в кадре.** Одно фото — один человек. Пару меняем за два прогона: сначала «⬅ левый» с фото 1, потом
+ результат снова подаём в ноду и меняем «➡ правый» с фото 2.
+ 
+@@ -103,6 +107,10 @@
+ inputs win: the frame fits inside width × height (clip shape) and «quality» hides. Never above the H3 passport.
+ Changing the frame shape (vertical → wide) is a separate step, not in this node: no seams.
+ 
++**Your own mask — «what to replace»** (optional). The clip's first frame as an image → **Load Image** → right-click
++«Open in MaskEditor» → paint what to replace (face, head, clothes, the whole person) → **MASK** into the
++**`clip_mask`** input. The node tracks exactly what you painted, no guessing.
++
+ **A couple in frame.** One photo — one person. Swap a couple in two runs: first «⬅ leftmost» with photo 1, then
+ feed the result back and swap «➡ rightmost» with photo 2.
+ 
+diff --git a/ComfyUI-NeronH3Swap/engine.py b/ComfyUI-NeronH3Swap/engine.py
+index ec006f7..e61cc8e 100644
+--- a/ComfyUI-NeronH3Swap/engine.py
++++ b/ComfyUI-NeronH3Swap/engine.py
+@@ -510,24 +510,50 @@ def face_scale(faces, report):
+     return sc
+ 
+ 
+-def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False, face_only=False):
++def user_init_mask(user_mask, h, w):
++    """Обводка пользователя (Mask Editor у Load Image) → маска первого кадра нужного размера."""
++    um = user_mask.float().cpu()
++    if um.dim() == 3:
++        um = um[:1]
++    elif um.dim() == 2:
++        um = um[None]
++    if tuple(um.shape[-2:]) != (h, w):
++        um = F.interpolate(um[None], size=(h, w), mode="bilinear", align_corners=False)[0]
++    return (um > 0.5).float()
++
++
++def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False, face_only=False, user_mask=None):
+     """→ маска [N,H,W] 0/1 (расширенная), картинка-проверка первого кадра и точная маска.
+     head=True — «лицо и причёска»: маска только по голове выбранного человека, тело и одежда — из клипа."""
+     send("Ищу человека / Finding the person")
+     model, clip = node("CheckpointLoaderSimple", ckpt_name=sam_name)[:2]
+     cond = node("CLIPTextEncode", clip=clip, text="person")[0]
+-    det = node("SAM3_Detect", model=model, image=frames[:1], conditioning=cond, threshold=float(threshold),
++    user = user_mask is not None
++    if user:
++        # ОБВОДКА ПОЛЬЗОВАТЕЛЯ (идея Романа): что заменить — решает человек кистью, SAM только ведёт это по клипу
++        init = user_init_mask(user_mask, int(frames.shape[1]), int(frames.shape[2]))
++        if float(init.sum()) == 0:
++            del model, clip, cond
++            free("SAM выгружен")
++            raise FriendlyError(f"{TAG} Обводка (clip_mask) пустая. Обведи кистью в Mask Editor то, что менять.\n\nEN: "
++                                f"The clip_mask is empty — paint what to replace in the Mask Editor.")
++        report.append(f"Обводка пользователя: {float(init.mean()) * 100:.0f}% первого кадра — веду ровно её")
++        det, chosen = init, [0]
++    else:
++        det = None
++    det = det if user else node("SAM3_Detect", model=model, image=frames[:1], conditioning=cond, threshold=float(threshold),
+                refine_iterations=2, individual_masks=True)[0]
+     if det.dim() == 2:
+         det = det[None]
+     det = (det.float().cpu() > 0.5).float()
+-    if det.shape[0] == 0 or float(det.sum()) == 0:
++    if not user and (det.shape[0] == 0 or float(det.sum()) == 0):
+         free("SAM выгружен")
+         raise FriendlyError(f"{TAG} В первом кадре не нашла человека. Возьми клип, где человек виден с первого кадра, "
+                             f"или в ⚙ эксперте снизь «порог поиска».\n\nEN: No person found in the first frame. Use a "
+                             f"clip where the person is visible from the start, or lower the detection threshold.")
+-    chosen = _pick(det, who)
+-    report.append(f"Людей в первом кадре: {det.shape[0]}, меняю: {len(chosen)} ({who.split(' / ')[0]})")
++    if not user:
++        chosen = _pick(det, who)
++        report.append(f"Людей в первом кадре: {det.shape[0]}, меняю: {len(chosen)} ({who.split(' / ')[0]})")
+     init = det[chosen]
+     send("Веду маску по клипу / Tracking the person", 0, int(frames.shape[0]))
+     track = node("SAM3_VideoTrack", images=frames, model=model, initial_mask=init,
+@@ -535,7 +561,7 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False,
+     masks = node("SAM3_TrackToMask", track_data=track, object_indices="")[0]
+     del track
+     masks = (masks.float().cpu() > 0.5).float()
+-    if masks.shape[0] == frames.shape[0]:
++    if masks.shape[0] == frames.shape[0] and not user:
+         masks, got = relink_lost(model, cond, frames, masks, threshold)
+         if got:
+             report.append(f"Трекер терял человека — нашла заново на {got} кадрах (по соседству с прошлым кадром)")
+@@ -553,7 +579,9 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False,
+     # поиск на КАЖДОМ кадре рядом с человеком: трекер не находит заново потерянное (наезд камеры, поворот,
+     # волосы в танце) — без этого голова «уходила» из маски и через 2 с возвращался оригинал, а по краям
+     # оставались пряди оригинала
+-    if face_only:
++    if user:
++        pass                                  # область задана обводкой — сами ничего не добавляем и не ищем
++    elif face_only:
+         # «только лицо» (идея Романа): маска — одно лицо, причёска и всё остальное — из клипа
+         fcs = extend_chin(detect_each_frame(model, clip, frames, ("face",), _near(masks), threshold))
+         miss = fcs.flatten(1).amax(1) == 0
+@@ -774,7 +802,7 @@ def _masked_latent(latent, vae, ref, mask, report):
+ 
+ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, models, who, threshold,
+              expand_px, keep_outside, feather_px, ref_quality, fast_attention, sound_original, head=False, blur=0.5,
+-             tight_edges=True, whole_frame=False, face_only=False):
++             tight_edges=True, whole_frame=False, face_only=False, user_mask=None):
+     """frames [N,H,W,3] уже 24 к/с и обрезаны по сетке. → (кадры, звук, превью маски, отчёт)."""
+     t0 = time.time()
+     report = []
+@@ -787,7 +815,7 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
+     send("Подготовка клипа / Preparing the clip")
+     src = resize(frames, w, h)               # форма — как у клипа; разница в несколько пикс. — обрезка по центру
+     mask, preview, tight, scale, faces = person_mask(src, models["sam"], who, threshold, expand_px, report, head,
+-                                                     face_only)
++                                                     face_only, user_mask)
+     # размываем ТОЛЬКО человека (точная маска + пара пикс.), не фон вокруг: зона перерисовки шире человека, и если
+     # размыть всю зону, модель повторяет мыльную стену вокруг — ореол (лог Романа: 73 % кадра вместо 73 %)
+     core = dilate(tight, max(2, int(round(0.01 * min(w, h)))), frames_r=1)
+diff --git a/ComfyUI-NeronH3Swap/node.py b/ComfyUI-NeronH3Swap/node.py
+index 1a0f722..a62d014 100644
+--- a/ComfyUI-NeronH3Swap/node.py
++++ b/ComfyUI-NeronH3Swap/node.py
+@@ -279,6 +279,12 @@ class NeronH3HeroSwap:
+                                              "паспорта H3 не будет.\n\nEN: External size: the frame fits inside "
+                                              "width × height with the clip's shape; «quality» is ignored."}),
+                 "height": ("INT", {"forceInput": True, "tooltip": "Внешняя высота. EN: External height."}),
++                "clip_mask": ("MASK", {"tooltip": "Необязательно. ЧТО ЗАМЕНИТЬ — обводка кистью на ПЕРВОМ кадре клипа: "
++                                                  "первый кадр картинкой → Load Image → правой кнопкой «Open in "
++                                                  "MaskEditor» → обвести → выход MASK сюда. Нода ведёт по клипу ровно "
++                                                  "обведённое (лицо, голову, одежду, всего человека).\n\nEN: Optional. "
++                                                  "WHAT TO REPLACE — paint it on the clip's FIRST frame in the Mask "
++                                                  "Editor (Load Image) and wire MASK here; the node tracks exactly that."}),
+                 "prompt": ("STRING", {"forceInput": True,
+                                       "tooltip": "Профи: свой текст целиком вместо текста ноды. Назови <Video 1> и "
+                                                  "<Picture 1>.\n\nEN: Your own full prompt; mention <Video 1> and "
+@@ -292,7 +298,7 @@ class NeronH3HeroSwap:
+                  clip_model=AUTO_MODEL, vae_video_model=AUTO_MODEL, vae_audio_model=AUTO_MODEL,
+                  turbo_lora_model=AUTO_MODEL, swap_lora_model=AUTO_MODEL, sam_model=AUTO_MODEL,
+                  blur_strength=0.5, tight_edges=True, draw=None, width=None, height=None,
+-                 prompt=None):
++                 clip_mask=None, prompt=None):
+         notes = []
+         for need in ("MiniMaxH3ReferenceToVideo", "MiniMaxH3AddGuide", "SAM3_Detect", "SAM3_VideoTrack"):
+             if not E.has_node(need):
+@@ -354,7 +360,7 @@ class NeronH3HeroSwap:
+                 frames, audio, photo, text, size, int(seed), int(steps), float(swap_strength),
+                 models, who, float(threshold), margin, bool(keep_outside), int(feather_px), ref_quality,
+                 bool(fast_attention), sound == SOUND[0], head,
+-                float(blur_strength), bool(tight_edges), draw == DRAW[1], face_only)
++                float(blur_strength), bool(tight_edges), draw == DRAW[1], face_only, clip_mask)
+         except Exception:
+             E.free("после ошибки / after error")
+             raise
+diff --git a/ComfyUI-NeronH3Swap/web/h3_swap.js b/ComfyUI-NeronH3Swap/web/h3_swap.js
+index 72bfe7f..8cbee92 100644
+--- a/ComfyUI-NeronH3Swap/web/h3_swap.js
++++ b/ComfyUI-NeronH3Swap/web/h3_swap.js
+@@ -538,6 +538,11 @@ const HELP_TEXT = `
+   а «качество» прячется и не работает. Больше паспорта H3 не будет.
+ • Сменить форму (вертикальное → широкое) — отдельный шаг, не в этой ноде: так нет швов.
+ 
++СВОЯ МАСКА — «ЧТО ЗАМЕНИТЬ» (необязательно)
++Первый кадр клипа картинкой → Load Image → правой кнопкой «Open in MaskEditor» →
++обведи кистью, что менять (лицо, голову, одежду, всего человека) → выход MASK во вход
++clip_mask. Нода ведёт по клипу ровно обведённое, без угадывания.
++
+ ПАРА В КАДРЕ
+ Одно фото — один человек. Пару меняем по очереди: сначала «⬅ левый» с фото 1,
+ потом результат снова в ноду — «➡ правый» с фото 2.
+@@ -601,6 +606,11 @@ FRAME SIZE
+   hides and is ignored. Never above the H3 passport.
+ • Changing the shape (vertical → wide) is a separate step, not in this node: no seams.
+ 
++YOUR OWN MASK — «WHAT TO REPLACE» (optional)
++The clip's first frame as an image → Load Image → right-click «Open in MaskEditor» →
++paint what to replace (face, head, clothes, the whole person) → MASK into clip_mask.
++The node tracks exactly what you painted, no guessing.
++
+ A COUPLE IN FRAME
+ One photo — one person. Swap a couple in two runs: «⬅ leftmost» with photo 1,
+ then feed the result back — «➡ rightmost» with photo 2.
+diff --git a/ComfyUI-NeronH3Swap/workflows/Neron_H3_Swap.json b/ComfyUI-NeronH3Swap/workflows/Neron_H3_Swap.json
+index fdae32d..d87d5c9 100644
+--- a/ComfyUI-NeronH3Swap/workflows/Neron_H3_Swap.json
++++ b/ComfyUI-NeronH3Swap/workflows/Neron_H3_Swap.json
+@@ -112,6 +112,12 @@
+           "type": "INT",
+           "link": null
+         },
++        {
++          "name": "clip_mask",
++          "shape": 7,
++          "type": "MASK",
++          "link": null
++        },
+         {
+           "name": "prompt",
+           "shape": 7,
+@@ -263,7 +269,7 @@
+       "title": "📖 Прочти меня / Read me",
+       "properties": {},
+       "widgets_values": [
+-        "🎭 NERON H3 ЗАМЕНА ГЕРОЯ / HERO SWAP\n\n🇷🇺 Тот же клип — танец, камера, фон, звук — но с человеком с вашего фото.\nМеняется только человек под маской, всё остальное — пиксели оригинала.\n\n1. Load Video — клип (любая частота кадров).\n2. Load Image — фото «на кого» (лицо хорошо видно; для «весь облик» — в полный рост).\n3. На ноде: кого менять, что менять, качество (начни с 480p), длина (начни с 5 с). Run.\n4. «Маска» внизу — кого нашла нода (оранжевым) и что увидела модель (человек размыт).\n\nРецепт: 480p — проба, понравился сид — тот же сид на 768p (чистовик).\n\nМодели — кнопка «📥 Модели» на ноде: скачает только то, что нужно замене\n(H3 Ref2VA, LoRA замены V1.5 от Akatz Labs, SAM 3.1, турбо-LoRA; энкодер и VAE — общие с H3).\nПару меняем по очереди: «⬅ левый» с фото 1, потом результат — «➡ правый» с фото 2.\nЗаменяйте себя и тех, кто согласен.\nПодробно — 📖 Справка на ноде.\n\n🇬🇧 The same clip — dance, camera, background, sound — with the person from your photo.\nOnly the masked person changes; everything else stays the original pixels.\n\n1. Load Video — the clip (any frame rate).\n2. Load Image — the new person's photo (face clearly visible; full body for «whole look»).\n3. On the node: who, what, quality (start with 480p), length (start with 5 s). Run.\n4. «Mask» below — who was found (orange) and what the model saw (the person blurred).\n\nRecipe: 480p to try; like the seed — the same seed at 768p for the final.\n\nModels — «📥 Models» on the node downloads only what the swap needs\n(H3 Ref2VA, Akatz Labs' swap LoRA V1.5, SAM 3.1, turbo LoRA; encoder and VAEs are shared with H3).\nSwap a couple in two runs: «⬅ leftmost» with photo 1, then the result — «➡ rightmost» with photo 2.\nThe swap model is experimental: face and expressions can drift. Swap yourself and people who agreed.\nDetails — 📖 Help on the node."
++        "🎭 NERON H3 ЗАМЕНА ГЕРОЯ / HERO SWAP\n\n🇷🇺 Тот же клип — танец, камера, фон, звук — но с человеком с вашего фото.\nМеняется только человек под маской, всё остальное — пиксели оригинала.\n\n1. Load Video — клип (любая частота кадров).\n2. Load Image — фото «на кого» (лицо хорошо видно; для «весь облик» — в полный рост).\n3. На ноде: кого менять, что менять, качество (начни с 480p), длина (начни с 5 с). Run.\n4. «Маска» внизу — кого нашла нода (оранжевым) и что увидела модель (человек размыт).\n\nРецепт: 480p — проба, понравился сид — тот же сид на 768p (чистовик).\n\nСвоя маска (необязательно): первый кадр клипа картинкой → Load Image → правой кнопкой «Open in MaskEditor» → обведи, ЧТО заменить → MASK в вход clip_mask.\n\nМодели — кнопка «📥 Модели» на ноде: скачает только то, что нужно замене\n(H3 Ref2VA, LoRA замены V1.5 от Akatz Labs, SAM 3.1, турбо-LoRA; энкодер и VAE — общие с H3).\nПару меняем по очереди: «⬅ левый» с фото 1, потом результат — «➡ правый» с фото 2.\nЗаменяйте себя и тех, кто согласен.\nПодробно — 📖 Справка на ноде.\n\n🇬🇧 The same clip — dance, camera, background, sound — with the person from your photo.\nOnly the masked person changes; everything else stays the original pixels.\n\n1. Load Video — the clip (any frame rate).\n2. Load Image — the new person's photo (face clearly visible; full body for «whole look»).\n3. On the node: who, what, quality (start with 480p), length (start with 5 s). Run.\n4. «Mask» below — who was found (orange) and what the model saw (the person blurred).\n\nRecipe: 480p to try; like the seed — the same seed at 768p for the final.\n\nYour own mask (optional): the clip's first frame as an image → Load Image → right-click «Open in MaskEditor» → paint WHAT to replace → MASK into clip_mask.\n\nModels — «📥 Models» on the node downloads only what the swap needs\n(H3 Ref2VA, Akatz Labs' swap LoRA V1.5, SAM 3.1, turbo LoRA; encoder and VAEs are shared with H3).\nSwap a couple in two runs: «⬅ leftmost» with photo 1, then the result — «➡ rightmost» with photo 2.\nThe swap model is experimental: face and expressions can drift. Swap yourself and people who agreed.\nDetails — 📖 Help on the node."
+       ],
+       "color": "#432",
+       "bgcolor": "#653"
