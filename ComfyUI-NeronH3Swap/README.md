@@ -5,7 +5,8 @@
 ## 🇷🇺 Русский
 
 **Что это.** Тот же клип — танец, камера, фон, свет, звук, — но с человеком с вашего фото.
-- **🙂 лицо и причёска** — новое лицо; тело, одежда и улица остаются настоящими пикселями клипа.
+- **🙂 лицо и причёска** — вся голова с фото (причёска тоже); тело и одежда — из клипа.
+- **👤 только лицо** — меняется одно лицо; причёска, тело и одежда остаются из клипа.
 - **🧍 весь облик** — новый человек целиком; наряд модель рисует по форме и цвету клипа.
 
 **Как пользоваться** (процесс `workflows/Neron_H3_Swap.json`)
@@ -82,7 +83,8 @@
 ## 🇬🇧 English
 
 **What it is.** The same clip — dance, camera, background, light, sound — with the person from your photo.
-- **🙂 face & hair** — a new face; the body, clothes and street stay the clip's real pixels.
+- **🙂 face & hair** — the whole head from the photo (hair too); body and clothes from the clip.
+- **👤 face only** — only the face changes; hair, body and clothes stay from the clip.
 - **🧍 whole look** — a whole new person; the model draws the outfit following the clip's shape and colors.
 
 **How to use** (workflow `workflows/Neron_H3_Swap.json`)

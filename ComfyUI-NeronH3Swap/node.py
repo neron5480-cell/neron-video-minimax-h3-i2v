@@ -19,7 +19,7 @@ ROLE_NAMES = {"unet": "модель H3 Ref2VA / H3 Ref2VA model", "clip": "те�
               "turbo_lora": "турбо-LoRA / turbo LoRA", "swap_lora": "LoRA замены / swap LoRA",
               "sam": "SAM 3.1 (маска человека / person mask)"}
 
-WHAT = ["🧍 весь облик / whole look", "🙂 лицо и причёска / face & hair"]
+WHAT = ["🧍 весь облик / whole look", "🙂 лицо и причёска / face & hair", "👤 только лицо / face only"]
 QUALITY = ["⚡ 480p — быстрее, для 16 ГБ / faster", "🎯 768p — как у автора LoRA, тяжелее / heavier"]
 SHORT = {QUALITY[0]: 480, QUALITY[1]: 768}
 SOUND = ["🎵 оригинал / original", "✨ сгенерировать / generate"]
@@ -39,6 +39,8 @@ def blur_prompt(who, what, hint=""):
     hint = (hint or "").strip()
     if what == WHAT[1]:
         return head_prompt(t, shape, hint)
+    if what == WHAT[2]:
+        return face_prompt(t, shape, hint)
     look = "facial features, face shape, hairstyle, hair color, skin tone, body build and clothing from <Picture 1>"
     return (
         f"In <Video 1>, {t} has been removed and replaced by {shape}. Fill the silhouette with the person shown in "
@@ -66,6 +68,36 @@ def blur_prompt(who, what, hint=""):
         "shot, no cuts."
         " The background, walls, objects and lighting come only from <Video 1>; <Picture 1> shows the person on a "
         "plain gray backdrop and supplies only their appearance — never its background."
+        + (f"\n\n{hint}" if hint else ""))
+
+
+def face_prompt(t, shape, hint=""):
+    """«Только лицо»: в <Video 1> размыто одно лицо — модель рисует лицо с <Picture 1>; причёска, тело, одежда — клип."""
+    return (
+        f"In <Video 1>, the face of {t} has been replaced by {shape}. Fill it with the face of the person shown in "
+        "<Picture 1>; the hairstyle, hair color, body, clothing and everything else stay exactly as in <Video 1>.\n\n"
+        "subject_definitions:\n"
+        "<Subject 1> is the face of the person from <Picture 1>: facial features, face shape, eyes, eyebrows, nose, "
+        "lips and skin tone.\n"
+        f"<Subject 2> is the hair, body and clothing of {t} in <Video 1>, plus the background, lighting and other "
+        "people.\n"
+        "<Video 1> is the source video: the shape gives the exact position, size, tilt and turns of the face over "
+        "time; the soundtrack gives the timing of speech or singing.\n\n"
+        "summary:\n"
+        "[video editing + reference generation] An edited version of <Video 1> in which the face becomes "
+        "<Subject 1>, naturally framed by the original hair, while <Subject 2> stays unchanged.\n\n"
+        "retention_analysis:\n"
+        "<Subject 1>: fully_preserved - the face of <Picture 1> in every frame and from every angle.\n"
+        "<Subject 2>: fully_preserved - unchanged hair, body, clothing, pose and background.\n"
+        "<Video 1>: partially_preserved - keep framing, camera motion, timing and head motion; no blurred areas "
+        "remain in the result.\n\n"
+        "detailed_description:\n"
+        "[Shot 1] Same composition and camera as <Video 1>. The face of <Subject 1> turns, tilts and nods exactly "
+        "as in <Video 1>, framed by the original hair; skin tone matches the neck; the face is expressive, with "
+        "mouth movements that follow the speech or singing in the soundtrack. Lighting and color match the scene. "
+        "One continuous shot, no cuts."
+        " The background, walls, objects and lighting come only from <Video 1>; <Picture 1> shows the person on a "
+        "plain gray backdrop and supplies only their face — never its background or hairstyle."
         + (f"\n\n{hint}" if hint else ""))
 
 
@@ -161,8 +193,10 @@ class NeronH3HeroSwap:
                                 "couple — run twice: left with photo 1, then the result again, right with photo 2.")),
                 "what": (WHAT, _main("что менять / what", default=WHAT[0],
                          tooltip="🧍 весь облик — лицо, причёска, телосложение и одежда с фото.\n🙂 лицо и причёска — "
-                                 "одежда и тело остаются из клипа.\n\nEN: whole look — face, hair, body and clothes "
-                                 "from the photo; face & hair — clothes and body stay from the clip.")),
+                                 "вся голова с фото (причёска тоже), одежда и тело — из клипа.\n👤 только лицо — "
+                                 "причёска, одежда и тело остаются из клипа; меняется только лицо.\n\nEN: whole "
+                                 "look — face, hair, body and clothes from the photo; face & hair — the whole head from "
+                                 "the photo; face only — hair, clothes and body stay from the clip.")),
                 "seconds": ("FLOAT", _main("не длиннее, с / max seconds", default=5.0, min=2.0, max=15.0, step=0.5,
                             display="slider",
                             tooltip="Сколько секунд клипа взять (от начала). Начни с 5 с — проверь, что замена "
@@ -303,7 +337,8 @@ class NeronH3HeroSwap:
             audio = E.fit_audio(audio, length / E.FPS)
 
         text = prompt.strip() if (prompt or "").strip() else blur_prompt(who, what, hint)
-        head = what == WHAT[1]
+        head = what in (WHAT[1], WHAT[2])
+        face_only = what == WHAT[2]
         margin = int(expand_px) if int(expand_px) > 0 else (1 if head else 25)
         notes.append(f"Запас маски: {margin} пикс." + ("" if int(expand_px) > 0 else " (авто)"))
         notes.append("Текст: " + ("свой" if (prompt or "").strip() else f"{what.split(' / ')[0]} · "
@@ -319,7 +354,7 @@ class NeronH3HeroSwap:
                 frames, audio, photo, text, size, int(seed), int(steps), float(swap_strength),
                 models, who, float(threshold), margin, bool(keep_outside), int(feather_px), ref_quality,
                 bool(fast_attention), sound == SOUND[0], head,
-                float(blur_strength), bool(tight_edges), draw == DRAW[1])
+                float(blur_strength), bool(tight_edges), draw == DRAW[1], face_only)
         except Exception:
             E.free("после ошибки / after error")
             raise

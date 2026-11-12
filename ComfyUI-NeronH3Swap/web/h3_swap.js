@@ -516,7 +516,8 @@ const HELP_TEXT = `
 
 🇷🇺 ЧТО ЭТО
 Тот же клип — танец, камера, фон, свет, звук — но с человеком с вашего фото.
-• 🙂 лицо и причёска — новое лицо, а тело, одежда и улица — настоящие пиксели клипа.
+• 🙂 лицо и причёска — вся голова с фото (причёска тоже); тело и одежда — из клипа.
+• 👤 только лицо — меняется одно лицо; причёска, тело и одежда — из клипа.
 • 🧍 весь облик — новый человек целиком; наряд по форме и цвету клипа.
 
 КАК ПОЛЬЗОВАТЬСЯ
@@ -578,7 +579,8 @@ const HELP_TEXT = `
 
 🇬🇧 WHAT IT IS
 The same clip — dance, camera, background, light, sound — with the person from your photo.
-• 🙂 face & hair — a new face; body, clothes and street stay the clip's real pixels.
+• 🙂 face & hair — the whole head from the photo (hair too); body and clothes from the clip.
+• 👤 face only — only the face changes; hair, body and clothes stay from the clip.
 • 🧍 whole look — a whole new person; the outfit follows the clip's shape and colors.
 
 HOW TO USE

@@ -425,7 +425,8 @@ def new_person_mask(video, sam_name, zone, threshold, head, report):
     вокруг снова стала настоящими резкими пикселями клипа."""
     send("Уточняю края / Refining edges", 0, int(video.shape[0]))
     model, clip = node("CheckpointLoaderSimple", ckpt_name=sam_name)[:2]
-    found = detect_each_frame(model, clip, video, ("head", "hair") if head else ("person", "hair"),
+    texts = head if isinstance(head, tuple) else (("head", "hair") if head else ("person", "hair"))
+    found = detect_each_frame(model, clip, video, texts,
                               _near(zone, 0.03), threshold)
     del model, clip
     free("SAM выгружен")
@@ -490,7 +491,7 @@ def face_scale(faces, report):
     return sc
 
 
-def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False):
+def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False, face_only=False):
     """→ маска [N,H,W] 0/1 (расширенная), картинка-проверка первого кадра и точная маска.
     head=True — «лицо и причёска»: маска только по голове выбранного человека, тело и одежда — из клипа."""
     send("Ищу человека / Finding the person")
@@ -533,7 +534,17 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False)
     # поиск на КАЖДОМ кадре рядом с человеком: трекер не находит заново потерянное (наезд камеры, поворот,
     # волосы в танце) — без этого голова «уходила» из маски и через 2 с возвращался оригинал, а по краям
     # оставались пряди оригинала
-    if head:
+    if face_only:
+        # «только лицо» (идея Романа): маска — одно лицо, причёска и всё остальное — из клипа
+        fcs = detect_each_frame(model, clip, frames, ("face",), _near(masks), threshold)
+        miss = fcs.flatten(1).amax(1) == 0
+        for i in torch.nonzero(miss).flatten().tolist():
+            fcs[i] = _head_fallback(masks[i])
+        report.append("Только лицо: ищу лицо на каждом кадре" +
+                      (f" (не нашла на {int(miss.sum())} — взяла верх фигуры)" if int(miss.sum()) else "") +
+                      "; причёска, тело и одежда — из клипа")
+        masks = fcs
+    elif head:
         heads = detect_each_frame(model, clip, frames, ("head", "hair"), _near(masks), threshold)
         miss = heads.flatten(1).amax(1) == 0
         for i in torch.nonzero(miss).flatten().tolist():
@@ -554,7 +565,9 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False)
     masks, filled = fill_holes(masks)
     if filled:
         report.append(f"Маска: залиты дырки внутри (открытый рот, глаза) на {filled} кадрах")
-    faces = detect_each_frame(model, clip, frames, ("face",), _near(masks, 0.06), threshold)
+    faces = masks if face_only else detect_each_frame(model, clip, frames, ("face",), _near(masks, 0.06), threshold)
+    if not face_only:
+        faces, _ = fill_holes(faces)
     scale = face_scale(faces, report)
     del model, clip, cond
     free("SAM выгружен")
@@ -565,7 +578,7 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False)
     preview = frames[:1].clone()
     tint = torch.tensor([1.0, 0.45, 0.1])
     preview[0] = preview[0] * (1 - 0.45 * grown[0, ..., None]) + tint * 0.45 * grown[0, ..., None]
-    return grown, preview, masks, scale
+    return grown, preview, masks, scale, faces
 
 
 # ---------------- образец без оригинала: человек размыт ----------------
@@ -657,6 +670,17 @@ def plate_weight(src, plate, zone, report, bad=0.04):
     return wgt
 
 
+def erase_region(frames, region):
+    """Стереть область (region = 1) в каждом кадре — цветом соседних точек. Для «лицо и причёска»: волосы оригинала
+    не размываем (размытие оставляет очертание причёски — модель смешивала её с причёской с фото), а убираем."""
+    out = frames[..., :3].clone()
+    for i in range(int(frames.shape[0])):
+        r = region[i]
+        if float(r.max()) > 0.5:
+            out[i] = erase_holes(frames[i, ..., :3].float(), 1 - (r > 0.5).float())
+    return out
+
+
 def erase_holes(img, known, step=8):
     """Дыры (known = 0) — цветом соседних точек (нормированное размытие на малом размере)."""
     c = img.movedim(-1, 0)[None]
@@ -731,7 +755,7 @@ def _masked_latent(latent, vae, ref, mask, report):
 
 def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, models, who, threshold,
              expand_px, keep_outside, feather_px, ref_quality, fast_attention, sound_original, head=False, blur=0.5,
-             tight_edges=True, whole_frame=False):
+             tight_edges=True, whole_frame=False, face_only=False):
     """frames [N,H,W,3] уже 24 к/с и обрезаны по сетке. → (кадры, звук, превью маски, отчёт)."""
     t0 = time.time()
     report = []
@@ -743,13 +767,24 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
 
     send("Подготовка клипа / Preparing the clip")
     src = resize(frames, w, h)               # форма — как у клипа; разница в несколько пикс. — обрезка по центру
-    mask, preview, tight, scale = person_mask(src, models["sam"], who, threshold, expand_px, report, head)
+    mask, preview, tight, scale, faces = person_mask(src, models["sam"], who, threshold, expand_px, report, head,
+                                                     face_only)
     # размываем ТОЛЬКО человека (точная маска + пара пикс.), не фон вокруг: зона перерисовки шире человека, и если
     # размыть всю зону, модель повторяет мыльную стену вокруг — ореол (лог Романа: 73 % кадра вместо 73 %)
     core = dilate(tight, max(2, int(round(0.01 * min(w, h)))), frames_r=1)
-    ref = blur_person(src, core, blur, scale)
-    report.append(f"Образец: {'голова' if head else 'человек'} размыт(а), сила {float(blur):.2f} — черт оригинала "
-                  f"модель не видит, свет и движение остаются")
+    if head and not face_only:
+        # «лицо и причёска»: лицо размываем, а волосы оригинала СТИРАЕМ в фон — иначе размытое очертание чужой
+        # причёски спорит с причёской с фото, и модель их смешивает (замечание Романа)
+        fcore = dilate(faces, max(2, int(round(0.01 * min(w, h)))), frames_r=1) * core
+        ref = blur_person(src, fcore, blur, scale)
+        hair = (core * (1 - fcore)).clamp(0, 1)
+        ref = ref * (1 - hair[..., None]) + erase_region(src, core)[..., :3] * hair[..., None]
+        report.append(f"Образец: лицо размыто (сила {float(blur):.2f}), причёска оригинала стёрта в фон — модель "
+                      f"рисует причёску с фото, не смешивая")
+    else:
+        ref = blur_person(src, core, blur, scale)
+        report.append(f"Образец: {'лицо' if face_only else 'человек'} размыт(о), сила {float(blur):.2f} — черт "
+                      f"оригинала модель не видит, свет и движение остаются")
     # чистый фон: вокруг размытого человека в образце — стена без разлетающихся волос оригинала
     send("Собираю чистый фон / Building a clean background")
     # «закрыто» — только сам человек с волосами (+2 %), не вся зона: на крупном плане зона — почти весь кадр
@@ -848,7 +883,8 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
         fpx = max(0, int(round(feather_px * min(w, h) / 768.0)))
         if tight_edges:
             try:
-                new = new_person_mask(video[:m, ..., :3].contiguous(), models["sam"], msk, threshold, head,
+                new = new_person_mask(video[:m, ..., :3].contiguous(), models["sam"], msk, threshold,
+                                      ("face",) if face_only else head,
                                       report)
                 if new is not None:
                     # мягкий переход — целиком СНАРУЖИ человека (по сгенерированному фону), а не по волосам:
