@@ -403,8 +403,8 @@ def new_person_mask(video, sam_name, zone, threshold, head, report):
     вокруг снова стала настоящими резкими пикселями клипа."""
     send("Уточняю края / Refining edges", 0, int(video.shape[0]))
     model, clip = node("CheckpointLoaderSimple", ckpt_name=sam_name)[:2]
-    found = detect_each_frame(model, clip, video, ("head", "hair") if head else ("person", "hair"), _near(zone),
-                              threshold)
+    found = detect_each_frame(model, clip, video, ("head", "hair") if head else ("person", "hair"),
+                              _near(zone, 0.03), threshold)
     del model, clip
     free("SAM выгружен")
     miss = found.flatten(1).amax(1) == 0
@@ -497,7 +497,7 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False)
     else:
         # волосы — чувствительнее: тонкие разлетающиеся пряди SAM при обычном пороге не берёт, и они оставались
         # тёмными волосинками на стене рядом с новым человеком
-        extra = detect_each_frame(model, clip, frames, ("hair",), _near(masks), max(0.1, threshold * 0.6))
+        extra = detect_each_frame(model, clip, frames, ("hair",), _near(masks, 0.06), threshold)
         masks = torch.maximum(masks, extra)
         report.append("Волосы — ещё и поиском на каждом кадре (в танце трекер их теряет, оставались пряди оригинала)")
     del model, clip, cond
@@ -553,7 +553,9 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
     send("Подготовка клипа / Preparing the clip")
     src = resize(frames, w, h)               # форма — как у клипа; разница в несколько пикс. — обрезка по центру
     mask, preview, tight = person_mask(src, models["sam"], who, threshold, expand_px, report, head)
-    ref = blur_person(src, mask, blur)
+    # размываем ТОЛЬКО человека (точная маска + пара пикс.), не фон вокруг: зона перерисовки шире человека, и если
+    # размыть всю зону, модель повторяет мыльную стену вокруг — ореол (лог Романа: 73 % кадра вместо 73 %)
+    ref = blur_person(src, dilate(tight, max(2, int(round(0.01 * min(w, h)))), frames_r=1), blur)
     report.append(f"Образец: {'голова' if head else 'человек'} размыт(а), сила {float(blur):.2f} — черт оригинала "
                   f"модель не видит, свет и движение остаются")
     preview = torch.cat([preview, ref[:1]], 0)
@@ -654,9 +656,7 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
                     # светлее стены — светлая обводка вокруг головы и плеч); волосы маска теперь держит сама
                     fpx = max(2, fpx // 2)
                     edge = max(1, int(round(2 * min(w, h) / 768.0))) + math.ceil(fpx * 1.42)   # квадрат окна по диагонали
-                    # место СТАРОГО человека — чуть шире (≈2 % кадра): кончики его прядей уходят под сгенерированное
-                    old = dilate(tight[:m], max(2, int(round(0.02 * min(w, h)))), frames_r=1)
-                    paste = dilate(torch.maximum(old, new[:m]), edge, frames_r=1) * msk
+                    paste = dilate(torch.maximum(tight[:m], new[:m]), edge, frames_r=1) * msk
                     report.append(f"Точные края: вклеиваю только человека ({float(paste.mean()) * 100:.0f}% кадра "
                                   f"вместо {float(msk.mean()) * 100:.0f}%), полоса запаса — снова клип")
             except Exception as e:
