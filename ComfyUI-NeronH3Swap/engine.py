@@ -387,6 +387,28 @@ def detect_each_frame(model, clip, frames, texts, near, threshold, chunk=16):
     return out * near
 
 
+def fill_holes(m, max_frac=0.04, step=4):
+    """Залить дырки ВНУТРИ маски: всё, до чего нельзя дойти от края кадра, не пересекая маску. SAM не включает в
+    голову открытый рот с языком (и иногда глаза) — дырка не размывалась, модель видела резкий тёмный рот оригинала
+    и рисовала кляксу на новых губах. Большие дырки (> max_frac кадра, напр. просвет между рукой и телом) не трогаем."""
+    m = (m > 0.5).float()
+    n, h, w = m.shape
+    bg = (F.avg_pool2d((1 - m)[:, None], step, ceil_mode=True) > 0.5).float()          # фон на малом размере
+    seed = torch.zeros_like(bg)
+    seed[..., 0, :] = bg[..., 0, :]; seed[..., -1, :] = bg[..., -1, :]
+    seed[..., :, 0] = bg[..., :, 0]; seed[..., :, -1] = bg[..., :, -1]
+    for _ in range(bg.shape[-1] + bg.shape[-2]):                                          # заливка от краёв кадра
+        nxt = F.max_pool2d(seed, 3, stride=1, padding=1) * bg
+        if torch.equal(nxt, seed):
+            break
+        seed = nxt
+    holes = F.interpolate(bg - seed, scale_factor=step, mode="nearest")[:, 0, :h, :w] * (1 - m)
+    frac = holes.flatten(1).mean(1)
+    ok = (frac > 0) & (frac < max_frac)
+    m[ok] = torch.maximum(m[ok], holes[ok])
+    return m, int(ok.sum())
+
+
 def _near(m, frac=0.12):
     """Окрестность маски: волосы в танце и смаз выходят за маску трекера — ищем рядом, но не по всему кадру."""
     return dilate(m, max(4, int(round(frac * min(m.shape[1], m.shape[2])))), frames_r=1)
@@ -529,6 +551,9 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False)
     # РАЗВЕДКА (вариант А, идея Романа): размер ЛИЦА на каждом кадре — крупность плана. Одна сила размытия на весь
     # клип не годится, если план меняется (наезд/отъезд): на сверхкрупном черты огромные, и то же окно размытия
     # для них слабое — модель узнаёт оригинал. По этой мерке размытие подстраивается под каждый кадр.
+    masks, filled = fill_holes(masks)
+    if filled:
+        report.append(f"Маска: залиты дырки внутри (открытый рот, глаза) на {filled} кадрах")
     faces = detect_each_frame(model, clip, frames, ("face",), _near(masks, 0.06), threshold)
     scale = face_scale(faces, report)
     del model, clip, cond
