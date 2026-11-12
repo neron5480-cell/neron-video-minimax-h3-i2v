@@ -569,6 +569,32 @@ def clean_plate(src, cover, report, moving=0.05, need=None):
     return plate.clamp(0, 1)
 
 
+def plate_weight(src, plate, zone, report, bad=0.04):
+    """Чистый фон — по КАЖДОМУ кадру: сравниваем настоящую стену сразу за краем зоны с собранным фоном. Не совпало
+    (наезд/отъезд камеры в начале клипа) — на этом кадре фон не используем, переход по времени плавный.
+    Иначе на таких кадрах шов «чистый фон / настоящая стена» виден как белёсая обводка. → вес [N] 0…1."""
+    n = int(src.shape[0])
+    band = (dilate(zone, max(4, int(round(0.03 * min(zone.shape[1], zone.shape[2])))), frames_r=0) - zone).clamp(0, 1)
+    wgt = torch.ones(n)
+    for f in range(n):
+        b = band[f] > 0.5
+        if int(b.sum()) < 50:
+            continue
+        d = float((src[f, ..., :3].float() - plate).abs().mean(-1)[b].mean())
+        if d > bad:
+            wgt[f] = 0.0
+    if n > 2:                                        # плавно по времени, без мигания
+        k = 7
+        # сначала «расширяем» плохие кадры на ±3 (минимум), потом сглаживаем — на плохом кадре вес точно 0
+        wgt = -F.max_pool1d(-wgt[None, None], k, stride=1, padding=k // 2)[0, 0]
+        wgt = F.avg_pool1d(wgt[None, None], k, stride=1, padding=k // 2, count_include_pad=False)[0, 0]
+    off = int((wgt < 0.5).sum())
+    if off:
+        report.append(f"Чистый фон: на {off} кадрах камера ещё движется (наезд/отъезд) — там вокруг человека "
+                      f"настоящая стена")
+    return wgt
+
+
 def erase_holes(img, known, step=8):
     """Дыры (known = 0) — цветом соседних точек (нормированное размытие на малом размере)."""
     c = img.movedim(-1, 0)[None]
@@ -619,8 +645,10 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
     # «закрыто» — только сам человек с волосами (+2 %), не вся зона: на крупном плане зона — почти весь кадр
     plate = clean_plate(src, dilate(tight, max(3, int(round(0.02 * min(w, h)))), frames_r=2), report,
                         need=(mask * (1 - core)).amax(0))
+    pw = None
     if plate is not None:
-        ring = (mask * (1 - core))[..., None]
+        pw = plate_weight(src, plate, mask, report)
+        ring = (mask * (1 - core))[..., None] * pw[:, None, None, None]
         ref = ref * (1 - ring) + plate[None] * ring
     preview = torch.cat([preview, ref[:1]], 0)
 
@@ -732,7 +760,7 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
         if plate is not None:
             # в зоне вокруг нового человека — чистый фон (без прядей оригинала), дальше — пиксели клипа;
             # фон собран из того же клипа, поэтому стык зоны не виден
-            zs = feather(msk, max(2, fpx))[..., None]
+            zs = feather(msk, max(2, fpx))[..., None] * pw[:m, None, None, None]
             bg = src_m * (1 - zs) + plate[None] * zs
         video = bg * (1 - soft) + video[..., :3] * soft
         report.append("Вне маски — настоящие пиксели клипа" + (", вокруг человека — чистый фон" if plate is not None
