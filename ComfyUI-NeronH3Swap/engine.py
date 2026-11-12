@@ -656,6 +656,39 @@ def _box(c, k):
 
 # ---------------- главное ----------------
 
+PHOTO_BG = 0.5           # нейтральный серый вместо фона фото
+
+
+def photo_cutout(photo, sam_name, threshold, report):
+    """Фото «на кого» — только человек, фон — ровный серый. В режиме «весь кадр» модель рисует фон сама и
+    подсматривала его на фото (у Романа — деревянные доски вместо стены клипа). Нет фона на фото — неоткуда взять."""
+    send("Вырезаю человека на фото / Cutting out the photo")
+    try:
+        model, clip = node("CheckpointLoaderSimple", ckpt_name=sam_name)[:2]
+        cond = node("CLIPTextEncode", clip=clip, text="person")[0]
+        det = node("SAM3_Detect", model=model, image=photo[:1], conditioning=cond, threshold=float(threshold),
+                   refine_iterations=2, individual_masks=True)[0]
+        del model, clip, cond
+    finally:
+        free("SAM выгружен")
+    if det.dim() == 2:
+        det = det[None]
+    det = (det.float().cpu() > 0.5).float()
+    if det.shape[0] == 0 or float(det.sum()) == 0:
+        report.append("Фото: человек не найден — фото как есть (фон фото может попасть в кадр)")
+        return photo
+    m = det[int(det.flatten(1).sum(1).argmax())][None]                  # самый крупный на фото
+    px = max(2, int(round(0.01 * min(m.shape[1], m.shape[2]))))
+    m = feather(dilate(m, px, frames_r=0), px)[0, ..., None]          # волосы по краю — с запасом и мягко
+    p = photo[:1, ..., :3].float().cpu()
+    if tuple(m.shape[:2]) != tuple(p.shape[1:3]):
+        m = F.interpolate(m.movedim(-1, 0)[None], size=p.shape[1:3], mode="bilinear", align_corners=False)[0].movedim(0, -1)
+    out = p * m + PHOTO_BG * (1 - m)
+    report.append(f"Фото: человек вырезан ({float(m.mean()) * 100:.0f}% снимка), фон — ровный серый: модели неоткуда "
+                  f"взять фон фото")
+    return out
+
+
 def _masked_latent(latent, vae, ref, mask, report):
     """Дорисовка по маске: в латенте — закодированный образец, noise_mask — зона человека. Меняется только зона."""
     send("Кодирую клип / Encoding the clip")
@@ -703,6 +736,8 @@ def generate(frames, audio, photo, prompt, size, seed, steps, swap_strength, mod
         ring = (mask * (1 - core))[..., None] * pw[:, None, None, None]
         ref = ref * (1 - ring) + plate[None] * ring
     preview = torch.cat([preview, ref[:1]], 0)
+
+    photo = photo_cutout(photo, models["sam"], threshold, report)
 
     # ---- 1. условия: текст + клип + фото + звук ----
     send("Текст и образцы / Text & references")

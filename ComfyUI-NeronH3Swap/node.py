@@ -64,6 +64,8 @@ def blur_prompt(who, what, hint=""):
         "face is expressive, with mouth movements that follow the speech or singing in the soundtrack. Lighting and "
         "color of <Subject 1> match the scene. Do not copy the background or pose of <Picture 1>. One continuous "
         "shot, no cuts."
+        " The background, walls, objects and lighting come only from <Video 1>; <Picture 1> shows the person on a "
+        "plain gray backdrop and supplies only their appearance — never its background."
         + (f"\n\n{hint}" if hint else ""))
 
 
@@ -91,6 +93,8 @@ def head_prompt(t, shape, hint=""):
         "as in <Video 1>; skin tone of the face matches the neck; the face is expressive, with mouth movements that "
         "follow the speech or singing in the soundtrack. Lighting and color match the scene. One continuous shot, "
         "no cuts."
+        " The background, walls, objects and lighting come only from <Video 1>; <Picture 1> shows the person on a "
+        "plain gray backdrop and supplies only their appearance — never its background."
         + (f"\n\n{hint}" if hint else ""))
 
 
