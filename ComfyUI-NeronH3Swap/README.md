@@ -37,7 +37,9 @@
 
 **Как устроено.** Только родные ноды ComfyUI; наш код — склейка, маски и размытие.
 1. **SAM 3.1** (ноды SAM3_Detect / SAM3_VideoTrack / SAM3_TrackToMask) находит человека в первом кадре — или
-   его голову с волосами — и ведёт маску по клипу. Кадры, где трекер потерял человека, берут маску соседних.
+   его голову с волосами — и ведёт маску по клипу. Где трекер потерял человека, SAM находит его заново рядом с
+   прошлым местом; голова и волосы ищутся **на каждом кадре** — наезд и отъезд камеры, повороты и волосы в
+   танце маску не срывают.
    Запас маски круглый, по контуру.
 2. **Размытие вместо оригинала (идея Романа).** До генерации человек (или голова) в клипе-образце размывается.
    Черт оригинала модели не видно — копировать нечего; свет, цвета одежды и движение остаются. Без этого H3
@@ -111,8 +113,9 @@ feed the result back and swap «➡ rightmost» with photo 2.
 
 **How it works.** Native ComfyUI nodes only; our code is the glue, the masks and the blur.
 1. **SAM 3.1** (SAM3_Detect / SAM3_VideoTrack / SAM3_TrackToMask) finds the person in the first frame — or
-   their head with hair — and tracks the mask through the clip. Frames where the tracker lost the person take the
-   mask of the nearest frames. The mask margin is round, following the contour.
+   their head with hair — and tracks the mask through the clip. Where the tracker lost the person, SAM finds them
+   again next to their last place; the head and hair are found **on every frame** — camera zoom, turns and hair
+   flying in a dance do not break the mask. The mask margin is round, following the contour.
 2. **Blur instead of the original (Roman's idea).** Before generation the person (or head) in the reference clip
    is blurred. The original's features are hidden — nothing to copy; light, clothing colors and motion stay.
    Without this H3 repeated the original and took only color from the photo. We tried black and gray silhouettes

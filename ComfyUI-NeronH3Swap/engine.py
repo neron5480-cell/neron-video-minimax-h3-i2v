@@ -367,38 +367,79 @@ def _heads_for(people, heads):
     return torch.stack(out, 0)
 
 
+def detect_each_frame(model, clip, frames, texts, near, threshold, chunk=16):
+    """SAM ищет texts («head», «hair», «person») НА КАЖДОМ КАДРЕ заново и оставляет только то, что рядом с near.
+    Трекер ведёт объект только от первого кадра и, потеряв (наезд/отъезд камеры, поворот, волосы в танце),
+    сам его не находит — отсюда «2 секунды замена, потом снова оригинал». Поиск на каждом кадре не теряет."""
+    n = int(frames.shape[0])
+    out = torch.zeros(n, int(frames.shape[1]), int(frames.shape[2]))
+    for t in texts:
+        cond = node("CLIPTextEncode", clip=clip, text=t)[0]
+        for i in range(0, n, chunk):
+            m = node("SAM3_Detect", model=model, image=frames[i:i + chunk], conditioning=cond,
+                     threshold=float(threshold), refine_iterations=1, individual_masks=False)[0]
+            m = (m.float().cpu() > 0.5).float()
+            if m.dim() == 2:
+                m = m[None]
+            if m.shape[0] == out[i:i + chunk].shape[0]:
+                out[i:i + chunk] = torch.maximum(out[i:i + chunk], m)
+            send(f"Ищу «{t}» на каждом кадре / Finding «{t}» per frame", min(n, i + chunk), n)
+    return out * near
+
+
+def _near(m, frac=0.12):
+    """Окрестность маски: волосы в танце и смаз выходят за маску трекера — ищем рядом, но не по всему кадру."""
+    return dilate(m, max(4, int(round(frac * min(m.shape[1], m.shape[2])))), frames_r=1)
+
+
+def _head_fallback(person):
+    """Кадр, где голову не нашли, — верх фигуры (≈ 22 % роста)."""
+    return _heads_for(person[None], [])[0]
+
+
 def new_person_mask(video, sam_name, zone, threshold, head, report):
     """Точные края (0.5): SAM ещё раз — уже по ГОТОВОМУ видео, ищет нового человека (или голову) там, где был
     старый. → маска [N,H,W] или None. Нужна, чтобы вклеивать сгенерированное только по человеку, а полоса запаса
     вокруг снова стала настоящими резкими пикселями клипа."""
     send("Уточняю края / Refining edges", 0, int(video.shape[0]))
     model, clip = node("CheckpointLoaderSimple", ckpt_name=sam_name)[:2]
-    found = []
-    for text in (("head", "hair") if head else ("person",)):        # голова — вместе с волосами до плеч
-        cond = node("CLIPTextEncode", clip=clip, text=text)[0]
-        det = node("SAM3_Detect", model=model, image=video[:1], conditioning=cond, threshold=float(threshold),
-                   refine_iterations=2, individual_masks=True)[0]
+    found = detect_each_frame(model, clip, video, ("head", "hair") if head else ("person", "hair"), _near(zone),
+                              threshold)
+    del model, clip
+    free("SAM выгружен")
+    miss = found.flatten(1).amax(1) == 0
+    empty = int(miss.sum())
+    if empty == found.shape[0]:
+        report.append("Точные края: нового человека SAM не нашла — вклейка по зоне маски")
+        return None
+    if empty:
+        found[miss] = zone[miss]                                                    # не нашла — по зоне
+        report.append(f"Точные края: на {empty} кадрах новый человек не найден — там вклейка по зоне")
+    return found
+
+
+def relink_lost(model, cond, frames, masks, threshold):
+    """Кадры, где трекер ПОТЕРЯЛ человека: ищем людей заново и берём того, кто ближе всего к месту на прошлом
+    кадре (между соседними кадрами человек сдвигается мало) — цепочка не рвётся. → (маски, сколько вернула)."""
+    got = 0
+    near_px = max(4, int(round(0.06 * min(masks.shape[1], masks.shape[2]))))
+    for f in range(1, int(masks.shape[0])):
+        if float(masks[f].sum()) > 0 or float(masks[f - 1].sum()) == 0:
+            continue
+        det = node("SAM3_Detect", model=model, image=frames[f:f + 1], conditioning=cond, threshold=float(threshold),
+                   refine_iterations=1, individual_masks=True)[0]
         if det.dim() == 2:
             det = det[None]
         det = (det.float().cpu() > 0.5).float()
-        z = zone[0]
-        found += [det[i] for i in range(det.shape[0]) if float(det[i].sum()) > 0 and
-                  float((det[i] * z).sum()) / float(det[i].sum()) > 0.5]       # лежит в зоне замены
-    if not found:
-        del model, clip
-        free("SAM выгружен")
-        report.append("Точные края: нового человека SAM не нашла — вклейка по зоне маски")
-        return None
-    track = node("SAM3_VideoTrack", images=video, model=model, initial_mask=torch.stack(found, 0),
-                 detection_threshold=0.5, max_objects=len(found), detect_interval=1)[0]
-    masks = node("SAM3_TrackToMask", track_data=track, object_indices="")[0]
-    del model, clip, track
-    free("SAM выгружен")
-    masks = (masks.float().cpu() > 0.5).float()
-    if masks.shape[0] != video.shape[0] or float(masks.sum()) == 0:
-        return None
-    masks, _ = _fill_gaps(masks)
-    return masks
+        if det.shape[0] == 0:
+            continue
+        prev = dilate(masks[f - 1:f], near_px, frames_r=0)[0]
+        score = (det * prev).flatten(1).sum(1) / det.flatten(1).sum(1).clamp_min(1)
+        best = int(score.argmax())
+        if float(score[best]) > 0.2:
+            masks[f] = det[best]
+            got += 1
+    return masks, got
 
 
 def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False):
@@ -420,22 +461,16 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False)
     chosen = _pick(det, who)
     report.append(f"Людей в первом кадре: {det.shape[0]}, меняю: {len(chosen)} ({who.split(' / ')[0]})")
     init = det[chosen]
-    if head:
-        hcond = node("CLIPTextEncode", clip=clip, text="head")[0]
-        hd = node("SAM3_Detect", model=model, image=frames[:1], conditioning=hcond, threshold=float(threshold),
-                  refine_iterations=2, individual_masks=True)[0]
-        if hd.dim() == 2:
-            hd = hd[None]
-        hd = (hd.float().cpu() > 0.5).float()
-        init = _heads_for(init, list(hd))
-        report.append(f"Только голова: голов в кадре {hd.shape[0]}, маска — по голове, тело и одежда из клипа")
     send("Веду маску по клипу / Tracking the person", 0, int(frames.shape[0]))
     track = node("SAM3_VideoTrack", images=frames, model=model, initial_mask=init,
                  detection_threshold=0.5, max_objects=len(chosen), detect_interval=1)[0]
     masks = node("SAM3_TrackToMask", track_data=track, object_indices="")[0]
-    del model, clip, cond, track
-    free("SAM выгружен")
+    del track
     masks = (masks.float().cpu() > 0.5).float()
+    if masks.shape[0] == frames.shape[0]:
+        masks, got = relink_lost(model, cond, frames, masks, threshold)
+        if got:
+            report.append(f"Трекер терял человека — нашла заново на {got} кадрах (по соседству с прошлым кадром)")
     if masks.shape[0] != frames.shape[0]:
         raise FriendlyError(f"{TAG} Маска и клип разной длины ({masks.shape[0]} и {frames.shape[0]}). Обнови ComfyUI.\n\n"
                             f"EN: Mask and clip lengths differ. Update ComfyUI.")
@@ -443,8 +478,28 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False)
     if holes:
         report.append(f"Трекер терял человека на {holes} кадрах — взяла маску соседних кадров")
     if float(masks.sum()) == 0:
+        del model, clip, cond
+        free("SAM выгружен")
         raise FriendlyError(f"{TAG} Трекер не удержал человека ни на одном кадре.\n\nEN: The tracker lost the person "
                             f"on every frame.")
+    # поиск на КАЖДОМ кадре рядом с человеком: трекер не находит заново потерянное (наезд камеры, поворот,
+    # волосы в танце) — без этого голова «уходила» из маски и через 2 с возвращался оригинал, а по краям
+    # оставались пряди оригинала
+    if head:
+        heads = detect_each_frame(model, clip, frames, ("head", "hair"), _near(masks), threshold)
+        miss = heads.flatten(1).amax(1) == 0
+        for i in torch.nonzero(miss).flatten().tolist():
+            heads[i] = _head_fallback(masks[i])
+        report.append(f"Только голова: ищу голову и волосы на каждом кадре" +
+                      (f" (не нашла на {int(miss.sum())} — взяла верх фигуры)" if int(miss.sum()) else "") +
+                      "; тело и одежда — из клипа")
+        masks = heads
+    else:
+        extra = detect_each_frame(model, clip, frames, ("hair",), _near(masks), threshold)
+        masks = torch.maximum(masks, extra)
+        report.append("Волосы — ещё и поиском на каждом кадре (в танце трекер их теряет, оставались пряди оригинала)")
+    del model, clip, cond
+    free("SAM выгружен")
     px = max(0, int(round(expand_px * min(masks.shape[1], masks.shape[2]) / 768.0)))
     grown = dilate(masks, px)
     share = float(grown.mean()) * 100
