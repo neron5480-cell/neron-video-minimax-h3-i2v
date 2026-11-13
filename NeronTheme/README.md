@@ -50,7 +50,7 @@ Delete the node — everything is back.
 
 ### Вкладка УСТАНОВИТЬ
 
-- **Встроенные:** Обычный ComfyUI (тема выключена), Графит, **Neron Studio** (стеклянные ноды в цветах стола; включается сама, когда процесс открыт со стола Neron Studio — если на холсте нет своей ноды темы), Neron Brown, Неон, **Подсветка** (ноды светятся снизу каждая своим цветом, как LED-подсветка), Закат, Океан, Лес, Сакура, Монохром, Бумага (светлая).
+- **Встроенные:** Обычный ComfyUI (тема выключена), Графит, **Светлый Neron (стол)** и **Neron Studio** (Аурей) — включаются сами, когда процесс открыт со стола Neron Studio: та же тема, что выбрана на столе; свои цвета нод и групп процесса на это время прячутся только на экране, файл не меняется, Neron Brown, Неон, **Подсветка** (ноды светятся снизу каждая своим цветом, как LED-подсветка), Закат, Океан, Лес, Сакура, Монохром, Бумага (светлая).
 - **Мои:** темы, которые вы сохранили. Лежат файлами в `ComfyUI/user/neron_themes` — их можно копировать и пересылать. ✖ на карточке — удалить (нажать дважды).
 - **Чужая тема:**
   - **код** — вставьте строчку `NERON-THEME1:…` в поле и нажмите 📥 ПОСТАВИТЬ;
@@ -145,7 +145,7 @@ The workflow itself is not changed: role colors are not written into nodes, so w
 
 ### INSTALL tab
 
-- **Built-in:** Plain ComfyUI (theme off), Graphite, Neron Brown, Neon, **Backlight** (each node glows from underneath in its own color, like LED lighting), Sunset, Ocean, Forest, Sakura, Mono, Paper (light).
+- **Built-in:** Plain ComfyUI (theme off), Graphite, **Neron Light (desk)** and **Neron Studio** (Aureus) — switched on by themselves when a workflow is opened from the Neron Studio desk: the same theme as on the desk; the workflow's own node and group colors are hidden on screen only, the file does not change; Neron Brown, Neon, **Backlight** (each node glows from underneath in its own color, like LED lighting), Sunset, Ocean, Forest, Sakura, Mono, Paper (light).
 - **Mine:** themes you saved. Stored as files in `ComfyUI/user/neron_themes` — copy and send them around. ✖ on a card deletes it (press twice).
 - **Someone's theme:** paste a `NERON-THEME1:…` **code** and press 📥 APPLY, or drop a theme **file** (`.json`) right onto the node. It is saved to **Mine** at once. A ComfyUI palette (`.json` from Settings → Appearance → Export) works too.
 

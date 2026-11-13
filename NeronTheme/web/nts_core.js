@@ -350,6 +350,12 @@ export const BUILTIN = [
         roles: { model: "#e090d8", input: "#7fb2e0", text: "#f0c75a", gen: "#ff7a1a", latent: "#f29ab4", image: "#97d17f", audio: "#97d17f", output: "#f0c75a", util: "#c9ab8c" },
         tint: 0.38, btint: 0.06, glow: 0.55, opacity: 0.8, halo: 0.3, life: { level: 1, bgfx: "none" },
     }), { id: "studio" }),
+    // Светлый Neron — как рабочий стол Neron Studio: серо-белый с лёгкой синевой, спокойные цвета ролей
+    Object.assign(make("#2f5d8a", T("Светлый Neron (стол)", "Neron Light (desk)"), { scheme: "rainbow", light: true }, {
+        c: { bg: "#e9ecef", grid: "#dfe3e8", title: "#e3e8ee", body: "#f8f9fa", text: "#1d232a", widget: "#ffffff", line: "#c3cad3", link: "#5b7fa6", menu: "#f1f3f5", accent: "#2f5d8a" },
+        roles: { model: "#7b5ea7", input: "#2f74b5", text: "#b8741a", gen: "#c0504d", latent: "#b5577f", image: "#2e8a8a", audio: "#3f8f4f", output: "#5f8a2e", util: "#6b7785" },
+        tint: 0.2, btint: 0.03, glow: 0.1, opacity: 1, life: { level: 0 },
+    }), { id: "studio-light" }),
     Object.assign(make("#ff2bd6", T("Неон", "Neon"), { scheme: "rainbow" }, {
         c: { bg: "#06040f", grid: "#0f0a22", title: "#1a1033", body: "#0c0820", text: "#ece7ff", widget: "#0d0822", line: "#4f39a8", link: "#00e5ff", menu: "#0b0718", accent: "#ff2bd6" },
         roles: { model: "#ff2bd6", input: "#00e5ff", text: "#ffe600", gen: "#ff3b6b", latent: "#b26bff", image: "#39ff88", audio: "#39ff88", output: "#ff9f1c", util: "#8f88cc" },

@@ -5,7 +5,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-const VERSION = "2026.11.13·4";                 // видно в подсказке монеты и на полосе — какая версия загружена
+const VERSION = "2026.11.13·5";                 // видно в подсказке монеты и на полосе — какая версия загружена
 const POS_KEY = "neron-studio-coin-pos";
 // язык: как выбран на столе, иначе — по языку системы (русский/украинский/белорусский/казахский → RU, остальное → EN)
 const LANG_KEY = "neron-studio-lang";
@@ -70,7 +70,7 @@ function fontsOnce() {
     if (document.getElementById("neron-studio-fonts")) return;
     const l = document.createElement("link");
     l.id = "neron-studio-fonts"; l.rel = "stylesheet";
-    l.href = "https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@700&family=Golos+Text:wght@500;600;700&display=swap";
+    l.href = "https://fonts.googleapis.com/css2?family=Golos+Text:wght@500;600;700&display=swap";
     document.head.append(l);
 }
 
@@ -81,45 +81,27 @@ function css() {
     st.textContent = `
 #neron-studio-bar { position: fixed; z-index: 9998; top: var(--nsb-top, 46px); left: 50%; transform: translateX(-50%);
   display: flex; align-items: center; gap: 10px; padding: 7px 10px 7px 8px; border-radius: 16px;
-  background: color-mix(in srgb, #1b130d 78%, transparent); backdrop-filter: blur(14px) saturate(1.25);
-  -webkit-backdrop-filter: blur(14px) saturate(1.25); border: 1px solid #5a3f27;
-  box-shadow: 0 12px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(200,135,58,.15);
-  font: 600 13px "Golos Text", "Segoe UI", system-ui, sans-serif; color: #f3e6d2; max-width: calc(100vw - 24px); }
-#neron-studio-bar .nsb-coin { width: 34px; height: 34px; flex: none; border-radius: 50%; display: grid; place-items: center;
-  background: radial-gradient(circle at 35% 30%, #fff1b8, #f0c75a 35%, #b9821f 75%, #6b4210);
-  box-shadow: 0 0 16px rgba(255,122,26,.5), inset 0 0 0 2px rgba(107,66,16,.7); font: 700 17px Georgia, serif; color: #4a2c06; }
-#neron-studio-bar .nsb-name { font: 700 17px "Cormorant SC", Georgia, serif; letter-spacing: .08em; color: #f0c75a; white-space: nowrap; }
-#neron-studio-bar .nsb-proc { color: #f3e6d2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 30vw; }
-#neron-studio-bar .nsb-sep { width: 1px; height: 22px; background: #5a3f27; flex: none; }
+  background: color-mix(in srgb, var(--nsb-bg) 88%, transparent); backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2); border: 1px solid var(--nsb-line);
+  box-shadow: 0 8px 28px var(--nsb-shadow);
+  font: 600 13px "Golos Text", "Segoe UI", system-ui, sans-serif; color: var(--nsb-text); max-width: calc(100vw - 24px); }
+#neron-studio-bar .nsb-coin { width: 34px; height: 34px; flex: none; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: var(--nsb-acc); color: var(--nsb-acc-ink); font: 700 16px "Golos Text", "Segoe UI", system-ui, sans-serif; }
+#neron-studio-bar .nsb-name { font: 700 15px "Golos Text", "Segoe UI", system-ui, sans-serif; letter-spacing: .06em; color: var(--nsb-text); white-space: nowrap; }
+#neron-studio-bar .nsb-proc { color: var(--nsb-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 30vw; }
+#neron-studio-bar .nsb-sep { width: 1px; height: 22px; background: var(--nsb-line); flex: none; }
 #neron-studio-bar button { font: 600 13px "Golos Text", "Segoe UI", system-ui, sans-serif; border-radius: 10px; cursor: pointer;
-  padding: 7px 12px; border: 1px solid #5a3f27; background: rgba(36,25,16,.85); color: #f3e6d2; white-space: nowrap; }
-#neron-studio-bar button:hover { color: #f0c75a; border-color: #c8873a; }
-#neron-studio-bar button.nsb-run { background: linear-gradient(180deg, #e09a48, #c8873a); color: #1b130d; border-color: #f0c75a;
-  box-shadow: 0 0 18px rgba(255,122,26,.45); padding: 7px 16px; }
-#neron-studio-bar button.nsb-run:hover { color: #0e0a07; background: #f0c75a; }
-#neron-studio-bar button.nsb-x { padding: 6px 9px; color: #a8957e; }
-#neron-studio-bar button.nsb-up { color: #f0c75a; border-color: #c8873a; }
-#neron-studio-bar .nsb-clock { font: 600 12px ui-monospace, Consolas, monospace; color: #a8957e; white-space: nowrap; min-width: 0;
+  padding: 7px 12px; border: 1px solid var(--nsb-line); background: var(--nsb-btn); color: var(--nsb-text); white-space: nowrap; }
+#neron-studio-bar button:hover { color: var(--nsb-acc); border-color: var(--nsb-acc); }
+#neron-studio-bar button.nsb-run { background: var(--nsb-acc); color: var(--nsb-acc-ink); border-color: var(--nsb-acc); padding: 7px 16px; }
+#neron-studio-bar button.nsb-run:hover { filter: brightness(1.12); color: var(--nsb-acc-ink); }
+#neron-studio-bar button.nsb-x { padding: 6px 9px; color: var(--nsb-muted); }
+#neron-studio-bar button.nsb-up { color: var(--nsb-acc); border-color: var(--nsb-acc); }
+#neron-studio-bar .nsb-clock { font: 600 12px ui-monospace, Consolas, monospace; color: var(--nsb-muted); white-space: nowrap; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; max-width: 26vw; }
-#neron-studio-bar .nsb-clock.run { color: #ffb347; } #neron-studio-bar .nsb-clock.ok { color: #8fd99a; } #neron-studio-bar .nsb-clock.err { color: #ff8a80; }
+#neron-studio-bar .nsb-clock.run { color: #c77a12; } #neron-studio-bar .nsb-clock.ok { color: #2e8b47; } #neron-studio-bar .nsb-clock.err { color: #c0392b; }
 #neron-studio-bar[hidden], #neron-studio-coin[hidden], #neron-studio-bar button[hidden] { display: none !important; }
-/* весь ComfyUI в оформлении стола: смысловые цвета интерфейса → стекло и бронза (только пока включено оформление) */
-html.neron-studio-skin, html.neron-studio-skin body, html.neron-studio-skin .dark-theme {
-  --background: rgba(22, 15, 10, .72) !important; --card: rgba(36, 25, 16, .78) !important;
-  --secondary: rgba(36, 25, 16, .80) !important; --popover: rgba(22, 15, 10, .94) !important;
-  --muted: #3a2616 !important; --accent: #4a301b !important; --border: #5a3f27 !important;
-  --foreground: #f3e6d2 !important; --muted-foreground: #a8957e !important;
-  --primary: #c8873a !important; --primary-fg: #1b130d !important; --primary-hover-bg: #f0c75a !important;
-  --primary-hover-fg: #0e0a07 !important; --ring: #c8873a !important; --input: #3a2616 !important;
-  --comfy-menu-bg: rgba(20, 14, 9, .78) !important; --comfy-menu-secondary-bg: rgba(36, 25, 16, .82) !important;
-  --interface-panel-surface: rgba(22, 15, 10, .72) !important; --shadow-color: rgba(0, 0, 0, .55) !important;
-  --node: rgba(27, 19, 13, .82) !important; --node-header: #3a2616 !important; --node-border: #5a3f27 !important;
-  --primary-background: #c8873a !important; --primary-bg: #c8873a !important;
-  --color-azure-400: #e09a48 !important; --color-azure-500: #d38f40 !important; --color-azure-600: #c8873a !important;
-  --color-azure-700: #a86f2c !important; --p-primary-color: #c8873a !important; --p-primary-500: #c8873a !important;
-  --p-button-primary-background: #c8873a !important; --p-button-primary-border-color: #c8873a !important;
-  --p-button-primary-hover-background: #f0c75a !important; --p-button-primary-color: #1b130d !important;
-}
+/* окно ComfyUI красит тема Neron Theme (та же, что выбрана на столе); здесь — только «стекло» панелей */
 html.neron-studio-skin .bg-background, html.neron-studio-skin .bg-secondary, html.neron-studio-skin .bg-card,
 html.neron-studio-skin .bg-popover, html.neron-studio-skin .bg-comfy-menu-bg, html.neron-studio-skin .bg-interface-panel-surface {
   backdrop-filter: blur(12px) saturate(1.2); -webkit-backdrop-filter: blur(12px) saturate(1.2); }
@@ -192,9 +174,35 @@ function coinTip() {
     if (c) c.title = `Neron Studio ${VERSION} — ` + L("щёлкни: открыть стол · потяни: переставить", "click: open desktop · drag: move");
 }
 
+// Тема стола («🎨 Тема» на столе) → та же тема в процессе. Стол и ComfyUI — один адрес, общий localStorage.
+const DESK_THEME_KEY = "neron-studio-theme";
+const DESK_LIGHT = { bg: "#f8f9fa", line: "#d5dae0", text: "#1d232a", muted: "#5a6470", acc: "#2f5d8a", btn: "#f1f3f5", light: true };
+function deskThemeId() {
+    let id = "calm";
+    try { id = localStorage.getItem(DESK_THEME_KEY) || "calm"; } catch (_) {}
+    if (id === "comfy") return null;                                   // «Как в ComfyUI» — решает нода Neron Theme
+    return id === "calm" ? "studio-light" : id === "aureus" ? "studio" : id;
+}
+function lum(hex) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || "")); if (!m) return 1;
+    const v = parseInt(m[1], 16); return (0.299 * (v >> 16) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255)) / 255;
+}
+function barColors(t) {
+    const c = t?.c, p = c ? { bg: c.menu || c.body, line: c.line, text: c.text, muted: c.text, acc: c.accent, btn: c.body, light: lum(c.bg) > 0.35 } : DESK_LIGHT;
+    const r = document.documentElement.style;
+    r.setProperty("--nsb-bg", p.bg); r.setProperty("--nsb-line", p.line); r.setProperty("--nsb-text", p.text);
+    r.setProperty("--nsb-muted", c ? `color-mix(in srgb, ${p.text} 60%, ${p.bg})` : p.muted);
+    r.setProperty("--nsb-acc", p.acc); r.setProperty("--nsb-btn", p.btn);
+    r.setProperty("--nsb-acc-ink", lum(p.acc) > 0.6 ? "#111111" : "#ffffff");
+    r.setProperty("--nsb-shadow", p.light ? "rgba(20,30,45,.16)" : "rgba(0,0,0,.5)");
+    const coin = document.getElementById("neron-studio-coin");
+    if (coin) { coin.style.background = p.acc; coin.style.color = lum(p.acc) > 0.6 ? "#111111" : "#ffffff"; }
+}
 function skin(on, tries = 0) {
-    if (typeof window.__neronThemeStudio === "function") { window.__neronThemeStudio(on); return; }
-    if (tries < 25) setTimeout(() => skin(on, tries + 1), 200);      // Neron Theme ещё грузится
+    const id = deskThemeId();
+    if (typeof window.__neronThemeStudio === "function") { barColors(window.__neronThemeStudio(on && !!id, id)); return; }
+    barColors(null);                                                   // без Neron Theme — полоса в цветах стола
+    if (tries < 25) setTimeout(() => skin(on, tries + 1), 200);       // Neron Theme ещё грузится
 }
 
 
@@ -342,6 +350,7 @@ addEventListener("message", (e) => {
     if (d.neronStudio === "close") { closeStudio(); if (M.on) exitStudioMode(); }
     if (d.neronStudio === "open" && d.id) openWorkflow(String(d.id), String(d.title || d.id));
     if (d.neronStudio === "lang") { barText(); coinTip(); }
+    if (d.neronStudio === "theme") skin(M.on);                          // на столе сменили тему — процесс следом
 });
 addEventListener("keydown", (e) => { if (e.key === "Escape" && overlay && !overlay.hidden) closeStudio(); });
 
@@ -367,9 +376,8 @@ function addCoin() {
 
     b.textContent = "N";
     b.style.cssText = `position:fixed;z-index:9999;width:${SIZE}px;height:${SIZE}px;border-radius:50%;` +
-        "border:0;cursor:pointer;font:700 22px Georgia,serif;color:#4a2c06;touch-action:none;user-select:none;" +
-        "background:radial-gradient(circle at 35% 30%,#fff1b8,#f0c75a 35%,#b9821f 75%,#6b4210);" +
-        "box-shadow:0 0 18px rgba(255,122,26,.55),inset 0 0 0 2px rgba(107,66,16,.7);transition:box-shadow .2s;";
+        "border:0;cursor:pointer;font:700 20px 'Golos Text','Segoe UI',system-ui,sans-serif;color:#ffffff;touch-action:none;user-select:none;" +
+        "background:#2f5d8a;box-shadow:0 4px 14px rgba(20,30,45,.35);transition:box-shadow .2s;";
     let [x, y] = loadPos();
     place(b, x, y);
 
@@ -385,7 +393,7 @@ function addCoin() {
         if (!drag.moved && Math.hypot(dx, dy) < 5) return;          // дрожь руки — ещё не перетаскивание
         drag.moved = true;
         b.style.cursor = "grabbing";
-        b.style.boxShadow = "0 0 28px rgba(255,122,26,.85),inset 0 0 0 2px rgba(107,66,16,.7)";
+        b.style.boxShadow = "0 8px 24px rgba(20,30,45,.5)";
         [x, y] = place(b, drag.x + dx, drag.y + dy);
     });
     const end = () => {
@@ -393,7 +401,7 @@ function addCoin() {
         const moved = drag.moved;
         drag = null;
         b.style.cursor = "pointer";
-        b.style.boxShadow = "0 0 18px rgba(255,122,26,.55),inset 0 0 0 2px rgba(107,66,16,.7)";
+        b.style.boxShadow = "0 4px 14px rgba(20,30,45,.35)";
         if (moved) { try { localStorage.setItem(POS_KEY, JSON.stringify({ x, y })); } catch (_) {} }
         else openStudio();
     };
@@ -402,7 +410,7 @@ function addCoin() {
     b.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openStudio(); } });
     addEventListener("resize", () => { [x, y] = place(b, x, y); });
     document.body.append(b);
-    coinTip();
+    coinTip(); skin(M.on);
 }
 
 app.registerExtension({

@@ -759,7 +759,8 @@ function fillThemes() {
   const add = (id, name, cols) => {
     const b = document.createElement("button"); b.type = "button"; b.className = "item"; b.setAttribute("aria-pressed", String(themeChoice === id));
     b.innerHTML = `<span class="swatch">${cols.map((x) => `<i style="background:${x}"></i>`).join("")}</span><span>${name}</span>`;
-    b.onclick = () => { themeChoice = id; try { localStorage.setItem(THEME_KEY, id); } catch (_) {} applyTheme(); fillThemes(); };
+    b.onclick = () => { themeChoice = id; try { localStorage.setItem(THEME_KEY, id); } catch (_) {} applyTheme(); fillThemes();
+      try { if (parent !== window) parent.postMessage({ neronStudio: "theme" }, "*"); } catch (_) {} };
     themesBox.append(b);
   };
   add(COMFY, tx(["🔗 Как в ComfyUI", "🔗 As in ComfyUI"]) + (cur ? ` — ${cur.name || "Neron Theme"}` : tx([" (тема не стоит → Светлый)", " (no theme → Light)"])),
@@ -889,7 +890,7 @@ bgLoad().then((rec) => { if (rec) bgShow(rec); });
 // ================== 🧪 «✉ Написать создателю» (папка «Тест») ==================
 // Письмо уходит автору через Web3Forms (ключ публичный: он только разрешает слать письма автору, адреса не раскрывает).
 // К письму — только то, что видно в «Что будет отправлено»: процесс, текст, версия ComfyUI, видеокарта, последняя ошибка.
-const DESK_VERSION = "2026.11.13·4";
+const DESK_VERSION = "2026.11.13·5";
 const W3F_KEY = "6462b9a5-e856-422f-9f27-23875a4277d3";
 const SENT_KEY = "neron-studio-report-at", ERR_KEY = "neron-studio-last-error";
 const RP = {

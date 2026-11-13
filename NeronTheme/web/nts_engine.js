@@ -137,14 +137,100 @@ function applyTheme(t) {
         if (st.textContent !== css) st.textContent = css;
     } else if (st) st.remove();
     E.ours = ours;
+    if (t === E.studio) uniOn(t); else uniOff();
     cv.setDirty && cv.setDirty(true, true);
     return true;
+}
+
+// ---------------------------------------------------------------------------
+//  Единый вид для процессов, открытых со стола Neron Studio: свои цвета нод и групп из файла процесса
+//  на экране убираем (ноды красятся по ролям темы, группы — одним цветом). Только на экране: при
+//  сохранении и при выходе со стола возвращаются исходные цвета, файл процесса не меняется.
+//  Цвет, который человек поставил ноде уже здесь, — его выбор, его не трогаем.
+// ---------------------------------------------------------------------------
+const UNI = { on: null, nodes: new Map(), groups: new Map(), seen: new WeakSet(), timer: 0, hooked: false };
+function allGraphs() {
+    const out = new Set();
+    try {
+        const root = app.graph?.rootGraph || app.graph;
+        if (root) out.add(root);
+        const subs = root?.subgraphs;
+        if (subs && typeof subs.values === "function") for (const g of subs.values()) out.add(g);
+        if (app.canvas?.graph) out.add(app.canvas.graph);
+    } catch (e) { /* ок */ }
+    return [...out];
+}
+function uniHook() {
+    if (UNI.hooked) return;
+    const lg = LG();
+    const N = lg?.LGraphNode?.prototype, G = lg?.LGraphGroup?.prototype;
+    if (!N || typeof N.serialize !== "function") return;
+    UNI.hooked = true;
+    const ns = N.serialize;
+    N.serialize = function () {
+        const o = ns.apply(this, arguments);
+        const s = UNI.nodes.get(this);
+        if (s && o && typeof o === "object") {
+            if (s.c !== undefined) o.color = s.c; else delete o.color;
+            if (s.bg !== undefined) o.bgcolor = s.bg; else delete o.bgcolor;
+        }
+        return o;
+    };
+    if (G && typeof G.serialize === "function") {
+        const gs = G.serialize;
+        G.serialize = function () {
+            const o = gs.apply(this, arguments);
+            if (UNI.groups.has(this) && o && typeof o === "object") o.color = UNI.groups.get(this);
+            return o;
+        };
+    }
+}
+function uniScan() {
+    const t = UNI.on; if (!t) return;
+    const gcol = mix(t.c.title, t.c.accent, isLight(t) ? 0.45 : 0.35);
+    let changed = false;
+    for (const g of allGraphs()) {
+        for (const n of g._nodes || g.nodes || []) {
+            const s = UNI.nodes.get(n);
+            if (s) {                                             // человек сам покрасил ноду — оставляем его цвет
+                if (n.color !== undefined || n.bgcolor !== undefined) UNI.nodes.delete(n);
+                continue;
+            }
+            if (UNI.seen.has(n)) continue;
+            UNI.seen.add(n);
+            if (n.color === undefined && n.bgcolor === undefined) continue;
+            UNI.nodes.set(n, { c: n.color, bg: n.bgcolor });
+            n.color = undefined; n.bgcolor = undefined; changed = true;
+        }
+        for (const gr of g._groups || g.groups || []) {
+            if (UNI.groups.has(gr)) { if (gr.color !== gcol) UNI.groups.delete(gr); continue; }
+            if (UNI.seen.has(gr)) continue;
+            UNI.seen.add(gr);
+            UNI.groups.set(gr, gr.color); gr.color = gcol; changed = true;
+        }
+    }
+    if (changed) app.canvas?.setDirty?.(true, true);
+}
+function uniOn(t) {
+    uniHook();
+    if (UNI.on && UNI.on !== t) uniOff();                     // другая тема стола — перекрасить заново
+    UNI.on = t; uniScan();
+    if (!UNI.timer) UNI.timer = setInterval(uniScan, 700);    // подграфы, новая вкладка, вставленные ноды
+}
+function uniOff() {
+    if (!UNI.on && !UNI.nodes.size && !UNI.groups.size) return;
+    clearInterval(UNI.timer); UNI.timer = 0; UNI.on = null;
+    for (const [n, s] of UNI.nodes) { n.color = s.c; n.bgcolor = s.bg; }
+    for (const [gr, c] of UNI.groups) gr.color = c;
+    UNI.nodes.clear(); UNI.groups.clear(); UNI.seen = new WeakSet();
+    app.canvas?.setDirty?.(true, true);
 }
 
 function restoreAll() {
     const lg = LG(), cv = app.canvas, L = LGC();
     const bk = E.bk;
     document.getElementById("nts-vars")?.remove();
+    uniOff();
     if (!bk) return;
     if (lg) for (const [k, v] of Object.entries(bk.lg)) lg[k] = v;
     if (cv) { for (const [k, v] of Object.entries(bk.canvas)) cv[k] = v; cv._pattern = undefined; }
@@ -179,7 +265,7 @@ function guard() {
 }
 
 function refresh() {
-    const want0 = E.preview || E.current || E.studio;
+    const want0 = E.preview || E.studio || E.current;      // процесс со стола — вид стола (тему меняют на столе)
     const want = want0 && want0.__none ? null : want0;      // примерка «обычного ComfyUI»
     const sig = want ? JSON.stringify(want) : "";
     if (sig === E.sig) return;

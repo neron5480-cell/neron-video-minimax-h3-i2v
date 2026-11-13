@@ -23,7 +23,9 @@
 (`ComfyUI-NeronStudio/workflows`); модели к ним — по заметкам в самих процессах.
 
 **Процесс в оформлении стола.** Сверху — полоса Neron Studio: название процесса, «▶ Создать», «■ Стоп», часы,
-«⤴ Наверх» (выход из подграфа), «🏠 Стол» и «✕». Ноды «стеклянные» в цветах стола (тема Neron Studio из Neron Theme).
+«⤴ Наверх» (выход из подграфа), «🏠 Стол» и «✕». Процесс — **в той же теме, что выбрана на столе** (по умолчанию светлая):
+ноды красятся по ролям, все группы одним цветом. Свои цвета нод из файла процесса на это время прячутся только на экране —
+файл не меняется. Сменить вид — «🎨 Тема» на столе («🔗 Как в ComfyUI» — решает нода Neron Theme). Нужна Neron Theme.
 Меню, вкладки, мини-карта и кнопки масштаба прячутся штатными выключателями ComfyUI — остаются холст, фон и полоса.
 Оформление живёт только во вкладках, открытых со стола. «✕» на полосе — обычный ComfyUI, всё возвращается как было
 (и стол забывает свои вкладки).
@@ -68,8 +70,9 @@ No workflow installed — the tile says «Not installed». Tested workflows ship
 (`ComfyUI-NeronStudio/workflows`); their models — see the notes inside each workflow.
 
 **Workflow in the desk look.** At the top — the Neron Studio strip: workflow name, «▶ Create», «■ Stop», a clock,
-«⤴ Up» (out of a subgraph), «🏠 Desktop» and «✕». Nodes are "glass" in the desk colors (the Neron Studio theme from
-Neron Theme). The menu, tabs, minimap and zoom buttons are hidden with ComfyUI's own switches — the canvas, background
+«⤴ Up» (out of a subgraph), «🏠 Desktop» and «✕». The workflow uses **the same theme as the desk** (light by default):
+nodes are colored by role, all groups in one color. The workflow file's own node colors are hidden on screen only — the
+file does not change. Change the look in «🎨 Theme» on the desk («🔗 As in ComfyUI» — the Neron Theme node decides). Needs Neron Theme. The menu, tabs, minimap and zoom buttons are hidden with ComfyUI's own switches — the canvas, background
 and strip remain. The look lives only in tabs opened from the desk. «✕» on the strip — plain ComfyUI, everything comes
 back as it was (and the desk forgets its tabs).
 
