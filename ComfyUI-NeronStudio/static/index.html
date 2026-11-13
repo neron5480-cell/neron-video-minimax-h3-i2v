@@ -345,6 +345,14 @@ const VIEWS = {
 };
 const BY = {};                                         // BY[папка][id] → плитка
 for (const [v, def] of Object.entries(VIEWS)) BY[v] = Object.fromEntries(def.tiles.map((d) => [d.id, d]));
+// Новый вид (13.11): один раз сбрасываем старую тему, цвет и размер плиток и раскладку — стол открывается светлым.
+// Свой фон (фото/видео) не трогаем. Дальше всё, что выберет человек, снова запоминается.
+try {
+  if (localStorage.getItem("neron-studio-design") !== "light-1") {
+    for (const k of ["neron-studio-theme", "neron-studio-look", "neron-studio-layout-v2", "neron-studio-layout-v3"]) localStorage.removeItem(k);
+    localStorage.setItem("neron-studio-design", "light-1");
+  }
+} catch (_) {}
 const KEY = "neron-studio-layout-v3";                  // раскладка — своя у каждой папки
 // папка, в которой ни один процесс не установлен (например «Тест» без альфа-пакетов), — не показывается
 function subtreeWf(v, out = []) { for (const d of VIEWS[v].tiles) { if (d.wf) out.push(d.wf); if (d.go) subtreeWf(d.go, out); } return out; }
@@ -379,7 +387,11 @@ function pack(items) {                                 // по порядку: �
 function defaults(v) { return pack(VIEWS[v].tiles.map(({ id, w, h }) => ({ id, x: 0, y: 0, w, h }))); }
 function loadView(v) {
   const s = LAYOUTS[v];
-  return Array.isArray(s) ? s.filter((it) => BY[v][it.id]).map((it) => ({ ...it })) : defaults(v);
+  if (!Array.isArray(s)) return defaults(v);
+  const out = s.filter((it) => BY[v][it.id]).map((it) => ({ ...it }));
+  // все плитки в одном столбике при широком столе — это сбой, а не выбор: раскладываем ровной сеткой
+  if (out.length > 1 && cols >= 8 && out.every((it) => it.x === 0 && it.w * 2 <= cols)) pack(out.sort((a, b) => a.y - b.y));
+  return out;
 }
 let layout = loadView(view);
 function save() { LAYOUTS[view] = layout; try { localStorage.setItem(KEY, JSON.stringify(LAYOUTS)); } catch (_) {} }
@@ -875,7 +887,7 @@ bgLoad().then((rec) => { if (rec) bgShow(rec); });
 // ================== 🧪 «✉ Написать создателю» (папка «Тест») ==================
 // Письмо уходит автору через Web3Forms (ключ публичный: он только разрешает слать письма автору, адреса не раскрывает).
 // К письму — только то, что видно в «Что будет отправлено»: процесс, текст, версия ComfyUI, видеокарта, последняя ошибка.
-const DESK_VERSION = "2026.11.13·2";
+const DESK_VERSION = "2026.11.13·3";
 const W3F_KEY = "6462b9a5-e856-422f-9f27-23875a4277d3";
 const SENT_KEY = "neron-studio-report-at", ERR_KEY = "neron-studio-last-error";
 const RP = {
