@@ -5,14 +5,17 @@
 **Что это.** Рабочий стол Neron прямо внутри ComfyUI: плитки, папки и свой фон — и все процессы Neron в один клик.
 Нод не добавляет. 📖 Подробно, со скриншотами: [статья на Civitai](https://civitai.com/articles/38373).
 
-**Как открыть.** Золотая монета **«N»** на холсте (её можно перетащить в любое место) или меню **Neron → Neron Studio**.
+**Как открыть.** Монета **«N»** на холсте (её можно перетащить в любое место) или меню **Neron → Neron Studio**.
 Закрыть — «✕ В ComfyUI» или Esc.
 
 **Папки.** Стол › **Видео** · **Картинки** · **Звук**; внутри — плитки по задачам (Фото → видео,
 Длинный ролик, Диалог…), а в них — варианты процесса. Путь «Стол › Видео › …» сверху: нажми на любое звено, чтобы
 вернуться. Назад — «‹ Назад» или Esc. Папка, в которой не установлен ни один процесс, сама прячется.
 
-**Живые плитки.** Тянуть, растягивать, убирать и возвращать, «⊞ Выровнять». Раскладка своя у каждой папки и
+**Вид.** Светлый и спокойный: серо-белый с лёгкой синевой. На каждой плитке — иконка, название и одна строка
+простыми словами, что она делает. Тёмные темы (Аурей и другие) — в «🎨 Тема».
+
+**Плитки.** Тянуть, растягивать, убирать и возвращать, «⊞ Выровнять». Раскладка своя у каждой папки и
 запоминается в браузере. Размер плиток — 50–140 %, свой цвет плиток и акцента.
 
 **«Открыть» на плитке** загружает настоящий процесс Neron в ComfyUI новой вкладкой — текущая работа не трогается.
@@ -47,14 +50,17 @@ ComfyUI» — стол сам переключается вместе с тем�
 **What it is.** The Neron desktop right inside ComfyUI: tiles, folders and your own background — and every Neron
 workflow one click away. Adds no nodes. 📖 Details with screenshots: [article on Civitai](https://civitai.com/articles/38373).
 
-**How to open.** The gold **«N»** coin on the canvas (you can drag it anywhere) or the menu **Neron → Neron Studio**.
+**How to open.** The **«N»** coin on the canvas (you can drag it anywhere) or the menu **Neron → Neron Studio**.
 Close with «✕ To ComfyUI» or Esc.
 
 **Folders.** Desktop › **Video** · **Images** · **Sound**; inside — tiles by task (Photo → video,
 Long video, Dialogue…), and inside those — workflow variants. The path "Desktop › Video › …" is at the top: click any
 part of it to go back. Back — «‹ Back» or Esc. A folder with no installed workflow hides itself.
 
-**Live tiles.** Drag, resize, remove and bring back, «⊞ Tidy up». Every folder has its own layout, remembered in the
+**Look.** Light and calm: gray-white with a cool blue tint. Every tile has an icon, a name and one plain line
+about what it does. Dark themes (Aureus and others) are in «🎨 Theme».
+
+**Tiles.** Drag, resize, remove and bring back, «⊞ Tidy up». Every folder has its own layout, remembered in the
 browser. Tile size 50–140 %, your own tile and accent colors.
 
 **«Open» on a tile** loads the real Neron workflow into ComfyUI in a new tab — your current work is not touched.

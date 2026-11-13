@@ -5,7 +5,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-const VERSION = "2026.11.09·2";                 // видно в подсказке монеты и на полосе — какая версия загружена
+const VERSION = "2026.11.13·1";                 // видно в подсказке монеты и на полосе — какая версия загружена
 const POS_KEY = "neron-studio-coin-pos";
 // язык: как выбран на столе, иначе — по языку системы (русский/украинский/белорусский/казахский → RU, остальное → EN)
 const LANG_KEY = "neron-studio-lang";
@@ -22,7 +22,7 @@ let overlay = null, frame = null;
 function openStudio() {
     if (overlay) { overlay.hidden = false; return; }
     overlay = document.createElement("div");
-    overlay.style.cssText = "position:fixed;inset:0;z-index:100000;background:#0e0a07;";
+    overlay.style.cssText = "position:fixed;inset:0;z-index:100000;background:#e9ecef;";
     frame = document.createElement("iframe");
     frame.src = api.apiURL("/neron_studio");
     frame.title = "Neron Studio";

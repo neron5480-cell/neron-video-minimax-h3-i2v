@@ -6,31 +6,34 @@
 <title>Neron Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@600;700&family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-/* Layout: «рабочий стол» — сетка плиток 12 колонок; плитки живые (canvas), тянутся, растягиваются, удаляются,
-   «⊞ Выровнять» убирает дыры. Единый тёмный мир Neron (бронза, золото аурея, угли) — одна тема намеренно. */
+/* Layout: «рабочий стол» — сетка плиток 12 колонок; плитки тянутся, растягиваются, удаляются, «⊞ Выровнять» убирает дыры.
+   Вид: спокойный и светлый — иконка, название и одна понятная строка «что делает». Тёмные темы — в «🎨 Тема». */
 :root {
-  --ink: #0e0a07;          /* фон стола — тёплая сажа */
-  --panel: #1b130d;        /* тело плитки */
-  --panel-2: #241910;      /* шапка плитки, полосы */
-  --line: #3a2a1c;         /* рамки */
-  --bronze: #c8873a;       /* основной акцент */
-  --gold: #f0c75a;         /* золото аурея — заголовки и главное */
-  --ember: #ff7a1a;        /* угли — живое, «идёт» */
-  --text: #f3e6d2;
-  --muted: #a8957e;
-  --ok: #8fd99a;           /* готово */
-  --alpha: #ffb347;        /* альфа */
-  --soon: #7f8fa1;         /* скоро */
-  --well: #0a0705;         /* окно живой плитки */
-  --halo: #2a1a0e;         /* подсветка стола сверху */
-  --f-display: "Cormorant SC", "Cormorant Garamond", Georgia, serif;
+  /* по умолчанию — «Светлый Neron»: серо-белый с лёгкой синевой, спокойный и читаемый */
+  --ink: #e9ecef;          /* фон стола */
+  --panel: #f8f9fa;        /* плитка */
+  --panel-2: #f1f3f5;      /* полосы, кнопки */
+  --line: #d5dae0;         /* рамки */
+  --bronze: #2f5d8a;       /* акцент */
+  --gold: #24496d;         /* заголовки и главное */
+  --ember: #2f5d8a;
+  --text: #1d232a;
+  --muted: #5a6470;
+  --ok: #2e8b47;
+  --alpha: #b8660a;
+  --soon: #6b7785;
+  --well: #ffffff;
+  --halo: #f4f6f8;
+  --acc-soft: color-mix(in srgb, var(--bronze) 13%, var(--panel));
+  --shadow: 0 1px 2px rgba(20, 30, 45, .06), 0 4px 14px rgba(20, 30, 45, .06);
+  --f-display: "Golos Text", "Segoe UI", system-ui, sans-serif;
   --f-body: "Golos Text", "Segoe UI", system-ui, sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
   --gap: 12px;
   --row: 96px;
-  color-scheme: dark;
+  color-scheme: light;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -72,77 +75,81 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .coin {
   width: 44px; height: 44px; border-radius: 50%; flex: none; display: grid; place-items: center;
-  background: radial-gradient(circle at 35% 30%, #fff1b8, #f0c75a 35%, #b9821f 75%, #6b4210);
-  box-shadow: 0 0 22px rgba(255, 122, 26, .45), inset 0 0 0 2px rgba(107, 66, 16, .7);
-  font: 700 22px var(--f-display); color: #4a2c06;
+  background: var(--bronze); box-shadow: var(--shadow);
+  font: 700 20px var(--f-display); color: var(--panel);
 }
-.brand h1 { margin: 0; font: 700 26px/1 var(--f-display); letter-spacing: .08em; color: var(--gold); text-wrap: balance; }
-.brand small { display: block; font: 500 11px var(--f-body); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+.brand h1 { margin: 0; font: 700 22px/1 var(--f-display); letter-spacing: .06em; color: var(--text); text-wrap: balance; }
+.brand small { display: block; font: 500 12px var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
 .crumbs, .seg { display: flex; align-items: center; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); flex-wrap: wrap; min-width: 0; }
 .crumbs .sep { color: var(--muted); padding: 0 2px; }
-.crumbs button[aria-current="page"] { color: var(--gold); cursor: default; }
+.crumbs button[aria-current="page"] { color: var(--text); cursor: default; }
 .crumbs .back { color: var(--text); border: 1px solid var(--line); }
-.seg button { font: 600 12px var(--f-mono); color: var(--muted); background: transparent; border: 0; border-radius: 7px; padding: 6px 9px; cursor: pointer; }
-.seg button[aria-pressed="true"] { color: var(--ink); background: var(--bronze); }
+.seg button { font: 600 12px var(--f-body); color: var(--muted); background: transparent; border: 0; border-radius: 7px; padding: 6px 9px; cursor: pointer; }
+.seg button[aria-pressed="true"] { color: var(--panel); background: var(--bronze); }
 .crumbs button, .tool {
   font: 600 13px var(--f-body); color: var(--muted); background: transparent; border: 0; border-radius: 7px;
   padding: 7px 12px; cursor: pointer;
 }
 
 .tools { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
-.tool { border: 1px solid var(--line); background: var(--panel); color: var(--text); }
-.tool:hover, .crumbs button:not([aria-current]):hover, .seg button:not([aria-pressed="true"]):hover { color: var(--gold); }
+.tool { border: 1px solid var(--line); background: var(--panel); color: var(--text); box-shadow: var(--shadow); }
+.tool:hover, .crumbs button:not([aria-current]):hover, .seg button:not([aria-pressed="true"]):hover { color: var(--bronze); }
 button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.hint { color: var(--muted); font-size: 12px; margin: -6px 0 14px; }
+.hint { color: var(--muted); font-size: 13px; margin: -4px 0 18px; max-width: 900px; }
 
 /* ---------- стол ---------- */
 .desk { position: relative; width: 100%; min-height: 200px; }
 .tile {
   position: absolute; display: flex; flex-direction: column; overflow: hidden;
-  background: linear-gradient(180deg, var(--panel-2), var(--panel) 38%);
+  background: var(--panel);
   border: 1px solid var(--line); border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+  box-shadow: var(--shadow);
   transition: left .28s cubic-bezier(.2, .8, .2, 1), top .28s cubic-bezier(.2, .8, .2, 1),
               width .28s cubic-bezier(.2, .8, .2, 1), height .28s cubic-bezier(.2, .8, .2, 1), opacity .25s, filter .25s;
 }
-.tile.dragging, .tile.resizing { transition: none; z-index: 20; box-shadow: 0 22px 60px rgba(0, 0, 0, .7), 0 0 0 1px var(--bronze); }
+.tile.dragging, .tile.resizing { transition: none; z-index: 20; box-shadow: 0 16px 40px rgba(20, 30, 45, .22), 0 0 0 1px var(--bronze); }
 .desk { perspective: 1400px; }
 /* вкладка: нужные плитки «выезжают» вперёд, остальные уходят вглубь */
 .tile { transition-property: left, top, width, height, opacity, filter, transform; transition-duration: .55s, .55s, .28s, .28s, .45s, .45s, .55s; }
 .tile.back { opacity: .32; filter: blur(1.6px) saturate(.35); transform: translateZ(-140px) scale(.94); z-index: 0; }
 .tile.front { z-index: 2; transform: translateZ(0) scale(1); }
-.tile.pop { animation: pop .6s cubic-bezier(.2, 1.4, .3, 1) both; }
-@keyframes pop { 0% { transform: translateZ(-90px) scale(.9); } 100% { transform: translateZ(0) scale(1); } }
+.tile.pop { animation: pop .35s ease-out both; }
+@keyframes pop { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: none; } }
 .tile.back .head { cursor: default; }
 .tile.back .grip { display: none; }
-.tile:hover { border-color: #5a3f27; }
-.head { display: flex; align-items: center; gap: 8px; padding: 9px 10px 7px 12px; cursor: grab; user-select: none; touch-action: none; }
+.tile:hover { border-color: var(--line2, color-mix(in srgb, var(--bronze) 35%, var(--line))); box-shadow: 0 2px 4px rgba(20, 30, 45, .06), 0 10px 26px rgba(20, 30, 45, .1); }
+.head { display: flex; align-items: center; gap: 14px; padding: 18px 12px 6px 20px; cursor: grab; user-select: none; touch-action: none; }
 .tile.dragging .head { cursor: grabbing; }
-.ico { font-size: 16px; }
-.title { font: 700 13.5px var(--f-body); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
-.chip { font: 600 10px var(--f-body); letter-spacing: .08em; text-transform: uppercase; padding: 2px 7px; border-radius: 99px; border: 1px solid currentColor; flex: none; }
+.ico { flex: none; width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; background: var(--acc-soft); color: var(--bronze); }
+.ico svg { width: 24px; height: 24px; }
+.ico.sm { width: 30px; height: 30px; border-radius: 8px; }
+.ico.sm svg { width: 18px; height: 18px; }
+.title { font: 650 18px/1.25 var(--f-body); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
+.chip { font: 600 11px var(--f-body); letter-spacing: .04em; padding: 2px 9px; border-radius: 99px; border: 1px solid currentColor; flex: none; }
+.count { font-size: 13px; color: var(--muted); }
 .chip.ok { color: var(--ok); } .chip.alpha { color: var(--alpha); } .chip.soon { color: var(--soon); }
-.x { flex: none; width: 24px; height: 24px; border-radius: 6px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; }
-.x:hover { background: #3a1f17; color: #ffb4a0; }
-.live { position: relative; flex: 1; min-height: 0; margin: 0 10px; border-radius: 9px; overflow: hidden; background: var(--well); }
-.live canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.foot { display: flex; align-items: center; gap: 8px; padding: 8px 10px 10px 12px; min-width: 0; }
-.meta { font: 400 11px var(--f-mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
-.open { flex: none; font: 600 12px var(--f-body); color: var(--ink); background: var(--bronze); border: 0; border-radius: 7px; padding: 6px 11px; cursor: pointer; }
-.open:hover { background: var(--gold); }
+.x { flex: none; align-self: flex-start; width: 24px; height: 24px; opacity: 0; border-radius: 6px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; }
+.tile:hover .x, .x:focus-visible { opacity: 1; }
+.x:hover { background: color-mix(in srgb, #c0392b 12%, transparent); color: #c0392b; }
+.foot { display: flex; align-items: center; gap: 10px; padding: 10px 16px 14px 20px; min-width: 0; border-top: 1px solid color-mix(in srgb, var(--line) 60%, transparent); margin: 0 0 0; }
+.meta { flex: 1; min-height: 0; margin: 4px 20px 10px 80px; font: 400 14.5px/1.45 var(--f-body); color: var(--muted); overflow: hidden; }
+.open { flex: none; margin-left: auto; font: 600 13.5px var(--f-body); color: var(--bronze); background: transparent; border: 1px solid transparent; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+.open:hover { background: var(--acc-soft); border-color: color-mix(in srgb, var(--bronze) 30%, transparent); }
 .tile[data-status="soon"] .open, .tile.missing .open { background: transparent; color: var(--soon); border: 1px solid var(--line); }
+.tile[data-status="soon"] .ico { color: var(--soon); background: var(--panel-2); }
 .open[aria-busy="true"] { opacity: .6; cursor: progress; }
-.grip { position: absolute; right: 2px; bottom: 2px; width: 18px; height: 18px; cursor: nwse-resize; touch-action: none; opacity: .55; }
+.grip { position: absolute; right: 2px; bottom: 2px; width: 18px; height: 18px; cursor: nwse-resize; touch-action: none; opacity: 0; }
 .grip::before { content: ""; position: absolute; right: 4px; bottom: 4px; width: 9px; height: 9px;
-  border-right: 2px solid var(--bronze); border-bottom: 2px solid var(--bronze); border-radius: 0 0 3px 0; }
+  border-right: 2px solid var(--line); border-bottom: 2px solid var(--line); border-radius: 0 0 3px 0; }
 .tile:hover .grip { opacity: 1; }
-.ghost { position: absolute; border: 2px dashed var(--bronze); border-radius: 14px; background: rgba(200, 135, 58, .08); pointer-events: none; z-index: 1; transition: left .12s, top .12s, width .12s, height .12s; }
+.tile:hover .grip::before { border-color: var(--muted); }
+.ghost { position: absolute; border: 2px dashed var(--bronze); border-radius: 14px; background: color-mix(in srgb, var(--bronze) 8%, transparent); pointer-events: none; z-index: 1; transition: left .12s, top .12s, width .12s, height .12s; }
 
 /* ---------- ящик «＋ Плитка» и тост ---------- */
 .drawer { position: fixed; z-index: 30; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(70px + env(safe-area-inset-top, 0px));
   width: min(340px, calc(100vw - 32px)); max-height: 70vh; overflow: auto; padding: 14px; border-radius: 14px;
-  background: var(--panel); border: 1px solid var(--bronze); box-shadow: 0 20px 60px rgba(0, 0, 0, .7); }
-.drawer h2 { margin: 0 0 4px; font: 700 18px var(--f-display); color: var(--gold); letter-spacing: .06em; }
+  background: var(--panel); border: 1px solid var(--line); box-shadow: 0 16px 40px rgba(20, 30, 45, .18); }
+.drawer h2 { margin: 0 0 4px; font: 650 17px var(--f-display); color: var(--text); }
 .drawer p { margin: 0 0 10px; color: var(--muted); font-size: 12px; }
 .drawer button.item { display: flex; width: 100%; gap: 10px; align-items: center; text-align: left; padding: 9px 10px; margin-top: 6px;
   border-radius: 9px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font: 500 13px var(--f-body); cursor: pointer; }
@@ -152,15 +159,12 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .drawer button.item[aria-pressed="true"] { border-color: var(--gold); }
 .toast { position: fixed; z-index: 40; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px));
   display: flex; gap: 12px; align-items: center; padding: 10px 14px; border-radius: 10px; background: #2a1c12; border: 1px solid var(--bronze);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, .6); font-size: 13px; max-width: calc(100vw - 32px); color: var(--text); background: var(--panel-2); }
-.toast button { font: 600 12px var(--f-body); background: var(--bronze); color: var(--ink); border: 0; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
-/* папка на столе: кнопка «Открыть ›» — золотом */
-.tile[data-kind="folder"] .open { background: var(--gold); }
-.tile[data-kind="folder"] .open:hover { background: var(--bronze); }
+  box-shadow: 0 12px 30px rgba(20, 30, 45, .2); font-size: 13px; max-width: calc(100vw - 32px); color: var(--text); background: var(--panel-2); }
+.toast button { font: 600 12px var(--f-body); background: var(--bronze); color: var(--panel); border: 0; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
 /* ---------- ✉ написать создателю (папка «Тест») ---------- */
 .report { position: relative; z-index: 1; margin-top: 22px; padding: 16px; border-radius: 14px; border: 1px solid var(--alpha);
-  background: linear-gradient(180deg, var(--panel-2), var(--panel)); box-shadow: 0 10px 30px rgba(0, 0, 0, .45); max-width: 900px; }
-.report h2 { margin: 0 0 4px; font: 700 20px var(--f-display); letter-spacing: .06em; color: var(--gold); }
+  background: var(--panel); box-shadow: var(--shadow); max-width: 900px; }
+.report h2 { margin: 0 0 4px; font: 650 19px var(--f-display); color: var(--text); }
 .report p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
 .rp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .report label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); min-width: 0; }
@@ -181,6 +185,11 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .rp-state { font-size: 13px; color: var(--text); }
 @media (max-width: 700px) {
   .rp-grid { grid-template-columns: 1fr; }
+  .head { padding: 14px 10px 4px 14px; gap: 10px; }
+  .ico { width: 38px; height: 38px; }
+  .title { font-size: 16px; white-space: normal; }
+  .meta { margin: 2px 14px 6px 14px; font-size: 13.5px; }
+  .foot { padding: 8px 12px 10px 14px; }
   .brand h1 { font-size: 22px; }
   .tools { margin-left: 0; }
 }
@@ -235,13 +244,13 @@ let lang = (() => {
 const tx = (v) => (Array.isArray(v) ? v[lang === "ru" ? 0 : 1] : v);
 const UI = {
   sub: ["рабочий стол · ComfyUI", "desktop · ComfyUI"],
-  hint: ["Тяните плитку за шапку, размер — за уголок, ✕ — убрать. «Открыть ›» — войти в папку; назад — по пути сверху или Esc. Свой фон — перетащите фото или видео на стол.",
-         "Drag a tile by its header, resize it by the corner, ✕ removes it. «Open ›» enters a folder; go back via the path on top or Esc. Drop a photo or video on the desk to make it the background."],
+  hint: ["«Открыть папку» — войти внутрь, «‹ Назад» или Esc — выйти. Плитку можно перетащить за верх и растянуть за уголок.",
+         "«Open folder» goes inside, «‹ Back» or Esc goes out. Drag a tile by its top, resize it by the corner."],
   theme: ["🎨 Тема", "🎨 Theme"], align: ["⊞ Выровнять", "⊞ Tidy up"], add: ["＋ Плитка", "＋ Tile"], reset: ["↺ Как было", "↺ Reset"],
   close: ["✕ В ComfyUI", "✕ To ComfyUI"], closeTip: ["Вернуться в ComfyUI", "Back to ComfyUI"],
   langTip: ["Язык стола", "Desktop language"], back: ["‹ Назад", "‹ Back"], path: ["Путь", "Path"],
   ok: ["готово", "ready"], alpha: ["альфа", "alpha"], soon: ["скоро", "soon"],
-  open: ["Открыть", "Open"], openF: ["Открыть ›", "Open ›"], soonBtn: ["Скоро", "Soon"], missing: ["Не установлено", "Not installed"],
+  open: ["Открыть →", "Open →"], openF: ["Открыть папку →", "Open folder →"], soonBtn: ["Скоро", "Soon"], missing: ["Не установлено", "Not installed"],
   removeTip: ["Убрать со стола", "Remove from the desk"], sizeTip: ["Потяни — размер", "Drag to resize"],
   tSoon: ["«%» — в планах. Плитка уже живёт на столе.", "«%» is planned. The tile already lives on the desk."],
   tOutside: ["Внутри ComfyUI эта кнопка откроет процесс «%» новой вкладкой.", "Inside ComfyUI this button opens «%» in a new tab."],
@@ -252,7 +261,7 @@ const UI = {
   tReset: ["Стол как в первый раз.", "The desk is back to the first-run layout."],
   drawerH: ["Добавить плитку", "Add a tile"], drawerP: ["Нажмите — плитка встанет на стол.", "Click — the tile goes back on the desk."],
   drawerNone: ["Все плитки этой папки уже на столе. Уберите любую ✕ — она появится здесь.", "All tiles of this folder are on the desk. Remove one with ✕ and it shows up here."],
-  inFolder: ["в папке: %", "inside: %"],
+  inFolder: ["внутри: %", "inside: %"],
 };
 const u = (k, arg) => tx(UI[k]).replace("%", arg ?? "");
 
@@ -260,58 +269,75 @@ const u = (k, arg) => tx(UI[k]).replace("%", arg ?? "");
 // Проверенные процессы — как есть (s: "ok"); на проверку сообществу — в папке «Тест» (s: "alpha").
 const VIEWS = {
   home: { t: ["Стол", "Desktop"], tiles: [
-    { id: "f-video", ico: "🎬", t: ["Видео", "Video"], s: "ok", go: "video", paint: "film", w: 6, h: 3,
-      meta: ["фото → видео · длинные ролики · диалог · улучшение", "photo → video · long clips · dialogue · enhance"] },
-    { id: "f-image", ico: "🖼", t: ["Картинки", "Images"], s: "ok", go: "image", paint: "outpaint", w: 6, h: 3,
-      meta: ["расширение · реставрация · качество", "outpaint · restoration · quality"] },
-    { id: "f-audio", ico: "🎵", t: ["Звук", "Sound"], s: "ok", go: "audio", paint: "eq", w: 4, h: 2,
-      meta: ["Audio Studio · DJ-пульт · сведение", "Audio Studio · DJ pult · mixing"] },
+    { id: "f-video", ico: "video", t: ["Видео", "Video"], s: "ok", go: "video", w: 4, h: 2,
+      meta: ["Оживить фото, снять длинный ролик или диалог, повторить движение из клипа, улучшить видео.",
+             "Bring a photo to life, make a long clip or a dialogue, copy motion from a clip, enhance a video."] },
+    { id: "f-image", ico: "image", t: ["Картинки", "Images"], s: "ok", go: "image", w: 4, h: 2,
+      meta: ["Расширить кадр, восстановить и раскрасить старое фото, повысить качество.",
+             "Expand a picture, restore and colorize an old photo, raise the quality."] },
+    { id: "f-audio", ico: "sound", t: ["Звук", "Sound"], s: "ok", go: "audio", w: 4, h: 2,
+      meta: ["Музыка и голос, сведение дорожек, клип со звуком.",
+             "Music and voice, mixing tracks, a clip with sound."] },
   ] },
   video: { up: "home", t: ["Видео", "Video"], tiles: [
-    { id: "v-i2v", ico: "🎬", t: ["Фото → видео", "Photo → video"], s: "ok", go: "i2v", paint: "film", w: 5, h: 3,
-      meta: ["MiniMax H3 v3.0 · LTX Engine · LTX 2.3", "MiniMax H3 v3.0 · LTX Engine · LTX 2.3"] },
-    { id: "v-long", ico: "🎞", t: ["Длинный ролик", "Long video"], s: "ok", go: "long", paint: "chain", w: 7, h: 3,
-      meta: ["до 45 с · H3 Story · Full Pipeline", "up to 45 s · H3 Story · Full Pipeline"] },
-    { id: "dialog", ico: "💬", t: ["Диалог", "Dialogue"], s: "ok", wf: "dialog", paint: "talk", w: 4, h: 2,
-      meta: ["Smart MiniMax H3 v1.0 · герои говорят", "Smart MiniMax H3 v1.0 · characters talk"] },
-    { id: "scail", ico: "🕺", t: ["Движение по видео", "Motion from video"], s: "ok", wf: "scail", paint: "pose", w: 4, h: 2,
-      meta: ["SCAIL · Wan 2.1 · позы из ролика", "SCAIL · Wan 2.1 · poses from a clip"] },
-    { id: "clarity", ico: "✨", t: ["Улучшить видео", "Enhance video"], s: "ok", wf: "clarity", paint: "split", w: 4, h: 2,
-      meta: ["Perception Relay · стабилизация · плавность", "Perception Relay · stabilize · smoothness"] },
+    { id: "v-i2v", ico: "photo2video", t: ["Фото → видео", "Photo → video"], s: "ok", go: "i2v", w: 4, h: 2,
+      meta: ["Одно фото превращается в короткое видео. Внутри три движка на выбор.",
+             "One photo becomes a short video. Three engines inside to choose from."] },
+    { id: "v-long", ico: "long", t: ["Длинный ролик", "Long video"], s: "ok", go: "long", w: 4, h: 2,
+      meta: ["Ролик до 45 секунд из нескольких сцен, без видимых стыков.",
+             "A clip up to 45 seconds from several scenes, with no visible joins."] },
+    { id: "dialog", ico: "dialog", t: ["Диалог", "Dialogue"], s: "ok", wf: "dialog", w: 4, h: 2,
+      meta: ["Два героя говорят по очереди: вы пишете реплики, губы попадают в слова.",
+             "Two characters take turns talking: you write the lines, the lips match the words."] },
+    { id: "scail", ico: "pose", t: ["Движение по видео", "Motion from video"], s: "ok", wf: "scail", w: 4, h: 2,
+      meta: ["Ваш герой повторяет движения человека из другого клипа.",
+             "Your character repeats the moves of a person from another clip."] },
+    { id: "clarity", ico: "sparkle", t: ["Улучшить видео", "Enhance video"], s: "ok", wf: "clarity", w: 4, h: 2,
+      meta: ["Убирает дрожание, делает движение плавнее, а картинку — чище.",
+             "Removes shake, makes motion smoother and the picture cleaner."] },
   ] },
   i2v: { up: "video", t: ["Фото → видео", "Photo → video"], tiles: [
-    { id: "h3v3", ico: "🎥", t: ["MiniMax H3 I2V v3.0", "MiniMax H3 I2V v3.0"], s: "ok", wf: "h3v3", paint: "film", w: 4, h: 3,
-      meta: ["камера · автопромтер · LoRA", "camera · autoprompter · LoRA"] },
-    { id: "ltx", ico: "🎞", t: ["LTX Engine · автопромтер", "LTX Engine · autoprompter"], s: "ok", wf: "ltx", paint: "film", w: 4, h: 3,
-      meta: ["LTX 2.5 · модели качает сама", "LTX 2.5 · downloads its models"] },
-    { id: "ltx23", ico: "📽", t: ["LTX 2.3 · фото → видео", "LTX 2.3 · image → video"], s: "ok", wf: "ltx23", paint: "chain", w: 4, h: 3,
-      meta: ["блоки · кадры перехода", "blocks · transition frames"] },
+    { id: "h3v3", ico: "video", t: ["MiniMax H3 I2V v3.0", "MiniMax H3 I2V v3.0"], s: "ok", wf: "h3v3", w: 4, h: 2,
+      meta: ["Главный движок: движение камеры, текст пишет сам, можно подключить LoRA.",
+             "The main engine: camera moves, writes the prompt for you, LoRA support."] },
+    { id: "ltx", ico: "video", t: ["LTX Engine · автопромтер", "LTX Engine · autoprompter"], s: "ok", wf: "ltx", w: 4, h: 2,
+      meta: ["Быстрый движок LTX 2.5. Сам пишет текст и сам скачивает модели.",
+             "The fast LTX 2.5 engine. Writes the prompt and downloads its models itself."] },
+    { id: "ltx23", ico: "long", t: ["LTX 2.3 · фото → видео", "LTX 2.3 · image → video"], s: "ok", wf: "ltx23", w: 4, h: 2,
+      meta: ["Видео из нескольких фото: вы задаёте кадры, переходы рисует модель.",
+             "Video from several photos: you set the frames, the model draws the transitions."] },
   ] },
   long: { up: "video", t: ["Длинный ролик", "Long video"], tiles: [
-    { id: "story", ico: "🎞", t: ["H3 Story", "H3 Story"], s: "ok", wf: "story", paint: "chain", w: 6, h: 3,
-      meta: ["до 45 с · блоки без стыков · со звуком", "up to 45 s · seamless blocks · with sound"] },
-    { id: "full", ico: "🎬", t: ["Full Pipeline · Auto Director", "Full Pipeline · Auto Director"], s: "ok", wf: "full", paint: "film", w: 6, h: 3,
-      meta: ["автопромтер → H3 → улучшение", "autoprompter → H3 → enhance"] },
+    { id: "story", ico: "long", t: ["H3 Story", "H3 Story"], s: "ok", wf: "story", w: 4, h: 2,
+      meta: ["До 45 секунд со звуком: сцены идут друг за другом без стыков.",
+             "Up to 45 seconds with sound: scenes follow each other without joins."] },
+    { id: "full", ico: "pipeline", t: ["Full Pipeline · Auto Director", "Full Pipeline · Auto Director"], s: "ok", wf: "full", w: 4, h: 2,
+      meta: ["Всё в одном: текст → видео H3 → улучшение. Нажали — и ждёте готовый ролик.",
+             "All in one: prompt → H3 video → enhance. Press Run and wait for the finished clip."] },
   ] },
   image: { up: "home", t: ["Картинки", "Images"], tiles: [
-    { id: "outpaint", ico: "↔", t: ["Расширение изображения", "Expand an image"], s: "ok", wf: "outpaint", paint: "outpaint", w: 4, h: 3,
-      meta: ["смартфон → широкий кадр · Flux Fill", "phone photo → wide frame · Flux Fill"] },
-    { id: "restore", ico: "🎨", t: ["Реставрация и раскраска", "Restore & colorize"], s: "ok", wf: "restore", paint: "colorize", w: 4, h: 3,
-      meta: ["Restore Studio · DDColor · CodeFormer", "Restore Studio · DDColor · CodeFormer"] },
-    { id: "upscale", ico: "🔍", t: ["Улучшить качество", "Improve quality"], s: "ok", wf: "upscale", paint: "loupe", w: 4, h: 3,
-      meta: ["апскейл · лица · шумодав", "upscale · faces · denoise"] },
-    { id: "imagegen", ico: "🖼", t: ["Генератор кадра", "Image generator"], s: "soon", paint: "forming", w: 3, h: 2,
-      meta: ["текст + образцы", "text + references"] },
-    { id: "edit", ico: "✏", t: ["Редактор словами", "Edit with words"], s: "soon", paint: "typing", w: 3, h: 2,
-      meta: ["«надень юбку с картинки 2»", "«put on the skirt from picture 2»"] },
-    { id: "tryon", ico: "👗", t: ["Примерочная", "Try-on"], s: "soon", paint: "tryon", w: 3, h: 2,
-      meta: ["фото человека + вещь", "photo of a person + an item"] },
-    { id: "cutout", ico: "✂", t: ["Удаление фона", "Remove background"], s: "soon", paint: "cutout", w: 3, h: 2,
-      meta: ["PNG с прозрачным фоном", "PNG with a transparent background"] },
+    { id: "outpaint", ico: "expand", t: ["Расширение изображения", "Expand an image"], s: "ok", wf: "outpaint", w: 4, h: 2,
+      meta: ["Дорисовывает края: вертикальное фото со смартфона становится широким кадром.",
+             "Paints beyond the edges: a vertical phone photo becomes a wide frame."] },
+    { id: "restore", ico: "restore", t: ["Реставрация и раскраска", "Restore & colorize"], s: "ok", wf: "restore", w: 4, h: 2,
+      meta: ["Старое фото: убирает царапины, восстанавливает лица, раскрашивает ч/б.",
+             "Old photos: removes scratches, restores faces, colorizes black and white."] },
+    { id: "upscale", ico: "loupe", t: ["Улучшить качество", "Improve quality"], s: "ok", wf: "upscale", w: 4, h: 2,
+      meta: ["Увеличивает картинку, делает лица чётче и убирает шум.",
+             "Enlarges the picture, sharpens faces and removes noise."] },
+    { id: "imagegen", ico: "text", t: ["Генератор кадра", "Image generator"], s: "soon", w: 4, h: 2,
+      meta: ["Картинка по вашему тексту и образцам.", "A picture from your text and reference images."] },
+    { id: "edit", ico: "edit", t: ["Редактор словами", "Edit with words"], s: "soon", w: 4, h: 2,
+      meta: ["Меняете фото словами: «надень юбку с картинки 2».", "Change a photo with words: «put on the skirt from picture 2»."] },
+    { id: "tryon", ico: "tryon", t: ["Примерочная", "Try-on"], s: "soon", w: 4, h: 2,
+      meta: ["Фото человека + вещь → человек в этой вещи.", "Photo of a person + an item → the person wearing it."] },
+    { id: "cutout", ico: "cutout", t: ["Удаление фона", "Remove background"], s: "soon", w: 4, h: 2,
+      meta: ["Вырезает объект: PNG с прозрачным фоном.", "Cuts out the subject: a PNG with a transparent background."] },
   ] },
   audio: { up: "home", t: ["Звук", "Sound"], tiles: [
-    { id: "audio", ico: "🎵", t: ["Audio Studio 2.0 · DJ-пульт", "Audio Studio 2.0 · DJ pult"], s: "ok", wf: "audio", paint: "eq", w: 8, h: 3,
-      meta: ["звук, музыка, сведение, клип со звуком", "sound, music, mixing, clip with sound"] },
+    { id: "audio", ico: "sound", t: ["Audio Studio 2.0 · DJ-пульт", "Audio Studio 2.0 · DJ pult"], s: "ok", wf: "audio", w: 4, h: 2,
+      meta: ["Музыка и голос, сведение дорожек, готовый клип со звуком.",
+             "Music and voice, mixing tracks, a finished clip with sound."] },
   ] },
   // 🧪 «Тест»: пока пусто (H3 One и Swap сняты 09.11). Плитку папки вернуть на стол, когда появятся альфа-процессы.
   test: { up: "home", t: ["Тест", "Test"], report: true, tiles: [
@@ -319,7 +345,7 @@ const VIEWS = {
 };
 const BY = {};                                         // BY[папка][id] → плитка
 for (const [v, def] of Object.entries(VIEWS)) BY[v] = Object.fromEntries(def.tiles.map((d) => [d.id, d]));
-const KEY = "neron-studio-layout-v2";                  // раскладка — своя у каждой папки
+const KEY = "neron-studio-layout-v3";                  // раскладка — своя у каждой папки
 // папка, в которой ни один процесс не установлен (например «Тест» без альфа-пакетов), — не показывается
 function subtreeWf(v, out = []) { for (const d of VIEWS[v].tiles) { if (d.wf) out.push(d.wf); if (d.go) subtreeWf(d.go, out); } return out; }
 function shown(id) {
@@ -406,7 +432,7 @@ function render(animate) {
     }
     bottom = Math.max(bottom, (it.y + it.h) * g.sy);
   }
-  for (const [id, el] of els) if (!now.find((it) => it.id === id)) { el.remove(); els.delete(id); painters = painters.filter((q) => q.id !== id); }
+  for (const [id, el] of els) if (!now.find((it) => it.id === id)) { el.remove(); els.delete(id); }
   markAvailable();
   desk.style.height = bottom + "px";
 }
@@ -429,7 +455,7 @@ function drawCrumbs() {
     crumbs.append(b);
   });
 }
-function clearTiles() { for (const [, el] of els) el.remove(); els.clear(); painters = []; }
+function clearTiles() { for (const [, el] of els) el.remove(); els.clear(); }
 function go(v) {
   if (!VIEWS[v] || v === view) return;
   drawer.hidden = true;
@@ -450,11 +476,11 @@ function make(it) {
   if (d.go) el.dataset.kind = "folder";
   el.setAttribute("aria-label", tx(d.t));
   const kids = d.go ? VIEWS[d.go].tiles.length : 0;
-  const chip = d.go ? `<span class="chip ${d.s}" title="${u("inFolder", kids)}">📁 ${kids}</span>` : `<span class="chip ${d.s}">${u(d.s)}</span>`;
-  el.innerHTML = `<div class="head"><span class="ico" aria-hidden="true">${d.ico}</span><span class="title"></span>
-    ${chip}<button class="x" type="button" title="${u("removeTip")}">✕</button></div>
-    <div class="live"><canvas></canvas></div>
-    <div class="foot"><span class="meta"></span><button class="open" type="button"></button></div>
+  const chip = d.go ? `<span class="count">${u("inFolder", kids)}</span>` : d.s === "alpha" ? `<span class="chip alpha">${u("alpha")}</span>` : "";
+  el.innerHTML = `<div class="head"><span class="ico" aria-hidden="true">${ICON[d.ico] || ""}</span><span class="title"></span>
+    <button class="x" type="button" title="${u("removeTip")}">✕</button></div>
+    <p class="meta"></p>
+    <div class="foot">${chip}<button class="open" type="button"></button></div>
     <div class="grip" title="${u("sizeTip")}" aria-hidden="true"></div>`;
   el.querySelector(".title").textContent = tx(d.t);
   el.querySelector(".meta").textContent = tx(d.meta);
@@ -466,7 +492,6 @@ function make(it) {
   dragOn(el.querySelector(".grip"), it, el, "size");
   desk.append(el);
   els.set(it.id, el);
-  painters.push({ el, canvas: el.querySelector("canvas"), fn: PAINT[d.paint], id: d.id });
   return el;
 }
 
@@ -548,7 +573,6 @@ function removeTile(id) {
   if (i < 0) return;
   const removed = { view, it: layout.splice(i, 1)[0] };
   lastRemoved = removed;
-  painters = painters.filter((p) => p.id !== id);
   render(); save(); fillDrawer();
   toast(u("tRemoved", tx(BY[view][id].t)), u("tUndo"), () => { if (lastRemoved === removed && view === removed.view) restore(removed.it); });
 }
@@ -565,7 +589,7 @@ function fillDrawer() {
   drawer.append(h, p);
   for (const d of off) {
     const b = document.createElement("button"); b.type = "button"; b.className = "item";
-    b.innerHTML = `<span aria-hidden="true">${d.ico}</span><span></span>`; b.lastChild.textContent = tx(d.t);
+    b.innerHTML = `<span class="ico sm" aria-hidden="true">${ICON[d.ico] || ""}</span><span></span>`; b.lastChild.textContent = tx(d.t);
     b.onclick = () => restore({ id: d.id, x: 0, y: 0, w: d.w, h: d.h });
     drawer.append(b);
   }
@@ -595,242 +619,27 @@ addEventListener("resize", () => { fit(); render(); });
 let lastW = 0;
 new ResizeObserver(() => { if (desk.clientWidth !== lastW) { lastW = desk.clientWidth; fit(); render(); } }).observe(desk);
 
-// ================== ЖИВЫЕ ПЛИТКИ: по художнику на плитку ==================
-const rnd = (s) => { const x = Math.sin(s * 127.1) * 43758.5453; return x - Math.floor(x); };
-function face(ctx, cx, cy, r, skin, hair, tone) {         // простой портрет-силуэт: волосы, лицо, плечи
-  ctx.fillStyle = hair; ctx.beginPath(); ctx.ellipse(cx, cy - r * .15, r * 1.08, r * 1.2, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = tone; ctx.beginPath(); ctx.ellipse(cx, cy + r * 2.1, r * 1.9, r * 1.1, 0, Math.PI, 0); ctx.fill();
-  ctx.fillStyle = skin; ctx.beginPath(); ctx.ellipse(cx, cy, r * .78, r, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "rgba(0,0,0,.45)"; ctx.beginPath(); ctx.arc(cx - r * .3, cy - r * .1, r * .08, 0, 7); ctx.arc(cx + r * .3, cy - r * .1, r * .08, 0, 7); ctx.fill();
-  ctx.strokeStyle = "rgba(120,30,30,.7)"; ctx.lineWidth = Math.max(1, r * .06); ctx.beginPath(); ctx.arc(cx, cy + r * .35, r * .25, .2, Math.PI - .2); ctx.stroke();
-}
-function scene(ctx, w, h, t, gray) {                     // «кадр»: закатное небо, холмы, солнце
-  const g = ctx.createLinearGradient(0, 0, 0, h);
-  g.addColorStop(0, gray ? "#555" : "#3b1d4a"); g.addColorStop(.55, gray ? "#999" : "#d9733a"); g.addColorStop(1, gray ? "#333" : "#2a1408");
-  ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-  ctx.fillStyle = gray ? "#ddd" : "#ffd27a"; ctx.beginPath(); ctx.arc(w * .68, h * .52, h * .14, 0, 7); ctx.fill();
-  ctx.fillStyle = gray ? "#222" : "#1d0f07"; ctx.beginPath(); ctx.moveTo(0, h);
-  for (let x = 0; x <= w; x += 8) ctx.lineTo(x, h * .72 + Math.sin(x / w * 6 + t * .3) * h * .05);
-  ctx.lineTo(w, h); ctx.fill();
-}
-const PAINT = {
-  lab(ctx, w, h, t) {                                     // колба с пузырьками — «Тест»
-    ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
-    const s = Math.min(w, h) * .8, cx = w / 2, top = (h - s) / 2 + s * .05, neck = s * .16, base = s * .7;
-    const flask = () => { ctx.beginPath(); ctx.moveTo(cx - neck / 2, top); ctx.lineTo(cx - neck / 2, top + s * .32); ctx.lineTo(cx - base / 2, top + s * .9);
-      ctx.lineTo(cx + base / 2, top + s * .9); ctx.lineTo(cx + neck / 2, top + s * .32); ctx.lineTo(cx + neck / 2, top); };
-    flask(); ctx.save(); ctx.clip();
-    const lvl = top + s * (.5 + .04 * Math.sin(t * 1.3));
-    const g = ctx.createLinearGradient(0, lvl, 0, top + s * .9); g.addColorStop(0, COL.alpha); g.addColorStop(1, COL.ember);
-    ctx.fillStyle = g; ctx.fillRect(0, lvl, w, h);
-    for (let i = 0; i < 14; i++) {
-      const ph = (t * (.25 + rnd(i) * .3) + rnd(i * 3.3)) % 1, bx = cx + (rnd(i * 7.1) - .5) * base * .6, by = top + s * .9 - ph * (top + s * .9 - lvl);
-      ctx.fillStyle = `rgba(255,240,200,${.7 * (1 - ph)})`; ctx.beginPath(); ctx.arc(bx, by, 1.5 + rnd(i) * 3, 0, 7); ctx.fill();
-    }
-    ctx.restore();
-    flask(); ctx.strokeStyle = COL.gold; ctx.lineWidth = 2; ctx.lineJoin = "round"; ctx.stroke();
-    ctx.fillStyle = COL.gold; ctx.fillRect(cx - neck * .8, top - 3, neck * 1.6, 4);
-  },
-  talk(ctx, w, h, t) {                                    // два героя и реплики по очереди
-    ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
-    const r = Math.min(w, h) * .15;
-    face(ctx, w * .22, h * .55, r, "#f1cdb2", "#2b1a10", "#6b5a4a");
-    face(ctx, w * .78, h * .55, r, "#e8c4a4", "#8a5a2b", "#40352c");
-    const who = Math.floor(t / 2.2) % 2, k = Math.min(1, (t % 2.2) * 2);
-    const bw = w * .42, bh = h * .2, bx = who ? w * .5 : w * .08, by = h * .08;
-    ctx.globalAlpha = k; ctx.fillStyle = who ? COL.bronze : COL.gold;
-    ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 8); ctx.fill();
-    ctx.beginPath(); const tx0 = who ? w * .74 : w * .26; ctx.moveTo(tx0 - 6, by + bh); ctx.lineTo(tx0 + 6, by + bh); ctx.lineTo(tx0, by + bh + 10); ctx.fill();
-    ctx.fillStyle = COL.ink; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(bx + bw / 2 + (i - 1) * 12, by + bh / 2, 3, 0, 7); ctx.fill(); }
-    ctx.globalAlpha = 1;
-  },
-  pose(ctx, w, h, t) {                                    // скелет из ролика → танцующая фигура
-    ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
-    const fig = (cx, col, a) => {
-      const s = Math.min(w * .4, h) * .37, hy = h * .1, sw = Math.sin(t * 3 + a);
-      const hip = [cx, hy + s * 1.1], neck = [cx, hy + s * .3];
-      const P = { lh: [cx - s * .55, hy + s * (.2 + .4 * sw)], rh: [cx + s * .55, hy + s * (.6 - .4 * sw)], lf: [cx - s * .35, hy + s * 2.05], rf: [cx + s * .35 + sw * s * .2, hy + s * 2.05 - Math.max(0, sw) * s * .3] };
-      ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.lineCap = "round";
-      ctx.beginPath(); ctx.moveTo(...neck); ctx.lineTo(...hip); ctx.moveTo(...neck); ctx.lineTo(...P.lh); ctx.moveTo(...neck); ctx.lineTo(...P.rh);
-      ctx.moveTo(...hip); ctx.lineTo(...P.lf); ctx.moveTo(...hip); ctx.lineTo(...P.rf); ctx.stroke();
-      ctx.beginPath(); ctx.arc(cx, hy + s * .1, s * .2, 0, 7); ctx.stroke();
-      ctx.fillStyle = COL.gold; for (const q of [neck, hip, P.lh, P.rh, P.lf, P.rf]) { ctx.beginPath(); ctx.arc(q[0], q[1], 3, 0, 7); ctx.fill(); }
-    };
-    fig(w * .27, COL.muted, 0); fig(w * .73, COL.ember, 0);
-    ctx.fillStyle = COL.bronze; ctx.font = "700 16px Golos Text"; ctx.textAlign = "center"; ctx.fillText("→", w / 2, h / 2);
-    ctx.font = "600 10px JetBrains Mono, monospace"; ctx.fillStyle = COL.muted; ctx.textAlign = "left"; ctx.fillText(tx(["позы", "poses"]), 8, h - 8);
-    ctx.textAlign = "right"; ctx.fillStyle = COL.gold; ctx.fillText(tx(["ваш герой", "your hero"]), w - 8, h - 8);
-  },
-  film(ctx, w, h, t) {                                    // плёнка с кадрами, плейхед и таймлайн 0–15 с
-    ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
-    const fw = Math.max(70, h * .9), off = (t * 38) % fw;
-    for (let i = -1; i < w / fw + 2; i++) {
-      const x = i * fw - off;
-      ctx.save(); ctx.beginPath(); ctx.rect(x + 6, h * .14, fw - 12, h * .58); ctx.clip();
-      ctx.translate(x + 6, h * .14); scene(ctx, fw - 12, h * .58, t + i, false); ctx.restore();
-      ctx.fillStyle = "#2a1c12"; for (let k = 0; k < 4; k++) { ctx.fillRect(x + 8 + k * fw / 4, h * .04, fw / 8, h * .06); ctx.fillRect(x + 8 + k * fw / 4, h * .76, fw / 8, h * .06); }
-    }
-    const p = (t % 15) / 15, bx = 12, bw = w - 24, by = h * .9;
-    ctx.fillStyle = COL.line; ctx.fillRect(bx, by, bw, 4);
-    ctx.fillStyle = COL.ember; ctx.fillRect(bx, by, bw * p, 4);
-    ctx.fillStyle = COL.gold; ctx.beginPath(); ctx.arc(bx + bw * p, by + 2, 6, 0, 7); ctx.fill();
-    ctx.font = "600 11px JetBrains Mono, monospace"; ctx.fillStyle = COL.text; ctx.textAlign = "right";
-    ctx.fillText((p * 15).toFixed(1) + tx([" / 15.0 с", " / 15.0 s"]), w - 12, by - 8);
-  },
-  chain(ctx, w, h, t) {                                   // блоки ролика и бегущий по стыкам огонёк
-    ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
-    const n = 4, gap = 10, bw = (w - 24 - gap * (n - 1)) / n, y = 26, bh = Math.max(30, h - 56);
-    for (let i = 0; i < n; i++) {
-      const x = 12 + i * (bw + gap);
-      ctx.save(); ctx.beginPath(); ctx.roundRect(x, y, bw, bh, 6); ctx.clip(); ctx.translate(x, y); scene(ctx, bw, bh, t + i * 2, false); ctx.restore();
-      ctx.font = "600 10px JetBrains Mono, monospace"; ctx.fillStyle = COL.muted; ctx.textAlign = "center";
-      ctx.fillText(tx(["блок ", "block "]) + (i + 1), x + bw / 2, y + bh + 16);
-      if (i < n - 1) {
-        const sx = x + bw + gap / 2, pulse = .5 + .5 * Math.sin(t * 3 - i);
-        ctx.fillStyle = `rgba(255,122,26,${.25 + .6 * pulse})`; ctx.fillRect(sx - 3, y - 4, 6, bh + 8);
-      }
-    }
-    const p = (t * .18) % 1, gx = 12 + p * (w - 24);
-    const gr = ctx.createRadialGradient(gx, y + bh / 2, 0, gx, y + bh / 2, 40);
-    gr.addColorStop(0, "rgba(255,210,120,.55)"); gr.addColorStop(1, "rgba(255,210,120,0)");
-    ctx.fillStyle = gr; ctx.fillRect(gx - 40, y - 10, 80, bh + 20);
-    ctx.fillStyle = COL.gold; ctx.textAlign = "left"; ctx.font = "600 11px JetBrains Mono, monospace";
-    ctx.fillText(`${(p * 45).toFixed(0).padStart(2, "0")}` + tx([" / 45 с · стык 0,9 с со звуком", " / 45 s · 0.9 s seam with sound"]), 12, 16);
-  },
-  swap(ctx, w, h, t) {                                    // лицо меняется по сканирующей полосе
-    ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
-    const p = .5 + .5 * Math.sin(t * .9), sx = w * p, r = Math.min(w, h) * .2, cx = w / 2, cy = h * .45;
-    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, sx, h); ctx.clip(); face(ctx, cx, cy, r, "#e8c4a4", "#2b1a10", "#6b5a4a"); ctx.restore();
-    ctx.save(); ctx.beginPath(); ctx.rect(sx, 0, w - sx, h); ctx.clip(); face(ctx, cx, cy, r, "#f1cdb2", "#8a5a2b", "#e9e1d4"); ctx.restore();
-    const g = ctx.createLinearGradient(sx - 14, 0, sx + 14, 0);
-    g.addColorStop(0, "rgba(255,122,26,0)"); g.addColorStop(.5, "rgba(255,180,90,.9)"); g.addColorStop(1, "rgba(255,122,26,0)");
-    ctx.fillStyle = g; ctx.fillRect(sx - 14, 0, 28, h);
-    ctx.font = "600 10px JetBrains Mono, monospace"; ctx.textAlign = "left"; ctx.fillStyle = COL.muted; ctx.fillText(tx(["видео", "video"]), 8, h - 8);
-    ctx.textAlign = "right"; ctx.fillStyle = COL.gold; ctx.fillText(tx(["на кого", "swap in"]), w - 8, h - 8);
-  },
-  split(ctx, w, h, t) {                                   // до / после: шум и «ползучая» текстура слева, чисто справа
-    const p = .5 + .35 * Math.sin(t * .8), sx = w * p;
-    ctx.save(); ctx.translate(0, 0); scene(ctx, w, h, t, false); ctx.restore();
-    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, sx, h); ctx.clip();
-    for (let i = 0; i < 260; i++) { ctx.fillStyle = `rgba(255,255,255,${rnd(i + Math.floor(t * 12)) * .18})`; ctx.fillRect(rnd(i * 3.1 + Math.floor(t * 12)) * w, rnd(i * 7.7 + Math.floor(t * 12)) * h, 2, 2); }
-    ctx.fillStyle = "rgba(60,40,80,.25)"; ctx.fillRect(0, 0, sx, h); ctx.restore();
-    ctx.fillStyle = COL.gold; ctx.fillRect(sx - 1, 0, 2, h);
-    ctx.beginPath(); ctx.arc(sx, h / 2, 9, 0, 7); ctx.fill();
-    ctx.fillStyle = COL.ink; ctx.font = "700 10px Golos Text"; ctx.textAlign = "center"; ctx.fillText("⇆", sx, h / 2 + 4);
-    ctx.font = "600 10px JetBrains Mono, monospace"; ctx.fillStyle = COL.text; ctx.textAlign = "left"; ctx.fillText(tx(["до", "before"]), 8, 16);
-    ctx.textAlign = "right"; ctx.fillText(tx(["после", "after"]), w - 8, 16);
-  },
-  eq(ctx, w, h, t) {                                      // эквалайзер + два «винила» пульта
-    ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
-    const r = Math.min(h * .32, w * .12);
-    for (const [cx, dir] of [[r + 12, 1], [w - r - 12, -1]]) {
-      ctx.save(); ctx.translate(cx, h / 2); ctx.rotate(t * 2.4 * dir);
-      ctx.fillStyle = "#14100c"; ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fill();
-      ctx.strokeStyle = "#2c2118"; for (let k = 3; k < 10; k++) { ctx.beginPath(); ctx.arc(0, 0, r * k / 10, 0, 7); ctx.stroke(); }
-      ctx.fillStyle = COL.bronze; ctx.beginPath(); ctx.arc(0, 0, r * .28, 0, 7); ctx.fill();
-      ctx.fillStyle = COL.gold; ctx.fillRect(-1, -r * .28, 2, r * .2); ctx.restore();
-    }
-    const x0 = r * 2 + 28, x1 = w - r * 2 - 28, n = Math.max(8, Math.floor((x1 - x0) / 9)), bw = (x1 - x0) / n;
-    for (let i = 0; i < n; i++) {
-      const v = .15 + .85 * Math.abs(Math.sin(t * (2 + rnd(i) * 3) + i * .7)) * (.5 + .5 * Math.sin(i / n * Math.PI));
-      const bh = v * h * .7, y = h / 2 + h * .35 - bh;
-      const g = ctx.createLinearGradient(0, y, 0, y + bh); g.addColorStop(0, COL.gold); g.addColorStop(1, COL.ember);
-      ctx.fillStyle = g; ctx.fillRect(x0 + i * bw + 1, y, bw - 2, bh);
-    }
-  },
-  colorize(ctx, w, h, t) {                                // ч/б → цвет волной
-    const p = (t * .22) % 1.4, sx = Math.min(1, p) * w;
-    scene(ctx, w, h, 0, true);
-    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, sx, h); ctx.clip(); scene(ctx, w, h, 0, false); ctx.restore();
-    face(ctx, w * .3, h * .5, Math.min(w, h) * .16, sx > w * .3 ? "#efc7a3" : "#bbb", sx > w * .3 ? "#5a3418" : "#444", sx > w * .3 ? "#6d3d2a" : "#666");
-    ctx.fillStyle = "rgba(255,210,120,.8)"; ctx.fillRect(sx - 1, 0, 2, h);
-    for (let i = 0; i < 40; i++) { ctx.fillStyle = "rgba(240,199,90,.8)"; ctx.fillRect(sx + (rnd(i + Math.floor(t * 20)) - .5) * 10, rnd(i * 5.3) * h, 2, 2); }
-  },
-  outpaint(ctx, w, h, t) {                                // кадр растёт наружу, дорисованное — по пунктиру
-    ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
-    const k = REDUCED ? 1 : .5 + .5 * (.5 - .5 * Math.cos(t * .9));
-    const iw = w * (.42 + .5 * k), ih = h * (.5 + .42 * k), ix = (w - iw) / 2, iy = (h - ih) / 2;
-    ctx.save(); ctx.beginPath(); ctx.rect(ix, iy, iw, ih); ctx.clip(); ctx.translate(ix, iy); scene(ctx, iw, ih, 0, false); ctx.restore();
-    const cw = w * .42, ch = h * .5;
-    ctx.strokeStyle = COL.gold; ctx.lineWidth = 2; ctx.setLineDash([]); ctx.strokeRect((w - cw) / 2, (h - ch) / 2, cw, ch);
-    ctx.strokeStyle = COL.ember; ctx.setLineDash([6, 5]); ctx.lineDashOffset = -t * 20; ctx.strokeRect(ix, iy, iw, ih); ctx.setLineDash([]);
-    ctx.font = "600 10px JetBrains Mono, monospace"; ctx.fillStyle = COL.text; ctx.textAlign = "left";
-    const lbl = `${Math.round(768 + 1024 * k)}×${Math.round(512 + 512 * k)}`;
-    ctx.fillStyle = "rgba(10,7,5,.8)"; ctx.fillRect(4, h - 22, ctx.measureText(lbl).width + 10, 18);
-    ctx.fillStyle = COL.text; ctx.fillText(lbl, 9, h - 9);
-  },
-  loupe(ctx, w, h, t) {                                   // пиксели → резкость под лупой
-    const cell = 10;
-    const ow = Math.ceil(w / cell), oh = Math.ceil(h / cell);
-    let off = PAINT._loupe;
-    if (!off || off.width !== ow || off.height !== oh) { off = PAINT._loupe = document.createElement("canvas"); off.width = ow; off.height = oh; scene(off.getContext("2d"), ow, oh, 0, false); }
-    ctx.imageSmoothingEnabled = false; ctx.drawImage(off, 0, 0, w, h);
-    const r = Math.min(w, h) * .3, cx = w / 2 + Math.cos(t * .7) * w * .22, cy = h / 2 + Math.sin(t * 1.1) * h * .2;
-    ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.clip(); ctx.imageSmoothingEnabled = true; scene(ctx, w, h, 0, false); ctx.restore();
-    ctx.strokeStyle = COL.gold; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.stroke();
-    ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(cx + r * .7, cy + r * .7); ctx.lineTo(cx + r * 1.15, cy + r * 1.15); ctx.stroke();
-    ctx.font = "600 11px JetBrains Mono, monospace"; ctx.fillStyle = COL.gold; ctx.textAlign = "left"; ctx.fillText("×4", 8, 16);
-  },
-  forming(ctx, w, h, t) {                                 // частицы собираются в кадр
-    ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
-    const k = REDUCED ? 1 : .5 - .5 * Math.cos((t * .5) % (Math.PI * 2));
-    const n = 220;
-    for (let i = 0; i < n; i++) {
-      const tx = (i % 22) / 21 * w * .8 + w * .1, ty = Math.floor(i / 22) / 9 * h * .7 + h * .15;
-      const sx = rnd(i) * w, sy = rnd(i * 9.3) * h;
-      const x = sx + (tx - sx) * k, y = sy + (ty - sy) * k;
-      const v = ty / h; ctx.fillStyle = v < .5 ? `rgba(217,115,58,${.35 + .6 * k})` : `rgba(240,199,90,${.35 + .6 * k})`;
-      ctx.fillRect(x, y, 3, 3);
-    }
-    ctx.font = "500 11px Golos Text, sans-serif"; ctx.fillStyle = COL.muted; ctx.textAlign = "left";
-    ctx.fillText(tx(["«закат над Римом, 16:9»", "«sunset over Rome, 16:9»"]), 8, h - 8);
-  },
-  typing(ctx, w, h, t) {                                  // печатается команда, картинка отзывается
-    ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
-    const msg = tx(["надень юбку с картинки 2", "put on the skirt from picture 2"]);
-    const n = Math.min(msg.length, Math.floor((t * 7) % (msg.length + 14)));
-    face(ctx, w * .72, h * .38, Math.min(w, h) * .14, "#f1cdb2", "#3b2312", "#e9e1d4");
-    const done = n >= msg.length;
-    ctx.fillStyle = done ? "#c9b48c" : "#4a4038";
-    ctx.beginPath(); const sx = w * .72, sy = h * .64, sw = Math.min(w, h) * .26;
-    ctx.moveTo(sx - sw * .45, sy); ctx.lineTo(sx + sw * .45, sy); ctx.lineTo(sx + sw * .6, sy + sw * .7); ctx.lineTo(sx - sw * .6, sy + sw * .7); ctx.fill();
-    ctx.fillStyle = COL.panel2; ctx.fillRect(8, h - 40, w * .58, 28);
-    ctx.font = "500 12px Golos Text, sans-serif"; ctx.fillStyle = COL.text; ctx.textAlign = "left";
-    const shown = msg.slice(0, n); ctx.fillText(shown, 14, h - 21);
-    if (Math.floor(t * 2) % 2 === 0) { const tw = ctx.measureText(shown).width; ctx.fillStyle = COL.gold; ctx.fillRect(15 + tw, h - 33, 2, 16); }
-  },
-  tryon(ctx, w, h, t) {                                   // вещь «въезжает» на человека
-    ctx.fillStyle = COL.well; ctx.fillRect(0, 0, w, h);
-    const cx = w * .45, r = Math.min(w, h) * .14; face(ctx, cx, h * .32, r, "#f1cdb2", "#5a3418", "#40352c");
-    const k = REDUCED ? 1 : .5 - .5 * Math.cos(t * 1.1);
-    const gx = w * .86 + (cx - w * .86) * k, gy = h * .66;
-    ctx.fillStyle = "#b8344a"; ctx.beginPath();
-    ctx.moveTo(gx - r * 1.2, gy - r * .9); ctx.lineTo(gx + r * 1.2, gy - r * .9); ctx.lineTo(gx + r * 1.5, gy + r * 1.3); ctx.lineTo(gx - r * 1.5, gy + r * 1.3); ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.setLineDash([3, 4]); ctx.strokeRect(w * .74, h * .44, w * .23, h * .5); ctx.setLineDash([]);
-  },
-  cutout(ctx, w, h, t) {                                  // фон уходит, остаётся шахматка прозрачности
-    const s = 10; for (let y = 0; y < h; y += s) for (let x = 0; x < w; x += s) { ctx.fillStyle = ((x / s + y / s) % 2) ? "#2a2420" : "#3a322b"; ctx.fillRect(x, y, s, s); }
-    const k = REDUCED ? 1 : (t * .3) % 1.3;
-    ctx.save(); ctx.beginPath(); ctx.rect(w * Math.min(1, k), 0, w, h); ctx.clip(); scene(ctx, w, h, 0, false); ctx.restore();
-    face(ctx, w / 2, h * .42, Math.min(w, h) * .16, "#f1cdb2", "#2b1a10", "#6b5a4a");
-    ctx.fillStyle = "rgba(255,180,90,.9)"; ctx.fillRect(w * Math.min(1, k) - 1, 0, 2, h);
-  },
+// ================== ИКОНКИ: тонкие линии, цвет — акцент темы ==================
+const SV = (body) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+const ICON = {
+  video: SV('<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/>'),
+  image: SV('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 9"/>'),
+  sound: SV('<path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>'),
+  photo2video: SV('<rect x="3" y="5" width="9" height="9" rx="1.5"/><path d="M14 9h3M15.5 7.5L17 9l-1.5 1.5"/><rect x="18" y="5" width="3" height="9" rx="1"/><path d="M3 18h18"/>'),
+  long: SV('<rect x="2" y="7" width="6" height="10" rx="1"/><rect x="9" y="7" width="6" height="10" rx="1"/><rect x="16" y="7" width="6" height="10" rx="1"/>'),
+  dialog: SV('<path d="M4 5h11v8H8l-4 3z"/><path d="M15 9h5v8l-3-2h-6v-2"/>'),
+  pipeline: SV('<circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><path d="M7 12h3M14 12h3"/>'),
+  pose: SV('<circle cx="12" cy="4.5" r="2"/><path d="M12 7v6M12 9l-5 2M12 9l5-3M12 13l-3 7M12 13l4 6"/>'),
+  sparkle: SV('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 1.8 1.8.7-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z"/>'),
+  expand: SV('<rect x="8" y="7" width="8" height="10" rx="1"/><path d="M3 12h3M4.5 10.5L3 12l1.5 1.5M21 12h-3M19.5 10.5L21 12l-1.5 1.5"/>'),
+  restore: SV('<path d="M4 20l7-7"/><path d="M13 4l7 7-6 6-7-7z"/><path d="M15 2v2M22 9h-2"/>'),
+  loupe: SV('<circle cx="10" cy="10" r="6"/><path d="M14.5 14.5L20 20M8 10h4M10 8v4"/>'),
+  text: SV('<path d="M4 6h16M4 11h10M4 16h13"/><path d="M18 14l3 3-3 3"/>'),
+  edit: SV('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>'),
+  tryon: SV('<path d="M9 3l3 2 3-2 5 3-2 4-2-1v12H8V9l-2 1-2-4z"/>'),
+  cutout: SV('<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.5 7.5L20 18M8.5 16.5L20 6"/>'),
+  lab: SV('<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/>'),
 };
-
-// ---------- общий цикл: рисуем только видимое, с учётом плотности экрана ----------
-let painters = [];
-function frame(now) {
-  const t = now / 1000, dpr = Math.min(2, devicePixelRatio || 1);
-  for (const p of painters) {
-    const c = p.canvas, w = c.clientWidth, h = c.clientHeight;
-    if (!w || !h) continue;
-    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
-    const ctx = c.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    try { p.fn(ctx, w, h, REDUCED ? 6 : t); } catch (_) {}
-  }
-  if (!REDUCED) requestAnimationFrame(frame);
-}
-if (!CanvasRenderingContext2D.prototype.roundRect) CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h) { this.rect(x, y, w, h); };
 
 // ================== 🎨 ТЕМЫ: те же, что у ноды Neron Theme (+ «как в ComfyUI») ==================
 const hx = (c) => { const n = parseInt(String(c).slice(1, 7), 16) || 0; return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
@@ -860,7 +669,8 @@ function gen(main, light) {                 // как generateFromColor у Neron
 }
 const P = (id, name, main, light, patch) => { const t = gen(main, light); if (patch?.c) Object.assign(t.c, patch.c); if (patch?.roles) Object.assign(t.roles, patch.roles); return { id, name, ...t }; };
 const THEMES = [
-  { id: "aureus", name: "Аурей Neron (стол)", c: { bg: "#0e0a07", title: "#241910", body: "#1b130d", text: "#f3e6d2", widget: "#0a0705", line: "#3a2a1c", accent: "#c8873a" }, roles: { text: "#f0c75a", gen: "#ff7a1a" } },
+  { id: "calm", name: "Светлый Neron (стол)", c: { bg: "#e9ecef", title: "#f1f3f5", body: "#f8f9fa", text: "#1d232a", muted: "#5a6470", halo: "#f4f6f8", widget: "#ffffff", line: "#d5dae0", accent: "#2f5d8a" }, roles: { text: "#24496d", gen: "#2f5d8a" } },
+  { id: "aureus", name: "Аурей Neron (тёмный)", c: { bg: "#0e0a07", title: "#241910", body: "#1b130d", text: "#f3e6d2", widget: "#0a0705", line: "#3a2a1c", accent: "#c8873a" }, roles: { text: "#f0c75a", gen: "#ff7a1a" } },
   P("graphite", "Графит", "#8a9099", false, { c: { bg: "#151618", title: "#2e3034", body: "#26282b", text: "#d6d8dc", widget: "#1c1d20", line: "#4a4d54", accent: "#8ab4f8" }, roles: { text: "#ffb74d", gen: "#e57373" } }),
   P("brown", "Neron Brown", "#f3a453", false, { c: { bg: "#170e07", title: "#4a2f1e", body: "#2e1c10", text: "#eedcc6", widget: "#1c120b", line: "#5e412b", accent: "#f3a453" }, roles: { text: "#ffcf70", gen: "#f3a453" } }),
   P("neon", "Неон", "#ff2bd6", false, { c: { bg: "#06040f", title: "#1a1033", body: "#0c0820", text: "#ece7ff", widget: "#0d0822", line: "#4f39a8", accent: "#ff2bd6" }, roles: { text: "#ffe600", gen: "#00e5ff" } }),
@@ -872,27 +682,27 @@ const THEMES = [
   P("mono", "Монохром", "#c0c0c0", false, { c: { bg: "#0d0d0d", title: "#2b2b2b", body: "#1e1e1e", text: "#eeeeee", widget: "#141414", line: "#4d4d4d", accent: "#ffffff" }, roles: { text: "#bdbdbd", gen: "#e0e0e0" } }),
   P("paper", "Бумага (светлая)", "#3b6fd6", true, { c: { bg: "#ecebe6", title: "#d9d6cc", body: "#f6f5f1", text: "#22242a", widget: "#ffffff", line: "#b8b5aa", accent: "#3b6fd6" } }),
 ];
-const THEME_EN = { aureus: "Neron Aureus (desk)", graphite: "Graphite", neon: "Neon", backlight: "Backlight", sunset: "Sunset",
+const THEME_EN = { calm: "Neron Light (desk)", aureus: "Neron Aureus (dark)", graphite: "Graphite", neon: "Neon", backlight: "Backlight", sunset: "Sunset",
   ocean: "Ocean", forest: "Forest", sakura: "Sakura", mono: "Monochrome", paper: "Paper (light)" };
 const tName = (t) => (lang === "ru" ? t.name : THEME_EN[t.id] || t.name);
 const COMFY = "comfy", THEME_KEY = "neron-studio-theme";
 const engine = () => { try { return parent !== window ? parent.__neronThemeEngine : null; } catch (_) { return null; } };
-let themeChoice = COMFY;
-try { themeChoice = localStorage.getItem(THEME_KEY) || COMFY; } catch (_) {}
+let themeChoice = "calm";                             // по умолчанию — светлый спокойный вид
+try { themeChoice = localStorage.getItem(THEME_KEY) || "calm"; } catch (_) {}
 
 function applyTheme() {
   let t = null, note = "";
   if (themeChoice === COMFY) {
     const cur = engine()?.current;
     t = cur && cur.c ? { name: cur.name || "Neron Theme", c: cur.c, roles: cur.roles || {} } : THEMES[0];
-    note = cur ? tx(["как в ComfyUI: ", "as in ComfyUI: "]) + t.name : tx(["как в ComfyUI: темы нет — Аурей", "as in ComfyUI: no theme — Aureus"]);
+    note = cur ? tx(["как в ComfyUI: ", "as in ComfyUI: "]) + t.name : tx(["как в ComfyUI: темы нет — Светлый", "as in ComfyUI: no theme — Light"]);
   } else t = THEMES.find((x) => x.id === themeChoice) || THEMES[0];
   const c = t.c, light = lumC(c.bg) > .35, R = t.roles || {};
   const v = {
     "--ink": c.bg, "--panel": c.body, "--panel-2": c.title, "--line": c.line, "--bronze": c.accent,
     "--gold": R.text || mixc(c.accent, light ? "#000000" : "#ffffff", .3), "--ember": R.gen || c.accent,
-    "--text": c.text, "--muted": mixc(c.text, c.bg, .42), "--well": c.widget || mixc(c.bg, "#000000", .3),
-    "--halo": rgbaC(c.accent, light ? .16 : .14),
+    "--text": c.text, "--muted": c.muted || mixc(c.text, c.bg, .42), "--well": c.widget || mixc(c.bg, "#000000", .3),
+    "--halo": c.halo || rgbaC(c.accent, light ? .16 : .14),
     "--ok": light ? "#2e8b47" : "#8fd99a", "--alpha": light ? "#b8660a" : "#ffb347", "--soon": light ? "#5a6a7a" : "#7f8fa1",
   };
   const root = document.documentElement;
@@ -933,8 +743,8 @@ function fillThemes() {
     b.onclick = () => { themeChoice = id; try { localStorage.setItem(THEME_KEY, id); } catch (_) {} applyTheme(); fillThemes(); };
     themesBox.append(b);
   };
-  add(COMFY, tx(["🔗 Как в ComfyUI", "🔗 As in ComfyUI"]) + (cur ? ` — ${cur.name || "Neron Theme"}` : tx([" (тема не стоит → Аурей)", " (no theme → Aureus)"])),
-      cur?.c ? [cur.c.bg, cur.c.title, cur.c.accent] : ["#0e0a07", "#241910", "#c8873a"]);
+  add(COMFY, tx(["🔗 Как в ComfyUI", "🔗 As in ComfyUI"]) + (cur ? ` — ${cur.name || "Neron Theme"}` : tx([" (тема не стоит → Светлый)", " (no theme → Light)"])),
+      cur?.c ? [cur.c.bg, cur.c.title, cur.c.accent] : ["#e9ecef", "#f8f9fa", "#2f5d8a"]);
   for (const t of THEMES) add(t.id, tName(t), [t.c.bg, t.c.title, t.c.accent]);
 }
 document.getElementById("themeBtn").onclick = () => { fillThemes(); drawer.hidden = true; themesBox.hidden = !themesBox.hidden; };
@@ -1060,7 +870,7 @@ bgLoad().then((rec) => { if (rec) bgShow(rec); });
 // ================== 🧪 «✉ Написать создателю» (папка «Тест») ==================
 // Письмо уходит автору через Web3Forms (ключ публичный: он только разрешает слать письма автору, адреса не раскрывает).
 // К письму — только то, что видно в «Что будет отправлено»: процесс, текст, версия ComfyUI, видеокарта, последняя ошибка.
-const DESK_VERSION = "2026.11.09·2";
+const DESK_VERSION = "2026.11.13·1";
 const W3F_KEY = "6462b9a5-e856-422f-9f27-23875a4277d3";
 const SENT_KEY = "neron-studio-report-at", ERR_KEY = "neron-studio-last-error";
 const RP = {
@@ -1196,8 +1006,6 @@ if (parent === window) document.getElementById("close").hidden = true;
 applyTexts(); drawCrumbs(); showReport();
 
 fit(); render(true);
-requestAnimationFrame(frame);
-if (REDUCED) addEventListener("resize", () => requestAnimationFrame(frame));
 document.fonts?.ready.then(() => render());
 })();
 </script>
