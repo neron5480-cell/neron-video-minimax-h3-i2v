@@ -5,7 +5,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-const VERSION = "2026.11.13·8";                 // видно в подсказке монеты и на полосе — какая версия загружена
+const VERSION = "2026.11.13·9";                 // видно в подсказке монеты и на полосе — какая версия загружена
 const POS_KEY = "neron-studio-coin-pos";
 // язык: как выбран на столе, иначе — по языку системы (русский/украинский/белорусский/казахский → RU, остальное → EN)
 const LANG_KEY = "neron-studio-lang";
@@ -189,7 +189,8 @@ const DESK_LIGHT = { bg: "#f8f9fa", line: "#d5dae0", text: "#1d232a", muted: "#5
 function deskThemeId() {
     let id = "calm";
     try { id = localStorage.getItem(DESK_THEME_KEY) || "calm"; } catch (_) {}
-    if (id === "comfy") return null;                                   // «Как в ComfyUI» — решает нода Neron Theme
+    // «Как в ComfyUI»: есть на холсте нода Neron Theme — решает она; нет — как на столе в этом режиме, светлая
+    if (id === "comfy") return window.__neronThemeEngine?.current ? null : "studio-light";
     return id === "calm" ? "studio-light" : id === "aureus" ? "studio" : id;
 }
 function lum(hex) {
@@ -326,7 +327,8 @@ setInterval(tellRun, 1000);
 // оформление стола в процессе должно стоять — если что-то его сбило (смена вкладок, сворачивание), ставим снова
 function healSkin() {
     const id = deskThemeId(), E = window.__neronThemeEngine;
-    if (!M.on || !id) { M.skinWarn = ""; return; }
+    if (!M.on) { M.skinWarn = ""; return; }
+    if (!id) { if (E?.studio) skin(true); M.skinWarn = ""; return; }   // решает нода темы на холсте
     if (!E || typeof window.__neronThemeStudio !== "function") {
         M.skinWarn = L("нет Neron Theme — холст не перекрашен", "no Neron Theme — canvas not restyled"); drawClock(); return;
     }
