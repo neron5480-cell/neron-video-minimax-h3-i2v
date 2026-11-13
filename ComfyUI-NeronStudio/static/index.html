@@ -809,8 +809,8 @@ function fillThemes() {
   lookPanel(themesBox);
   bgPanel(themesBox);
   const h = document.createElement("h3"); h.textContent = tx(["🎨 Цвета — темы Neron Theme", "🎨 Colors — Neron Theme themes"]); themesBox.append(h);
-  const p = document.createElement("p"); p.textContent = tx(["Эта тема — для стола и всех процессов. Свой вид одному процессу: поставьте в него ноду «Neron Theme 🎨» и выберите тему — процесс запомнит её. Удалите ноду — вернётся тема стола.",
-    "This theme is for the desk and all workflows. A look for one workflow: add the «Neron Theme 🎨» node to it and pick a theme — the workflow remembers it. Delete the node — the desk theme returns."]); themesBox.append(p);
+  const p = document.createElement("p"); p.textContent = tx(["Эта тема — для стола и всех процессов. В каждом процессе со стола есть нода «Neron Theme 🎨»: выберите в ней тему — этот процесс запомнит её. Удалите ноду — вернётся тема стола.",
+    "This theme is for the desk and all workflows. Every workflow opened from the desk has a «Neron Theme 🎨» node: pick a theme there and that workflow remembers it. Delete the node — the desk theme returns."]); themesBox.append(p);
   const add = (id, name, cols) => {
     const b = document.createElement("button"); b.type = "button"; b.className = "item"; b.setAttribute("aria-pressed", String(themeChoice === id));
     b.innerHTML = `<span class="swatch">${cols.map((x) => `<i style="background:${x}"></i>`).join("")}</span><span>${name}</span>`;
@@ -945,7 +945,7 @@ bgLoad().then((rec) => { if (rec) bgShow(rec); });
 // ================== 🧪 «✉ Написать создателю» (папка «Тест») ==================
 // Письмо уходит автору через Web3Forms (ключ публичный: он только разрешает слать письма автору, адреса не раскрывает).
 // К письму — только то, что видно в «Что будет отправлено»: процесс, текст, версия ComfyUI, видеокарта, последняя ошибка.
-const DESK_VERSION = "2026.11.13·10";
+const DESK_VERSION = "2026.11.13·11";
 const W3F_KEY = "6462b9a5-e856-422f-9f27-23875a4277d3";
 const SENT_KEY = "neron-studio-report-at", ERR_KEY = "neron-studio-last-error";
 const RP = {

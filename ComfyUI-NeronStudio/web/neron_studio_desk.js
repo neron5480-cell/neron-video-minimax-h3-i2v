@@ -5,7 +5,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-const VERSION = "2026.11.13·10";                 // видно в подсказке монеты и на полосе — какая версия загружена
+const VERSION = "2026.11.13·11";                 // видно в подсказке монеты и на полосе — какая версия загружена
 const POS_KEY = "neron-studio-coin-pos";
 // язык: как выбран на столе, иначе — по языку системы (русский/украинский/белорусский/казахский → RU, остальное → EN)
 const LANG_KEY = "neron-studio-lang";
@@ -61,6 +61,7 @@ async function openWorkflow(id, title) {
         await app.loadGraphData(data, true, true, file);
         closeStudio();
         enterStudioMode(title);
+        setTimeout(() => ensureThemeNode(), 150);                         // нода темы — в каждом процессе со стола
     } catch (e) {
         console.error("[Neron Studio] open workflow", e);
         tellDesk(L(`ComfyUI не смог открыть «${title}»: `, `ComfyUI could not open «${title}»: `) + (e?.message || e));
@@ -221,6 +222,46 @@ function wantedTheme() {
     const id = deskThemeId();
     return id ? { id } : { node: true };
 }
+// ---------- нода «Neron Theme 🎨» в каждом процессе со стола ----------
+// Стол сам ставит её на холст (файл процесса не меняется). В ней — тема процесса: своя, если человек её выбирал,
+// иначе — тема стола. Человек сменил тему в ноде — процесс запомнил; удалил ноду — снова тема стола.
+const THEME_NODE = "NeronThemeStudio";
+function themeNodeOf(g) { return ((g && g._nodes) || []).find((n) => (n.comfyClass || n.type) === THEME_NODE) || null; }
+function deskTheme() {
+    const id = deskThemeId() || "studio-light";
+    return window.__neronThemeBuiltin?.(id) || window.__neronThemeBuiltin?.("studio-light") || null;
+}
+function setNodeTheme(n, theme) {
+    const w = (n.widgets || []).find((x) => x.name === "theme_json");
+    if (!w || !theme) return;
+    let o = {}; try { o = JSON.parse(w.value || "{}") || {}; } catch (_) { o = {}; }
+    w.value = JSON.stringify({ ...o, v: 1, theme, tab: o.tab || "install" });
+    n.__ntsConfigured = true;
+    try { n.__ntsReload?.(); } catch (_) {}
+}
+function ensureThemeNode(tries = 0) {
+    const g = rootGraph(), LGx = window.LiteGraph;
+    if (!M.on) return;
+    if (!g || !LGx || !window.__neronThemeBuiltin || !LGx.registered_node_types?.[THEME_NODE]) {
+        if (tries < 25) setTimeout(() => ensureThemeNode(tries + 1), 200);   // Neron Theme ещё грузится (или её нет)
+        return;
+    }
+    const theme = procTheme() || deskTheme();
+    let n = themeNodeOf(g);
+    if (!n) {
+        try {
+            n = LGx.createNode(THEME_NODE);
+            const ns = g._nodes || [];
+            const minX = ns.length ? Math.min(...ns.map((x) => x.pos[0])) : 0, minY = ns.length ? Math.min(...ns.map((x) => x.pos[1])) : 0;
+            n.pos = [minX - 620, minY];                                    // слева от процесса, ничего не закрывает
+            g.add(n);
+        } catch (e) { console.warn("[Neron Studio] theme node", e); return; }
+    }
+    setNodeTheme(n, theme);
+    M.baseSig = ""; M.baseAt = Date.now();                             // какая тема стоит «по умолчанию» — узнаем через миг
+    app.canvas?.setDirty?.(true, true);
+}
+
 function skin(on, tries = 0) {
     const w = wantedTheme();
     M.wantSig = JSON.stringify(w);
@@ -348,7 +389,10 @@ function healSkin() {
     // нода темы в процессе: её тему запоминаем за этим процессом; ноду удалили — процесс снова в теме стола
     if (E?.current) {
         const sig = JSON.stringify(E.current);
-        if (sig !== M.procSig) { M.procSig = sig; try { localStorage.setItem(PROC_KEY(M.title), sig); } catch (_) {} }
+        if (!M.baseSig || Date.now() - (M.baseAt || 0) < 1500) M.baseSig = sig;   // тема, которую поставил стол (нода ещё перечитывается)
+        else if (sig !== M.baseSig && sig !== M.procSig) {             // человек выбрал другую — запомнить за процессом
+            M.procSig = sig; try { localStorage.setItem(PROC_KEY(M.title), sig); } catch (_) {}
+        }
         M.nodeSeen = true;
     } else if (M.nodeSeen) { M.nodeSeen = false; M.procSig = ""; try { localStorage.removeItem(PROC_KEY(M.title)); } catch (_) {} }
     const w = wantedTheme();
@@ -451,7 +495,10 @@ addEventListener("message", (e) => {
     if (d.neronStudio === "close") { closeStudio(); if (M.on) exitStudioMode(); }
     if (d.neronStudio === "open" && d.id) openWorkflow(String(d.id), String(d.title || d.id));
     if (d.neronStudio === "lang") { barText(); coinTip(); }
-    if (d.neronStudio === "theme") skin(M.on);
+    if (d.neronStudio === "theme") {                                    // на столе сменили тему — процесс следом
+        if (M.on && !procTheme()) { const n = themeNodeOf(rootGraph()); if (n) { setNodeTheme(n, deskTheme()); M.baseSig = ""; M.baseAt = Date.now(); } }
+        skin(M.on);
+    }
     if (d.neronStudio === "goto" && d.key) (async () => {               // «Вернуться к процессу» с окошка на столе
         closeStudio();
         if (!(await switchTo(String(d.key)))) { openStudio(); tellDesk(L("Вкладка этого процесса уже закрыта.", "This workflow's tab is already closed.")); return; }
