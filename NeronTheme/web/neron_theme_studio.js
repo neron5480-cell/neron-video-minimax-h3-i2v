@@ -764,6 +764,20 @@ function setupNode(node) {
             : T("Тема собрана из картинки. Тяните рамку, чтобы взять цвета с одного места", "Theme built from the picture. Drag a frame to take colors from one spot"));
     }
     async function themeFromWiredImage() {
+        if (node.__ntsPanel) {                                         // панель на полосе стола: входа нет — картинку выбираем файлом
+            const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.style.display = "none";
+            inp.onchange = async () => {
+                const f = inp.files && inp.files[0]; inp.remove(); if (!f) return;
+                try {
+                    const im = await loadImg(URL.createObjectURL(f));
+                    const key = "file:" + f.name + ":" + f.size;
+                    if (S.picKey !== key) { S.sel = null; S.pick = null; S.picKey = key; }
+                    picImg = im; rebuildFromPicture(); paintCreate();
+                } catch (e) { status(T("Не получилось: ", "Failed: ") + (e.message || e), true); }
+            };
+            document.body.appendChild(inp); inp.click();
+            return;
+        }
         const o = upstreamImage(node);
         let url = null;
         if (o) url = loadImageUrl(o);
@@ -978,6 +992,44 @@ function setupNode(node) {
     const onChange0 = engineState.onChange;
     engineState.onChange = (t) => { if (onChange0) try { onChange0(t); } catch (e) { /* ок */ } paintLook(); };
 }
+
+// ---------------------------------------------------------------------------
+//  Та же нода — панелью на полосе Neron Studio (кнопка «🎨»): все вкладки и «для спецов», без ноды на холсте.
+//  host — куда положить интерфейс; theme — тема процесса; onChange(theme) — человек выбрал/собрал тему.
+// ---------------------------------------------------------------------------
+const PANEL_PROPS = "neron-theme-panel-props";
+window.__neronThemePanel = (host, theme, onChange) => {
+    let props = {};
+    try { props = JSON.parse(localStorage.getItem(PANEL_PROPS) || "{}") || {}; } catch (e) { props = {}; }
+    const w = { name: "theme_json", type: "hidden", _v: JSON.stringify({ v: 1, theme: theme || null, tab: "install" }) };
+    let quiet = false;
+    Object.defineProperty(w, "value", {
+        get() { return this._v; },
+        set(v) {
+            const before = this._v; this._v = v;
+            if (quiet || v === before) return;
+            try {                                                       // смена вкладки и прочее — не повод запоминать тему
+                const t = (JSON.parse(v) || {}).theme, t0 = (JSON.parse(before) || {}).theme;
+                if (t && onChange && JSON.stringify(t) !== JSON.stringify(t0)) onChange(t);
+            } catch (e) { /* ок */ }
+            try { localStorage.setItem(PANEL_PROPS, JSON.stringify(fake.properties || {})); } catch (e) { /* ок */ }
+        },
+    });
+    const fake = {
+        __ntsPanel: true, widgets: [w], inputs: [], graph: null, properties: props, size: [560, 600], id: -1,
+        addDOMWidget(name, type, root) { host.appendChild(root); return { options: {}, last_y: 0 }; },
+        setSize(sz) { this.size = sz; }, setDirtyCanvas() {}, computeSize() { return [560, 600]; },
+    };
+    setupNode(fake);
+    try { fake.__ntsPaint && fake.__ntsPaint(true); } catch (e) { /* ок */ }
+    return {
+        setTheme(t) {                                                   // другой процесс — показать его тему
+            quiet = true; w.value = JSON.stringify({ ...(JSON.parse(w._v) || {}), v: 1, theme: t || null }); quiet = false;
+            try { fake.__ntsReload && fake.__ntsReload(); fake.__ntsPaint && fake.__ntsPaint(true); } catch (e) { /* ок */ }
+        },
+        saveProps() { try { localStorage.setItem(PANEL_PROPS, JSON.stringify(fake.properties || {})); } catch (e) { /* ок */ } },
+    };
+};
 
 app.registerExtension({
     name: "Neron.ThemeStudio",

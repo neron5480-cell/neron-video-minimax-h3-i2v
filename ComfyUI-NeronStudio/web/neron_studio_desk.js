@@ -5,7 +5,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-const VERSION = "2026.11.13·13";                 // видно в подсказке монеты и на полосе — какая версия загружена
+const VERSION = "2026.11.13·14";                 // видно в подсказке монеты и на полосе — какая версия загружена
 const POS_KEY = "neron-studio-coin-pos";
 // язык: как выбран на столе, иначе — по языку системы (русский/украинский/белорусский/казахский → RU, остальное → EN)
 const LANG_KEY = "neron-studio-lang";
@@ -110,19 +110,16 @@ function css() {
 #neron-studio-bar[hidden], #neron-studio-coin[hidden], #neron-studio-bar button[hidden] { display: none !important; }
 #neron-studio-bar button.nsb-theme { padding: 6px 10px; }
 #neron-studio-themes { position: fixed; z-index: 9999; top: calc(var(--nsb-top, 46px) + 58px); left: 50%; transform: translateX(-50%);
-  width: min(560px, calc(100vw - 24px)); max-height: 70vh; overflow: auto; padding: 14px; border-radius: 14px;
-  background: var(--nsb-bg); border: 1px solid var(--nsb-line); box-shadow: 0 14px 40px var(--nsb-shadow);
-  font: 500 13px "Golos Text", "Segoe UI", system-ui, sans-serif; color: var(--nsb-text); }
-#neron-studio-themes .nst-head { font-weight: 700; font-size: 15px; }
-#neron-studio-themes .nst-sub { color: var(--nsb-muted); font-size: 12px; margin: 4px 0 10px; }
-#neron-studio-themes .nst-sub:empty { display: none; }
-#neron-studio-themes .nst-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 8px; }
-#neron-studio-themes .nst-card { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding: 8px; border-radius: 10px; cursor: pointer;
-  border: 1px solid var(--nsb-line); background: var(--nsb-btn); color: var(--nsb-text); font: 600 12px "Golos Text", "Segoe UI", system-ui, sans-serif; text-align: left; }
-#neron-studio-themes .nst-card:hover { border-color: var(--nsb-acc); }
-#neron-studio-themes .nst-card.on { border: 2px solid var(--nsb-acc); }
-#neron-studio-themes .nst-sw { display: flex; width: 100%; height: 22px; border-radius: 6px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
-#neron-studio-themes .nst-sw i { flex: 1; }
+  width: min(620px, calc(100vw - 24px)); max-height: calc(100vh - var(--nsb-top, 46px) - 80px); display: flex; flex-direction: column;
+  border-radius: 14px; background: var(--nsb-bg); border: 1px solid var(--nsb-line); box-shadow: 0 14px 40px var(--nsb-shadow);
+  font: 500 13px "Golos Text", "Segoe UI", system-ui, sans-serif; color: var(--nsb-text); overflow: hidden; }
+#neron-studio-themes[hidden] { display: none !important; }
+#neron-studio-themes .nst-top { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--nsb-line); }
+#neron-studio-themes .nst-head { flex: 1; font-weight: 700; font-size: 13px; }
+#neron-studio-themes button { font: 600 12px "Golos Text", "Segoe UI", system-ui, sans-serif; border-radius: 8px; padding: 5px 10px; cursor: pointer;
+  border: 1px solid var(--nsb-line); background: var(--nsb-btn); color: var(--nsb-text); }
+#neron-studio-themes .nst-host { overflow: auto; min-height: 0; flex: 1; }
+#neron-studio-themes .nst-host > * { height: auto !important; max-height: none !important; }
 /* окно ComfyUI красит тема Neron Theme (та же, что выбрана на столе); здесь — только «стекло» панелей */
 html.neron-studio-skin .bg-background, html.neron-studio-skin .bg-secondary, html.neron-studio-skin .bg-card,
 html.neron-studio-skin .bg-popover, html.neron-studio-skin .bg-comfy-menu-bg, html.neron-studio-skin .bg-interface-panel-surface {
@@ -413,59 +410,41 @@ function tellRun() {
 setInterval(tellRun, 1000);
 // оформление стола в процессе должно стоять — если что-то его сбило (смена вкладок, сворачивание), ставим снова
 // ---------- «🎨» на полосе: тема только этого процесса (встроенные темы Neron Theme и «Мои») ----------
-let themeBox = null;
+// Панель — это сама нода Neron Theme (все вкладки и «для спецов»), только не на холсте, а под полосой.
+let themeBox = null, themeUI = null, themeOff = null;
 function themePanel() {
-    if (themeBox) { themeBox.remove(); themeBox = null; return; }
-    if (!window.__neronThemeList) { tellBar(L("Нужна Neron Theme", "Needs Neron Theme")); return; }
-    const box = document.createElement("div"); box.id = "neron-studio-themes"; themeBox = box;
-    const cur = procTheme();
-    const head = document.createElement("div"); head.className = "nst-head";
-    head.textContent = L("Тема процесса «", "Workflow theme «") + M.title + "»";
-    const sub = document.createElement("div"); sub.className = "nst-sub";
-    sub.textContent = L("Запомнится только за этим процессом. Тему стола и всех процессов меняют на столе («🎨 Тема»).",
-        "Remembered for this workflow only. The desk and all workflows: «🎨 Theme» on the desk.");
-    const grid = document.createElement("div"); grid.className = "nst-grid";
-    const card = (name, t, active, onClick) => {
-        const c = document.createElement("button"); c.type = "button"; c.className = "nst-card" + (active ? " on" : "");
-        const sw = document.createElement("span"); sw.className = "nst-sw";
-        for (const col of t ? [t.c.bg, t.c.title, t.c.body, t.c.accent] : ["#e9ecef", "#e3e8ee", "#f8f9fa", "#2f5d8a"]) {
-            const i = document.createElement("i"); i.style.background = col; sw.append(i);
-        }
-        const tx = document.createElement("span"); tx.textContent = name;
-        c.append(sw, tx); c.onclick = () => { onClick(); themePanel(); };
-        grid.append(c);
-    };
-    const pick = (t) => () => setProcTheme(t);
-    card(L("↺ Как на столе", "↺ Same as desk"), deskTheme(), !cur, pick(null));
-    const nameOf = (t) => { const s2 = String(t.name || t.id || ""); const p = s2.split(" / "); return p.length === 2 ? (lang() === "ru" ? p[0] : p[1]) : s2; };
-    const sigCur = cur ? JSON.stringify(cur.c) : "";
-    for (const t of window.__neronThemeList()) card(nameOf(t), t, sigCur === JSON.stringify(t.c), pick(t));
-    box.append(head, sub, grid);
-    const mineH = document.createElement("div"); mineH.className = "nst-sub"; box.append(mineH);
-    (async () => {                                                      // «Мои» темы — сохранённые в ноде Neron Theme
-        try {
-            const r = await api.fetchApi("/neron_theme/list?t=" + Date.now()); const d = await r.json();
-            const list = d.ok ? d.themes || [] : [];
-            if (!list.length || themeBox !== box) return;
-            mineH.textContent = L("Мои темы", "My themes");
-            const g2 = document.createElement("div"); g2.className = "nst-grid"; box.append(g2);
-            for (const t of list) {
-                const c = document.createElement("button"); c.type = "button"; c.className = "nst-card" + (sigCur === JSON.stringify(t.c) ? " on" : "");
-                const sw = document.createElement("span"); sw.className = "nst-sw";
-                for (const col of [t.c?.bg, t.c?.title, t.c?.body, t.c?.accent]) { const i = document.createElement("i"); i.style.background = col || "#888"; sw.append(i); }
-                const tx = document.createElement("span"); tx.textContent = nameOf(t);
-                c.append(sw, tx); c.onclick = () => { setProcTheme({ ...t, id: undefined }); themePanel(); }; g2.append(c);
-            }
-        } catch (_) {}
-    })();
-    box.addEventListener("pointerdown", (e) => e.stopPropagation());
-    document.body.append(box);
-    const off = (ev) => {                                              // щелчок мимо панели — закрыть (кнопка «🎨» закрывает сама)
-        if (themeBox !== box) { removeEventListener("pointerdown", off, true); return; }
-        if (box.contains(ev.target) || ev.target.closest?.(".nsb-theme")) return;
-        removeEventListener("pointerdown", off, true); themePanel();
-    };
-    setTimeout(() => addEventListener("pointerdown", off, true), 0);
+    if (themeBox && !themeBox.hidden) { themeBox.hidden = true; themeUI?.saveProps(); return; }
+    if (!window.__neronThemePanel) { tellBar(L("Нужна Neron Theme", "Needs Neron Theme")); return; }
+    const cur = procTheme() || deskTheme();
+    if (!themeBox) {
+        themeBox = document.createElement("div"); themeBox.id = "neron-studio-themes";
+        const top = document.createElement("div"); top.className = "nst-top";
+        const head = document.createElement("div"); head.className = "nst-head";
+        const reset = document.createElement("button"); reset.type = "button"; reset.className = "nst-reset";
+        const close = document.createElement("button"); close.type = "button"; close.className = "nst-close"; close.textContent = "✕";
+        reset.onclick = () => { setProcTheme(null); themeUI?.setTheme(deskTheme()); paintHead(); };
+        close.onclick = () => themePanel();
+        top.append(head, reset, close);
+        const host = document.createElement("div"); host.className = "nst-host";
+        themeBox.append(top, host);
+        themeBox.addEventListener("pointerdown", (e) => e.stopPropagation());
+        document.body.append(themeBox);
+        themeUI = window.__neronThemePanel(host, cur, (t) => { setProcTheme(t); paintHead(); });
+        themeOff = (ev) => {                                             // щелчок мимо панели — закрыть
+            if (!themeBox || themeBox.hidden || themeBox.contains(ev.target) || ev.target.closest?.(".nsb-theme")) return;
+            themeBox.hidden = true; themeUI?.saveProps();
+        };
+        addEventListener("pointerdown", themeOff, true);
+    } else themeUI?.setTheme(cur);
+    paintHead();
+    themeBox.hidden = false;
+}
+function paintHead() {
+    if (!themeBox) return;
+    themeBox.querySelector(".nst-head").textContent = L("🎨 Тема процесса «", "🎨 Workflow theme «") + M.title + "» — "
+        + (procTheme() ? L("своя, запомнена", "its own, remembered") : L("как на столе", "same as the desk"));
+    const r = themeBox.querySelector(".nst-reset");
+    r.textContent = L("↺ Как на столе", "↺ Same as desk"); r.hidden = !procTheme();
 }
 function tellBar(text) { const c = M.bar?.querySelector(".nsb-clock"); if (c) c.textContent = text; }
 
@@ -528,6 +507,7 @@ function exitStudioMode(quiet) {
     if (!quiet) { TABS = {}; saveTabs(); }                       // «✕» — выход из Studio целиком; вернётся только через стол
     try { localStorage.setItem(MODE_KEY, JSON.stringify({ on: false, title: M.title })); } catch (_) {}
     if (M.bar) M.bar.hidden = true;
+    if (themeBox && !themeBox.hidden) { themeBox.hidden = true; themeUI?.saveProps(); }
     const coin = document.getElementById("neron-studio-coin"); if (coin) coin.hidden = false;
     skin(false);
     document.documentElement.classList.remove("neron-studio-skin");
