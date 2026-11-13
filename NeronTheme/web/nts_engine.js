@@ -137,7 +137,7 @@ function applyTheme(t) {
         if (st.textContent !== css) st.textContent = css;
     } else if (st) st.remove();
     E.ours = ours;
-    if (t === E.studio) uniOn(t); else uniOff();
+    if (E.desk) uniOn(t); else uniOff();                      // процесс со стола — единый вид при любой теме
     cv.setDirty && cv.setDirty(true, true);
     return true;
 }
@@ -288,6 +288,11 @@ function refresh() {
 export function setCurrent(t) { E.current = t || null; refresh(); }
 // Neron Studio: процесс открыт со стола — холст в оформлении стола (стеклянные ноды, цвета стола)
 export function setStudio(t) { E.studio = t || null; refresh(); }
+// режим стола (процесс открыт со стола Neron Studio): цвета нод и групп из файла — только на экране, единые
+export function setDesk(on) {
+    on = !!on; if (E.desk === on) return; E.desk = on;
+    if (E.applied && E.bk) { if (on) uniOn(E.applied); else uniOff(); } else if (!on) uniOff();
+}
 export function setPreview(t) { E.preview = t || null; refresh(); }
 export function getApplied() { return E.applied; }
 export function engineReady() { return !!(LG() && app.canvas); }
