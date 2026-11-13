@@ -687,6 +687,58 @@ function saneWidget(w, o) {
         if (typeof w.value !== "string") w.value = d;
     }
 }
+// ---------- самолечение (13.11, Роман: «делаешь ещё прогон, а нода красная — стоят не те значения», NaN после
+// сворачивания) ----------
+// Раз в секунду, при возврате окна и ПЕРЕД КАЖДЫМ «Запустить» нода проверяет свои поля. Сломанное (NaN, чужое слово
+// в списке, число вне диапазона) возвращается к ПОСЛЕДНЕМУ ХОРОШЕМУ значению, а не к умолчанию. В консоль браузера
+// пишется, какое поле сломалось и когда — чтобы найти виновника.
+function validValue(w, o, v) {
+    if (w.type === "combo") {
+        const list = comboList(w);
+        return !(Array.isArray(list) && list.length) || list.includes(v);
+    }
+    if (!o || !("default" in o)) return true;
+    const d = o.default;
+    if (typeof d === "number")
+        return typeof v === "number" && isFinite(v) && !(o.min != null && v < o.min) && !(o.max != null && v > o.max);
+    if (typeof d === "boolean") return typeof v === "boolean";
+    if (typeof d === "string") return typeof v === "string";
+    return true;
+}
+const HEAL_SPECS = new Map();                       // нода → описания полей
+function healNode(node, why) {
+    const specs = HEAL_SPECS.get(node);
+    if (!specs || !node.widgets) return;
+    const good = node.__neronGood || {};
+    const fixed = [];
+    for (const w of node.widgets) {
+        if (!w.name || !(specs[w.name] || w.name === "control_after_generate")) continue;
+        const o = specs[w.name];
+        if (validValue(w, o, w.value)) continue;
+        const was = w.value;
+        if (Object.prototype.hasOwnProperty.call(good, w.name) && validValue(w, o, good[w.name])) w.value = good[w.name];
+        else saneWidget(w, o);
+        fixed.push(`${w.name}: ${String(was)} → ${String(w.value)}`);
+    }
+    if (fixed.length) {
+        console.warn(`[Neron H3 Swap] самолечение (${why}): ` + fixed.join("; "));
+        try { node.setDirtyCanvas?.(true, true); app.graph?.setDirtyCanvas?.(true, true); } catch (_) {}
+    }
+    node.__neronGood = namedValues(node, specs);     // запомнить хорошие
+}
+function healAll(why) {
+    for (const n of HEAL_SPECS.keys()) { try { healNode(n, why); } catch (_) {} }
+}
+let HEAL_HOOKED = false;
+function hookHeal() {
+    if (HEAL_HOOKED) return;
+    HEAL_HOOKED = true;
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) healAll("окно вернулось"); });
+    window.addEventListener("focus", () => healAll("окно в фокусе"));
+    const orig = app.graphToPrompt?.bind(app);
+    if (orig) app.graphToPrompt = async function (...args) { healAll("перед запуском"); return orig(...args); };
+}
+
 function namedValues(node, specs) {
     const out = {};
     for (const w of node.widgets || [])
@@ -729,6 +781,8 @@ app.registerExtension({
         const origRemoved = nodeType.prototype.onRemoved;
         nodeType.prototype.onRemoved = function () {
             DL.nodes.delete(this);
+            clearInterval(this.__neronHeal);
+            HEAL_SPECS.delete(this);
             return origRemoved?.apply(this, arguments);
         };
 
@@ -737,6 +791,10 @@ app.registerExtension({
             const node = this;
             node.color = NODE_COLOR;
             node.bgcolor = NODE_BGCOLOR;
+            HEAL_SPECS.set(node, specs);
+            hookHeal();
+            clearInterval(node.__neronHeal);
+            node.__neronHeal = setInterval(() => { try { healNode(node, "проверка"); } catch (_) {} }, 1000);
             const spacer = node.addCustomWidget({ name: "_spacer", type: "neron_blank", value: "", serialize: false,
                                                   options: { serialize: false }, draw() {},
                                                   computeSize: () => [0, CLOCK_ROOM], mouse() { return false; } });
@@ -779,7 +837,7 @@ app.registerExtension({
         nodeType.prototype.onConfigure = function (info) {
             const r = origConfigure?.apply(this, arguments);
             const named = info?.properties?.[NAMED] || this.properties?.[NAMED];
-            const fix = () => { restoreNamed(this, specs, named); applyExpert(this, specs); };
+            const fix = () => { restoreNamed(this, specs, named); applyExpert(this, specs); this.__neronGood = namedValues(this, specs); };
             fix();
             for (const t of [0, 50, 300, 800]) setTimeout(fix, t);
             return r;
