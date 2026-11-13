@@ -5,7 +5,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-const VERSION = "2026.11.13·6";                 // видно в подсказке монеты и на полосе — какая версия загружена
+const VERSION = "2026.11.13·7";                 // видно в подсказке монеты и на полосе — какая версия загружена
 const POS_KEY = "neron-studio-coin-pos";
 // язык: как выбран на столе, иначе — по языку системы (русский/украинский/белорусский/казахский → RU, остальное → EN)
 const LANG_KEY = "neron-studio-lang";
@@ -133,6 +133,7 @@ function drawClock() {
     } else if (M.t0) {
         c.textContent = `⏱ ${fmt(M.end - M.t0)} · ` + (M.result === "ok" ? L("готово ✓", "done ✓") : M.result === "error" ? L("ошибка", "error") : L("остановлено", "stopped"));
     } else c.textContent = "⏱ --:--";
+    if (M.skinWarn) { c.textContent = "⚠ " + M.skinWarn; c.classList.add("err"); }
 }
 
 function runQueue() {
@@ -148,7 +149,7 @@ function buildBar() {
     fontsOnce(); css();
     const b = document.createElement("div");
     b.id = "neron-studio-bar";
-    b.innerHTML = `<div class="nsb-coin" title="Neron Studio ${VERSION}">N</div><span class="nsb-name">NERON STUDIO</span>
+    b.innerHTML = `<div class="nsb-coin" title="Neron Studio ${VERSION} · Neron Theme ${window.__neronThemeVersion || "—"}">N</div><span class="nsb-name">NERON STUDIO</span>
       <span class="nsb-sep"></span><span class="nsb-proc"></span><button type="button" class="nsb-up" hidden></button><span class="nsb-sep"></span>
       <button type="button" class="nsb-home"></button>
       <button type="button" class="nsb-run"></button>
@@ -177,7 +178,7 @@ function barText() {                                               // подпи
 }
 function coinTip() {
     const c = document.getElementById("neron-studio-coin");
-    if (c) c.title = `Neron Studio ${VERSION} — ` + L("щёлкни: открыть стол · потяни: переставить", "click: open desktop · drag: move");
+    if (c) c.title = `Neron Studio ${VERSION} · Neron Theme ${window.__neronThemeVersion || L("старая или нет", "old or missing")} — ` + L("щёлкни: открыть стол · потяни: переставить", "click: open desktop · drag: move");
 }
 
 // Тема стола («🎨 Тема» на столе) → та же тема в процессе. Стол и ComfyUI — один адрес, общий localStorage.
@@ -303,6 +304,8 @@ async function switchTo(key) {
 async function goHome() {
     const k = activeKey();
     if (M.on && k && TABS[k] && !(M.running && M.runKey === k)) {
+        // процесс со стола — как приложение: закрываем без вопроса «сохранить?», в следующий раз он откроется чистым
+        try { const w = app.extensionManager.workflow.activeWorkflow; if (w) w.isModified = false; } catch (_) {}
         await cmd("Workspace.CloseWorkflow"); await sleep(150);
         if (openKeys().includes(k) && activeKey() === k) return;      // человек передумал в окне «сохранить?» — остаёмся
         delete TABS[k]; saveTabs();
@@ -321,8 +324,19 @@ setInterval(tellRun, 1000);
 // оформление стола в процессе должно стоять — если что-то его сбило (смена вкладок, сворачивание), ставим снова
 function healSkin() {
     const id = deskThemeId(), E = window.__neronThemeEngine;
-    if (!M.on || !id || !E || typeof window.__neronThemeStudio !== "function") return;
-    if (E.studio?.id !== id || E.applied?.id !== id) skin(true);
+    if (!M.on || !id) { M.skinWarn = ""; return; }
+    if (!E || typeof window.__neronThemeStudio !== "function") {
+        M.skinWarn = L("нет Neron Theme — холст не перекрашен", "no Neron Theme — canvas not restyled"); return;
+    }
+    if (E.studio?.id !== id || E.applied?.id !== id) {
+        skin(true);
+        if (Date.now() - (M.enteredAt || 0) > 4000) {
+            const why = E.lastError || (E.studio && E.studio.id !== id ? L("старая Neron Theme: нет темы ", "old Neron Theme: no theme ") + id : "");
+            M.skinWarn = L("тема не встала", "theme not applied") + (why ? ": " + why : "");
+            if (!M.warned) { M.warned = true; console.warn("[Neron Studio] skin:", M.skinWarn, { studio: E.studio?.id, applied: E.applied?.id, want: id }); }
+        }
+    } else { M.skinWarn = ""; M.warned = false; }
+    drawClock();
 }
 
 function followTabs() {
@@ -338,7 +352,7 @@ function followTabs() {
 }
 
 function enterStudioMode(title, quiet) {
-    M.on = true; M.title = title || M.title || "Neron";
+    M.on = true; M.title = title || M.title || "Neron"; M.enteredAt = Date.now();
     if (!quiet) { rememberTab(M.title); M.since = Date.now(); }
     try { localStorage.setItem(MODE_KEY, JSON.stringify({ on: true, title: M.title })); } catch (_) {}
     const b = buildBar(); b.hidden = false;
@@ -481,6 +495,7 @@ app.registerExtension({
         } catch (_) {}
         setInterval(followTabs, 700);                                         // оформление — по вкладке
         setTimeout(followTabs, 300);
+        setTimeout(coinTip, 4000);                                            // Neron Theme уже загрузилась — её версия в подсказке
         setTimeout(() => {                                                    // закрыли ComfyUI в оформлении стола,
             if (!M.on && localStorage.getItem(CHROME_KEY)) cleanScreen(false); // а открыта своя вкладка — вернуть как было
         }, 2500);

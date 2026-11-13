@@ -4,6 +4,7 @@
 import { setStudio } from "./nts_engine.js";
 import { BUILTIN } from "./nts_core.js";
 
+window.__neronThemeVersion = "2026.11.13·7";            // стол показывает её в подсказке монеты — видно, какая загружена
 window.__neronThemeStudio = (on, id) => {
     const t = on ? (BUILTIN.find((x) => x.id === (id || "studio-light")) || BUILTIN.find((x) => x.id === "studio-light")) : null;
     try { setStudio(t); } catch (e) { console.warn("[Neron Theme] studio skin", e); }

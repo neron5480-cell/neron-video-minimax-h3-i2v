@@ -271,8 +271,13 @@ function refresh() {
     if (sig === E.sig) return;
     E.sig = sig;
     if (!want) { restoreAll(); E.applied = null; }
-    else if (applyTheme(want)) E.applied = want;
-    else { E.sig = ""; return; }    // холст ещё не готов — попробуем позже
+    else {
+        let ok = false;
+        try { ok = applyTheme(want); E.lastError = ok ? "" : "холст ещё не готов / canvas not ready"; }
+        catch (e) { E.lastError = String(e && e.message || e); console.warn("[Neron Theme] apply", e); }
+        if (ok) E.applied = want;
+        else { E.sig = ""; return; }    // холст ещё не готов (или сбой) — попробуем позже
+    }
     startFx();
     // ноды Neron (Audio Studio и др.) перерисовывают ручки и индикаторы в цветах темы
     try { window.dispatchEvent(new Event("neron-theme")); } catch (e) { /* ок */ }
