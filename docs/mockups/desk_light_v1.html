@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neron Studio — макет</title>
+<style>
+:root {
+  --bg: #e9ecef; --bg2: #f1f3f5; --tile: #f8f9fa; --line: #d5dae0; --line2: #c3cad3;
+  --text: #1d232a; --muted: #5a6470; --soft: #8a939e;
+  --acc: #2f5d8a; --acc-soft: #e1e9f2; --shadow: 0 1px 2px rgba(20,30,45,.06), 0 4px 14px rgba(20,30,45,.06);
+  --gold: #b88a3e;
+}
+body.warm {
+  --bg: #ecebe7; --bg2: #f3f2ee; --tile: #faf9f6; --line: #dcd8cf; --line2: #ccc6ba;
+  --text: #24211c; --muted: #625d54; --soft: #948d80;
+  --acc: #8a5f25; --acc-soft: #efe6d6;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text);
+  font: 400 15px/1.45 "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 22px 28px 48px; }
+
+/* шапка */
+.top { display: flex; align-items: center; gap: 14px; }
+.coin { width: 36px; height: 36px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: radial-gradient(circle at 35% 30%, #f6e2b0, #d9b05e 45%, #a7792e 80%);
+  color: #4a3210; font: 700 17px Georgia, serif; box-shadow: inset 0 0 0 1.5px rgba(90,60,20,.35); }
+.brand b { display: block; font-size: 18px; font-weight: 650; letter-spacing: .02em; }
+.brand span { display: block; font-size: 12px; color: var(--muted); }
+.spacer { flex: 1; }
+.seg { display: flex; padding: 3px; gap: 2px; background: var(--bg2); border: 1px solid var(--line); border-radius: 9px; }
+.seg button { border: 0; background: transparent; color: var(--muted); font: 600 12px inherit; font-family: inherit;
+  padding: 6px 10px; border-radius: 7px; cursor: pointer; }
+.seg button.on { background: var(--tile); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.ghost { border: 1px solid var(--line); background: var(--tile); color: var(--text); font: 500 13px inherit; font-family: inherit;
+  padding: 7px 12px; border-radius: 9px; cursor: pointer; }
+.ghost:hover { border-color: var(--line2); }
+
+/* путь */
+.path { display: flex; align-items: center; gap: 8px; margin: 26px 0 6px; font-size: 14px; color: var(--muted); }
+.path a { color: var(--acc); text-decoration: none; cursor: pointer; }
+.path a:hover { text-decoration: underline; }
+h1 { font-size: 26px; font-weight: 650; margin: 2px 0 4px; letter-spacing: -.01em; }
+.lead { color: var(--muted); margin: 0 0 22px; max-width: 720px; }
+
+/* сетка плиток */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+.tile { background: var(--tile); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow);
+  padding: 20px; display: flex; flex-direction: column; gap: 12px; cursor: pointer; min-height: 196px;
+  transition: border-color .15s, box-shadow .15s, transform .15s; }
+.tile:hover { border-color: var(--line2); box-shadow: 0 2px 4px rgba(20,30,45,.07), 0 10px 26px rgba(20,30,45,.09); transform: translateY(-1px); }
+.tile:hover .go { color: var(--acc); }
+.row { display: flex; align-items: center; gap: 14px; }
+.ico { width: 46px; height: 46px; flex: none; border-radius: 12px; display: grid; place-items: center;
+  background: var(--acc-soft); color: var(--acc); }
+.ico svg { width: 24px; height: 24px; }
+.title { font-size: 18px; font-weight: 650; line-height: 1.25; }
+.sub { font-size: 12.5px; color: var(--soft); }
+.what { color: var(--muted); font-size: 14.5px; margin: 0; flex: 1; }
+.foot { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 12px; }
+.count { font-size: 12.5px; color: var(--muted); }
+.go { font-size: 13.5px; font-weight: 600; color: var(--muted); transition: color .15s; }
+.badge { font-size: 11px; font-weight: 650; padding: 2px 8px; border-radius: 99px; background: var(--acc-soft); color: var(--acc); }
+.badge.new { background: #e6f2e8; color: #2f6b3c; }
+body.warm .badge.new { background: #e8efdf; color: #4a6526; }
+.badge.soon { background: var(--bg2); color: var(--soft); border: 1px solid var(--line); }
+.tile.soon { opacity: .7; }
+
+.note { margin-top: 30px; font-size: 13px; color: var(--soft); }
+.switch { position: fixed; right: 16px; bottom: 16px; display: flex; gap: 8px; background: #1d232a; color: #fff;
+  padding: 8px 10px; border-radius: 12px; font-size: 12.5px; align-items: center; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.switch button { border: 0; border-radius: 8px; padding: 6px 10px; font: 600 12px inherit; font-family: inherit; cursor: pointer; background: #39424d; color: #fff; }
+.switch button.on { background: #fff; color: #1d232a; }
+@media (max-width: 560px) { .wrap { padding: 16px; } .grid { grid-template-columns: 1fr; } .top { flex-wrap: wrap; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="coin">N</div>
+    <div class="brand"><b>Neron Studio</b><span data-ru="Рабочий стол для ComfyUI" data-en="A desktop for ComfyUI"></span></div>
+    <div class="spacer"></div>
+    <div class="seg" id="lang"><button data-l="ru" class="on">RU</button><button data-l="en">EN</button></div>
+    <button class="ghost" data-ru="🎨 Тема" data-en="🎨 Theme"></button>
+    <button class="ghost" data-ru="⊞ Выровнять" data-en="⊞ Tidy up"></button>
+  </div>
+
+  <div id="view"></div>
+  <p class="note" data-ru="Макет: только вид главного экрана и папки. Нажмите «Видео», чтобы открыть папку." data-en="Mock-up: only the look of the home screen and a folder. Click «Video» to open the folder."></p>
+</div>
+
+<div class="switch">
+  <span data-ru="Оттенок:" data-en="Tone:"></span>
+  <button data-t="cool" class="on" data-ru="Холодный" data-en="Cool"></button>
+  <button data-t="warm" data-ru="Тёплый" data-en="Warm"></button>
+</div>
+
+<script>
+const ICONS = {
+  video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>',
+  image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 9"/></svg>',
+  sound: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>',
+  photo2video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="9" height="9" rx="1.5"/><path d="M14 9h3M15.5 7.5L17 9l-1.5 1.5"/><rect x="18" y="5" width="3" height="9" rx="1"/><path d="M3 18h18"/></svg>',
+  long: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="6" height="10" rx="1"/><rect x="9" y="7" width="6" height="10" rx="1"/><rect x="16" y="7" width="6" height="10" rx="1"/></svg>',
+  dialog: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h11v8H8l-4 3z"/><path d="M15 9h5v8l-3-2h-6v-2"/></svg>',
+  swap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="9" r="3"/><path d="M3 19c0-3 2.2-5 5-5"/><circle cx="17" cy="9" r="3"/><path d="M21 19c0-3-2.2-5-5-5"/><path d="M11 15h3M13 13.5l1.5 1.5-1.5 1.5"/></svg>',
+  pipeline: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><path d="M7 12h3M14 12h3"/></svg>',
+};
+const HOME = [
+  { id: "video", icon: "video", ru: ["Видео", "Сделать ролик: из фото, длинный, диалог, замена героя"], en: ["Video", "Make a clip: from a photo, long, dialogue, hero swap"], n: 5, open: true },
+  { id: "image", icon: "image", ru: ["Картинки", "Расширить кадр, восстановить старое фото, улучшить качество"], en: ["Images", "Extend a frame, restore an old photo, improve quality"], n: 7 },
+  { id: "sound", icon: "sound", ru: ["Звук", "Музыка и сведение: Audio Studio, DJ-пульт, микшер"], en: ["Sound", "Music and mixing: Audio Studio, DJ deck, mixer"], n: 1 },
+];
+const VIDEO = [
+  { icon: "photo2video", ru: ["Фото → видео", "Оживить фото: движение, камера, звук. До 15 секунд"], en: ["Photo → video", "Bring a photo to life: motion, camera, sound. Up to 15 s"] },
+  { icon: "long", ru: ["Длинный ролик", "До 45 секунд из нескольких сцен, со звуком"], en: ["Long video", "Up to 45 s from several scenes, with sound"] },
+  { icon: "dialog", ru: ["Диалог", "Разговор героев по вашему сценарию"], en: ["Dialogue", "Characters talk by your script"] },
+  { icon: "pipeline", ru: ["Всё сразу", "Режиссёр сам пишет кадры и делает видео"], en: ["All in one", "The director writes the shots and makes the video"] },
+  { icon: "swap", ru: ["Замена героя", "Тот же клип — другой человек с вашего фото"], en: ["Hero swap", "The same clip — another person from your photo"], badge: "new" },
+];
+let lang = "ru", where = "home";
+function T(o) { return o[lang]; }
+function word(n) { if (lang === "en") return n + (n === 1 ? " workflow" : " workflows");
+  const m10 = n % 10, m100 = n % 100; return n + (m10 === 1 && m100 !== 11 ? " процесс" : (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) ? " процесса" : " процессов"); }
+function tile(it, kind) {
+  const [title, what] = T(it);
+  const b = it.badge === "new" ? `<span class="badge new">${lang === "ru" ? "новое" : "new"}</span>` : "";
+  const foot = kind === "folder" ? `<span class="count">${word(it.n)}</span><span class="go">${lang === "ru" ? "Открыть папку →" : "Open folder →"}</span>`
+                                 : `<span class="count">${b}</span><span class="go">${lang === "ru" ? "Открыть →" : "Open →"}</span>`;
+  return `<div class="tile" data-id="${it.id || ""}"><div class="row"><div class="ico">${ICONS[it.icon]}</div>
+    <div><div class="title">${title}</div></div></div><p class="what">${what}</p><div class="foot">${foot}</div></div>`;
+}
+function render() {
+  const v = document.getElementById("view");
+  if (where === "home") {
+    v.innerHTML = `<div class="path">${lang === "ru" ? "Стол" : "Desktop"}</div>
+      <h1>${lang === "ru" ? "С чего начнём?" : "Where do we start?"}</h1>
+      <p class="lead">${lang === "ru" ? "Выберите, что хотите сделать. Внутри — готовые процессы Neron, каждый открывается одной кнопкой." : "Pick what you want to make. Inside are ready Neron workflows, each opens with one click."}</p>
+      <div class="grid">${HOME.map((x) => tile(x, "folder")).join("")}</div>`;
+  } else {
+    v.innerHTML = `<div class="path"><a data-back>${lang === "ru" ? "Стол" : "Desktop"}</a> › ${lang === "ru" ? "Видео" : "Video"}</div>
+      <h1>${lang === "ru" ? "Видео" : "Video"}</h1>
+      <p class="lead">${lang === "ru" ? "Процесс откроется в ComfyUI новой вкладкой — текущая работа не пострадает." : "The workflow opens in ComfyUI in a new tab — your current work is safe."}</p>
+      <div class="grid">${VIDEO.map((x) => tile(x, "proc")).join("")}</div>`;
+  }
+  v.querySelectorAll('.tile[data-id="video"]').forEach((t) => t.onclick = () => { where = "video"; render(); });
+  v.querySelectorAll("[data-back]").forEach((a) => a.onclick = () => { where = "home"; render(); });
+  document.querySelectorAll("[data-ru]").forEach((e) => e.textContent = e.dataset[lang]);
+}
+document.querySelectorAll("#lang button").forEach((b) => b.onclick = () => {
+  lang = b.dataset.l; document.querySelectorAll("#lang button").forEach((x) => x.classList.toggle("on", x === b)); render(); });
+document.querySelectorAll(".switch button").forEach((b) => b.onclick = () => {
+  document.body.classList.toggle("warm", b.dataset.t === "warm");
+  document.querySelectorAll(".switch button").forEach((x) => x.classList.toggle("on", x === b)); });
+render();
+</script>
+</body>
+</html>
