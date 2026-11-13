@@ -4,8 +4,10 @@
 import { setStudio, setDesk } from "./nts_engine.js";
 import { BUILTIN, normalizeTheme } from "./nts_core.js";
 
-window.__neronThemeVersion = "2026.11.13·12";            // стол показывает её в подсказке монеты — видно, какая загружена
+window.__neronThemeVersion = "2026.11.13·13";            // стол показывает её в подсказке монеты — видно, какая загружена
 // встроенная тема по id — стол ставит её в ноду темы своих процессов
+// список встроенных тем — для кнопки «🎨» на полосе стола
+window.__neronThemeList = () => BUILTIN.map((b) => JSON.parse(JSON.stringify(b)));
 window.__neronThemeBuiltin = (id) => { const t = BUILTIN.find((b) => b.id === id); return t ? JSON.parse(JSON.stringify(t)) : null; };
 // x — id встроенной темы или сама тема (своя тема процесса, сохранённая со стола); desk — процесс открыт со стола
 window.__neronThemeStudio = (on, x, desk) => {

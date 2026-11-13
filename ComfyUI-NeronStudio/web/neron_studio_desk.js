@@ -5,7 +5,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-const VERSION = "2026.11.13·12";                 // видно в подсказке монеты и на полосе — какая версия загружена
+const VERSION = "2026.11.13·13";                 // видно в подсказке монеты и на полосе — какая версия загружена
 const POS_KEY = "neron-studio-coin-pos";
 // язык: как выбран на столе, иначе — по языку системы (русский/украинский/белорусский/казахский → RU, остальное → EN)
 const LANG_KEY = "neron-studio-lang";
@@ -108,6 +108,21 @@ function css() {
 #neron-studio-bar .nsb-clock.warn { white-space: normal; max-width: 46vw; font-size: 11px; line-height: 1.3; }
 #neron-studio-bar .nsb-clock.run { color: #c77a12; } #neron-studio-bar .nsb-clock.ok { color: #2e8b47; } #neron-studio-bar .nsb-clock.err { color: #c0392b; }
 #neron-studio-bar[hidden], #neron-studio-coin[hidden], #neron-studio-bar button[hidden] { display: none !important; }
+#neron-studio-bar button.nsb-theme { padding: 6px 10px; }
+#neron-studio-themes { position: fixed; z-index: 9999; top: calc(var(--nsb-top, 46px) + 58px); left: 50%; transform: translateX(-50%);
+  width: min(560px, calc(100vw - 24px)); max-height: 70vh; overflow: auto; padding: 14px; border-radius: 14px;
+  background: var(--nsb-bg); border: 1px solid var(--nsb-line); box-shadow: 0 14px 40px var(--nsb-shadow);
+  font: 500 13px "Golos Text", "Segoe UI", system-ui, sans-serif; color: var(--nsb-text); }
+#neron-studio-themes .nst-head { font-weight: 700; font-size: 15px; }
+#neron-studio-themes .nst-sub { color: var(--nsb-muted); font-size: 12px; margin: 4px 0 10px; }
+#neron-studio-themes .nst-sub:empty { display: none; }
+#neron-studio-themes .nst-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 8px; }
+#neron-studio-themes .nst-card { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding: 8px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--nsb-line); background: var(--nsb-btn); color: var(--nsb-text); font: 600 12px "Golos Text", "Segoe UI", system-ui, sans-serif; text-align: left; }
+#neron-studio-themes .nst-card:hover { border-color: var(--nsb-acc); }
+#neron-studio-themes .nst-card.on { border: 2px solid var(--nsb-acc); }
+#neron-studio-themes .nst-sw { display: flex; width: 100%; height: 22px; border-radius: 6px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
+#neron-studio-themes .nst-sw i { flex: 1; }
 /* окно ComfyUI красит тема Neron Theme (та же, что выбрана на столе); здесь — только «стекло» панелей */
 html.neron-studio-skin .bg-background, html.neron-studio-skin .bg-secondary, html.neron-studio-skin .bg-card,
 html.neron-studio-skin .bg-popover, html.neron-studio-skin .bg-comfy-menu-bg, html.neron-studio-skin .bg-interface-panel-surface {
@@ -153,12 +168,14 @@ function buildBar() {
     b.id = "neron-studio-bar";
     b.innerHTML = `<div class="nsb-coin" title="Neron Studio ${VERSION} · Neron Theme ${window.__neronThemeVersion || "—"}">N</div><span class="nsb-name">NERON STUDIO</span>
       <span class="nsb-sep"></span><span class="nsb-proc"></span><button type="button" class="nsb-up" hidden></button><span class="nsb-sep"></span>
+      <button type="button" class="nsb-theme"></button>
       <button type="button" class="nsb-home"></button>
       <button type="button" class="nsb-run"></button>
       <button type="button" class="nsb-stop" hidden></button>
       <span class="nsb-clock">⏱ --:--</span>
       <button type="button" class="nsb-x">✕</button>`;
     b.querySelector(".nsb-home").onclick = goHome;
+    b.querySelector(".nsb-theme").onclick = (e) => { e.stopPropagation(); themePanel(); };
     b.querySelector(".nsb-coin").onclick = goHome;
     b.querySelector(".nsb-run").onclick = runQueue;
     b.querySelector(".nsb-stop").onclick = () => { try { api.interrupt?.(); } catch (_) {} };
@@ -173,6 +190,7 @@ function barText() {                                               // подпи
     const b = M.bar; if (!b) return;
     const set = (sel, text, tip) => { const el = b.querySelector(sel); if (text != null) el.textContent = text; el.title = tip; };
     set(".nsb-home", L("🏠 Стол", "🏠 Desktop"), L("Вернуться на рабочий стол", "Back to the desktop"));
+    set(".nsb-theme", "🎨", L("Тема этого процесса — запомнится за ним", "Theme of this workflow — it remembers it"));
     set(".nsb-run", L("▶ Создать", "▶ Create"), L("Запустить этот процесс (как «Запустить» ComfyUI)", "Run this workflow (same as ComfyUI «Run»)"));
     set(".nsb-stop", L("■ Стоп", "■ Stop"), L("Остановить генерацию", "Stop generation"));
     set(".nsb-up", L("⤴ Наверх", "⤴ Up"), L("Выйти из подграфа на основной холст", "Leave the subgraph, back to the main canvas"));
@@ -190,7 +208,7 @@ function deskThemeId() {
     let id = "calm";
     try { id = localStorage.getItem(DESK_THEME_KEY) || "calm"; } catch (_) {}
     // «Как в ComfyUI»: есть на холсте нода Neron Theme — решает она; нет — как на столе в этом режиме, светлая
-    if (id === "comfy") return window.__neronThemeEngine?.current ? null : "studio-light";
+    if (id === "comfy") return "studio-light";                       // «Как в ComfyUI» без своей темы — как стол, светлая
     return id === "calm" ? "studio-light" : id === "aureus" ? "studio" : id;
 }
 function lum(hex) {
@@ -213,14 +231,23 @@ function barColors(t) {
 // поэтому тема хранится здесь, в браузере, по названию процесса.
 const PROC_KEY = (title) => "neron-studio-proc-theme:" + title;
 function procTheme() { try { return JSON.parse(localStorage.getItem(PROC_KEY(M.title)) || "null"); } catch (_) { return null; } }
-function wantedTheme() {
-    const E = window.__neronThemeEngine;
-    if (M.on && E?.current) return { node: true };                    // нода темы на холсте — решает она
+function wantedTheme() {                                               // своя тема процесса, иначе тема стола
     const saved = M.on ? procTheme() : null;
-    if (saved) return { obj: saved };
-    const id = deskThemeId();
-    return id ? { id } : { node: true };
+    return saved ? { obj: saved } : { id: deskThemeId() || "studio-light" };
 }
+function setProcTheme(theme) {                                         // null — снова тема стола
+    try { if (theme) localStorage.setItem(PROC_KEY(M.title), JSON.stringify(theme)); else localStorage.removeItem(PROC_KEY(M.title)); } catch (_) {}
+    const n = themeNodeOf(rootGraph());                                // нода темы из файла процесса — показывает то же
+    if (n) { setNodeTheme(n, theme || deskTheme()); M.nodeSet = nodeThemeSig(n); }
+    skin(true);
+}
+// прошлые версии могли запомнить за процессами тему из их файла (не выбор человека) — один раз забываем
+try {
+    if (localStorage.getItem("neron-studio-proc-v") !== "2") {
+        for (const k of Object.keys(localStorage)) if (k.startsWith("neron-studio-proc-theme:")) localStorage.removeItem(k);
+        localStorage.setItem("neron-studio-proc-v", "2");
+    }
+} catch (_) {}
 // ---------- нода «Neron Theme 🎨» в каждом процессе со стола ----------
 // Стол сам ставит её на холст (файл процесса не меняется). В ней — тема процесса: своя, если человек её выбирал,
 // иначе — тема стола. Человек сменил тему в ноде — процесс запомнил; удалил ноду — снова тема стола.
@@ -242,10 +269,8 @@ function nodeThemeSig(n) {
     const w = (n?.widgets || []).find((x) => x.name === "theme_json");
     try { return JSON.stringify((JSON.parse(w?.value || "{}") || {}).theme || null); } catch (_) { return "null"; }
 }
-// Проверка ноды темы — каждый такт, пока открыт процесс со стола (любым путём: плитка, вкладка, «Вернуться»):
-//  • новый холст и ноды нет — ставим; есть — ставим в неё тему процесса (свою или тему стола);
-//  • человек сменил тему в ноде — запоминаем за процессом;
-//  • человек удалил ноду — забываем, процесс в теме стола (обратно не ставим, пока процесс не откроют снова).
+// Нода темы, если она есть в файле процесса (Audio Studio, LTX Engine): показывает тему процесса;
+// человек выбрал в ней другую — запоминаем за процессом (как кнопкой «🎨» на полосе).
 function checkThemeNode() {
     const g = rootGraph(), LGx = window.LiteGraph;
     if (!M.on || !g || !LGx || !window.__neronThemeBuiltin || !LGx.registered_node_types?.[THEME_NODE]) return;
@@ -253,29 +278,16 @@ function checkThemeNode() {
     let n = themeNodeOf(g);
     if (!M.nodeDone) {
         if (Date.now() - M.nodeAt < 400) return;                        // холст только что загрузился — дать ему встать
-        if (!n) {
-            try {
-                n = LGx.createNode(THEME_NODE);
-                const ns = g._nodes || [];
-                const minX = ns.length ? Math.min(...ns.map((x) => x.pos[0])) : 0, minY = ns.length ? Math.min(...ns.map((x) => x.pos[1])) : 0;
-                n.pos = [minX - 620, minY];                                // слева от процесса, ничего не закрывает
-                g.add(n);
-            } catch (e) { console.warn("[Neron Studio] theme node", e); return; }
-        }
-        const theme = procTheme() || deskTheme();
-        setNodeTheme(n, theme);
-        M.nodeSet = nodeThemeSig(n); M.nodeDone = true;
+        if (n) { setNodeTheme(n, procTheme() || deskTheme()); M.nodeSet = nodeThemeSig(n); app.canvas?.setDirty?.(true, true); }
+        M.nodeDone = true;
         try { const w = app.extensionManager.workflow.activeWorkflow; if (w) w.isModified = false; } catch (_) {}
-        app.canvas?.setDirty?.(true, true);
         return;
     }
-    if (!n) {                                                          // удалили — процесс в теме стола
-        if (M.nodeSet) { M.nodeSet = ""; try { localStorage.removeItem(PROC_KEY(M.title)); } catch (_) {} }
-        return;
-    }
+    if (!n) return;
     const sig = nodeThemeSig(n);
     if (sig !== M.nodeSet && sig !== "null") {                          // выбрали другую тему — запомнить за процессом
         M.nodeSet = sig; try { localStorage.setItem(PROC_KEY(M.title), sig); } catch (_) {}
+        skin(true);
     }
 }
 
@@ -400,13 +412,69 @@ function tellRun() {
 }
 setInterval(tellRun, 1000);
 // оформление стола в процессе должно стоять — если что-то его сбило (смена вкладок, сворачивание), ставим снова
+// ---------- «🎨» на полосе: тема только этого процесса (встроенные темы Neron Theme и «Мои») ----------
+let themeBox = null;
+function themePanel() {
+    if (themeBox) { themeBox.remove(); themeBox = null; return; }
+    if (!window.__neronThemeList) { tellBar(L("Нужна Neron Theme", "Needs Neron Theme")); return; }
+    const box = document.createElement("div"); box.id = "neron-studio-themes"; themeBox = box;
+    const cur = procTheme();
+    const head = document.createElement("div"); head.className = "nst-head";
+    head.textContent = L("Тема процесса «", "Workflow theme «") + M.title + "»";
+    const sub = document.createElement("div"); sub.className = "nst-sub";
+    sub.textContent = L("Запомнится только за этим процессом. Тему стола и всех процессов меняют на столе («🎨 Тема»).",
+        "Remembered for this workflow only. The desk and all workflows: «🎨 Theme» on the desk.");
+    const grid = document.createElement("div"); grid.className = "nst-grid";
+    const card = (name, t, active, onClick) => {
+        const c = document.createElement("button"); c.type = "button"; c.className = "nst-card" + (active ? " on" : "");
+        const sw = document.createElement("span"); sw.className = "nst-sw";
+        for (const col of t ? [t.c.bg, t.c.title, t.c.body, t.c.accent] : ["#e9ecef", "#e3e8ee", "#f8f9fa", "#2f5d8a"]) {
+            const i = document.createElement("i"); i.style.background = col; sw.append(i);
+        }
+        const tx = document.createElement("span"); tx.textContent = name;
+        c.append(sw, tx); c.onclick = () => { onClick(); themePanel(); };
+        grid.append(c);
+    };
+    const pick = (t) => () => setProcTheme(t);
+    card(L("↺ Как на столе", "↺ Same as desk"), deskTheme(), !cur, pick(null));
+    const nameOf = (t) => { const s2 = String(t.name || t.id || ""); const p = s2.split(" / "); return p.length === 2 ? (lang() === "ru" ? p[0] : p[1]) : s2; };
+    const sigCur = cur ? JSON.stringify(cur.c) : "";
+    for (const t of window.__neronThemeList()) card(nameOf(t), t, sigCur === JSON.stringify(t.c), pick(t));
+    box.append(head, sub, grid);
+    const mineH = document.createElement("div"); mineH.className = "nst-sub"; box.append(mineH);
+    (async () => {                                                      // «Мои» темы — сохранённые в ноде Neron Theme
+        try {
+            const r = await api.fetchApi("/neron_theme/list?t=" + Date.now()); const d = await r.json();
+            const list = d.ok ? d.themes || [] : [];
+            if (!list.length || themeBox !== box) return;
+            mineH.textContent = L("Мои темы", "My themes");
+            const g2 = document.createElement("div"); g2.className = "nst-grid"; box.append(g2);
+            for (const t of list) {
+                const c = document.createElement("button"); c.type = "button"; c.className = "nst-card" + (sigCur === JSON.stringify(t.c) ? " on" : "");
+                const sw = document.createElement("span"); sw.className = "nst-sw";
+                for (const col of [t.c?.bg, t.c?.title, t.c?.body, t.c?.accent]) { const i = document.createElement("i"); i.style.background = col || "#888"; sw.append(i); }
+                const tx = document.createElement("span"); tx.textContent = nameOf(t);
+                c.append(sw, tx); c.onclick = () => { setProcTheme({ ...t, id: undefined }); themePanel(); }; g2.append(c);
+            }
+        } catch (_) {}
+    })();
+    box.addEventListener("pointerdown", (e) => e.stopPropagation());
+    document.body.append(box);
+    const off = (ev) => {                                              // щелчок мимо панели — закрыть (кнопка «🎨» закрывает сама)
+        if (themeBox !== box) { removeEventListener("pointerdown", off, true); return; }
+        if (box.contains(ev.target) || ev.target.closest?.(".nsb-theme")) return;
+        removeEventListener("pointerdown", off, true); themePanel();
+    };
+    setTimeout(() => addEventListener("pointerdown", off, true), 0);
+}
+function tellBar(text) { const c = M.bar?.querySelector(".nsb-clock"); if (c) c.textContent = text; }
+
 function healSkin() {
     const E = window.__neronThemeEngine;
     if (!M.on) { M.skinWarn = ""; return; }
     checkThemeNode();
     const w = wantedTheme();
     if (JSON.stringify(w) !== M.wantSig) skin(true);
-    if (w.node) { M.skinWarn = ""; drawClock(); return; }              // решает нода темы на холсте
     const id = w.id || "своя";
     if (!E || typeof window.__neronThemeStudio !== "function") {
         M.skinWarn = L("нет Neron Theme — холст не перекрашен", "no Neron Theme — canvas not restyled"); drawClock(); return;
