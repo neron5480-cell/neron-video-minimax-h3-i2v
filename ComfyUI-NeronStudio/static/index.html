@@ -118,9 +118,9 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .tile.back .head { cursor: default; }
 .tile.back .grip { display: none; }
 .tile:hover { border-color: var(--line2, color-mix(in srgb, var(--bronze) 35%, var(--line))); box-shadow: 0 2px 4px rgba(20, 30, 45, .06), 0 10px 26px rgba(20, 30, 45, .1); }
-.head { display: flex; align-items: center; gap: 14px; padding: 18px 12px 6px 20px; cursor: grab; user-select: none; touch-action: none; }
+.head { display: flex; align-items: center; gap: 14px; padding: 14px 12px 4px 18px; cursor: grab; user-select: none; touch-action: none; }
 .tile.dragging .head { cursor: grabbing; }
-.ico { flex: none; width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; background: var(--acc-soft); color: var(--bronze); }
+.ico { flex: none; width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: var(--acc-soft); color: var(--bronze); }
 .ico svg { width: 24px; height: 24px; }
 .ico.sm { width: 30px; height: 30px; border-radius: 8px; }
 .ico.sm svg { width: 18px; height: 18px; }
@@ -131,8 +131,8 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .x { flex: none; align-self: flex-start; width: 24px; height: 24px; opacity: 0; border-radius: 6px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; }
 .tile:hover .x, .x:focus-visible { opacity: 1; }
 .x:hover { background: color-mix(in srgb, #c0392b 12%, transparent); color: #c0392b; }
-.foot { display: flex; align-items: center; gap: 10px; padding: 10px 16px 14px 20px; min-width: 0; border-top: 1px solid color-mix(in srgb, var(--line) 60%, transparent); margin: 0 0 0; }
-.meta { flex: 1; min-height: 0; margin: 4px 20px 10px 80px; font: 400 14.5px/1.45 var(--f-body); color: var(--muted); overflow: hidden; }
+.foot { display: flex; align-items: center; gap: 10px; padding: 6px 12px 8px 18px; min-width: 0; border-top: 1px solid color-mix(in srgb, var(--line) 60%, transparent); margin: 0 0 0; }
+.meta { flex: 1; min-height: 0; margin: 2px 18px 6px 74px; font: 400 14px/1.42 var(--f-body); color: var(--muted); overflow: hidden; }
 .open { flex: none; margin-left: auto; font: 600 13.5px var(--f-body); color: var(--bronze); background: transparent; border: 1px solid transparent; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
 .open:hover { background: var(--acc-soft); border-color: color-mix(in srgb, var(--bronze) 30%, transparent); }
 .tile[data-status="soon"] .open, .tile.missing .open { background: transparent; color: var(--soon); border: 1px solid var(--line); }
@@ -257,7 +257,7 @@ const UI = {
   tMissing: ["Процесс «%» не установлен. Обновите пакет Neron в Manager и перезапустите ComfyUI.", "«%» is not installed. Update the Neron pack in Manager and restart ComfyUI."],
   tOpening: ["Открываю «%»…", "Opening «%»…"],
   tRemoved: ["Плитка «%» убрана.", "Tile «%» removed."], tUndo: ["Вернуть", "Undo"],
-  tAligned: ["Выровнено: плитки сдвинуты вверх, дыр нет.", "Tidied up: tiles moved up, no gaps."],
+  tAligned: ["Выровнено: плитки стоят ровной сеткой.", "Tidied up: tiles stand in an even grid."],
   tReset: ["Стол как в первый раз.", "The desk is back to the first-run layout."],
   drawerH: ["Добавить плитку", "Add a tile"], drawerP: ["Нажмите — плитка встанет на стол.", "Click — the tile goes back on the desk."],
   drawerNone: ["Все плитки этой папки уже на столе. Уберите любую ✕ — она появится здесь.", "All tiles of this folder are on the desk. Remove one with ✕ and it shows up here."],
@@ -270,8 +270,8 @@ const u = (k, arg) => tx(UI[k]).replace("%", arg ?? "");
 const VIEWS = {
   home: { t: ["Стол", "Desktop"], tiles: [
     { id: "f-video", ico: "video", t: ["Видео", "Video"], s: "ok", go: "video", w: 4, h: 2,
-      meta: ["Оживить фото, снять длинный ролик или диалог, повторить движение из клипа, улучшить видео.",
-             "Bring a photo to life, make a long clip or a dialogue, copy motion from a clip, enhance a video."] },
+      meta: ["Оживить фото, длинный ролик, диалог, движение из клипа, улучшение.",
+             "Bring a photo to life, long clips, dialogue, motion from a clip, enhance."] },
     { id: "f-image", ico: "image", t: ["Картинки", "Images"], s: "ok", go: "image", w: 4, h: 2,
       meta: ["Расширить кадр, восстановить и раскрасить старое фото, повысить качество.",
              "Expand a picture, restore and colorize an old photo, raise the quality."] },
@@ -483,7 +483,7 @@ function make(it) {
     <div class="foot">${chip}<button class="open" type="button"></button></div>
     <div class="grip" title="${u("sizeTip")}" aria-hidden="true"></div>`;
   el.querySelector(".title").textContent = tx(d.t);
-  el.querySelector(".meta").textContent = tx(d.meta);
+  el.querySelector(".meta").textContent = tx(d.meta); el.querySelector(".meta").title = tx(d.meta);
   el.querySelector(".x").setAttribute("aria-label", `${u("removeTip")}: ${tx(d.t)}`);
   el.querySelector(".open").textContent = d.go ? u("openF") : d.s === "soon" ? u("soonBtn") : u("open");
   el.querySelector(".x").onclick = () => removeTile(d.id);
@@ -596,7 +596,7 @@ function fillDrawer() {
 }
 document.getElementById("add").onclick = () => { fillDrawer(); themesBox.hidden = true; drawer.hidden = !drawer.hidden; };
 document.addEventListener("pointerdown", (e) => { if (!drawer.hidden && !drawer.contains(e.target) && e.target.id !== "add") drawer.hidden = true; });
-document.getElementById("align").onclick = () => { compact(); render(); save(); toast(u("tAligned")); };
+document.getElementById("align").onclick = () => { reflow(); render(); save(); toast(u("tAligned")); };
 document.getElementById("reset").onclick = () => {
   LAYOUTS = {}; clearTiles(); layout = defaults(view); render(true); save(); toast(u("tReset"));
 };
@@ -609,15 +609,18 @@ function toast(text, act, fn) {
 }
 
 // ---------- ширина экрана: 12 / 8 / 4 колонки ----------
+// Плитки заново раскладываются по порядку чтения (слева направо, сверху вниз) — ровной сеткой, без столбика.
+function reflow() { pack(vis().sort((a, b) => a.y - b.y || a.x - b.x)); }
 function fit() {
+  if (!innerWidth || !desk.clientWidth) return;        // стол спрятан (окно свёрнуто) — раскладку не трогаем
   const base = innerWidth >= 1100 ? 12 : innerWidth >= 700 ? 8 : 4;
   const want = Math.max(4, Math.min(24, Math.round(base / look.scale)));   // меньше плитки — больше колонок
-  if (want !== cols) { cols = want; compact(); }
+  if (want !== cols) { cols = want; reflow(); }
   else settle(null);
 }
 addEventListener("resize", () => { fit(); render(); });
 let lastW = 0;
-new ResizeObserver(() => { if (desk.clientWidth !== lastW) { lastW = desk.clientWidth; fit(); render(); } }).observe(desk);
+new ResizeObserver(() => { if (desk.clientWidth && desk.clientWidth !== lastW) { lastW = desk.clientWidth; fit(); render(); } }).observe(desk);
 
 // ================== ИКОНКИ: тонкие линии, цвет — акцент темы ==================
 const SV = (body) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
@@ -719,7 +722,9 @@ function applyTheme() {
   if (!lk) { lk = document.createElement("style"); lk.id = "lookcss"; document.head.append(lk); }
   if (look.tile) {
     const ink = lumC(look.tile) > .35 ? "#16120d" : "#f6efe4";
-    lk.textContent = `.tile { --text: ${ink}; --muted: ${mixc(ink, look.tile, .32)}; }`;
+    lk.textContent = `.tile { --text: ${ink}; --muted: ${mixc(ink, look.tile, .25)}; }
+      .tile .ico, .tile .open { color: ${ink}; } .tile .ico { background: ${mixc(ink, look.tile, .86)}; }
+      .tile .open:hover { background: ${mixc(ink, look.tile, .86)}; }`;
   } else lk.textContent = "";
   if (look.accent) {
     root.style.setProperty("--bronze", look.accent);
@@ -870,7 +875,7 @@ bgLoad().then((rec) => { if (rec) bgShow(rec); });
 // ================== 🧪 «✉ Написать создателю» (папка «Тест») ==================
 // Письмо уходит автору через Web3Forms (ключ публичный: он только разрешает слать письма автору, адреса не раскрывает).
 // К письму — только то, что видно в «Что будет отправлено»: процесс, текст, версия ComfyUI, видеокарта, последняя ошибка.
-const DESK_VERSION = "2026.11.13·1";
+const DESK_VERSION = "2026.11.13·2";
 const W3F_KEY = "6462b9a5-e856-422f-9f27-23875a4277d3";
 const SENT_KEY = "neron-studio-report-at", ERR_KEY = "neron-studio-last-error";
 const RP = {
