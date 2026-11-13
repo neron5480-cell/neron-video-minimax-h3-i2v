@@ -149,6 +149,7 @@ function applyTheme(t) {
 //  Цвет, который человек поставил ноде уже здесь, — его выбор, его не трогаем.
 // ---------------------------------------------------------------------------
 const UNI = { on: null, nodes: new Map(), groups: new Map(), seen: new WeakSet(), timer: 0, hooked: false };
+E.uni = UNI;                                              // для проверки со стола / for desk diagnostics
 function allGraphs() {
     const out = new Set();
     try {

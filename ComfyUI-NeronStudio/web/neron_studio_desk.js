@@ -5,7 +5,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-const VERSION = "2026.11.13·7";                 // видно в подсказке монеты и на полосе — какая версия загружена
+const VERSION = "2026.11.13·8";                 // видно в подсказке монеты и на полосе — какая версия загружена
 const POS_KEY = "neron-studio-coin-pos";
 // язык: как выбран на столе, иначе — по языку системы (русский/украинский/белорусский/казахский → RU, остальное → EN)
 const LANG_KEY = "neron-studio-lang";
@@ -105,6 +105,7 @@ function css() {
 #neron-studio-bar button.nsb-up { color: var(--nsb-acc); border-color: var(--nsb-acc); }
 #neron-studio-bar .nsb-clock { font: 600 12px ui-monospace, Consolas, monospace; color: var(--nsb-muted); white-space: nowrap; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; max-width: 26vw; }
+#neron-studio-bar .nsb-clock.warn { white-space: normal; max-width: 46vw; font-size: 11px; line-height: 1.3; }
 #neron-studio-bar .nsb-clock.run { color: #c77a12; } #neron-studio-bar .nsb-clock.ok { color: #2e8b47; } #neron-studio-bar .nsb-clock.err { color: #c0392b; }
 #neron-studio-bar[hidden], #neron-studio-coin[hidden], #neron-studio-bar button[hidden] { display: none !important; }
 /* окно ComfyUI красит тема Neron Theme (та же, что выбрана на столе); здесь — только «стекло» панелей */
@@ -133,6 +134,7 @@ function drawClock() {
     } else if (M.t0) {
         c.textContent = `⏱ ${fmt(M.end - M.t0)} · ` + (M.result === "ok" ? L("готово ✓", "done ✓") : M.result === "error" ? L("ошибка", "error") : L("остановлено", "stopped"));
     } else c.textContent = "⏱ --:--";
+    c.classList.toggle("warn", !!M.skinWarn);
     if (M.skinWarn) { c.textContent = "⚠ " + M.skinWarn; c.classList.add("err"); }
 }
 
@@ -326,16 +328,24 @@ function healSkin() {
     const id = deskThemeId(), E = window.__neronThemeEngine;
     if (!M.on || !id) { M.skinWarn = ""; return; }
     if (!E || typeof window.__neronThemeStudio !== "function") {
-        M.skinWarn = L("нет Neron Theme — холст не перекрашен", "no Neron Theme — canvas not restyled"); return;
+        M.skinWarn = L("нет Neron Theme — холст не перекрашен", "no Neron Theme — canvas not restyled"); drawClock(); return;
     }
-    if (E.studio?.id !== id || E.applied?.id !== id) {
+    // проверяем не «что думает тема», а что реально на холсте: фон и цвет нод по умолчанию
+    const t = E.studio, cv = app.canvas, LGx = window.LiteGraph;
+    const bg = cv?.clear_background_color, nodeBg = LGx?.NODE_DEFAULT_BGCOLOR;
+    const real = !!(t && E.applied === t && (bg === t.c.bg || bg === "transparent"));
+    if (E.studio?.id === id && real) { M.skinWarn = ""; M.warned = false; M.fixes = 0; drawClock(); return; }
+    if ((M.fixes || 0) < 5) {                                            // перекрасить заново: выключить и включить
+        M.fixes = (M.fixes || 0) + 1;
+        try { window.__neronThemeStudio(false, id); } catch (_) {}
         skin(true);
-        if (Date.now() - (M.enteredAt || 0) > 4000) {
-            const why = E.lastError || (E.studio && E.studio.id !== id ? L("старая Neron Theme: нет темы ", "old Neron Theme: no theme ") + id : "");
-            M.skinWarn = L("тема не встала", "theme not applied") + (why ? ": " + why : "");
-            if (!M.warned) { M.warned = true; console.warn("[Neron Studio] skin:", M.skinWarn, { studio: E.studio?.id, applied: E.applied?.id, want: id }); }
-        }
-    } else { M.skinWarn = ""; M.warned = false; }
+    }
+    if (Date.now() - (M.enteredAt || 0) > 4000) {
+        const u = E.uni;
+        M.skinWarn = L("тема не встала", "theme not applied") + ` [${E.studio?.id || "-"}/${E.applied?.id || "-"} фон ${bg || "-"} нода ${nodeBg || "-"}`
+            + ` нод ${u ? u.nodes.size : "?"} групп ${u ? u.groups.size : "?"}${E.lastError ? " · " + E.lastError : ""}]`;
+        if (!M.warned) { M.warned = true; console.warn("[Neron Studio] skin:", M.skinWarn); }
+    }
     drawClock();
 }
 
@@ -352,7 +362,7 @@ function followTabs() {
 }
 
 function enterStudioMode(title, quiet) {
-    M.on = true; M.title = title || M.title || "Neron"; M.enteredAt = Date.now();
+    M.on = true; M.title = title || M.title || "Neron"; M.enteredAt = Date.now(); M.fixes = 0; M.warned = false;
     if (!quiet) { rememberTab(M.title); M.since = Date.now(); }
     try { localStorage.setItem(MODE_KEY, JSON.stringify({ on: true, title: M.title })); } catch (_) {}
     const b = buildBar(); b.hidden = false;
