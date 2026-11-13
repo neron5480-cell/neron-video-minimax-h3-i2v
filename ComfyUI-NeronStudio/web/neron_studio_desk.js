@@ -5,7 +5,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-const VERSION = "2026.11.13·5";                 // видно в подсказке монеты и на полосе — какая версия загружена
+const VERSION = "2026.11.13·6";                 // видно в подсказке монеты и на полосе — какая версия загружена
 const POS_KEY = "neron-studio-coin-pos";
 // язык: как выбран на столе, иначе — по языку системы (русский/украинский/белорусский/казахский → RU, остальное → EN)
 const LANG_KEY = "neron-studio-lang";
@@ -20,7 +20,7 @@ const SIZE = 46, MARGIN = 6;
 let overlay = null, frame = null;
 
 function openStudio() {
-    if (overlay) { overlay.hidden = false; return; }
+    if (overlay) { overlay.hidden = false; setTimeout(tellRun, 50); return; }
     overlay = document.createElement("div");
     overlay.style.cssText = "position:fixed;inset:0;z-index:100000;background:#e9ecef;";
     frame = document.createElement("iframe");
@@ -39,6 +39,12 @@ function tellDesk(text) {
 
 // открыть процесс плитки в ComfyUI — тем же путём, что и перетащенный файл: новая вкладка, ваша работа не трогается
 async function openWorkflow(id, title) {
+    const have = Object.keys(TABS).find((k) => TABS[k] === title && openKeys().includes(k));
+    if (have) {                                                        // уже открыт со стола — просто вернуться к нему
+        closeStudio();
+        if (await switchTo(have)) { enterStudioMode(title, true); M.since = Date.now(); return; }
+        openStudio();
+    }
     let res;
     try { res = await api.fetchApi(`/neron_studio/workflow/${encodeURIComponent(id)}`, { cache: "no-store" }); }
     catch (_) { tellDesk(L("Нет связи с ComfyUI. Перезапустите ComfyUI и попробуйте ещё раз.", "No connection to ComfyUI. Restart ComfyUI and try again.")); return; }
@@ -64,7 +70,7 @@ async function openWorkflow(id, title) {
 
 // ================== 🪙 ПРОЦЕСС В ОФОРМЛЕНИИ СТОЛА ==================
 const MODE_KEY = "neron-studio-mode";
-const M = { on: false, title: "", bar: null, timer: 0, t0: 0, stage: "", i: 0, total: 0, running: false, result: "" };
+const M = { on: false, title: "", bar: null, timer: 0, t0: 0, stage: "", i: 0, total: 0, running: false, result: "", runKey: null, runTitle: "" };
 
 function fontsOnce() {
     if (document.getElementById("neron-studio-fonts")) return;
@@ -149,8 +155,8 @@ function buildBar() {
       <button type="button" class="nsb-stop" hidden></button>
       <span class="nsb-clock">⏱ --:--</span>
       <button type="button" class="nsb-x">✕</button>`;
-    b.querySelector(".nsb-home").onclick = openStudio;
-    b.querySelector(".nsb-coin").onclick = openStudio;
+    b.querySelector(".nsb-home").onclick = goHome;
+    b.querySelector(".nsb-coin").onclick = goHome;
     b.querySelector(".nsb-run").onclick = runQueue;
     b.querySelector(".nsb-stop").onclick = () => { try { api.interrupt?.(); } catch (_) {} };
     b.querySelector(".nsb-x").onclick = () => exitStudioMode();
@@ -278,7 +284,49 @@ function exitSubgraph() {
 }
 function upButton() { const u = M.bar?.querySelector(".nsb-up"); if (u) u.hidden = !(M.on && inSubgraph()); }
 
+// ---------- вкладки ComfyUI: список, переключение, закрытие — штатными командами ----------
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function cmd(id) { try { await app.extensionManager?.command?.execute?.(id); return true; } catch (_) { return false; } }
+function openKeys() {
+    try { return (app.extensionManager?.workflow?.openWorkflows || []).map((w) => String(w.path || w.key || w.filename || "")); }
+    catch (_) { return []; }
+}
+async function switchTo(key) {
+    for (let i = 0; i < 40 && activeKey() !== key; i++) {
+        if (!openKeys().includes(key)) return false;
+        await cmd("Workspace.NextOpenedWorkflow"); await sleep(80);
+    }
+    return activeKey() === key;
+}
+// «🏠 Стол»: процесс со стола не запущен — закрываем его вкладку, чтобы не копились. Идёт генерация — вкладка живёт,
+// а стол показывает, что работает. Меняли что-то в процессе — ComfyUI сам спросит, сохранить ли.
+async function goHome() {
+    const k = activeKey();
+    if (M.on && k && TABS[k] && !(M.running && M.runKey === k)) {
+        await cmd("Workspace.CloseWorkflow"); await sleep(150);
+        if (openKeys().includes(k) && activeKey() === k) return;      // человек передумал в окне «сохранить?» — остаёмся
+        delete TABS[k]; saveTabs();
+        exitStudioMode(true);
+    }
+    openStudio();
+}
+// стол видит, что идёт: процесс, время, этап — раз в секунду, пока стол открыт
+function tellRun() {
+    if (!overlay || overlay.hidden || !frame?.contentWindow) return;
+    const st = { running: M.running, title: M.runTitle, key: M.runKey, t0: M.t0, end: M.end || 0, stage: M.stage, i: M.i, total: M.total,
+        result: M.result, open: !!(M.runKey && openKeys().includes(M.runKey)) };
+    try { frame.contentWindow.postMessage({ neronStudioRun: st }, "*"); } catch (_) {}
+}
+setInterval(tellRun, 1000);
+// оформление стола в процессе должно стоять — если что-то его сбило (смена вкладок, сворачивание), ставим снова
+function healSkin() {
+    const id = deskThemeId(), E = window.__neronThemeEngine;
+    if (!M.on || !id || !E || typeof window.__neronThemeStudio !== "function") return;
+    if (E.studio?.id !== id || E.applied?.id !== id) skin(true);
+}
+
 function followTabs() {
+    healSkin();
     upButton();
     if (Date.now() - (M.since || 0) < 1200) return;                     // вкладка только что открыта — даём ей встать
     const k = activeKey();
@@ -325,6 +373,7 @@ function saveError(d) {
 
 function hookRun() {
     const start = () => { M.running = true; M.t0 = Date.now(); M.stage = ""; M.i = 0; M.total = 0; M.result = "";
+        M.runKey = activeKey(); M.runTitle = (M.runKey && TABS[M.runKey]) || (() => { try { return app.extensionManager.workflow.activeWorkflow.filename || ""; } catch (_) { return ""; } })();
         clearInterval(M.timer); M.timer = setInterval(drawClock, 500); drawClock(); };
     const finish = (r) => { if (!M.running) return; M.running = false; M.end = Date.now(); M.result = r; clearInterval(M.timer); drawClock(); };
     api.addEventListener("execution_start", start);
@@ -350,7 +399,12 @@ addEventListener("message", (e) => {
     if (d.neronStudio === "close") { closeStudio(); if (M.on) exitStudioMode(); }
     if (d.neronStudio === "open" && d.id) openWorkflow(String(d.id), String(d.title || d.id));
     if (d.neronStudio === "lang") { barText(); coinTip(); }
-    if (d.neronStudio === "theme") skin(M.on);                          // на столе сменили тему — процесс следом
+    if (d.neronStudio === "theme") skin(M.on);
+    if (d.neronStudio === "goto" && d.key) (async () => {               // «Вернуться к процессу» с окошка на столе
+        closeStudio();
+        if (!(await switchTo(String(d.key)))) { openStudio(); tellDesk(L("Вкладка этого процесса уже закрыта.", "This workflow's tab is already closed.")); return; }
+        M.since = 0; followTabs();
+    })();                          // на столе сменили тему — процесс следом
 });
 addEventListener("keydown", (e) => { if (e.key === "Escape" && overlay && !overlay.hidden) closeStudio(); });
 

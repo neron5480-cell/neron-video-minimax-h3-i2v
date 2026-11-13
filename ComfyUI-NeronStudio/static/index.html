@@ -97,6 +97,23 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .hint { color: var(--muted); font-size: 13px; margin: -4px 0 18px; max-width: 900px; }
 
+/* ---------- окошко «что сейчас работает» ---------- */
+.runbox { position: relative; z-index: 1; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: -6px 0 18px; padding: 12px 16px;
+  border-radius: 14px; border: 1px solid var(--line); background: var(--panel); box-shadow: var(--shadow); max-width: 900px; }
+.runbox .rb-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; background: var(--soon); }
+.runbox.run .rb-dot { background: var(--bronze); animation: rbpulse 1.4s ease-in-out infinite; }
+.runbox.ok .rb-dot { background: var(--ok); } .runbox.err .rb-dot { background: #c0392b; }
+@keyframes rbpulse { 50% { opacity: .35; } }
+.runbox .rb-text { flex: 1; min-width: 200px; }
+.runbox .rb-title { font: 650 15px var(--f-body); color: var(--text); }
+.runbox .rb-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.runbox .rb-bar { height: 4px; border-radius: 99px; background: var(--panel-2); margin-top: 8px; overflow: hidden; }
+.runbox .rb-bar i { display: block; height: 100%; background: var(--bronze); width: 0; transition: width .4s; }
+.runbox button { font: 600 13px var(--f-body); border-radius: 8px; padding: 7px 12px; cursor: pointer; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); }
+.runbox button.go { background: var(--bronze); border-color: var(--bronze); color: var(--panel); }
+.runbox button.hide { padding: 6px 9px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .runbox.run .rb-dot { animation: none; } }
+
 /* ---------- стол ---------- */
 .desk { position: relative; width: 100%; min-height: 200px; }
 .tile {
@@ -216,6 +233,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   </div>
 </header>
 <p class="hint" id="hint"></p>
+<section class="runbox" id="runbox" hidden aria-live="polite"></section>
 <main class="desk" id="desk"></main>
 <section class="report" id="report" hidden></section>
 <div class="drawer" id="drawer" hidden></div>
@@ -529,7 +547,43 @@ function markAvailable() {
     el.querySelector(".open").textContent = miss ? u("missing") : u("open");
   }
 }
+// ---------- окошко «что сейчас работает»: ComfyUI присылает состояние раз в секунду ----------
+const runbox = document.getElementById("runbox");
+let runHidden = 0;                                     // «✕» на окошке — до следующего запуска
+const mmss = (ms) => { const t = Math.max(0, Math.round(ms / 1000)); return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0"); };
+function drawRun(st) {
+  if (!st || !st.t0 || runHidden === st.t0) { runbox.hidden = true; return; }
+  const name = st.title || tx(["процесс", "workflow"]);
+  const cls = st.running ? "run" : st.result === "ok" ? "ok" : "err";
+  const head = st.running ? tx(["Идёт генерация: ", "Generating: "]) + "«" + name + "»"
+    : st.result === "ok" ? tx(["Готово: ", "Done: "]) + "«" + name + "»"
+    : st.result === "stop" ? tx(["Остановлено: ", "Stopped: "]) + "«" + name + "»" : tx(["Ошибка: ", "Error: "]) + "«" + name + "»";
+  const time = "⏱ " + mmss((st.running ? Date.now() : st.end) - st.t0);
+  const stage = st.running && st.stage ? " · " + st.stage + (st.total > 1 ? ` ${st.i}/${st.total}` : "") : "";
+  const sub = st.running ? time + stage : time + (st.result === "ok" ? tx([" · результат — в процессе", " · the result is in the workflow"]) : "");
+  const pct = st.running && st.total > 1 ? Math.round(100 * st.i / st.total) : st.running ? 0 : 100;
+  runbox.className = "runbox " + cls;
+  runbox.innerHTML = `<span class="rb-dot" aria-hidden="true"></span><div class="rb-text"><div class="rb-title"></div><div class="rb-sub"></div>
+    ${st.running ? '<div class="rb-bar"><i></i></div>' : ""}</div>`;
+  runbox.querySelector(".rb-title").textContent = head;
+  runbox.querySelector(".rb-sub").textContent = sub;
+  const bar = runbox.querySelector(".rb-bar i"); if (bar) bar.style.width = pct + "%";
+  if (st.open) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "go";
+    b.textContent = tx(["Вернуться к процессу →", "Back to the workflow →"]);
+    b.onclick = () => parent.postMessage({ neronStudio: "goto", key: st.key }, "*");
+    runbox.append(b);
+  }
+  if (!st.running) {
+    const x = document.createElement("button"); x.type = "button"; x.className = "hide"; x.textContent = "✕";
+    x.title = tx(["Скрыть", "Hide"]); x.onclick = () => { runHidden = st.t0; runbox.hidden = true; };
+    runbox.append(x);
+  }
+  runbox.hidden = false;
+}
+
 if (INSIDE) {
+  addEventListener("message", (e) => { if (e?.data?.neronStudioRun) drawRun(e.data.neronStudioRun); });
   fetch("neron_studio/available", { cache: "no-store" }).catch(() => fetch("/neron_studio/available"))
     .then((r) => r && r.ok ? r.json() : null).then((a) => {
       available = a;
@@ -890,7 +944,7 @@ bgLoad().then((rec) => { if (rec) bgShow(rec); });
 // ================== 🧪 «✉ Написать создателю» (папка «Тест») ==================
 // Письмо уходит автору через Web3Forms (ключ публичный: он только разрешает слать письма автору, адреса не раскрывает).
 // К письму — только то, что видно в «Что будет отправлено»: процесс, текст, версия ComfyUI, видеокарта, последняя ошибка.
-const DESK_VERSION = "2026.11.13·5";
+const DESK_VERSION = "2026.11.13·6";
 const W3F_KEY = "6462b9a5-e856-422f-9f27-23875a4277d3";
 const SENT_KEY = "neron-studio-report-at", ERR_KEY = "neron-studio-last-error";
 const RP = {

@@ -654,7 +654,7 @@ setInterval(() => {
     try {
         if (!engineReady()) return;
         if (E.applied) guard();
-        else if (E.current || E.preview) { E.sig = ""; refresh(); }
+        else if (E.current || E.preview || E.studio) { E.sig = ""; refresh(); }      // холст не был готов — красим, как только готов
         if (E.applied && E.applied.life.level > 0) startFx();
     } catch (e) { /* ок */ }
 }, 1000);
