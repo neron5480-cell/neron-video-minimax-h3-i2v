@@ -625,8 +625,10 @@ function toast(text, act, fn) {
 function reflow() { pack(vis().sort((a, b) => a.y - b.y || a.x - b.x)); }
 function fit() {
   if (!innerWidth || !desk.clientWidth) return;        // стол спрятан (окно свёрнуто) — раскладку не трогаем
-  const base = innerWidth >= 1100 ? 12 : innerWidth >= 700 ? 8 : 4;
-  const want = Math.max(4, Math.min(24, Math.round(base / look.scale)));   // меньше плитки — больше колонок
+  // колонок столько, чтобы обычная плитка (4 колонки) была ~330 px: на широком мониторе плиток в ряд больше,
+  // а не сами плитки шире. «Размер плиток» в «🎨 Тема» меняет эти 330 px.
+  const per = Math.max(1, Math.floor((desk.clientWidth + 12) / (330 * look.scale + 12)));
+  const want = Math.min(48, per * 4);
   if (want !== cols) { cols = want; reflow(); }
   else settle(null);
 }
@@ -887,7 +889,7 @@ bgLoad().then((rec) => { if (rec) bgShow(rec); });
 // ================== 🧪 «✉ Написать создателю» (папка «Тест») ==================
 // Письмо уходит автору через Web3Forms (ключ публичный: он только разрешает слать письма автору, адреса не раскрывает).
 // К письму — только то, что видно в «Что будет отправлено»: процесс, текст, версия ComfyUI, видеокарта, последняя ошибка.
-const DESK_VERSION = "2026.11.13·3";
+const DESK_VERSION = "2026.11.13·4";
 const W3F_KEY = "6462b9a5-e856-422f-9f27-23875a4277d3";
 const SENT_KEY = "neron-studio-report-at", ERR_KEY = "neron-studio-last-error";
 const RP = {
