@@ -1,5 +1,17 @@
 # Changelog / История изменений
 
+## 🎭 Neron H3 Замена героя / Hero Swap — тест (main, 14.11.2026)
+
+**RU:**
+- Новая нода **🎭 Neron H3 Замена героя** (папка `ComfyUI-NeronH3Swap`) и процесс `workflows/Neron_H3_Swap.json`: клип + фото → тот же клип с человеком с фото; режимы «весь облик», «лицо и причёска», «только лицо».
+- MiniMax H3 Ref2VA + LoRA Character Swap V1.5 (Akatz Labs) + турбо-LoRA, 8 шагов; маски — SAM 3.1 (родные ноды); оригинал в образце размывается; звук клипа — оригинал.
+- Умолчания по прогонам: быстрое внимание выкл, «рисовать» = авто. Модели — кнопка «📥 Модели». В справке — подгонка под фото и клип и отказ от ответственности.
+
+**EN:**
+- New node **🎭 Neron H3 Hero Swap** (folder `ComfyUI-NeronH3Swap`) and the workflow `workflows/Neron_H3_Swap.json`: clip + photo → the same clip with the person from the photo; «whole look», «face & hair», «face only».
+- MiniMax H3 Ref2VA + Character Swap V1.5 LoRA (Akatz Labs) + turbo LoRA, 8 steps; masks — SAM 3.1 (native nodes); the original in the reference is blurred; the clip's sound is kept.
+- Tested defaults: fast attention off, «draw» = auto. Models — the «📥 Models» button. The help covers fitting to your photo and clip and a disclaimer.
+
 ## 🖥 Neron Studio — рабочий стол внутри ComfyUI / desktop inside ComfyUI (main 2.2.0, 08.11.2026)
 
 **RU:**

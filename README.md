@@ -110,6 +110,26 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 
 ---
 
+## 🎭 NERON H3 ЗАМЕНА ГЕРОЯ / HERO SWAP — человек с фото в вашем клипе (новое, тест)
+
+> **⚠ АВТОР НЕ НЕСЁТ ОТВЕТСТВЕННОСТИ ЗА ИСПОЛЬЗОВАНИЕ ЭТОГО ИНСТРУМЕНТА И ЗА СОЗДАННЫЙ С ЕГО ПОМОЩЬЮ КОНТЕНТ — В ТОМ
+> ЧИСЛЕ ФЕЙКИ, ПОДМЕНУ ЛИЧНОСТИ И ЭРОТИЧЕСКИЙ КОНТЕНТ. ЭТО ТОЛЬКО ИНСТРУМЕНТ. ВСЯ ОТВЕТСТВЕННОСТЬ — НА ПОЛЬЗОВАТЕЛЕ.
+> ИСПОЛЬЗУЙТЕ ТОЛЬКО С СОГЛАСИЯ ЛЮДЕЙ НА ФОТО И В ВИДЕО И В РАМКАХ ЗАКОНА.**
+
+👋 Нода и воркфлоу лежат в папке **[`ComfyUI-NeronH3Swap`](ComfyUI-NeronH3Swap/)**.
+
+Клип + фото → тот же клип (движение, камера, свет, звук) с человеком с фото. Без промптов: подключили, нажали Run.
+
+* **🧍 весь облик**, **🙂 лицо и причёска** или **👤 только лицо**.
+* Движок — **MiniMax H3 Ref2VA** + LoRA замены (Akatz Labs) + турбо, 8 шагов; маски — **SAM 3.1** (родные ноды).
+* Оригинал в образце **размывается** — модель не копирует его черты; губы ложатся на звук клипа.
+* Модели качает сама (кнопка **📥 Модели**). 480p / 5 с ≈ 5–7 мин на 16 ГБ.
+* В справке ноды — таблица «что видно → что поменять» под ваши фото и клип.
+
+*Подробности — в [README внутри папки](ComfyUI-NeronH3Swap/README.md).*
+
+---
+
 ## 🎬 Проект 2: NERON STUDIO H3 (Готовый процесс видео-генерации, v1.0 «Lite»)
 
 👋 Все ноды, воркфлоу и инструкции лежат в папке **[`Neron_Studio_H3`](Neron_Studio_H3/)**.
@@ -212,6 +232,7 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 | Подготовить первый кадр | **🖼 Neron Studio Image Processor** — пресеты подрезаются по центру, Сброс и Справка | Interactive Image Processor (пресеты растягивают картинку); Smart Load & Resize Image и Manual Color & Upscale Panel — *legacy*, тот же код |
 | Сгенерировать видео H3 | **🎬 Neron H3 Engine** — качество | 🎥 Neron MiniMax H3 Generator (Lite) — для воркфлоу Neron Studio H3 |
 | Длинный ролик H3 (5–45 с) | **🎬 Neron H3 Story** + **🖼 Кадры** + **📝 Story AutoPrompter** (или ноды **🎞 Блок**) | — |
+| Заменить человека в клипе на человека с фото | **🎭 Neron H3 Замена героя / Hero Swap** | — |
 | Сгенерировать видео LTX 2.5 | **🎬 Neron LTX Engine** — первый / промежуточные / последний кадр, звук, модели качает сам; **🎬 Neron LTX AutoPrompter** — промпт под LTX с физикой и камерой, LLM качает сам | — |
 | Написать промпт | **🎬 Neron AutoPrompter** — промпт под H3 по картинке и брифу | 🎬 Neron Dialog Autoprompter и 🧠 Multi-Image LLM — диалоговый режим |
 | Камера H3 | **⚡ Fixed Camera H3** | — |
@@ -351,6 +372,26 @@ The same quality H3 engine, but a **5–45 s video with sound** — a chain of b
 
 ---
 
+## 🎭 NERON H3 HERO SWAP — the person from your photo in your clip (new, test)
+
+> **⚠ THE AUTHOR IS NOT RESPONSIBLE FOR HOW THIS TOOL IS USED OR FOR CONTENT MADE WITH IT, INCLUDING DEEPFAKES,
+> IDENTITY SUBSTITUTION AND EROTIC CONTENT. IT IS ONLY A TOOL. ALL RESPONSIBILITY LIES WITH THE USER. USE IT ONLY WITH
+> THE CONSENT OF THE PEOPLE IN THE PHOTO AND VIDEO AND WITHIN THE LAW.**
+
+👋 The node and workflow live in the **[`ComfyUI-NeronH3Swap`](ComfyUI-NeronH3Swap/)** folder.
+
+Clip + photo → the same clip (motion, camera, light, sound) with the person from the photo. No prompts: wire it, press Run.
+
+* **🧍 whole look**, **🙂 face & hair** or **👤 face only**.
+* Engine — **MiniMax H3 Ref2VA** + swap LoRA (Akatz Labs) + turbo, 8 steps; masks — **SAM 3.1** (native nodes).
+* The original in the reference is **blurred** — the model does not copy its features; lips follow the clip's sound.
+* Downloads its models (the **📥 Models** button). 480p / 5 s ≈ 5–7 min on 16 GB.
+* The node's help has a «what you see → what to change» table for your photo and clip.
+
+*Details are in the [README inside the folder](ComfyUI-NeronH3Swap/README.md).*
+
+---
+
 ## 🎬 Project 2: NERON STUDIO H3 (Ready-made video pipeline, v1.0 "Lite")
 
 👋 All nodes, workflows and instructions live in the **[`Neron_Studio_H3`](Neron_Studio_H3/)** folder.
@@ -453,6 +494,7 @@ Details in the **[README inside NeronTheme](NeronTheme/README.md)**.
 | Prepare the first frame | **🖼 Neron Studio Image Processor** — presets are center-cropped, Reset and Help | Interactive Image Processor (presets stretch the picture); Smart Load & Resize Image and Manual Color & Upscale Panel — *legacy*, same code |
 | Generate H3 video | **🎬 Neron H3 Engine** — quality | 🎥 Neron MiniMax H3 Generator (Lite) — for the Neron Studio H3 workflows |
 | Long H3 video (5–45 s) | **🎬 Neron H3 Story** + **🖼 Frames** + **📝 Story AutoPrompter** (or **🎞 Block** nodes) | — |
+| Swap the person in a clip for the person from a photo | **🎭 Neron H3 Hero Swap** | — |
 | Generate LTX 2.5 video | **🎬 Neron LTX Engine** — first / middle / last frames, audio, downloads its models; **🎬 Neron LTX AutoPrompter** — an LTX prompt with physics and camera, downloads its LLM | — |
 | Write the prompt | **🎬 Neron AutoPrompter** — an H3 prompt from a picture and a brief | 🎬 Neron Dialog Autoprompter and 🧠 Multi-Image LLM — dialog mode |
 | H3 camera | **⚡ Fixed Camera H3** | — |
