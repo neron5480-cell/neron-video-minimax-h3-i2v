@@ -172,7 +172,7 @@
         12,
         0.35,
         "match",
-        true,
+        false,
         "🤖 авто — из пакета / auto — from pack",
         "🤖 авто — из пакета / auto — from pack",
         "🤖 авто — из пакета / auto — from pack",
@@ -182,7 +182,7 @@
         "🤖 авто — из пакета / auto — from pack",
         0.5,
         true,
-        "🎯 только человека — точно / person only"
+        "🤖 авто — по режиму / auto"
       ]
     },
     {
@@ -263,7 +263,7 @@
       "title": "📖 Прочти меня / Read me",
       "properties": {},
       "widgets_values": [
-        "🎭 NERON H3 ЗАМЕНА ГЕРОЯ / HERO SWAP\n\n🇷🇺 Тот же клип — танец, камера, фон, звук — но с человеком с вашего фото.\nМеняется только человек под маской, всё остальное — пиксели оригинала.\n\n1. Load Video — клип (любая частота кадров).\n2. Load Image — фото «на кого» (лицо хорошо видно; для «весь облик» — в полный рост).\n3. На ноде: кого менять, что менять, качество (начни с 480p), длина (начни с 5 с). Run.\n4. «Маска» внизу — кого нашла нода (оранжевым) и что увидела модель (человек размыт).\n\nРецепт: 480p — проба, понравился сид — тот же сид на 768p (чистовик).\n\nМодели — кнопка «📥 Модели» на ноде: скачает только то, что нужно замене\n(H3 Ref2VA, LoRA замены V1.5 от Akatz Labs, SAM 3.1, турбо-LoRA; энкодер и VAE — общие с H3).\nПару меняем по очереди: «⬅ левый» с фото 1, потом результат — «➡ правый» с фото 2.\nЗаменяйте себя и тех, кто согласен.\nПодробно — 📖 Справка на ноде.\n\n🇬🇧 The same clip — dance, camera, background, sound — with the person from your photo.\nOnly the masked person changes; everything else stays the original pixels.\n\n1. Load Video — the clip (any frame rate).\n2. Load Image — the new person's photo (face clearly visible; full body for «whole look»).\n3. On the node: who, what, quality (start with 480p), length (start with 5 s). Run.\n4. «Mask» below — who was found (orange) and what the model saw (the person blurred).\n\nRecipe: 480p to try; like the seed — the same seed at 768p for the final.\n\nModels — «📥 Models» on the node downloads only what the swap needs\n(H3 Ref2VA, Akatz Labs' swap LoRA V1.5, SAM 3.1, turbo LoRA; encoder and VAEs are shared with H3).\nSwap a couple in two runs: «⬅ leftmost» with photo 1, then the result — «➡ rightmost» with photo 2.\nThe swap model is experimental: face and expressions can drift. Swap yourself and people who agreed.\nDetails — 📖 Help on the node."
+        "⚠ ОТКАЗ ОТ ОТВЕТСТВЕННОСТИ\nАВТОР НЕ НЕСЁТ ОТВЕТСТВЕННОСТИ ЗА ИСПОЛЬЗОВАНИЕ ЭТОГО ИНСТРУМЕНТА И ЗА СОЗДАННЫЙ С ЕГО ПОМОЩЬЮ\nКОНТЕНТ — В ТОМ ЧИСЛЕ ФЕЙКИ, ПОДМЕНУ ЛИЧНОСТИ И ЭРОТИЧЕСКИЙ КОНТЕНТ. ЭТО ТОЛЬКО ИНСТРУМЕНТ.\nВСЯ ОТВЕТСТВЕННОСТЬ — НА ПОЛЬЗОВАТЕЛЕ. ИСПОЛЬЗУЙТЕ ТОЛЬКО С СОГЛАСИЯ ЛЮДЕЙ НА ФОТО И В ВИДЕО\nИ В РАМКАХ ЗАКОНА.\n\n⚠ DISCLAIMER\nTHE AUTHOR IS NOT RESPONSIBLE FOR HOW THIS TOOL IS USED OR FOR CONTENT MADE WITH IT, INCLUDING\nDEEPFAKES, IDENTITY SUBSTITUTION AND EROTIC CONTENT. IT IS ONLY A TOOL. ALL RESPONSIBILITY LIES\nWITH THE USER. USE IT ONLY WITH THE CONSENT OF THE PEOPLE IN THE PHOTO AND VIDEO AND WITHIN THE LAW.\n\n🎭 NERON H3 ЗАМЕНА ГЕРОЯ / HERO SWAP\n\n🇷🇺 Меняет человека в клипе на человека с фото; движение, камера, свет и звук — из клипа.\n1. Load Video — клип. 2. Load Image — фото (лицо хорошо видно; для «весь облик» — в полный рост).\n3. На ноде: кого, что менять, качество (начни с 480p), длина (начни с 5 с). Run.\n4. «Маска» — кого нашла нода и что получила модель.\nПроба на 480p → тот же сид на 768p. Модели — «📥 Модели» на ноде. Подгонка — 📖 Справка.\n\n🇬🇧 Replaces the person in a clip with the person from a photo; motion, camera, light and sound come from the clip.\n1. Load Video — the clip. 2. Load Image — the photo (face clearly visible; full body for «whole look»).\n3. On the node: who, what, quality (start with 480p), length (start with 5 s). Run.\n4. «Mask» — who was found and what the model got.\nTry at 480p → the same seed at 768p. Models — «📥 Models» on the node. Fitting tips — 📖 Help."
       ],
       "color": "#432",
       "bgcolor": "#653"

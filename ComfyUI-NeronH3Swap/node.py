@@ -23,7 +23,7 @@ WHAT = ["🧍 весь облик / whole look", "🙂 лицо и причёс�
 QUALITY = ["⚡ 480p — быстрее, для 16 ГБ / faster", "🎯 768p — как у автора LoRA, тяжелее / heavier"]
 SHORT = {QUALITY[0]: 480, QUALITY[1]: 768}
 SOUND = ["🎵 оригинал / original", "✨ сгенерировать / generate"]
-DRAW = ["🎯 только человека — точно / person only", "🖼 весь кадр — чисто / whole frame"]
+DRAW = ["🤖 авто — по режиму / auto", "🎯 только человека — точно / person only", "🖼 весь кадр — чисто / whole frame"]
 TARGET = {E.WHO[0]: "the main person", E.WHO[1]: "the person on the left", E.WHO[2]: "the person on the right",
           E.WHO[3]: "the person in the center", E.WHO[4]: "every person"}
 
@@ -238,9 +238,12 @@ class NeronH3HeroSwap:
                                 tooltip="match — фото под размер кадра (быстрее, так у автора). max — в полном качестве: "
                                         "лицо узнаётся лучше, медленнее.\n\nEN: match — faster (author's); max — better "
                                         "likeness, slower.")),
-                "fast_attention": ("BOOLEAN", _exp("быстрое внимание INT8 / fast attention", default=True,
-                                   tooltip="Как у автора LoRA: быстрее и легче для памяти. Выключи, если видишь "
-                                           "морфинг.\n\nEN: As the LoRA author: faster, lighter. Turn off on morphing.")),
+                "fast_attention": ("BOOLEAN", _exp("быстрое внимание INT8 / fast attention", default=False,
+                                   tooltip="Выкл (по умолчанию) — точное внимание: чище, лицо не «подмешивается», "
+                                           "время почти то же. Вкл — приближённое INT8: легче для памяти, но бывают "
+                                           "огрехи и возврат к оригиналу.\n\nEN: Off (default) — exact attention: "
+                                           "cleaner, about the same time. On — approximate INT8: lighter on memory, "
+                                           "but glitches and drifting back to the original happen.")),
                 "unet_model": _model_combo("unet", "модель H3 Ref2VA / model"),
                 "clip_model": _model_combo("clip", "текстовый энкодер / text encoder"),
                 "vae_video_model": _model_combo("vae_video", "VAE видео / video VAE"),
@@ -250,7 +253,7 @@ class NeronH3HeroSwap:
                 "sam_model": _model_combo("sam", "SAM 3.1"),
                 # новое — строго в конец: сохранённые схемы хранят значения по порядку
                 "blur_strength": ("FLOAT", _exp("сила размытия / blur strength", default=0.5, min=0.4, max=1.0,
-                                  step=0.05, tooltip="Идея Романа: ДО генерации человек (или голова) в клипе-образце "
+                                  step=0.05, tooltip="ДО генерации человек (или голова) в клипе-образце "
                                   "размывается — модели нечего копировать, а свет, цвета и движение остаются.\n"
                                   "0.5 — лучшее по проверкам. 1.0 — черт не видно совсем, больше от фото. 0.4 — "
                                   "смесь оригинала и фото («двойник»). На крупном плане (лицо на весь кадр) — не "
@@ -266,11 +269,15 @@ class NeronH3HeroSwap:
                                         "the NEW person and only they are pasted in; the margin band becomes the "
                                         "clip's real sharp pixels again. One more short SAM pass.")),
                 "draw": (DRAW, _exp("рисовать / draw", default=DRAW[0],
-                         tooltip="🎯 только человека — точно: вокруг остаются настоящие пиксели клипа (бывает ореол по "
-                                 "краю).\n🖼 весь кадр — чисто (идея Романа): модель рисует кадр целиком по размытому "
-                                 "образцу — краёв нет, но фон нарисован заново (очень похож, не пиксель в пиксель).\n\n"
-                                 "EN: person only — exact clip pixels around (an edge halo is possible); whole frame — "
-                                 "the model paints the full frame: no edges, the background is re-painted.")),
+                         tooltip="🤖 авто: весь облик → весь кадр; лицо, лицо и причёска → только человека.\n"
+                                 "🎯 только человека — точно: вокруг остаются настоящие пиксели клипа (у всего облика "
+                                 "бывает ореол).\n🖼 весь кадр — чисто: модель рисует кадр целиком по размытому "
+                                 "образцу — краёв нет, фон нарисован заново (очень похож, не пиксель в пиксель); для "
+                                 "лица модель может взять с фото и причёску, и одежду.\n\n"
+                                 "EN: auto — whole look → whole frame; face, face & hair → person only. Person only — "
+                                 "exact clip pixels around (a halo is possible for the whole look). Whole frame — the "
+                                 "model paints the full frame: no edges, the background is re-painted; for a face it "
+                                 "may take the hair and clothes from the photo too.")),
             },
             "optional": {
                 "width": ("INT", {"forceInput": True,
@@ -357,6 +364,11 @@ class NeronH3HeroSwap:
         text = prompt.strip() if (prompt or "").strip() else blur_prompt(who, what, hint)
         head = what in (WHAT[1], WHAT[2])
         face_only = what == WHAT[2]
+        # «авто» (проверено 14.11): весь облик — весь кадр (без ореола-призрака); лицо и голова — только человека
+        # (в «весь кадр» модель тащит с фото причёску и одежду)
+        whole_frame = draw == DRAW[2] or (draw not in (DRAW[1], DRAW[2]) and not head)
+        if draw not in (DRAW[1], DRAW[2]):
+            notes.append("Рисовать: авто → " + ("весь кадр" if whole_frame else "только человека"))
         margin = int(expand_px) if int(expand_px) > 0 else (1 if head else 25)
         notes.append(f"Запас маски: {margin} пикс." + ("" if int(expand_px) > 0 else " (авто)"))
         notes.append("Текст: " + ("свой" if (prompt or "").strip() else f"{what.split(' / ')[0]} · "
@@ -372,7 +384,7 @@ class NeronH3HeroSwap:
                 frames, audio, photo, text, size, int(seed), int(steps), float(swap_strength),
                 models, who, float(threshold), margin, bool(keep_outside), int(feather_px), ref_quality,
                 bool(fast_attention), sound == SOUND[0], head,
-                float(blur_strength), bool(tight_edges), draw == DRAW[1], face_only)
+                float(blur_strength), bool(tight_edges), whole_frame, face_only)
         except Exception:
             E.free("после ошибки / after error")
             raise

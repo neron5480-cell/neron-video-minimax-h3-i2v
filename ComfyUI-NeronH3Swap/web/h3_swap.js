@@ -514,149 +514,132 @@ const HELP_TEXT = `
 🎭 NERON H3 ЗАМЕНА ГЕРОЯ / HERO SWAP
 ===================================================
 
-🇷🇺 ЧТО ЭТО
-Тот же клип — танец, камера, фон, свет, звук — но с человеком с вашего фото.
-• 🙂 лицо и причёска — вся голова с фото (причёска тоже); тело и одежда — из клипа.
-• 👤 только лицо — меняется одно лицо; причёска, тело и одежда — из клипа.
-• 🧍 весь облик — новый человек целиком; наряд по форме и цвету клипа.
+⚠ ОТКАЗ ОТ ОТВЕТСТВЕННОСТИ
+АВТОР НЕ НЕСЁТ ОТВЕТСТВЕННОСТИ ЗА ИСПОЛЬЗОВАНИЕ ЭТОГО ИНСТРУМЕНТА И ЗА СОЗДАННЫЙ С ЕГО ПОМОЩЬЮ
+КОНТЕНТ — В ТОМ ЧИСЛЕ ФЕЙКИ, ПОДМЕНУ ЛИЧНОСТИ И ЭРОТИЧЕСКИЙ КОНТЕНТ. ЭТО ТОЛЬКО ИНСТРУМЕНТ.
+ВСЯ ОТВЕТСТВЕННОСТЬ — НА ПОЛЬЗОВАТЕЛЕ. ИСПОЛЬЗУЙТЕ ТОЛЬКО С СОГЛАСИЯ ЛЮДЕЙ НА ФОТО И В ВИДЕО
+И В РАМКАХ ЗАКОНА.
 
-КАК ПОЛЬЗОВАТЬСЯ
-1. В «Load Video» — клип (любая частота кадров, нода сама сделает 24 к/с).
-2. В «Load Image» — фото «на кого»: лицо хорошо видно, ровный свет.
-3. Выбери, кого менять, что менять, качество и длину. Run.
-4. Окно «Маска» — две картинки: оранжевым — кого нашла нода; рядом — что увидела модель
-   (человек или голова размыты).
-
-РЕЦЕПТ (проверен)
-1. 480p, 5 с — быстро пробуешь (≈4 мин на 16 ГБ). Понравилось — запомни сид
-   (в ⚙ эксперте «управление после генерации» = fixed).
-2. Тот же сид, 768p — чистовик: резко и естественно (≈11 мин на 5 с).
-
-РАЗМЕР КАДРА
-• Качество 480p / 768p — короткая сторона кадра; форма — всегда как у клипа.
-• Провода width + height главнее: кадр будет не больше width × height (форма клипа),
-  а «качество» прячется и не работает. Больше паспорта H3 не будет.
-• Сменить форму (вертикальное → широкое) — отдельный шаг, не в этой ноде: так нет швов.
-
-ПАРА В КАДРЕ
-Одно фото — один человек. Пару меняем по очереди: сначала «⬅ левый» с фото 1,
-потом результат снова в ноду — «➡ правый» с фото 2.
-
-⚙ ЭКСПЕРТ — главное
-• Сила размытия (0.5 — лучшее). 1.0 — больше от фото. 0.4 — смесь оригинала и фото
-  («двойник»). На крупном плане (лицо на весь кадр) — не ниже 0.5, иначе лицо теряется.
-• Запас маски: 0 — авто (лицо 1, весь облик 25). Для всего облика мало не ставь: тонкие пряди оригинала выйдут за маску. Меньше — одежда ближе к клипу,
-  больше — модели свободнее.
-• Точные края (вкл.) — после генерации SAM находит нового человека, и вклеивается
-  только он: фон вокруг остаётся резким, как в клипе.
-
-ПОДГОНКА ПОД ВАШИ ФОТО И КЛИП (проверено 14.11)
-Нода сама подстраивается под клип, но на все фото и видео одной настройки нет.
-Что видно → что поменять (сид — fixed, чтобы сравнивать честно):
-• Тень, «призрак» вокруг всей фигуры (весь облик) → рисовать = «🖼 весь кадр».
-• Лицо «подмешивается», мелкие огрехи → ⚙ быстрое внимание = выкл (чище).
-• «Только лицо» тащит с фото причёску и одежду → рисовать = «🎯 точно».
-• Пышная причёска, банты, заколки с фото срезаны или пропадают («лицо и причёска»)
-  → запас маски 25–40: голове с фото нужно больше места, чем голове из клипа.
-• Подбородок или шея не на месте → напишите нам: это подгоняем в самой ноде.
-
-КАК УСТРОЕНО
-• SAM 3.1 находит человека (или его голову с волосами) и ведёт маску по клипу.
-• Разведка: нода мерит размер лица на каждом кадре; на крупном плане (наезд камеры) размытие
-  сильнее — иначе модель узнаёт оригинал сквозь размытие.
-• Идея Романа: ДО генерации человек в клипе-образце РАЗМЫВАЕТСЯ — черт оригинала
-  модели не видно, копировать нечего, а свет, цвета и движение остаются.
-  (Пробовали чёрный и серый силуэт и скелет — размытие вышло лучше всех.)
-• MiniMax H3 Ref2VA получает размытый клип как <Video 1>, фото как <Picture 1>
-  и звук клипа — губы ложатся на песню сами. Перерисовывается только зона маски.
-• LoRA «Character Swap V1.5» (Akatz Labs) + турбо-LoRA, 8 шагов.
-• Вне человека вклеиваются настоящие пиксели клипа. Звук — оригинал, байт в байт.
-
-МОДЕЛИ — «📥 Модели» на ноде, качает только то, что нужно этой ноде:
-модель H3 Ref2VA (отдельный файл, не тот, что у Story / Engine), энкодер и VAE
-(общие с другими нодами H3), турбо-LoRA, LoRA замены, SAM 3.1.
-
-ЧЕСТНО
-• Проверено на одном клипе с одним фото — на других видео возможны сюрпризы
-  (быстрые движения, профиль, перекрытия руками).
-• 768p и длинные клипы тяжелы для 16 ГБ — начни с 480p и 5 с.
-• Заменяйте себя и тех, кто согласен.
-
-Идея процесса — Akatz Labs («H3 Character Swap»), LoRA — их, со своей лицензией
-(MiniMax H3 Community License). Размытие, точные края и код ноды — Neron.
+⚠ DISCLAIMER
+THE AUTHOR IS NOT RESPONSIBLE FOR HOW THIS TOOL IS USED OR FOR CONTENT MADE WITH IT, INCLUDING
+DEEPFAKES, IDENTITY SUBSTITUTION AND EROTIC CONTENT. IT IS ONLY A TOOL. ALL RESPONSIBILITY LIES
+WITH THE USER. USE IT ONLY WITH THE CONSENT OF THE PEOPLE IN THE PHOTO AND VIDEO AND WITHIN THE LAW.
 
 ===================================================
 
-🇬🇧 WHAT IT IS
-The same clip — dance, camera, background, light, sound — with the person from your photo.
-• 🙂 face & hair — the whole head from the photo (hair too); body and clothes from the clip.
-• 👤 face only — only the face changes; hair, body and clothes stay from the clip.
-• 🧍 whole look — a whole new person; the outfit follows the clip's shape and colors.
+🇷🇺 ЧТО ДЕЛАЕТ
+Меняет человека в клипе на человека с фото. Движение, камера, свет и звук — из клипа.
+• 🧍 весь облик — человек целиком с фото; одежда по форме и цвету клипа.
+• 🙂 лицо и причёска — голова с фото (с волосами); тело и одежда — из клипа.
+• 👤 только лицо — лицо с фото; причёска, тело и одежда — из клипа.
+
+КАК ПОЛЬЗОВАТЬСЯ
+1. Load Video — клип (любая частота кадров, нода переводит в 24 к/с).
+2. Load Image — фото: лицо хорошо видно, ровный свет; для «весь облик» — в полный рост.
+3. Кого менять, что менять, качество, длина. Run.
+4. «Маска»: слева — кого нашла нода (оранжевым), справа — что получила модель.
+
+ВРЕМЯ (16 ГБ, 5 с клипа): 480p — 5–7 мин; 768p — дольше, резче.
+Проба на 480p → понравился сид (⚙ «управление после генерации» = fixed) → тот же сид на 768p.
+
+УМОЛЧАНИЯ (проверены)
+• рисовать = авто: весь облик → весь кадр; лицо, лицо и причёска → только человека.
+• быстрое внимание = выкл — чище, время почти то же.
+• сила размытия 0.5; запас маски 0 = авто (голова и лицо 1, весь облик 25).
+
+⚙ ЭКСПЕРТ
+• Сила размытия 0.4–1.0: насколько размыт оригинал в образце. 0.5 — норма, 1.0 — больше от фото,
+  0.4 — смесь оригинала и фото. На крупном плане — не ниже 0.5.
+• Рисовать: 🎯 только человека — вокруг пиксели клипа; 🖼 весь кадр — модель рисует кадр целиком
+  (нет краёв и ореола, фон нарисован заново; для лица может взять с фото причёску и одежду).
+• Быстрое внимание INT8: вкл — легче для памяти, но бывают огрехи и возврат к оригиналу.
+• Запас маски: больше — модели свободнее (пышная причёска, банты); меньше — ближе к клипу.
+• Точные края (вкл): после генерации вклеивается только новый человек, фон — пиксели клипа.
+• Качество фото-образца: match — быстрее; max — лицо узнаётся лучше, медленнее.
+• Входы width / height: кадр не больше width × height, форма клипа; «качество» отключается.
+
+ПОДГОНКА ПОД ФОТО И КЛИП (сравнивайте на одном сиде)
+• Тень, «призрак» вокруг всей фигуры → рисовать = 🖼 весь кадр.
+• Лицо «подмешивается», мелкие огрехи → быстрое внимание = выкл.
+• «Только лицо» берёт с фото причёску и одежду → рисовать = 🎯 только человека.
+• Пышная причёска, банты, заколки срезаны («лицо и причёска») → запас маски 25–40.
+• Подбородок или шея не на месте → сообщите: правится в самой ноде.
+
+КАК УСТРОЕНО
+• SAM 3.1 находит человека и ведёт маску по клипу; голова, волосы, лицо — на каждом кадре.
+• Человек (голова, лицо) в образце размывается: черт оригинала модель не видит, свет и движение
+  остаются. Сила — по крупности плана на каждом кадре. Силуэт и скелет модель копирует буквально.
+• Фото: человек вырезан на серый фон — фон фото не попадает в кадр.
+• MiniMax H3 Ref2VA: клип — <Video 1>, фото — <Picture 1>, звук клипа — образец (губы по звуку).
+• LoRA Character Swap V1.5 + турбо-LoRA, 8 шагов, CFG 1.
+• Звук — оригинал клипа, байт в байт.
+
+МОДЕЛИ — «📥 Модели» на ноде: H3 Ref2VA (не fl2va от Story / Engine), энкодер и VAE (общие с H3),
+турбо-LoRA, LoRA замены (Akatz Labs), SAM 3.1.
+
+ОГРАНИЧЕНИЯ
+• До 15 с клипа за прогон. Пара в кадре — два прогона («⬅ левый», потом «➡ правый»).
+• Быстрые движения, профиль, руки перед лицом — возможны огрехи. 768p тяжёл для 16 ГБ.
+
+Идея процесса и LoRA замены — Akatz Labs («H3 Character Swap», MiniMax H3 Community License).
+
+===================================================
+
+🇬🇧 WHAT IT DOES
+Replaces the person in a clip with the person from a photo. Motion, camera, light and sound come from the clip.
+• 🧍 whole look — the whole person from the photo; clothing follows the clip's shape and colors.
+• 🙂 face & hair — the head from the photo (with hair); body and clothes from the clip.
+• 👤 face only — the face from the photo; hair, body and clothes from the clip.
 
 HOW TO USE
-1. «Load Video» — the clip (any frame rate; the node converts to 24 fps).
-2. «Load Image» — the new person's photo: face clearly visible, even light.
-3. Choose who, what, quality and length. Run.
-4. The «Mask» window shows two pictures: in orange — who was found; next to it — what the
-   model saw (the person or the head blurred).
+1. Load Video — the clip (any frame rate, converted to 24 fps).
+2. Load Image — the photo: face clearly visible, even light; full body for «whole look».
+3. Who, what, quality, length. Run.
+4. «Mask»: left — who was found (orange), right — what the model got.
 
-RECIPE (tested)
-1. 480p, 5 s — a quick try (≈4 min on 16 GB). Like it — keep the seed
-   (⚙ expert «control after generate» = fixed).
-2. Same seed at 768p — the final: sharp and natural (≈11 min for 5 s).
+TIME (16 GB, 5 s clip): 480p — 5–7 min; 768p — longer, sharper.
+Try at 480p → keep the seed you like (⚙ «control after generate» = fixed) → the same seed at 768p.
 
-FRAME SIZE
-• Quality 480p / 768p — the short side of the frame; the shape always follows the clip.
-• Wired width + height win: the frame fits inside width × height (clip shape) and «quality»
-  hides and is ignored. Never above the H3 passport.
-• Changing the shape (vertical → wide) is a separate step, not in this node: no seams.
+DEFAULTS (tested)
+• draw = auto: whole look → whole frame; face, face & hair → person only.
+• fast attention = off — cleaner, about the same time.
+• blur strength 0.5; mask margin 0 = auto (head and face 1, whole look 25).
 
-A COUPLE IN FRAME
-One photo — one person. Swap a couple in two runs: «⬅ leftmost» with photo 1,
-then feed the result back — «➡ rightmost» with photo 2.
+⚙ EXPERT
+• Blur strength 0.4–1.0: how blurred the original is in the reference. 0.5 — normal, 1.0 — more from
+  the photo, 0.4 — a mix of original and photo. On a close-up keep 0.5+.
+• Draw: 🎯 person only — clip pixels around; 🖼 whole frame — the model paints the full frame
+  (no edges or halo, background re-painted; for a face it may take the photo's hair and clothes).
+• Fast attention INT8: on — lighter on memory, but glitches and drifting back to the original happen.
+• Mask margin: more — more room (big hair, bows); less — closer to the clip.
+• Tight edges (on): after generation only the new person is pasted in; the background is clip pixels.
+• Photo quality: match — faster; max — better likeness, slower.
+• width / height inputs: the frame fits inside width × height, clip shape; «quality» is ignored.
 
-⚙ EXPERT — the main things
-• Blur strength (0.5 — best). 1.0 — more of the photo. 0.4 — a mix of the original and the
-  photo («look-alike»). On a close-up (face fills the frame) keep 0.5+, or the face is lost.
-• Mask margin: 0 — auto (face 1, whole look 25). Not low for the whole look: thin strands of the original's hair escape the mask. Less — clothing closer to the clip,
-  more — more freedom for the model.
-• Tight edges (on) — after generation SAM finds the new person and only they are pasted in:
-  the background around stays as sharp as in the clip.
-
-FITTING YOUR PHOTO AND CLIP (tested 14.11)
-The node adapts to the clip by itself, but no single setting fits every photo and video.
-What you see → what to change (keep the seed fixed to compare fairly):
-• A shadow, a «ghost» around the whole figure (whole look) → draw = «🖼 whole frame».
-• The face «blends», small glitches → ⚙ fast attention = off (cleaner).
-• «Face only» takes the hairstyle and clothes from the photo → draw = «🎯 person only».
-• Big hair, bows, clips from the photo are cut or vanish («face & hair»)
-  → mask margin 25–40: the photo's head needs more room than the clip's head.
-• The chin or neck is off → tell us: we tune that inside the node.
+FITTING YOUR PHOTO AND CLIP (compare on one seed)
+• A shadow, a «ghost» around the whole figure → draw = 🖼 whole frame.
+• The face «blends», small glitches → fast attention = off.
+• «Face only» takes the photo's hair and clothes → draw = 🎯 person only.
+• Big hair, bows, clips are cut («face & hair») → mask margin 25–40.
+• The chin or neck is off → report it: it is tuned inside the node.
 
 HOW IT WORKS
-• SAM 3.1 finds the person (or their head with hair) and tracks the mask through the clip.
-• Scouting: the node measures the face size on every frame; on a close-up (camera zoom) the blur
-  is stronger — otherwise the model recognises the original through the blur.
-• Roman's idea: BEFORE generation the person in the reference clip is BLURRED — the original's
-  features are hidden, nothing to copy, while light, colors and motion stay.
-  (We tried black and gray silhouettes and a skeleton — blur came out best.)
-• MiniMax H3 Ref2VA gets the blurred clip as <Video 1>, the photo as <Picture 1> and the clip's
-  sound — lips follow the song by themselves. Only the mask zone is repainted.
-• «Character Swap V1.5» LoRA (Akatz Labs) + turbo LoRA, 8 steps.
-• Outside the person the clip's real pixels are pasted back. Sound — the original, byte for byte.
+• SAM 3.1 finds the person and tracks the mask; head, hair and face are searched on every frame.
+• The person (head, face) in the reference is blurred: the model cannot see the original's features,
+  light and motion stay. Strength follows the shot size per frame. Silhouettes and skeletons are copied literally.
+• Photo: the person is cut out onto gray — the photo's background does not get into the frame.
+• MiniMax H3 Ref2VA: clip — <Video 1>, photo — <Picture 1>, clip sound — a reference (lips follow it).
+• Character Swap V1.5 LoRA + turbo LoRA, 8 steps, CFG 1.
+• Sound — the clip's original, byte for byte.
 
-MODELS — «📥 Models» on the node downloads only what this node needs: the H3 Ref2VA model
-(a separate file from Story / Engine), the encoder and VAEs (shared with other H3 nodes),
-the turbo LoRA, the swap LoRA, SAM 3.1.
+MODELS — «📥 Models» on the node: H3 Ref2VA (not the fl2va of Story / Engine), encoder and VAEs
+(shared with H3), turbo LoRA, swap LoRA (Akatz Labs), SAM 3.1.
 
-HONESTLY
-• Tested on one clip with one photo — other videos may surprise
-  (fast moves, profile, hands in front of the face).
-• 768p and long clips are heavy for 16 GB — start with 480p and 5 s.
-• Swap yourself and people who agreed.
+LIMITS
+• Up to 15 s of clip per run. A couple in frame — two runs («⬅ leftmost», then «➡ rightmost»).
+• Fast moves, profile, hands in front of the face — glitches are possible. 768p is heavy for 16 GB.
 
-Workflow idea — Akatz Labs («H3 Character Swap»); the LoRA is theirs under its own
-license (MiniMax H3 Community License). Blur, tight edges and the node code — Neron.
+Workflow idea and swap LoRA — Akatz Labs («H3 Character Swap», MiniMax H3 Community License).
 `;
 
 function showHelpDialog() {
