@@ -36,6 +36,15 @@
 - **Точные края** (вкл.) — после генерации SAM находит нового человека, и вклеивается только он: фон вокруг
   остаётся резким, как в клипе.
 
+**Подгонка под ваши фото и клип** (проверено 14.11). Одной настройки на все фото и видео нет. Что видно → что
+поменять (сид — fixed, чтобы сравнивать честно):
+- тень, «призрак» вокруг всей фигуры (весь облик) → рисовать = **«🖼 весь кадр»**;
+- лицо «подмешивается», мелкие огрехи → ⚙ **быстрое внимание = выкл** (чище);
+- «только лицо» тащит с фото причёску и одежду → рисовать = **«🎯 точно»**;
+- пышная причёска, банты, заколки с фото срезаны («лицо и причёска») → **запас маски 25–40**: голове с фото нужно
+  больше места, чем голове из клипа;
+- подбородок или шея не на месте → напишите нам: это подгоняем в самой ноде.
+
 **Как устроено.** Только родные ноды ComfyUI; наш код — склейка, маски и размытие.
 1. **SAM 3.1** (ноды SAM3_Detect / SAM3_VideoTrack / SAM3_TrackToMask) находит человека в первом кадре — или
    его голову с волосами — и ведёт маску по клипу. Где трекер потерял человека, SAM находит его заново рядом с
@@ -112,6 +121,15 @@ feed the result back and swap «➡ rightmost» with photo 2.
 - **Mask margin:** 0 — auto (face 1, whole look 25). Not low for the whole look: thin strands of the original's hair escape the mask. Less — clothing closer to the clip, more — more freedom.
 - **Tight edges** (on) — after generation SAM finds the new person and only they are pasted in: the background
   around stays as sharp as in the clip.
+
+**Fitting your photo and clip** (tested 14.11). No single setting fits every photo and video. What you see → what to
+change (keep the seed fixed to compare fairly):
+- a shadow, a «ghost» around the whole figure (whole look) → draw = **«🖼 whole frame»**;
+- the face «blends», small glitches → ⚙ **fast attention = off** (cleaner);
+- «face only» takes the hairstyle and clothes from the photo → draw = **«🎯 person only»**;
+- big hair, bows, clips from the photo are cut («face & hair») → **mask margin 25–40**: the photo's head needs more
+  room than the clip's head;
+- the chin or neck is off → tell us: we tune that inside the node.
 
 **How it works.** Native ComfyUI nodes only; our code is the glue, the masks and the blur.
 1. **SAM 3.1** (SAM3_Detect / SAM3_VideoTrack / SAM3_TrackToMask) finds the person in the first frame — or

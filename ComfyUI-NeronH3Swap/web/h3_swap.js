@@ -550,6 +550,16 @@ const HELP_TEXT = `
 • Точные края (вкл.) — после генерации SAM находит нового человека, и вклеивается
   только он: фон вокруг остаётся резким, как в клипе.
 
+ПОДГОНКА ПОД ВАШИ ФОТО И КЛИП (проверено 14.11)
+Нода сама подстраивается под клип, но на все фото и видео одной настройки нет.
+Что видно → что поменять (сид — fixed, чтобы сравнивать честно):
+• Тень, «призрак» вокруг всей фигуры (весь облик) → рисовать = «🖼 весь кадр».
+• Лицо «подмешивается», мелкие огрехи → ⚙ быстрое внимание = выкл (чище).
+• «Только лицо» тащит с фото причёску и одежду → рисовать = «🎯 точно».
+• Пышная причёска, банты, заколки с фото срезаны или пропадают («лицо и причёска»)
+  → запас маски 25–40: голове с фото нужно больше места, чем голове из клипа.
+• Подбородок или шея не на месте → напишите нам: это подгоняем в самой ноде.
+
 КАК УСТРОЕНО
 • SAM 3.1 находит человека (или его голову с волосами) и ведёт маску по клипу.
 • Разведка: нода мерит размер лица на каждом кадре; на крупном плане (наезд камеры) размытие
@@ -612,6 +622,16 @@ then feed the result back — «➡ rightmost» with photo 2.
   more — more freedom for the model.
 • Tight edges (on) — after generation SAM finds the new person and only they are pasted in:
   the background around stays as sharp as in the clip.
+
+FITTING YOUR PHOTO AND CLIP (tested 14.11)
+The node adapts to the clip by itself, but no single setting fits every photo and video.
+What you see → what to change (keep the seed fixed to compare fairly):
+• A shadow, a «ghost» around the whole figure (whole look) → draw = «🖼 whole frame».
+• The face «blends», small glitches → ⚙ fast attention = off (cleaner).
+• «Face only» takes the hairstyle and clothes from the photo → draw = «🎯 person only».
+• Big hair, bows, clips from the photo are cut or vanish («face & hair»)
+  → mask margin 25–40: the photo's head needs more room than the clip's head.
+• The chin or neck is off → tell us: we tune that inside the node.
 
 HOW IT WORKS
 • SAM 3.1 finds the person (or their head with hair) and tracks the mask through the clip.
