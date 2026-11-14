@@ -414,8 +414,10 @@ def fill_holes(m, max_frac=0.04, step=4):
     n, h, w = m.shape
     bg = (F.avg_pool2d((1 - m)[:, None], step, ceil_mode=True) > 0.5).float()          # фон на малом размере
     seed = torch.zeros_like(bg)
-    seed[..., 0, :] = bg[..., 0, :]; seed[..., -1, :] = bg[..., -1, :]
-    seed[..., :, 0] = bg[..., :, 0]; seed[..., :, -1] = bg[..., :, -1]
+    seed[..., 0, :] = bg[..., 0, :]
+    seed[..., -1, :] = bg[..., -1, :]
+    seed[..., :, 0] = bg[..., :, 0]
+    seed[..., :, -1] = bg[..., :, -1]
     for _ in range(bg.shape[-1] + bg.shape[-2]):                                          # заливка от краёв кадра
         nxt = F.max_pool2d(seed, 3, stride=1, padding=1) * bg
         if torch.equal(nxt, seed):

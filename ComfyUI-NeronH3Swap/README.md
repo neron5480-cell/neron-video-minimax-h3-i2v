@@ -8,7 +8,7 @@
 > DEEPFAKES, IDENTITY SUBSTITUTION AND EROTIC CONTENT. IT IS ONLY A TOOL. ALL RESPONSIBILITY LIES WITH THE USER. USE IT
 > ONLY WITH THE CONSENT OF THE PEOPLE IN THE PHOTO AND VIDEO AND WITHIN THE LAW.**
 
-> dev-сборка / dev build — на тесте.
+> Тестовая версия — ждём ваших отзывов. / Test version — your feedback is welcome.
 
 ## 🇷🇺 Русский
 
