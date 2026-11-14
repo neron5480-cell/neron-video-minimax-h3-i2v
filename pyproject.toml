@@ -1,7 +1,7 @@
 [project]
 name = "neron-video-minimax-h3"
-description = "Neron nodes for ComfyUI: MiniMax H3 video with sound (long clips, AutoPrompter, auto model download), LTX 2.5 engine, Audio Studio, Video Sampler, Neron Theme, Neron Studio desktop. RU/EN. / Ноды Neron: видео MiniMax H3 со звуком, LTX, звук, тема, рабочий стол Neron Studio."
-version = "2.2.0"
+description = "Neron nodes for ComfyUI: MiniMax H3 video with sound (long clips, AutoPrompter, auto model download), Hero Swap (replace a person in a clip with a photo), LTX 2.5 engine, Audio Studio, Video Sampler, Neron Theme, Neron Studio desktop. RU/EN. / Ноды Neron: видео MiniMax H3 со звуком, замена героя, LTX, звук, тема, рабочий стол Neron Studio."
+version = "2.3.0"
 license = { file = "LICENSE" }
 dependencies = ["imageio-ffmpeg", "soundfile"]
 
