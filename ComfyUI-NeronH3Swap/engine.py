@@ -429,6 +429,8 @@ def fill_holes(m, max_frac=0.04, step=4):
 
 
 CHIN = 0.18           # насколько продлить маску лица вниз — доля высоты лица
+CHIN_HEAD = 0.26      # «лицо и причёска»: маска головы SAM кончается на челюсти — подбородок нового лица выходил выше
+                      # (Роман 14.11: «опять подбородок, нужно немного ниже»), тянем вниз сильнее и в маске головы тоже
 
 
 def extend_chin(faces, frac=CHIN):
@@ -605,7 +607,9 @@ def person_mask(frames, sam_name, who, threshold, expand_px, report, head=False,
         report.append(f"Маска: залиты дырки внутри (открытый рот, глаза) на {filled} кадрах")
     faces = masks if face_only else detect_each_frame(model, clip, frames, ("face",), _near(masks, 0.06), threshold)
     if not face_only:
-        faces, _ = fill_holes(extend_chin(faces))
+        faces, _ = fill_holes(extend_chin(faces, CHIN_HEAD if head else CHIN))
+        if head:                                   # подбородок — внутрь маски головы, иначе он обрезается по челюсти
+            masks = torch.maximum(masks, faces)
     scale = face_scale(faces, report)
     del model, clip, cond
     free("SAM выгружен")
