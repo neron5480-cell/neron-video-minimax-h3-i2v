@@ -8,7 +8,11 @@
 **За ⚙ экспертом:** число картинок, шаги, CFG, сэмплер, настройки автопромтера, стиль (LoRA), «держать модели», выбор файлов.
 
 ### Автопромтер
-- **🎨 до мелочей** (по умолчанию) — всё, что ты написал, остаётся как есть и идёт первым. Всё, чего не написал, промптер придумывает конкретно: одежда и ткани, материалы, детали механизмов, место, свет, объектив, стиль. Flux и Krea лучше всего рисуют по длинным подробным промптам.
+- **🎨 до мелочей** (по умолчанию) — твои слова остаются как есть и идут первыми. Остальное промптер дописывает по правилам:
+  - логика вместо клише: материалы и свет такие, какими были бы на самом деле;
+  - эпоха и настроение держатся до конца;
+  - **каждый** названный человек и механизм описан отдельно;
+  - без отрицаний и пустых слов.
 - **✨ расписать** — официальная инструкция Krea: сдержанно, без выдуманных деталей.
 - **🌐 подправить** — только перевод и лёгкая шлифовка.
 - **✍ как есть** — текст уходит в модель без изменений.
@@ -17,11 +21,11 @@
 - текст на картинке — как у авторов Krea: только слова в кавычках;
 - любой язык на входе превращается в английский промпт.
 
-Готовый промпт видно внизу ноды и на выходе `prompt`. Если текст и режим не менялись, промптер второй раз не запускается. Кнопка **✏ Править итоговый промпт** ставит готовый промпт в поле для ручной правки.
+Готовый промпт видно внизу ноды и на выходе `prompt`. Если текст и режим не менялись, промптер второй раз не запускается. Кнопка **✏ Править итоговый промпт** ставит готовый промпт в поле для ручной правки. Длинный промпт удобно писать в **📝 Большом редакторе**: он открывается кнопкой под полем и сам, когда выбираешь «✍ как есть». Свой промпт можно подать и проводом во вход `prompt_text`.
 
 > ⚠ **Где автопромтер не справится** (проверено вживую). Он маленький (4B) и отлично расписывает лёгкие сцены: один-два героя, пейзаж, предмет, механизм. Насыщенная сцена, где много персонажей и каждого надо прописать отдельно, ему не по силам: люди выходят похожими, и правками инструкции это не лечится. Для таких сцен напишите промпт сами (по-английски) или попросите большую ИИ (Gemini, ChatGPT, Claude…) и вставьте ответ с **✍ как есть**. Просьба для ИИ:
 >
-> *Перепиши мою идею в промпт для генератора картинок Krea 2 / FLUX: один абзац на английском, 150–300 слов. Сначала главное, потом место, свет, камера, стиль. КАЖДОГО персонажа опиши отдельно и по-разному: возраст, телосложение, лицо, причёска, одежда (крой, ткань, цвет), поза, что делает, где стоит в кадре. Никаких двух одинаковых. Только промпт, без пояснений. Идея: …*
+> *Перепиши мою идею в промпт для генератора картинок Krea 2 / FLUX, на английском. Правила: 1) мои слова — свято, главное — первым. 2) Логика, а не клише: материалы, машины, свет и одежда — как было бы на самом деле в этом мире и при его технике, а не «как обычно рисуют этот жанр». 3) Эпоха и настроение держатся до конца (будущее — значит электрический свет; мрачно — значит без тёплого уюта). 4) Всё, что названо, описано отдельно: КАЖДЫЙ человек — своим предложением (где в кадре, возраст, телосложение, лицо, волосы, одежда: крой, ткань, цвет, состояние; что делает); КАЖДЫЙ механизм — своим предложением (из чего, что двигает, куда идёт, в каком состоянии). Слова «разные», «непохожие», «несколько», «разного возраста» не писать — модель их не рисует. 5) Описывай, а не указывай; без отрицаний «no …». 6) Фон осмысленный, но остаётся фоном. Объём — сколько нужно. Только промпт, без пояснений. Идея: …*
 
 ### Резкость
 После рисования края становятся чётче благодаря мягкой нерезкой маске. Новых деталей она не добавляет. По умолчанию **1.0**, проверено на 2K. Подбирайте под сюжет:
@@ -54,7 +58,11 @@ One node: write what to draw (in any language) and get a picture up to 2K with *
 **Behind ⚙ expert:** image count, steps, CFG, sampler, prompter settings, style LoRA, keep models loaded, model files.
 
 ### Prompter
-- **🎨 every detail** (default) — your words stay as written and come first. Everything you did not specify is filled with concrete details: clothing and fabrics, materials, mechanism parts, setting, light, lens, style.
+- **🎨 every detail** (default) — your words stay as written and come first. The prompter adds the rest by these rules:
+  - logic instead of clichés: materials and light are what they would really be;
+  - the era and the mood hold to the end;
+  - **every** named person and machine is described on its own;
+  - no negations and no empty words.
 - **✨ expand** — the official Krea instruction: restrained, no invented details.
 - **🌐 polish** — translation and light polishing only.
 - **✍ as is** — your text goes to the model unchanged.
@@ -63,7 +71,7 @@ It is the same Qwen3-VL 4B that encodes text for Krea, so there is nothing extra
 - text in the picture follows the Krea authors' rule: only words in quotes;
 - input in any language becomes an English prompt.
 
-The final prompt is shown at the bottom of the node and on the `prompt` output. If the text and mode have not changed, the prompter does not run again. **✏ Edit final prompt** puts the prompt into the text field so you can edit it by hand.
+The final prompt is shown at the bottom of the node and on the `prompt` output. If the text and mode have not changed, the prompter does not run again. **✏ Edit final prompt** puts the prompt into the text field so you can edit it by hand. Long prompts are easiest in the **📝 Big prompt editor**: it opens from the button under the field, and by itself when you pick «✍ as is». A prompt can also come by wire into the `prompt_text` input.
 
 > ⚠ **Where the prompter falls short** (tested live). It is small (4B) and great for light scenes: one or two characters, a landscape, an object, a machine. A busy scene with many characters, each described separately, is beyond it: the people come out alike, and no instruction tweak fixes that. For such scenes write the prompt yourself (in English) or ask a big AI (Gemini, ChatGPT, Claude…) to describe *every character separately and differently*, then paste its answer with **✍ as is**.
 
