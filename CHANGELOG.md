@@ -1,6 +1,6 @@
 # Changelog / История изменений
 
-## 🖼 Neron Image — картинка по тексту на Krea 2 (main, 16.11.2026)
+## 🖼 Neron Image — картинка по тексту на Krea 2 (main 2.4.0, 16.11.2026)
 
 **RU:**
 - Новая нода **🖼 Neron Image** (папка `ComfyUI-NeronImage`) и процесс `workflows/Neron_Image_Krea2.json`: текст (на любом языке) → картинка до 2K.
