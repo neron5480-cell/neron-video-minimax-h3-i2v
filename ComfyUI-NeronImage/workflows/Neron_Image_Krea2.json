@@ -1,0 +1,174 @@
+{
+  "id": "3b8e5f0a-1c2d-4e6f-9a7b-5c4d3e2f1a10",
+  "revision": 0,
+  "last_node_id": 3,
+  "last_link_id": 1,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "NeronImage",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        460,
+        760
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NeronImage",
+        "neron_values": {
+          "text": "рыжий кот-астронавт в стеклянном шлеме парит над Землёй, 3D мультфильм, мягкий свет",
+          "expert": false,
+          "prompter": "✨ расписать — подробно, как любит Krea / expand",
+          "aspect": "⬜ 1:1 квадрат / square",
+          "quality": "💎 2K — максимум / maximum",
+          "seed": 1,
+          "control_after_generate": "randomize",
+          "count": 1,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler": "euler",
+          "scheduler": "simple",
+          "prompter_seed": 0,
+          "prompter_creativity": 0.7,
+          "prompter_instruction": "",
+          "style_lora": "— без стиля / no style —",
+          "style_strength": 1.0,
+          "keep_loaded": false,
+          "unet_model": "🤖 авто — из пакета / auto — from pack",
+          "clip_model": "🤖 авто — из пакета / auto — from pack",
+          "vae_model": "🤖 авто — из пакета / auto — from pack"
+        }
+      },
+      "widgets_values": [
+        "рыжий кот-астронавт в стеклянном шлеме парит над Землёй, 3D мультфильм, мягкий свет",
+        false,
+        "✨ расписать — подробно, как любит Krea / expand",
+        "⬜ 1:1 квадрат / square",
+        "💎 2K — максимум / maximum",
+        1,
+        "randomize",
+        1,
+        8,
+        1.0,
+        "euler",
+        "simple",
+        0,
+        0.7,
+        "",
+        "— без стиля / no style —",
+        1.0,
+        false,
+        "🤖 авто — из пакета / auto — from pack",
+        "🤖 авто — из пакета / auto — from pack",
+        "🤖 авто — из пакета / auto — from pack"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "SaveImage",
+      "pos": [
+        500,
+        0
+      ],
+      "size": [
+        760,
+        800
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 1
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "Neron_Image/krea2"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "Note",
+      "pos": [
+        -440,
+        0
+      ],
+      "size": [
+        400,
+        300
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "🖼 NERON IMAGE · KREA 2\n\n1. «📥 Модели» на ноде — скачает недостающее (официально, Comfy-Org/Krea-2).\n2. Напиши, что нарисовать — можно по-русски.\n3. Run. Картинка — в папке output/Neron_Image.\nВнизу ноды — итоговый промпт, что ушло в модель.\n\nEN: 1. «📥 Models» downloads what is missing. 2. Write what to draw, in any language. 3. Run. The final prompt is shown at the bottom of the node."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.8,
+      "offset": [
+        520,
+        80
+      ]
+    }
+  },
+  "version": 0.4
+}

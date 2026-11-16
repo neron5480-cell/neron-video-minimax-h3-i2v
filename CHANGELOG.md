@@ -1,5 +1,9 @@
 # Changelog / История изменений
 
+## 🖼 Neron Image 0.1 — картинка по тексту на Krea 2 (dev, 16.11.2026, НЕ проверено вживую)
+
+**RU:** новая нода **🖼 Neron Image** (папка `ComfyUI-NeronImage`): одна нода вместо 20 нод официального шаблона. Модель Krea 2 Turbo bf16 (официально, Comfy-Org); по README авторов Krea для картинок нужна Turbo (до 2K), RAW — база для обучения LoRA. Рецепт авторов: 8 шагов, CFG 1, euler / simple. Автопромтер на том же Qwen3-VL 4B: «расписать / подправить / как есть», пишет английский промпт с любого языка, готовый промпт виден на ноде, повтор того же текста — из памяти. Форма кадра + качество 1K / 1.5K / 2K, официальные стили-LoRA со словом-ключом, «📥 Модели», справка, часы, самолечение полей. Модели между прогонами по умолчанию не держит (26 ГБ + видео H3 не влезут в 48 ГБ). Тесты на подставном ComfyUI: 86/86. **EN:** new **🖼 Neron Image** node — Krea 2 Turbo bf16 text-to-image up to 2K with a built-in prompter (expand / polish / as is, any language → English), aspect + quality presets, official style LoRAs, model downloader, help.
+
 ## 🎬 H3 Story — 🗂 Картотека и цвет блоков (dev, 16.11.2026)
 
 **RU:** новая нода **🗂 Neron H3 Картотека** — до трёх образцов (герой, существо, место) с подписью «кто это»; вход `cast` движка: образцы идут в каждый блок после картинок блока (номера автопромтера не сдвигаются). **🎨 Цвет блоков** (эксперт, 0.3): стык нового блока сравнивается с хвостом прошлого, и цвет блока подтягивается к прошлому. Идеи — из разбора процесса H3 Showrunner. **EN:** new **🗂 Neron H3 Cast** node (up to three labelled references for every block) and **block color match** (expert, 0.3) measured on the seam.
