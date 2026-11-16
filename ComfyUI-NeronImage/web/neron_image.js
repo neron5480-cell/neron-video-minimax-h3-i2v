@@ -602,9 +602,9 @@ const HELP_TEXT = `
   а автопромтер переключится на «как есть».
 
 РЕЗКОСТЬ
-• После рисования — мягкая нерезкая маска: края чуть чётче, деталей не добавляет.
-  0 — как нарисовала модель; 0.3–0.5 — «чуть-чуть» (по умолчанию 0.35); больше 0.8 —
-  заметно, могут появиться светлые ореолы.
+• После рисования — мягкая нерезкая маска: края чётче, деталей не добавляет.
+  1.0 — по умолчанию (проверено на 2K). Подбирай под сюжет: крупный портрет — меньше
+  (0.5–0.8), чтобы кожа не «песочила»; пейзаж, ткань, техника — 1.0–1.3; 0 — как нарисовала модель.
 
 ВАРИАНТЫ
 • «вариант» — номер картинки. Другой номер — другая картинка по тому же промпту.
@@ -653,8 +653,8 @@ PROMPTER
 • To edit the prompt by hand — «✏ Edit final prompt»: it goes into the text field and
   the prompter switches to «as is».
 
-SHARPNESS — a gentle unsharp mask after drawing: 0 — as drawn; 0.3–0.5 — subtle (default
-0.35); above 0.8 — halos may appear. It adds crispness, not detail.
+SHARPNESS — a gentle unsharp mask after drawing: 1.0 by default (tested at 2K). Tune it per
+picture: close-up portraits — less (0.5–0.8); landscapes, fabric, machines — 1.0–1.3; 0 — as drawn.
 
 ⚙ EXPERT
 • 8 steps, CFG 1, euler / simple — the Krea 2 Turbo authors' recipe.

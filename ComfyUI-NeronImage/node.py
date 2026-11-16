@@ -102,13 +102,14 @@ class NeronImage:
                             tooltip="Сколько деталей (площадь кадра): 1K ≈ 1 Мп, 1.5K ≈ 2,3 Мп, 2K ≈ 4 Мп. Krea 2 "
                                     "Turbo по словам авторов рисует от 1K до 2K — 2K максимум.\n\nEN: Detail level "
                                     "(frame area): 1K ≈ 1 MP, 1.5K ≈ 2.3 MP, 2K ≈ 4 MP — the Turbo maximum.")),
-                "sharpness": ("FLOAT", _main("резкость / sharpness", default=0.35, min=0.0, max=1.5, step=0.05,
+                "sharpness": ("FLOAT", _main("резкость / sharpness", default=1.0, min=0.0, max=1.5, step=0.05,
                               display="slider",
-                              tooltip="Чуть чётче края после рисования (мягкая нерезкая маска). Деталей не придумывает. "
-                                      "0 — как нарисовала модель; 0.3–0.5 — «чуть-чуть»; больше 0.8 — заметно, могут "
-                                      "появиться светлые ореолы по краям.\n\nEN: A touch of crispness after drawing "
-                                      "(gentle unsharp mask). 0 — as drawn; 0.3–0.5 — subtle; above 0.8 — halos may "
-                                      "appear.")),
+                              tooltip="Чётче края после рисования (мягкая нерезкая маска). Деталей не придумывает. "
+                                      "1.0 — по умолчанию (проверено на 2K). Подбирай под сюжет: крупный портрет — "
+                                      "меньше (0.5–0.8), чтобы кожа не «песочила»; пейзаж, ткань, техника — можно "
+                                      "1.0–1.3. 0 — как нарисовала модель.\n\nEN: Crisper edges after drawing (gentle "
+                                      "unsharp mask). 1.0 by default; close-up portraits — less (0.5–0.8); landscapes, "
+                                      "fabric, machines — 1.0–1.3; 0 — as drawn.")),
                 "seed": ("INT", _main("вариант / seed", default=1, min=0, max=0xffffffffffffffff, control_after_generate=True,
                          tooltip="Номер варианта. Другой номер — другая картинка по тому же промпту. Понравилась — "
                                  "поставь «управление» = fixed и меняй только промпт.\n\nEN: Variant number. Another "
@@ -168,7 +169,7 @@ class NeronImage:
         }
 
     def generate(self, text, expert=False, prompter=E.MODE_DETAIL, aspect=E.ASPECT_NAMES[0],
-                 quality=E.QUALITY_NAMES[2], sharpness=0.35, seed=1, count=1, steps=E.STEPS, cfg=E.CFG, sampler=E.SAMPLER,
+                 quality=E.QUALITY_NAMES[2], sharpness=1.0, seed=1, count=1, steps=E.STEPS, cfg=E.CFG, sampler=E.SAMPLER,
                  scheduler=E.SCHEDULER, prompter_seed=0, prompter_creativity=0.7, prompter_instruction="",
                  style_lora=E.NO_LORA, style_strength=1.0, keep_loaded=False, unet_model=AUTO_MODEL,
                  clip_model=AUTO_MODEL, vae_model=AUTO_MODEL, width=None, height=None):
