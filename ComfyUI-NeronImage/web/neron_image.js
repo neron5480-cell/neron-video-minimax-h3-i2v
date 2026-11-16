@@ -17,7 +17,7 @@ const ROUTE = "/neron_image";
 const GROUPS = [
     { name: "⚙️ EXPERT MODE / ЭКСПЕРТ", widgets: ["expert"],
       fill: "rgba(255, 200, 100, 0.22)", border: "rgba(255, 200, 100, 0.95)", label: "rgba(255, 235, 160, 1.0)", thick: 2.5 },
-    { name: "ЧТО НАРИСОВАТЬ / PROMPT", widgets: ["text", "prompter"],
+    { name: "ЧТО НАРИСОВАТЬ / PROMPT", widgets: ["text", "📝 Большой редактор промпта / Big prompt editor", "prompter"],
       fill: "rgba( 90, 140, 200, 0.15)", border: "rgba( 90, 140, 200, 0.75)", label: "rgba(180, 215, 255, 1.0)" },
     { name: "КАДР / FRAME", widgets: ["aspect", "quality", "sharpness", "seed", "control_after_generate"],
       fill: "rgba(120, 170, 120, 0.15)", border: "rgba(120, 170, 120, 0.75)", label: "rgba(200, 245, 200, 1.0)" },
@@ -171,6 +171,9 @@ function wiredSize(node) {
     const linked = (n) => (node.inputs || []).some((i) => i.name === n && i.link != null);
     return linked("width") && linked("height");
 }
+function promptWired(node) {
+    return (node.inputs || []).some((i) => i.name === "prompt_text" && i.link != null);
+}
 function applyExpert(node, specs) {
     const ex = wv(node, "expert") === true;
     const wired = wiredSize(node);
@@ -184,9 +187,12 @@ function applyExpert(node, specs) {
         if (!o) { prevHidden = false; continue; }
         let hide = !ex && !o.neron_main;
         if (wired && SIZE_WIDGETS.includes(w.name)) hide = true;
+        if (promptWired(node) && (w.name === "text")) hide = true;
         if (w.hidden !== hide) w.hidden = hide;
         prevHidden = hide;
     }
+    const eb = getWidget(node, EDITOR_BTN);
+    if (eb) eb.hidden = promptWired(node);
     applyGroupGaps(node);
     try {
         const sz = node.computeSize();
@@ -535,6 +541,72 @@ function tidyTextareas(node) {
     }
 }
 
+// ---------- большой редактор промпта (16.11, Роман: «в таком узком окне нормальный промпт не написать —
+// человек должен видеть весь текст») ----------
+const EDITOR_BTN = "📝 Большой редактор промпта / Big prompt editor";
+function openPromptEditor(node) {
+    const tw = getWidget(node, "text");
+    if (!tw) return;
+    const overlay = el("div", "position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:99999;display:flex;" +
+        "align-items:center;justify-content:center;");
+    const box = el("div", "background:#101a2b;color:#e0e0e0;border:1px solid #2f4870;border-radius:10px;padding:16px 18px;" +
+        "width:min(1100px,94vw);height:min(820px,90vh);display:flex;flex-direction:column;gap:10px;" +
+        "box-shadow:0 10px 40px rgba(0,0,0,0.85);font:13px sans-serif;");
+    box.append(el("div", "font:bold 16px sans-serif;color:#bfe0ff;", "📝 Промпт целиком / The whole prompt"));
+    box.append(el("div", "color:#90a4ae;", "Пиши свободно, абзацами. Ctrl+Enter — сохранить, Esc — отмена. " +
+        "Свой готовый промпт — ставь автопромтер «✍ как есть».  EN: Ctrl+Enter — save, Esc — cancel."));
+    const ta = el("textarea", "flex:1;width:100%;box-sizing:border-box;resize:none;background:#0b1320;color:#e8f0ff;" +
+        "border:1px solid #2f4870;border-radius:8px;padding:14px 16px;font:15px/1.65 sans-serif;outline:none;");
+    ta.value = tw.value || "";
+    ta.spellcheck = false;
+    box.append(ta);
+    const foot = el("div", "display:flex;align-items:center;gap:8px;");
+    const count = el("div", "flex:1;color:#78909c;font:12px monospace;");
+    const upd = () => {
+        const t = ta.value.trim();
+        count.textContent = `${t ? t.split(/\s+/).length : 0} слов / words · ${ta.value.length} знаков / chars`;
+    };
+    ta.addEventListener("input", upd); upd();
+    const close = () => { overlay.remove(); document.removeEventListener("keydown", onKey, true); };
+    const save = () => {
+        tw.value = ta.value;
+        try { tw.callback?.(tw.value, app.canvas, node, [0, 0], null); } catch (_) {}
+        app.graph?.setDirtyCanvas(true, true);
+        close();
+    };
+    const onKey = (e) => {
+        if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(); }
+        else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); e.stopPropagation(); save(); }
+    };
+    document.addEventListener("keydown", onKey, true);
+    foot.append(count);
+    foot.append(btn("Отмена / Cancel", "#455a64", close));
+    foot.append(btn("✅ Сохранить / Save", "#2e7d32", save));
+    box.append(foot);
+    overlay.append(box);
+    overlay.onclick = (e) => { if (e.target === overlay) close(); };
+    document.body.append(overlay);
+    setTimeout(() => { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }, 30);
+}
+function addEditorButton(node) {
+    const b = node.addWidget("button", EDITOR_BTN, null, () => openPromptEditor(node));
+    // поставить кнопку сразу под полем «что нарисовать»
+    const ws = node.widgets;
+    ws.splice(ws.indexOf(b), 1);
+    const ti = ws.findIndex((w) => w.name === "text");
+    ws.splice(ti >= 0 ? ti + 1 : ws.length, 0, b);
+    // выбрали «✍ как есть» — сразу открыть большой редактор
+    const pw = getWidget(node, "prompter");
+    if (pw) {
+        const cb = pw.callback;
+        pw.callback = function (v) {
+            const r = cb?.apply(this, arguments);
+            if (String(pw.value).startsWith("✍") && !promptWired(node) && !node.__neronEditing) openPromptEditor(node);
+            return r;
+        };
+    }
+}
+
 // ---------- итоговый промпт на ноде ----------
 const EDIT_BTN = "✏ Править итоговый промпт / Edit final prompt";
 const PROMPT_BOX_H = 130;
@@ -571,6 +643,7 @@ function editFinalPrompt(node) {
         pw.value = asis;
     }
     app.graph?.setDirtyCanvas(true, true);
+    openPromptEditor(node);
 }
 
 // ---------- справка ----------
@@ -584,6 +657,8 @@ const HELP_TEXT = `
 
 КАК ПОЛЬЗОВАТЬСЯ
 1. «Что нарисовать» — опиши картинку. Текст, который должен быть НА картинке, — в кавычках.
+   Длинный промпт — кнопка «📝 Большой редактор»: текст видно целиком. Свой промпт можно
+   подать и проводом во вход prompt_text (например, из большой текстовой ноды).
 2. Автопромтер — «🎨 до мелочей» (по умолчанию). Форма кадра, качество (2K — максимум).
 3. Run. Выход image подключи к Save Image (в готовом процессе уже подключено).
 4. Внизу ноды — итоговый промпт: что на самом деле ушло в модель.
@@ -597,7 +672,20 @@ const HELP_TEXT = `
 • 🌐 подправить — только перевод и лёгкая шлифовка, близко к твоим словам.
 • ✍ как есть — текст уходит в модель без изменений (пиши по-английски).
 • Это тот же Qwen3-VL 4B, что кодирует текст для Krea, — отдельно ничего качать не надо.
+
+⚠ ГДЕ АВТОПРОМТЕР НЕ СПРАВИТСЯ (проверено вживую)
+Он маленький (4B) и отлично расписывает лёгкие сцены: один-два героя, пейзаж, предмет,
+механизм. Насыщенная сцена — много персонажей, и каждого надо прописать отдельно, —
+ему не по силам: люди выходят похожими друг на друга, и правками инструкции это не лечится.
+Для таких сцен:
+• напиши промпт сам (по-английски) и поставь «✍ как есть»;
+• или попроси большую ИИ (Gemini, ChatGPT, Claude…) — вставь ей текст ниже со своей идеей,
+  а её ответ — в ноду с «✍ как есть»:
+
+  Перепиши мою идею в промпт для генератора картинок Krea 2 / FLUX, на английском. Правила: 1) мои слова — свято, главное — первым. 2) Логика, а не клише: материалы, машины, свет и одежда — как было бы на самом деле в этом мире и при его технике, а не «как обычно рисуют этот жанр». 3) Эпоха и настроение держатся до конца (будущее — значит электрический свет; мрачно — значит без тёплого уюта). 4) Всё, что названо, описано отдельно: КАЖДЫЙ человек — своим предложением (где в кадре, возраст, телосложение, лицо, волосы, одежда: крой, ткань, цвет, состояние; что делает); КАЖДЫЙ механизм — своим предложением (из чего, что двигает, куда идёт, в каком состоянии). Слова «разные», «непохожие», «несколько», «разного возраста» не писать — модель их не рисует. 5) Описывай, а не указывай; без отрицаний «no …». 6) Фон осмысленный, но остаётся фоном. Объём — сколько нужно. Только промпт, без пояснений. Идея: …
+
 • Тот же текст и режим — промптер второй раз не гоняется: «вариант» меняет только картинку.
+• «✍ как есть» — сразу открывается большой редактор: свой промпт удобно писать целиком.
 • Хочешь поправить промпт руками — кнопка «✏ Править итоговый промпт»: он встанет в поле,
   а автопромтер переключится на «как есть».
 
@@ -605,6 +693,16 @@ const HELP_TEXT = `
 • После рисования — мягкая нерезкая маска: края чётче, деталей не добавляет.
   1.0 — по умолчанию (проверено на 2K). Подбирай под сюжет: крупный портрет — меньше
   (0.5–0.8), чтобы кожа не «песочила»; пейзаж, ткань, техника — 1.0–1.3; 0 — как нарисовала модель.
+
+ПРИМЕР В ГОТОВОМ ПРОЦЕССЕ (workflows/Neron_Image_Krea2.json)
+Зелёная нода «📝 Пример большого промпта (кот-художник)» НЕ подключена нарочно.
+Это образец подробного промпта для сложной сцены — такой встроенный промптер не напишет.
+Чтобы нарисовать пример:
+• соедини её выход STRING со входом prompt_text у Neron Image;
+• автопромтер — «✍ как есть», иначе он перепишет твой текст;
+• форма кадра 16:9, качество 2K, резкость 0.6–0.8 (3D гладкое).
+Свой большой промпт пиши в этой же зелёной ноде вместо примера (её можно растянуть).
+Отключить — убери провод: снова работает поле «что нарисовать».
 
 ВАРИАНТЫ
 • «вариант» — номер картинки. Другой номер — другая картинка по тому же промпту.
@@ -637,6 +735,8 @@ Write in any language: the prompter translates and expands it.
 
 HOW TO USE
 1. «What to draw» — describe the picture. Words to appear IN the picture go in quotes.
+   Long prompts — «📝 Big prompt editor» shows the whole text. A prompt can also come by
+   wire into the prompt_text input (e.g. from a big text node).
 2. Prompter — «every detail» (default). Aspect, quality (2K is the maximum).
 3. Run. Connect image to Save Image (already connected in the ready workflow).
 4. The bottom of the node shows the final prompt — what actually went to the model.
@@ -649,12 +749,27 @@ PROMPTER
 • polish — translation and light polishing only, close to your words.
 • as is — your text goes to the model unchanged (write in English).
 • It is the same Qwen3-VL 4B that encodes text for Krea — nothing extra to download.
+
+⚠ WHERE THE PROMPTER FALLS SHORT (tested live)
+It is small (4B) and great for light scenes: one or two characters, a landscape, an object,
+a machine. A busy scene with many characters, each of whom must be described separately, is
+beyond it: the people come out alike, and no instruction tweak fixes that. For such scenes
+write the prompt yourself (in English) with «✍ as is», or ask a big AI (Gemini, ChatGPT,
+Claude…) to write it — ask it to describe EVERY character separately and differently — and
+paste its answer with «✍ as is».
+
 • Same text and mode — the prompter is not run again: «seed» only changes the picture.
 • To edit the prompt by hand — «✏ Edit final prompt»: it goes into the text field and
   the prompter switches to «as is».
 
 SHARPNESS — a gentle unsharp mask after drawing: 1.0 by default (tested at 2K). Tune it per
 picture: close-up portraits — less (0.5–0.8); landscapes, fabric, machines — 1.0–1.3; 0 — as drawn.
+
+EXAMPLE IN THE READY WORKFLOW — the green «📝 Example big prompt» node is NOT connected on
+purpose: a detailed prompt for a complex scene, which the built-in prompter cannot write. To
+draw it, connect its STRING output to prompt_text of Neron Image, set the prompter to «✍ as is»
+(otherwise it rewrites your text), aspect 16:9, quality 2K, sharpness 0.6–0.8. Write your own
+big prompt in that node. Remove the wire to use the «what to draw» field again.
 
 ⚙ EXPERT
 • 8 steps, CFG 1, euler / simple — the Krea 2 Turbo authors' recipe.
@@ -842,6 +957,7 @@ app.registerExtension({
             node.__h3ModelsBtn = node.addWidget("button", MODELS_BTN, null, () => openModelsDialog(false));
             node.addWidget("button", "🔄 Reset to Defaults / Сброс", null, () => resetAll(node, specs));
             node.addWidget("button", "📖 Help / Справка", null, () => showHelpDialog());
+            addEditorButton(node);
             addPromptBox(node);
             node.addWidget("button", EDIT_BTN, null, () => editFinalPrompt(node));
             for (const t of [50, 300, 800]) setTimeout(() => { applyExpert(node, specs); tidyTextareas(node); }, t);

@@ -219,6 +219,7 @@ Rules:
 - Do not add new people, characters or animals the user did not ask for. Background props and environment details are welcome.
 - Every object appears exactly once. Introduce each person, piece of furniture, lamp, window, machine or prop one time only; later sentences about light, camera or mood may refer back to it ("the lamp", "her dress") but must never describe it again as if it were another one. Give explicit counts where a model might duplicate things: "a single armchair", "one floor lamp", "two identical gears".
 - Never repeat a sentence, phrase or detail.
+- Groups must not be clones. When the user mentions several people, a crowd, passers-by, animals or similar objects, image models tend to draw identical copies. Describe the visible ones as distinct individuals, one short clause each (two to four of them, the rest as background): different age, build, height, posture, action, clothing cut and color, hat or hair, what they carry. State plainly that they all look different from one another.
 - Describe only what can be seen: no sounds, smells or story.
 - Text in the image: only words the user explicitly asked for, written exactly, in quotes. Otherwise no text, letters, logos or watermarks.
 - Treat people with dignity; assume clothing covers intimate anatomy.

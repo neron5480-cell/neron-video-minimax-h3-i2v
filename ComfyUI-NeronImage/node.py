@@ -92,10 +92,15 @@ class NeronImage:
                                      "✨ расписать — официальная инструкция Krea: сдержанно, без выдуманных деталей.\n"
                                      "🌐 подправить — только перевод и лёгкая шлифовка.\n"
                                      "✍ как есть — текст уходит в модель без изменений (пиши по-английски).\n"
+                                     "⚠ Промптер маленький: лёгкие сцены — отлично; много персонажей, каждого надо прописать — "
+                                     "напиши промпт сам или попроси большую ИИ (Gemini, ChatGPT…) и вставь с «✍ как "
+                                     "есть» (готовая просьба — в 📖 Справке).\n"
                                      "Готовый промпт видно внизу ноды и на выходе prompt. Тот же текст и режим — "
                                      "промптер второй раз не гоняется.\n\nEN: every detail — your words stay, gaps "
                                      "are filled with concrete details; expand — the official, restrained Krea "
-                                     "instruction; polish — translate and lightly fix; as is — unchanged.")),
+                                     "instruction; polish — translate and lightly fix; as is — unchanged. The prompter is "
+                                     "small: busy scenes with many characters — write the prompt yourself or use a big AI "
+                                     "and paste it with «as is».")),
                 "aspect": (E.ASPECT_NAMES, _main("форма кадра / aspect", default=E.ASPECT_NAMES[0],
                            tooltip="Соотношение сторон картинки.\n\nEN: Picture aspect ratio.")),
                 "quality": (E.QUALITY_NAMES, _main("качество / quality", default=E.QUALITY_NAMES[2],
@@ -165,6 +170,12 @@ class NeronImage:
                                              "«качество» не работают. Больше 2K по площади не будет.\n\nEN: External "
                                              "size; aspect and quality are ignored."}),
                 "height": ("INT", {"forceInput": True, "tooltip": "Внешняя высота. EN: External height."}),
+                "prompt_text": ("STRING", {"forceInput": True,
+                                           "tooltip": "Свой промпт проводом — например, из большой текстовой ноды, где "
+                                                      "текст видно целиком. Подключён — поле «что нарисовать» не "
+                                                      "используется. С автопромтером «✍ как есть» уходит в модель "
+                                                      "без изменений.\n\nEN: Your prompt by wire (e.g. from a big text "
+                                                      "node); replaces the «what to draw» field."}),
             },
         }
 
@@ -172,8 +183,11 @@ class NeronImage:
                  quality=E.QUALITY_NAMES[2], sharpness=1.0, seed=1, count=1, steps=E.STEPS, cfg=E.CFG, sampler=E.SAMPLER,
                  scheduler=E.SCHEDULER, prompter_seed=0, prompter_creativity=0.7, prompter_instruction="",
                  style_lora=E.NO_LORA, style_strength=1.0, keep_loaded=False, unet_model=AUTO_MODEL,
-                 clip_model=AUTO_MODEL, vae_model=AUTO_MODEL, width=None, height=None):
+                 clip_model=AUTO_MODEL, vae_model=AUTO_MODEL, width=None, height=None, prompt_text=None):
         notes = []
+        if (prompt_text or "").strip():
+            text = prompt_text
+            notes.append("Промпт — с провода prompt_text")
         if not (text or "").strip():
             raise E.FriendlyError(f"{E.TAG} Напиши, что нарисовать.\n\nEN: Write what to draw.")
         if not E.comfy_has_krea2():
