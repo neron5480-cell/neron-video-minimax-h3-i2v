@@ -694,6 +694,16 @@ const HELP_TEXT = `
   1.0 — по умолчанию (проверено на 2K). Подбирай под сюжет: крупный портрет — меньше
   (0.5–0.8), чтобы кожа не «песочила»; пейзаж, ткань, техника — 1.0–1.3; 0 — как нарисовала модель.
 
+ПРИМЕР В ГОТОВОМ ПРОЦЕССЕ (workflows/Neron_Image_Krea2.json)
+Зелёная нода «📝 Пример большого промпта (кот-художник)» НЕ подключена нарочно.
+Это образец подробного промпта для сложной сцены — такой встроенный промптер не напишет.
+Чтобы нарисовать пример:
+• соедини её выход STRING со входом prompt_text у Neron Image;
+• автопромтер — «✍ как есть», иначе он перепишет твой текст;
+• форма кадра 16:9, качество 2K, резкость 0.6–0.8 (3D гладкое).
+Свой большой промпт пиши в этой же зелёной ноде вместо примера (её можно растянуть).
+Отключить — убери провод: снова работает поле «что нарисовать».
+
 ВАРИАНТЫ
 • «вариант» — номер картинки. Другой номер — другая картинка по тому же промпту.
 • Понравилась — «управление после генерации» = fixed, и меняй только слова.
@@ -754,6 +764,12 @@ paste its answer with «✍ as is».
 
 SHARPNESS — a gentle unsharp mask after drawing: 1.0 by default (tested at 2K). Tune it per
 picture: close-up portraits — less (0.5–0.8); landscapes, fabric, machines — 1.0–1.3; 0 — as drawn.
+
+EXAMPLE IN THE READY WORKFLOW — the green «📝 Example big prompt» node is NOT connected on
+purpose: a detailed prompt for a complex scene, which the built-in prompter cannot write. To
+draw it, connect its STRING output to prompt_text of Neron Image, set the prompter to «✍ as is»
+(otherwise it rewrites your text), aspect 16:9, quality 2K, sharpness 0.6–0.8. Write your own
+big prompt in that node. Remove the wire to use the «what to draw» field again.
 
 ⚙ EXPERT
 • 8 steps, CFG 1, euler / simple — the Krea 2 Turbo authors' recipe.

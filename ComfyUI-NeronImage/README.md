@@ -23,6 +23,12 @@
 >
 > *Перепиши мою идею в промпт для генератора картинок Krea 2 / FLUX, на английском. Правила: 1) мои слова — свято, главное — первым. 2) Логика, а не клише: материалы, машины, свет и одежда — как было бы на самом деле в этом мире и при его технике, а не «как обычно рисуют этот жанр». 3) Эпоха и настроение держатся до конца (будущее — значит электрический свет; мрачно — значит без тёплого уюта). 4) Всё, что названо, описано отдельно: КАЖДЫЙ человек — своим предложением (где в кадре, возраст, телосложение, лицо, волосы, одежда: крой, ткань, цвет, состояние; что делает); КАЖДЫЙ механизм — своим предложением (из чего, что двигает, куда идёт, в каком состоянии). Слова «разные», «непохожие», «несколько», «разного возраста» не писать — модель их не рисует. 5) Описывай, а не указывай; без отрицаний «no …». 6) Фон осмысленный, но остаётся фоном. Объём — сколько нужно. Только промпт, без пояснений. Идея: …*
 
+### Пример в готовом процессе
+В `workflows/Neron_Image_Krea2.json` есть зелёная нода **«📝 Пример большого промпта (кот-художник)»**. Она **не подключена нарочно**: это образец подробного промпта для сложной сцены. Чтобы нарисовать пример:
+1. Соедините её выход `STRING` со входом `prompt_text`.
+2. Автопромтер поставьте «✍ как есть».
+3. Форма кадра 16:9, качество 2K, резкость 0.6–0.8.
+
 ### Резкость
 После рисования края становятся чётче благодаря мягкой нерезкой маске. Новых деталей она не добавляет. По умолчанию **1.0**, проверено на 2K. Подбирайте под сюжет:
 - крупный портрет — 0.5–0.8, чтобы кожа не «песочила»;
@@ -66,6 +72,12 @@ It is the same Qwen3-VL 4B that encodes text for Krea, so there is nothing extra
 The final prompt is shown at the bottom of the node and on the `prompt` output. If the text and mode have not changed, the prompter does not run again. **✏ Edit final prompt** puts the prompt into the text field so you can edit it by hand. Long prompts are easiest in the **📝 Big prompt editor**: it opens from the button under the field, and by itself when you pick «✍ as is». A prompt can also come by wire into the `prompt_text` input.
 
 > ⚠ **Where the prompter falls short** (tested live). It is small (4B) and great for light scenes: one or two characters, a landscape, an object, a machine. A busy scene with many characters, each described separately, is beyond it: the people come out alike, and no instruction tweak fixes that. For such scenes write the prompt yourself (in English) or ask a big AI (Gemini, ChatGPT, Claude…) to describe *every character separately and differently*, then paste its answer with **✍ as is**.
+
+### Example in the ready workflow
+`workflows/Neron_Image_Krea2.json` has a green **«📝 Example big prompt»** node. It is **not connected on purpose**: it is a sample of a detailed prompt for a complex scene. To draw it:
+1. Connect its `STRING` output to `prompt_text`.
+2. Set the prompter to «✍ as is».
+3. Use aspect 16:9, quality 2K, sharpness 0.6–0.8.
 
 ### Sharpness
 After drawing, a gentle unsharp mask makes the edges crisper without adding new detail. The default is **1.0**, tested at 2K. Tune it to the picture:
