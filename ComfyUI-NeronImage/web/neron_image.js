@@ -29,7 +29,7 @@ const GROUPS = [
       fill: "rgba(180, 120, 220, 0.15)", border: "rgba(180, 120, 220, 0.75)", label: "rgba(230, 200, 255, 1.0)" },
     { name: "МОДЕЛИ / MODELS", widgets: ["keep_loaded", "unet_model", "clip_model", "vae_model"],
       fill: "rgba(200, 120, 120, 0.15)", border: "rgba(200, 120, 120, 0.75)", label: "rgba(255, 190, 190, 1.0)" },
-    { name: "ИТОГОВЫЙ ПРОМПТ / FINAL PROMPT", widgets: ["neron_final_prompt"],
+    { name: "ИТОГОВЫЙ ПРОМПТ / FINAL PROMPT", widgets: ["neron_final_prompt", "✏ Править итоговый промпт / Edit final prompt"],
       fill: "rgba(150, 150, 170, 0.12)", border: "rgba(150, 150, 170, 0.60)", label: "rgba(215, 215, 235, 1.0)" },
 ];
 function wv(node, name) {
@@ -108,11 +108,20 @@ function groupRect(node, g) {
 }
 
 function applyGroupGaps(node) {
-    for (const w of node.widgets || []) clearBottomPadding(w);
+    const ws = node.widgets || [];
+    for (const w of ws) clearBottomPadding(w);
     for (const g of GROUPS) {
         let last = null;
-        for (const w of node.widgets || []) if (g.widgets.includes(w.name) && !isHidden(w)) last = w;
+        for (const w of ws) if (g.widgets.includes(w.name) && !isHidden(w)) last = w;
         if (last) setBottomPadding(last, GROUP_GAP);
+    }
+    // над первой строкой каждой группы — место под подпись, даже если выше стоит виджет без группы (кнопки)
+    for (const g of GROUPS) {
+        const i = ws.findIndex((w) => g.widgets.includes(w.name) && !isHidden(w));
+        if (i <= 0) continue;
+        let j = i - 1;
+        while (j >= 0 && isHidden(ws[j])) j--;
+        if (j >= 0 && !("__neronBottomPadding" in ws[j]) && ws[j].name !== "_spacer") setBottomPadding(ws[j], GROUP_GAP);
     }
 }
 

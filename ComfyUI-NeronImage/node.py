@@ -77,14 +77,14 @@ class NeronImage:
         samplers, schedulers = _samplers()
         return {
             "required": {
+                "expert": ("BOOLEAN", _main("⚙ эксперт / expert", default=False,
+                           tooltip="Показать тонкие настройки.\n\nEN: Show fine settings.")),
                 "text": ("STRING", _main("что нарисовать / what to draw", default="", multiline=True,
                          placeholder="Например: рыжий кот-астронавт в стеклянном шлеме на фоне Земли, 3D мультфильм\n"
                                      "EN: e.g. a ginger cat astronaut in a glass helmet, Earth behind, 3D cartoon",
                          tooltip="Опиши картинку своими словами — по-русски или по-английски. Текст, который должен "
                                  "быть НА картинке, бери в кавычки: вывеска \"Neron\".\n\nEN: Describe the picture in "
                                  "any language. Words to be written IN the image go in quotes.")),
-                "expert": ("BOOLEAN", _main("⚙ эксперт / expert", default=False,
-                           tooltip="Показать тонкие настройки.\n\nEN: Show fine settings.")),
                 "prompter": (E.PROMPTER, _main("автопромтер / prompter", default=E.PROMPTER[0],
                              tooltip="✨ расписать — переводит на английский и расписывает подробно (свет, кадр, "
                                      "детали). Krea лучше всего рисует по длинным подробным промптам.\n"
