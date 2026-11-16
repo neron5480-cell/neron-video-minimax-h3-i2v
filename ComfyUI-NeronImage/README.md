@@ -8,11 +8,12 @@
 **За ⚙ экспертом:** число картинок, шаги, CFG, сэмплер, настройки автопромтера, стиль (LoRA), «держать модели», выбор файлов.
 
 ### Автопромтер
-- **✨ расписать** (по умолчанию) — переводит на английский и подробно расписывает: свет, кадр, материалы. Krea 2 лучше всего рисует по длинным подробным промптам.
+- **🎨 до мелочей** (по умолчанию) — всё, что ты написал, остаётся как есть и идёт первым. Всё, чего не написал, промптер придумывает конкретно: одежда и ткани, материалы, детали механизмов, место, свет, объектив, стиль. Flux и Krea лучше всего рисуют по длинным подробным промптам.
+- **✨ расписать** — официальная инструкция Krea: сдержанно, без выдуманных деталей.
 - **🌐 подправить** — только перевод и лёгкая шлифовка.
 - **✍ как есть** — текст уходит в модель без изменений.
 
-Автопромтер — это тот же Qwen3-VL 4B, что кодирует текст для Krea, так что качать ничего не надо. Инструкция официальная (Comfy-Org / Krea), наши правки две:
+Автопромтер — это тот же Qwen3-VL 4B, что кодирует текст для Krea, так что качать ничего не надо. В режиме «расписать» инструкция официальная (Comfy-Org / Krea), наши правки две:
 - текст на картинке — как у авторов Krea: только слова в кавычках;
 - любой язык на входе превращается в английский промпт.
 
@@ -43,11 +44,12 @@ One node: write what to draw (in any language) and get a picture up to 2K with *
 **Behind ⚙ expert:** image count, steps, CFG, sampler, prompter settings, style LoRA, keep models loaded, model files.
 
 ### Prompter
-- **✨ expand** (default) — translates to English and describes in detail: light, framing, materials.
+- **🎨 every detail** (default) — your words stay as written and come first. Everything you did not specify is filled with concrete details: clothing and fabrics, materials, mechanism parts, setting, light, lens, style.
+- **✨ expand** — the official Krea instruction: restrained, no invented details.
 - **🌐 polish** — translation and light polishing only.
 - **✍ as is** — your text goes to the model unchanged.
 
-It is the same Qwen3-VL 4B that encodes text for Krea, so there is nothing extra to download. The instruction is the official one (Comfy-Org / Krea) with two changes:
+It is the same Qwen3-VL 4B that encodes text for Krea, so there is nothing extra to download. In «expand» the instruction is the official one (Comfy-Org / Krea) with two changes:
 - text in the picture follows the Krea authors' rule: only words in quotes;
 - input in any language becomes an English prompt.
 

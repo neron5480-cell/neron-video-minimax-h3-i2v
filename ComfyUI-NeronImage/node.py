@@ -85,15 +85,17 @@ class NeronImage:
                          tooltip="Опиши картинку своими словами — по-русски или по-английски. Текст, который должен "
                                  "быть НА картинке, бери в кавычки: вывеска \"Neron\".\n\nEN: Describe the picture in "
                                  "any language. Words to be written IN the image go in quotes.")),
-                "prompter": (E.PROMPTER, _main("автопромтер / prompter", default=E.PROMPTER[0],
-                             tooltip="✨ расписать — переводит на английский и расписывает подробно (свет, кадр, "
-                                     "детали). Krea лучше всего рисует по длинным подробным промптам.\n"
-                                     "🌐 подправить — только перевод и лёгкая шлифовка, близко к твоему тексту.\n"
-                                     "✍ как есть — твой текст уходит в модель без изменений (пиши по-английски).\n"
-                                     "Готовый промпт видно на ноде и на выходе prompt. Тот же текст и режим — "
-                                     "промптер второй раз не гоняется.\n\nEN: expand — translate and describe in "
-                                     "detail (Krea likes long prompts); polish — translate and lightly fix; as is — "
-                                     "your text goes in unchanged (write in English).")),
+                "prompter": (E.PROMPTER, _main("автопромтер / prompter", default=E.MODE_DETAIL,
+                             tooltip="🎨 до мелочей — всё, что ты написал, остаётся как есть; всё, чего не написал "
+                                     "(одежда, материалы, детали механизмов, место, свет, объектив, стиль), промптер "
+                                     "придумает конкретно. Flux и Krea лучше всего рисуют по таким промптам.\n"
+                                     "✨ расписать — официальная инструкция Krea: сдержанно, без выдуманных деталей.\n"
+                                     "🌐 подправить — только перевод и лёгкая шлифовка.\n"
+                                     "✍ как есть — текст уходит в модель без изменений (пиши по-английски).\n"
+                                     "Готовый промпт видно внизу ноды и на выходе prompt. Тот же текст и режим — "
+                                     "промптер второй раз не гоняется.\n\nEN: every detail — your words stay, gaps "
+                                     "are filled with concrete details; expand — the official, restrained Krea "
+                                     "instruction; polish — translate and lightly fix; as is — unchanged.")),
                 "aspect": (E.ASPECT_NAMES, _main("форма кадра / aspect", default=E.ASPECT_NAMES[0],
                            tooltip="Соотношение сторон картинки.\n\nEN: Picture aspect ratio.")),
                 "quality": (E.QUALITY_NAMES, _main("качество / quality", default=E.QUALITY_NAMES[2],
@@ -158,7 +160,7 @@ class NeronImage:
             },
         }
 
-    def generate(self, text, expert=False, prompter=E.PROMPTER[0], aspect=E.ASPECT_NAMES[0],
+    def generate(self, text, expert=False, prompter=E.MODE_DETAIL, aspect=E.ASPECT_NAMES[0],
                  quality=E.QUALITY_NAMES[2], seed=1, count=1, steps=E.STEPS, cfg=E.CFG, sampler=E.SAMPLER,
                  scheduler=E.SCHEDULER, prompter_seed=0, prompter_creativity=0.7, prompter_instruction="",
                  style_lora=E.NO_LORA, style_strength=1.0, keep_loaded=False, unet_model=AUTO_MODEL,
@@ -217,7 +219,8 @@ class NeronImage:
             clip = E.load_clip(models["clip"])
             final, cached = E.autoprompt(clip, text, prompter, int(prompter_seed), float(prompter_creativity),
                                          prompter_instruction)
-            if prompter == E.PROMPTER[2]:
+            prompter = E.OLD_MODES.get(prompter, prompter)
+            if prompter == E.MODE_ASIS:
                 notes.append("Промпт: как есть")
                 if E.has_cyrillic(final):
                     notes.append("⚠ В промпте русские буквы — Krea лучше понимает английский. Включи автопромтер "

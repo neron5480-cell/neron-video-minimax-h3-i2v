@@ -584,13 +584,16 @@ const HELP_TEXT = `
 
 КАК ПОЛЬЗОВАТЬСЯ
 1. «Что нарисовать» — опиши картинку. Текст, который должен быть НА картинке, — в кавычках.
-2. Автопромтер — «✨ расписать» (по умолчанию). Форма кадра, качество (2K — максимум).
+2. Автопромтер — «🎨 до мелочей» (по умолчанию). Форма кадра, качество (2K — максимум).
 3. Run. Выход image подключи к Save Image (в готовом процессе уже подключено).
 4. Внизу ноды — итоговый промпт: что на самом деле ушло в модель.
 
 АВТОПРОМТЕР
-• ✨ расписать — переводит и подробно расписывает: свет, кадр, материалы. Krea 2 лучше
-  всего рисует по длинным подробным промптам.
+• 🎨 до мелочей (по умолчанию) — всё, что ты написал, остаётся как есть и идёт первым;
+  всё, чего не написал, промптер придумает конкретно: одежда и ткани, материалы, детали
+  механизмов (шестерни, валы, заклёпки, следы износа), место, свет, объектив, стиль.
+  Flux и Krea лучше всего рисуют по длинным подробным промптам.
+• ✨ расписать — официальная инструкция Krea: сдержанно, без выдуманных деталей.
 • 🌐 подправить — только перевод и лёгкая шлифовка, близко к твоим словам.
 • ✍ как есть — текст уходит в модель без изменений (пиши по-английски).
 • Это тот же Qwen3-VL 4B, что кодирует текст для Krea, — отдельно ничего качать не надо.
@@ -629,13 +632,15 @@ Write in any language: the prompter translates and expands it.
 
 HOW TO USE
 1. «What to draw» — describe the picture. Words to appear IN the picture go in quotes.
-2. Prompter — «expand» (default). Aspect, quality (2K is the maximum).
+2. Prompter — «every detail» (default). Aspect, quality (2K is the maximum).
 3. Run. Connect image to Save Image (already connected in the ready workflow).
 4. The bottom of the node shows the final prompt — what actually went to the model.
 
 PROMPTER
-• expand — translates and describes in detail: light, framing, materials. Krea 2 draws
-  best from long, detailed prompts.
+• every detail (default) — your words stay as written and come first; everything you did
+  not specify is filled with concrete details: clothing and fabrics, materials, mechanism
+  parts (gears, shafts, rivets, wear), setting, light, lens, style.
+• expand — the official Krea instruction: restrained, no invented details.
 • polish — translation and light polishing only, close to your words.
 • as is — your text goes to the model unchanged (write in English).
 • It is the same Qwen3-VL 4B that encodes text for Krea — nothing extra to download.

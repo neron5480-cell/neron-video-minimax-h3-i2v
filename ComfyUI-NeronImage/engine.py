@@ -189,9 +189,40 @@ def trigger_for(lora_name):
 
 
 # ---------------- автопромтер ----------------
-PROMPTER = ["✨ расписать — подробно, как любит Krea / expand",
-            "🌐 подправить — перевод и шлифовка / polish",
-            "✍ как есть — без автопромтера / as is"]
+MODE_DETAIL = "🎨 до мелочей — твоё свято, пустоты заполнит / every detail"
+MODE_EXPAND = "✨ расписать — официально, сдержанно / expand (official)"
+MODE_POLISH = "🌐 подправить — перевод и шлифовка / polish"
+MODE_ASIS = "✍ как есть — без автопромтера / as is"
+PROMPTER = [MODE_DETAIL, MODE_EXPAND, MODE_POLISH, MODE_ASIS]
+OLD_MODES = {"✨ расписать — подробно, как любит Krea / expand": MODE_EXPAND}     # 0.1 → 0.2: старые схемы
+
+# Инструкция «до мелочей» (16.11, Роман: «Flux и Krea любят подробные промпты до мелочей; автопромтер пишет сухо;
+# особенно важно для техники — описание механизмов»). Своя. Правило: всё, что написал человек, — свято и идёт первым;
+# всё, что он не указал, — придумать конкретно и правдоподобно. Менять только с живой проверкой.
+DETAIL_SYSTEM = """You are a master prompt writer for photorealistic and stylized text-to-image models such as FLUX and Krea. These models follow long, concrete, richly detailed prompts best. Turn the user's idea into one such prompt.
+
+Golden rule: everything the user wrote is sacred; every gap is yours to fill.
+- Keep every subject, count, action, color, material, style and medium the user gave, exactly, and mention them early. Never contradict or soften them.
+- For everything the user did not specify, invent concrete, plausible, specific details instead of vague words: not "nice clothes" but "a charcoal wool skirt with a fine herringbone weave"; not "a machine" but its actual parts.
+
+Cover, in this order, whatever applies:
+1. Main subject: what it is, its size and proportions, its pose or orientation in the frame.
+2. Appearance: for people and animals — build, hair, face, expression, hands; for objects — shape, materials, surface finish, colors.
+3. Clothing and accessories: garments, fabrics, fit, colors, shoes, jewelry.
+4. Mechanisms, machines, devices and technology: name the real components and how they connect (gears, shafts, bearings, pistons, linkages, springs, rivets, bolts, welds, hinges, hoses, cables, circuit boards, displays), their materials (brushed steel, cast iron, anodized aluminum, brass, carbon fiber, rubber, glass), finishes and markings, signs of use (scratches, oil, patina, dust, heat discoloration), and what the mechanism is visibly doing. Keep the construction physically consistent and the part counts stable.
+5. Setting: location, background objects, architecture or landscape, time of day, weather.
+6. Light: the source and its direction, quality (hard or soft), color temperature, shadows, reflections.
+7. Camera: shot size, angle, lens focal length, depth of field, focus point.
+8. Style and mood: medium and look (photograph, 3D animation, oil painting…), color palette, atmosphere.
+
+Rules:
+- Do not add new people, characters or animals the user did not ask for. Background props and environment details are welcome.
+- Describe only what can be seen: no sounds, smells or story.
+- Text in the image: only words the user explicitly asked for, written exactly, in quotes. Otherwise no text, letters, logos or watermarks.
+- Treat people with dignity; assume clothing covers intimate anatomy.
+- The user may write in any language (for example Russian). Always write the prompt in English, translating every detail faithfully.
+- Length: about 150 to 250 words. One flowing paragraph of natural prose, the most important things first.
+- Output only the final prompt: no title, no lists, no markdown, no quotes around it, no comments, no reasoning."""
 
 # Инструкция «расписать»: официальная от Comfy-Org (шаблон Krea 2) на основе docs/expansion.txt авторов Krea.
 # Наши правки: правило о тексте на картинке — как у авторов Krea (без вшитого «никакого текста»),
@@ -265,15 +296,16 @@ def _generate(clip, text, system, max_len, temperature, seed):
 def autoprompt(clip, text, mode, seed=0, temperature=0.7, custom=""):
     """Готовый английский промпт. Возвращает (промпт, из_памяти)."""
     text = (text or "").strip()
-    if mode == PROMPTER[2] or not text:
+    mode = OLD_MODES.get(mode, mode)
+    if mode == MODE_ASIS or not text:
         return text, False
-    expand = mode == PROMPTER[0]
-    system = (custom or "").strip() or (EXPAND_SYSTEM if expand else POLISH_SYSTEM)
+    system = (custom or "").strip() or {MODE_DETAIL: DETAIL_SYSTEM, MODE_EXPAND: EXPAND_SYSTEM}.get(mode, POLISH_SYSTEM)
+    max_len = {MODE_DETAIL: 900, MODE_EXPAND: 640}.get(mode, 360)
     key = (text, mode, system, int(seed), round(float(temperature), 3))
     if key in _PROMPT_CACHE:
         return _PROMPT_CACHE[key], True
     send("✍ автопромтер / prompter")
-    out = _generate(clip, text, system, 640 if expand else 360, temperature, seed)
+    out = _generate(clip, text, system, max_len, temperature, seed)
     if len(out) < 8:                       # модель ничего толкового не сказала — берём свой текст
         log.warning("%s автопромтер вернул пустое — беру промпт как есть", TAG)
         out = text
