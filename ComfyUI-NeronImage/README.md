@@ -8,11 +8,7 @@
 **За ⚙ экспертом:** число картинок, шаги, CFG, сэмплер, настройки автопромтера, стиль (LoRA), «держать модели», выбор файлов.
 
 ### Автопромтер
-- **🎨 до мелочей** (по умолчанию) — твои слова остаются как есть и идут первыми. Остальное промптер дописывает по правилам:
-  - логика вместо клише: материалы и свет такие, какими были бы на самом деле;
-  - эпоха и настроение держатся до конца;
-  - **каждый** названный человек и механизм описан отдельно;
-  - без отрицаний и пустых слов.
+- **🎨 до мелочей** (по умолчанию) — всё, что ты написал, остаётся как есть и идёт первым. Всё, чего не написал, промптер придумывает конкретно: одежда и ткани, материалы, детали механизмов, место, свет, объектив, стиль. Flux и Krea лучше всего рисуют по длинным подробным промптам.
 - **✨ расписать** — официальная инструкция Krea: сдержанно, без выдуманных деталей.
 - **🌐 подправить** — только перевод и лёгкая шлифовка.
 - **✍ как есть** — текст уходит в модель без изменений.
@@ -58,11 +54,7 @@ One node: write what to draw (in any language) and get a picture up to 2K with *
 **Behind ⚙ expert:** image count, steps, CFG, sampler, prompter settings, style LoRA, keep models loaded, model files.
 
 ### Prompter
-- **🎨 every detail** (default) — your words stay as written and come first. The prompter adds the rest by these rules:
-  - logic instead of clichés: materials and light are what they would really be;
-  - the era and the mood hold to the end;
-  - **every** named person and machine is described on its own;
-  - no negations and no empty words.
+- **🎨 every detail** (default) — your words stay as written and come first. Everything you did not specify is filled with concrete details: clothing and fabrics, materials, mechanism parts, setting, light, lens, style.
 - **✨ expand** — the official Krea instruction: restrained, no invented details.
 - **🌐 polish** — translation and light polishing only.
 - **✍ as is** — your text goes to the model unchanged.

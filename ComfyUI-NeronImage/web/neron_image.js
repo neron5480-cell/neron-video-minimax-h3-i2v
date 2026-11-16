@@ -664,10 +664,10 @@ const HELP_TEXT = `
 4. Внизу ноды — итоговый промпт: что на самом деле ушло в модель.
 
 АВТОПРОМТЕР
-• 🎨 до мелочей (по умолчанию) — твои слова остаются как есть и идут первыми; остальное
-  промптер дописывает по правилам: логика вместо клише (материалы и свет — как было бы на
-  самом деле), эпоха и настроение держатся до конца, КАЖДЫЙ названный человек и механизм
-  описан отдельно, без отрицаний и пустых слов. Объём — сколько нужно.
+• 🎨 до мелочей (по умолчанию) — всё, что ты написал, остаётся как есть и идёт первым;
+  всё, чего не написал, промптер придумает конкретно: одежда и ткани, материалы, детали
+  механизмов (шестерни, валы, заклёпки, следы износа), место, свет, объектив, стиль.
+  Flux и Krea лучше всего рисуют по длинным подробным промптам.
 • ✨ расписать — официальная инструкция Krea: сдержанно, без выдуманных деталей.
 • 🌐 подправить — только перевод и лёгкая шлифовка, близко к твоим словам.
 • ✍ как есть — текст уходит в модель без изменений (пиши по-английски).
@@ -732,9 +732,9 @@ HOW TO USE
 4. The bottom of the node shows the final prompt — what actually went to the model.
 
 PROMPTER
-• every detail (default) — your words stay as written and come first; the rest follows rules:
-  logic instead of clichés, the era and mood hold to the end, EVERY named person and machine
-  is described on its own, no negations or empty words. As long as needed.
+• every detail (default) — your words stay as written and come first; everything you did
+  not specify is filled with concrete details: clothing and fabrics, materials, mechanism
+  parts (gears, shafts, rivets, wear), setting, light, lens, style.
 • expand — the official Krea instruction: restrained, no invented details.
 • polish — translation and light polishing only, close to your words.
 • as is — your text goes to the model unchanged (write in English).

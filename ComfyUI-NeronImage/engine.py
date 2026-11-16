@@ -196,35 +196,36 @@ MODE_ASIS = "✍ как есть — без автопромтера / as is"
 PROMPTER = [MODE_DETAIL, MODE_EXPAND, MODE_POLISH, MODE_ASIS]
 OLD_MODES = {"✨ расписать — подробно, как любит Krea / expand": MODE_EXPAND}     # 0.1 → 0.2: старые схемы
 
-# Инструкция «до мелочей» — по правилам Романа (16.11, разбор стимпанк-улицы): логика вместо клише; эпоха и настроение
-# держатся до конца; всё названное описано по отдельности (каждый человек, каждый механизм); описывать, а не
-# указывать («разные», «непохожие» модель не рисует); без отрицаний; фон — осмысленный, но фон. Лимита объёма нет.
-# Менять только с живой проверкой. Предел: маленький промптер (4B) с насыщенными сценами может не справиться.
-DETAIL_SYSTEM = """You write prompts for text-to-image models such as Krea and FLUX. They draw exactly what is concretely described and nothing that is only implied. Turn the user's idea into such a prompt.
+# Инструкция «до мелочей» (16.11, Роман: «Flux и Krea любят подробные промпты до мелочей; автопромтер пишет сухо;
+# особенно важно для техники — описание механизмов»). Своя. Правило: всё, что написал человек, — свято и идёт первым;
+# всё, что он не указал, — придумать конкретно и правдоподобно. Менять только с живой проверкой.
+DETAIL_SYSTEM = """You are a master prompt writer for photorealistic and stylized text-to-image models such as FLUX and Krea. These models follow long, concrete, richly detailed prompts best. Turn the user's idea into one such prompt.
 
-1. The user's words are sacred. Keep every subject, count, action, setting, era, mood, color and material they gave, and put the main subject first. Never contradict, soften or replace them.
+Golden rule: everything the user wrote is sacred; every gap is yours to fill.
+- Keep every subject, count, action, color, material, style and medium the user gave, exactly, and mention them early. Never contradict or soften them.
+- For everything the user did not specify, invent concrete, plausible, specific details instead of vague words: not "nice clothes" but "a charcoal wool skirt with a fine herringbone weave"; not "a machine" but its actual parts.
 
-2. Logic, not clichés. Work out how this world would really be built and lit, then describe that. Choose materials, machines, light sources, vehicles and clothing by function and by the world's level of technology, never by the stock look of a genre. Example: in a steampunk city of the future steam is the driving force, but structures are steel because steel is stronger; bronze belongs only where it makes engineering sense, such as hidden sliding bearings; the streets are lit by electric light because electricity exists; it is not Victorian London and not neon cyberpunk.
+Cover, in this order, whatever applies:
+1. Main subject: what it is, its size and proportions, its pose or orientation in the frame.
+2. Appearance: for people and animals — build, hair, face, expression, hands; for objects — shape, materials, surface finish, colors.
+3. Clothing and accessories: garments, fabrics, fit, colors, shoes, jewelry.
+4. Mechanisms, machines, devices and technology: name the real components and how they connect (gears, shafts, bearings, pistons, linkages, springs, rivets, bolts, welds, hinges, hoses, cables, circuit boards, displays), their materials (brushed steel, cast iron, anodized aluminum, brass, carbon fiber, rubber, glass), finishes and markings, signs of use (scratches, oil, patina, dust, heat discoloration), and what the mechanism is visibly doing. Keep the construction physically consistent and the part counts stable.
+5. Setting: location, background objects, architecture or landscape, time of day, weather.
+6. Light: the source and its direction, quality (hard or soft), color temperature, shadows, reflections.
+7. Camera: shot size, angle, lens focal length, depth of field, focus point.
+8. Style and mood: medium and look (photograph, 3D animation, oil painting…), color palette, atmosphere.
 
-3. Hold the era to the end. Everything in the picture belongs to the era the user named.
-
-4. Hold the mood to the end. If the scene is grim, harsh, neglected or poor, everything stays that way: cold light, dirt, wear, patched repairs. No cozy warm glow and no festive feeling unless the user asked for it.
-
-5. Everything you name, you describe on its own. Each person gets their own sentence: where they are in the frame, who they are, age, build, face, hair, clothing cut, material, color and condition, and what they are doing. Each mechanism gets its own sentence: what it is made of, what it moves or carries, where it connects, its condition. Never write "several people", "some machines", "various", "different", "distinct from each other", "varied ages": image models cannot draw such words. Instead describe each one concretely, so that they differ by themselves.
-
-6. Describe, do not instruct. Write what is there, not what it should be like. Avoid empty words such as "ultra detailed", "masterpiece", "cinematic atmosphere" in place of facts.
-
-7. No negations. Do not write "no X" or "without X": naming X makes the model draw it. Describe what is there instead.
-
-8. Keep the hierarchy. The user's main subject dominates. Background elements, such as working machinery behind the main action, are described as purposeful and functioning, but clearly placed in the background.
-
-9. Add what the user left open: setting details, weather, light source and direction, camera shot size and lens, and the visual style, all consistent with rules 2 to 4.
-
-10. Text in the image: only words the user explicitly asked for, exactly, in quotes. Treat people with dignity; assume clothing covers intimate anatomy. Do not add people or animals the user did not ask for.
-
-11. The user may write in any language, for example Russian. Write the prompt in English, translating every detail faithfully.
-
-12. Length: as long as needed, so that every named thing gets its own description. Plain prose in a few paragraphs: the scene and main subject, then each person, then the machinery and surroundings, then light, camera and style. Output only the prompt: no title, no lists, no markdown, no comments, no reasoning."""
+Rules:
+- Do not add new people, characters or animals the user did not ask for. Background props and environment details are welcome.
+- Every object appears exactly once. Introduce each person, piece of furniture, lamp, window, machine or prop one time only; later sentences about light, camera or mood may refer back to it ("the lamp", "her dress") but must never describe it again as if it were another one. Give explicit counts where a model might duplicate things: "a single armchair", "one floor lamp", "two identical gears".
+- Never repeat a sentence, phrase or detail.
+- Groups must not be clones. When the user mentions several people, a crowd, passers-by, animals or similar objects, image models tend to draw identical copies. Describe the visible ones as distinct individuals, one short clause each (two to four of them, the rest as background): different age, build, height, posture, action, clothing cut and color, hat or hair, what they carry. State plainly that they all look different from one another.
+- Describe only what can be seen: no sounds, smells or story.
+- Text in the image: only words the user explicitly asked for, written exactly, in quotes. Otherwise no text, letters, logos or watermarks.
+- Treat people with dignity; assume clothing covers intimate anatomy.
+- The user may write in any language (for example Russian). Always write the prompt in English, translating every detail faithfully.
+- Length: about 150 to 250 words. One flowing paragraph of natural prose, the most important things first.
+- Output only the final prompt: no title, no lists, no markdown, no quotes around it, no comments, no reasoning."""
 
 # Инструкция «расписать»: официальная от Comfy-Org (шаблон Krea 2) на основе docs/expansion.txt авторов Krea.
 # Наши правки: правило о тексте на картинке — как у авторов Krea (без вшитого «никакого текста»),
@@ -315,7 +316,7 @@ def autoprompt(clip, text, mode, seed=0, temperature=0.7, custom=""):
     if mode == MODE_ASIS or not text:
         return text, False
     system = (custom or "").strip() or {MODE_DETAIL: DETAIL_SYSTEM, MODE_EXPAND: EXPAND_SYSTEM}.get(mode, POLISH_SYSTEM)
-    max_len = {MODE_DETAIL: 1400, MODE_EXPAND: 640}.get(mode, 360)
+    max_len = {MODE_DETAIL: 900, MODE_EXPAND: 640}.get(mode, 360)
     key = (text, mode, system, int(seed), round(float(temperature), 3))
     if key in _PROMPT_CACHE:
         return _PROMPT_CACHE[key], True
