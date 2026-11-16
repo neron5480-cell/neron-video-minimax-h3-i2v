@@ -1,5 +1,15 @@
 # Changelog / История изменений
 
+## 🖼 Neron Image — картинка по тексту на Krea 2 (main, 16.11.2026)
+
+**RU:**
+- Новая нода **🖼 Neron Image** (папка `ComfyUI-NeronImage`) и процесс `workflows/Neron_Image_Krea2.json`: текст (на любом языке) → картинка до 2K.
+- Krea 2 Turbo bf16 (Comfy-Org), рецепт авторов: 8 шагов, CFG 1, euler / simple; RAW — по своему рецепту (52 шага, CFG 3.5, до 1K).
+- Автопромтер на том же Qwen3-VL 4B: «🎨 до мелочей» (по умолчанию), «✨ расписать» (официально), «🌐 подправить», «✍ как есть»; итоговый промпт на ноде.
+- Форма кадра, качество 1K / 1.5K / 2K, резкость (по умолчанию 1.0), стили-LoRA Krea, «📥 Модели», справка. Проверено вживую: 2K ≈ 1 мин на RTX 5070 Ti 16 ГБ.
+
+**EN:** new **🖼 Neron Image** node — Krea 2 Turbo bf16 text-to-image up to 2K with a built-in prompter (every detail / expand / polish / as is), aspect and quality presets, sharpness, style LoRAs and a model downloader. Tested live: 2K ≈ 1 min on a 16 GB RTX 5070 Ti.
+
 ## 🎭 Neron H3 Замена героя / Hero Swap — тест (main 2.3.0, 14.11.2026)
 
 **RU:**

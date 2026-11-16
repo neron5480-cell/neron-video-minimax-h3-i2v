@@ -130,6 +130,21 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 
 ---
 
+## 🖼 NERON IMAGE — картинка по тексту на Krea 2 (новое)
+
+👋 Нода и воркфлоу лежат в папке **[`ComfyUI-NeronImage`](ComfyUI-NeronImage/)**.
+
+Пишете, что нарисовать, хоть по-русски, — получаете картинку до **2K**. Одна нода вместо двадцати в официальном шаблоне.
+
+* Модель — **Krea 2 Turbo bf16** (официально, Comfy-Org): 8 шагов, ≈ 1 мин на 2K на 16 ГБ.
+* **Автопромтер** на том же Qwen3-VL, качать ничего не надо. По умолчанию **🎨 до мелочей**: ваши слова остаются как есть, а одежду, материалы, детали механизмов, свет и камеру он дописывает сам. Готовый промпт видно на ноде.
+* Форма кадра, качество 1K / 1.5K / 2K, **резкость** (ползунок), официальные стили-LoRA.
+* Модели качает сама (кнопка **📥 Модели**).
+
+*Подробности — в [README внутри папки](ComfyUI-NeronImage/README.md).*
+
+---
+
 ## 🎬 Проект 2: NERON STUDIO H3 (Готовый процесс видео-генерации, v1.0 «Lite»)
 
 👋 Все ноды, воркфлоу и инструкции лежат в папке **[`Neron_Studio_H3`](Neron_Studio_H3/)**.
@@ -233,6 +248,7 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 | Сгенерировать видео H3 | **🎬 Neron H3 Engine** — качество | 🎥 Neron MiniMax H3 Generator (Lite) — для воркфлоу Neron Studio H3 |
 | Длинный ролик H3 (5–45 с) | **🎬 Neron H3 Story** + **🖼 Кадры** + **📝 Story AutoPrompter** (или ноды **🎞 Блок**) | — |
 | Заменить человека в клипе на человека с фото | **🎭 Neron H3 Замена героя / Hero Swap** | — |
+| Нарисовать картинку по тексту | **🖼 Neron Image / Картинка (Krea 2)** | — |
 | Сгенерировать видео LTX 2.5 | **🎬 Neron LTX Engine** — первый / промежуточные / последний кадр, звук, модели качает сам; **🎬 Neron LTX AutoPrompter** — промпт под LTX с физикой и камерой, LLM качает сам | — |
 | Написать промпт | **🎬 Neron AutoPrompter** — промпт под H3 по картинке и брифу | 🎬 Neron Dialog Autoprompter и 🧠 Multi-Image LLM — диалоговый режим |
 | Камера H3 | **⚡ Fixed Camera H3** | — |
@@ -392,6 +408,21 @@ Clip + photo → the same clip (motion, camera, light, sound) with the person fr
 
 ---
 
+## 🖼 NERON IMAGE — text to image with Krea 2 (new)
+
+👋 The node and workflow live in the **[`ComfyUI-NeronImage`](ComfyUI-NeronImage/)** folder.
+
+Write what to draw, in any language, and get a picture up to **2K**. One node instead of twenty in the official template.
+
+* Model — **Krea 2 Turbo bf16** (official, Comfy-Org): 8 steps, ≈ 1 min at 2K on 16 GB.
+* A **prompter** runs on the same Qwen3-VL, so there is nothing extra to download. By default it uses **🎨 every detail**: your words stay as written, and it adds clothing, materials, mechanism parts, light and camera. The final prompt is shown on the node.
+* Aspect, quality 1K / 1.5K / 2K, a **sharpness** slider, official style LoRAs.
+* Downloads its models (the **📥 Models** button).
+
+*Details are in the [README inside the folder](ComfyUI-NeronImage/README.md).*
+
+---
+
 ## 🎬 Project 2: NERON STUDIO H3 (Ready-made video pipeline, v1.0 "Lite")
 
 👋 All nodes, workflows and instructions live in the **[`Neron_Studio_H3`](Neron_Studio_H3/)** folder.
@@ -495,6 +526,7 @@ Details in the **[README inside NeronTheme](NeronTheme/README.md)**.
 | Generate H3 video | **🎬 Neron H3 Engine** — quality | 🎥 Neron MiniMax H3 Generator (Lite) — for the Neron Studio H3 workflows |
 | Long H3 video (5–45 s) | **🎬 Neron H3 Story** + **🖼 Frames** + **📝 Story AutoPrompter** (or **🎞 Block** nodes) | — |
 | Swap the person in a clip for the person from a photo | **🎭 Neron H3 Hero Swap** | — |
+| Draw a picture from text | **🖼 Neron Image (Krea 2)** | — |
 | Generate LTX 2.5 video | **🎬 Neron LTX Engine** — first / middle / last frames, audio, downloads its models; **🎬 Neron LTX AutoPrompter** — an LTX prompt with physics and camera, downloads its LLM | — |
 | Write the prompt | **🎬 Neron AutoPrompter** — an H3 prompt from a picture and a brief | 🎬 Neron Dialog Autoprompter and 🧠 Multi-Image LLM — dialog mode |
 | H3 camera | **⚡ Fixed Camera H3** | — |
