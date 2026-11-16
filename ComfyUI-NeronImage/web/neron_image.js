@@ -19,7 +19,7 @@ const GROUPS = [
       fill: "rgba(255, 200, 100, 0.22)", border: "rgba(255, 200, 100, 0.95)", label: "rgba(255, 235, 160, 1.0)", thick: 2.5 },
     { name: "ЧТО НАРИСОВАТЬ / PROMPT", widgets: ["text", "prompter"],
       fill: "rgba( 90, 140, 200, 0.15)", border: "rgba( 90, 140, 200, 0.75)", label: "rgba(180, 215, 255, 1.0)" },
-    { name: "КАДР / FRAME", widgets: ["aspect", "quality", "seed", "control_after_generate"],
+    { name: "КАДР / FRAME", widgets: ["aspect", "quality", "sharpness", "seed", "control_after_generate"],
       fill: "rgba(120, 170, 120, 0.15)", border: "rgba(120, 170, 120, 0.75)", label: "rgba(200, 245, 200, 1.0)" },
     { name: "РИСОВАНИЕ / SAMPLING", widgets: ["count", "steps", "cfg", "sampler", "scheduler"],
       fill: "rgba(200, 160,  90, 0.15)", border: "rgba(200, 160,  90, 0.75)", label: "rgba(255, 225, 170, 1.0)" },
@@ -601,6 +601,11 @@ const HELP_TEXT = `
 • Хочешь поправить промпт руками — кнопка «✏ Править итоговый промпт»: он встанет в поле,
   а автопромтер переключится на «как есть».
 
+РЕЗКОСТЬ
+• После рисования — мягкая нерезкая маска: края чуть чётче, деталей не добавляет.
+  0 — как нарисовала модель; 0.3–0.5 — «чуть-чуть» (по умолчанию 0.35); больше 0.8 —
+  заметно, могут появиться светлые ореолы.
+
 ВАРИАНТЫ
 • «вариант» — номер картинки. Другой номер — другая картинка по тому же промпту.
 • Понравилась — «управление после генерации» = fixed, и меняй только слова.
@@ -647,6 +652,9 @@ PROMPTER
 • Same text and mode — the prompter is not run again: «seed» only changes the picture.
 • To edit the prompt by hand — «✏ Edit final prompt»: it goes into the text field and
   the prompter switches to «as is».
+
+SHARPNESS — a gentle unsharp mask after drawing: 0 — as drawn; 0.3–0.5 — subtle (default
+0.35); above 0.8 — halos may appear. It adds crispness, not detail.
 
 ⚙ EXPERT
 • 8 steps, CFG 1, euler / simple — the Krea 2 Turbo authors' recipe.

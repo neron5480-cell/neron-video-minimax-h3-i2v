@@ -350,3 +350,27 @@ def generate(models, prompt, width, height, count, seed, steps, cfg, sampler, sc
     send("🖼 проявляю / decoding")
     vae = load_vae(models["vae"])
     return node("VAEDecode", samples=out, vae=vae)[0]
+
+
+# ---------------- резкость (16.11, Роман: «живее Flux, но чуть-чуть бы резкости») ----------------
+
+def sharpen(image, amount):
+    """Мягкая нерезкая маска: картинка + amount × (картинка − размытая). Деталей не придумывает, только чётче края.
+    Радиус растёт с размером кадра (на 2K ≈ 1 пиксель)."""
+    if amount <= 0:
+        return image
+    import torch
+    import torch.nn.functional as F
+    b, h, w, c = image.shape
+    sigma = max(0.6, min(h, w) / 1536.0)
+    r = max(1, int(math.ceil(sigma * 2.5)))
+    x = torch.arange(-r, r + 1, dtype=torch.float32, device=image.device)
+    k = torch.exp(-(x ** 2) / (2 * sigma ** 2))
+    k = (k / k.sum()).to(image.dtype)
+    t = image.permute(0, 3, 1, 2)
+    p = F.pad(t, (r, r, r, r), mode="reflect")
+    blur = F.conv2d(p, k.view(1, 1, 1, -1).repeat(c, 1, 1, 1), groups=c)
+    blur = F.conv2d(blur, k.view(1, 1, -1, 1).repeat(c, 1, 1, 1), groups=c)
+    out = (t + float(amount) * (t - blur)).clamp(0, 1)
+    return out.permute(0, 2, 3, 1).contiguous()
+
