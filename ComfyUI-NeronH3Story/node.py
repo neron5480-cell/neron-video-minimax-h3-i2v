@@ -98,7 +98,8 @@ class NeronH3Story:
              "unet_model", "clip_model", "vae_video_model", "vae_audio_model", "turbo_lora_model",
              "seed", "ref_quality", "fast_attention",
              # новое — строго в конец: старые сохранённые схемы хранят значения по порядку
-             "fast_steps", "fast_lora_model"]                               # 🚀 БЫСТРО / FAST
+             "fast_steps", "fast_lora_model",                               # 🚀 БЫСТРО / FAST
+             "color_match"]                                                 # СТЫК / SEAM (16.11)
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -158,6 +159,14 @@ class NeronH3Story:
                                 tooltip="22 кадра ≈ 0,9 с — по умолчанию. 5 — короче, 39 ≈ 1,6 с — больше «памяти» о "
                                         "движении. Только сетка модели.\n\nEN: 22 ≈ 0.9 s default; 5 shorter; "
                                         "39 ≈ 1.6 s more motion memory.")),
+                "color_match": ("FLOAT", _exp("подгонка цвета блоков / color match", default=0.3, min=0.0,
+                                max=1.0, step=0.05,
+                                tooltip="Новый блок начинается с повтора хвоста прошлого — по этому стыку видно, "
+                                        "уплыл ли цвет (теплее, холоднее, темнее). Движок подтягивает цвет блока к "
+                                        "прошлому на эту долю. 0 — выкл; 0.3 — мягко; 1 — полностью. Не уплыл — "
+                                        "ничего не меняется.\n\nEN: Each new block starts by repeating the previous "
+                                        "tail; the seam shows any color drift. The block's color is pulled toward "
+                                        "the previous one by this share. 0 — off; 0.3 — gentle; 1 — full.")),
                 "fast_steps": (["4", "6", "8", "10"], _exp("🚀 шаги «Быстро» / Fast steps", default="6",
                                tooltip="Сколько шагов в режиме 🚀 Быстро. 6 — по умолчанию; 4 — быстрее, но грязнее; "
                                        "8–10 — чище детали, дольше.\n\nEN: Steps in 🚀 Fast mode. 6 by default; 4 is "
@@ -182,6 +191,9 @@ class NeronH3Story:
                                                      "EN: First frame of the video, also the appearance sample."}),
                 "appearance": ("IMAGE", {"tooltip": "Отдельный образец внешности, если нужен не первый кадр.\n\n"
                                                     "EN: Separate appearance reference."}),
+                "cast": (bus.CAST_TYPE, {"tooltip": "🗂 Картотека: до трёх образцов с подписью (герой, существо, место) "
+                                                    "— идут в КАЖДЫЙ блок, герой не «плывёт».\n\nEN: Cast: up to "
+                                                    "three labelled references for EVERY block."}),
                 "lora_all": (bus.LORA_TYPE, {"tooltip": "LoRA на ВЕСЬ ролик (стиль) — 🎨 Набор LoRA.\n\n"
                                                         "EN: LoRAs for the WHOLE video (style)."}),
                 "prompt_1": ("STRING", {"forceInput": True, "tooltip": "Промпт блока 1 — как есть, в модель. / Block 1 prompt, as is."}),
@@ -244,7 +256,7 @@ class NeronH3Story:
                  clip_model=None, vae_video_model=None, vae_audio_model=None, turbo_lora_model=None,
                  fast_lora_model=None, fast_steps="6", ref_audio_1=None, ref_audio_2=None, ref_audio_3=None, seed=1,
                  ref_quality="auto", fast_attention=False, story=None, first_frame=None, appearance=None,
-                 lora_all=None, width=None, height=None, **kw):
+                 lora_all=None, width=None, height=None, cast=None, color_match=0.3, **kw):
         notes = []
         bus_ = story or {}
         sb = list(bus_.get("blocks") or [])
@@ -353,7 +365,8 @@ class NeronH3Story:
                 seam_frames=int(seam_frames or 22), ref_quality=ref_quality, fast_attention=bool(fast_attention),
                 global_loras=bus.loras_pairs(g_loras), block_loras=block_loras, total_frames=T,
                 block_images=block_images, fast_steps=int(fast_steps or 6),
-                ref_audios=[a for a in (ref_audio_1, ref_audio_2, ref_audio_3) if a is not None])
+                ref_audios=[a for a in (ref_audio_1, ref_audio_2, ref_audio_3) if a is not None],
+                cast=list(cast or []), color_match=float(color_match if color_match is not None else 0.3))
         except Exception:
             story_mod.free("после ошибки / after error")
             raise

@@ -4,6 +4,7 @@
 Провода:
   NERON_H3_LORAS — список {"name", "strength"} (нода 🎨 Набор LoRA).
   NERON_H3_BLOCK — одна сцена (нода 🎞 Блок): {"text", "first", "mid", "last", "loras"}.
+  NERON_H3_CAST — 🗂 Картотека: [{"image", "name"}, …] — образцы героев, существ, мест; идут в КАЖДЫЙ блок.
   NERON_H3_STORY — шина от Story AutoPrompter в движок:
       {"total_seconds", "block_seconds", "first_frame", "appearance", "lora_all",
        "blocks": [{"prompt", "first", "mid", "last", "loras"}, …]}
@@ -14,6 +15,7 @@ LORA_TYPE = "NERON_H3_LORAS"
 BLOCK_TYPE = "NERON_H3_BLOCK"
 STORY_TYPE = "NERON_H3_STORY"
 FRAMES_TYPE = "NERON_H3_FRAMES"
+CAST_TYPE = "NERON_H3_CAST"
 
 FPS = 24
 MAX_BLOCKS = 12
@@ -59,3 +61,8 @@ def frames(first=None, mid=(), last=None):
 
 def loras_pairs(loras):
     return [(d["name"], float(d["strength"])) for d in (loras or [])]
+
+
+def cast(items):
+    """🗂 Картотека одним проводом: только заполненные окна, подпись — как есть (может быть пустой)."""
+    return [{"image": im, "name": (nm or "").strip()} for im, nm in items if im is not None]

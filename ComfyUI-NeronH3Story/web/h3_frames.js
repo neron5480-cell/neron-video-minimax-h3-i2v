@@ -1,16 +1,21 @@
-// 🖼 Neron H3 Кадры — четыре окна загрузки прямо в ноде (первый, промежуточный 1, промежуточный 2, последний),
+// 🖼 Neron H3 Кадры и 🗂 Neron H3 Картотека — окна загрузки прямо в ноде (первый, промежуточный 1, промежуточный 2, последний),
 // с подписью и превью. Картинки любого размера вписываются в своё окно и никогда не вылезают за него.
 // Нажми на окно — выбрать файл; можно перетащить файл прямо на окно; ✕ — убрать.
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-const NODE = "NeronH3Frames";
 const NONE = "— нет / none —";
 const SLOTS = [
     { widget: "first_image", input: "first_frame", ru: "1 · ПЕРВЫЙ КАДР", en: "first frame", color: "#5fd0ff" },
     { widget: "mid_image_1", input: "mid_frame_1", ru: "2 · ПРОМЕЖУТОЧНЫЙ", en: "middle 1", color: "#ffd166" },
     { widget: "mid_image_2", input: "mid_frame_2", ru: "3 · ПРОМЕЖУТОЧНЫЙ", en: "middle 2", color: "#ffd166" },
     { widget: "last_image", input: "last_frame", ru: "4 · ПОСЛЕДНИЙ КАДР", en: "last frame", color: "#ff8fa3" },
+];
+// 🗂 Картотека — те же окна, три штуки; подписи «кто это» — обычные поля над окнами
+const CAST_SLOTS = [
+    { widget: "cast_image_1", ru: "1 · ГЕРОЙ", en: "hero", color: "#7ee0a8" },
+    { widget: "cast_image_2", ru: "2 · ГЕРОЙ / СУЩЕСТВО", en: "hero / creature", color: "#b9a7ff" },
+    { widget: "cast_image_3", ru: "3 · МЕСТО / ПРЕДМЕТ", en: "place / object", color: "#ffb37a" },
 ];
 const PAD = 10, GAP = 8, CAP_H = 30, INFO_H = 18, CLOSE = 18;
 
@@ -77,7 +82,54 @@ them to the video size itself.
 ===================================================
 `;
 
-function showHelpDialog() {
+const CAST_HELP = `
+🗂 NERON H3 CAST
+===================================================
+
+📌 WHAT IT IS 📌
+References for the WHOLE video: your hero, a second
+hero or creature, a place or object. Each goes into
+EVERY block as <Picture N> with its label, so the hero
+does not drift from block to block — even when the
+middle pictures do not show him. One wire 'cast' into
+the 🎬 Neron H3 Story engine.
+
+📌 HOW 📌
+Fill the windows (click or drop a file) and write who
+it is above, briefly: "a young man in a dark hood and a
+respirator", "a corporate flying drone", "a dark alley".
+Empty label — just an appearance reference.
+💡 Plain background, the subject clearly visible.
+💡 More references — a bit slower; use what you need.
+
+===================================================
+🇷🇺 РУССКИЙ
+===================================================
+
+📌 ЧТО ЭТО 📌
+Образцы для ВСЕГО ролика: герой, второй герой или
+существо, место или предмет. Каждый идёт <Picture N>
+с подписью в КАЖДЫЙ блок — герой не «плывёт» от блока
+к блоку, даже если в кадрах-навигаторах его нет.
+Один провод 'cast' в движок 🎬 Neron H3 Story.
+
+📌 КАК 📌
+Заполни окна (нажми или перетащи файл) и над ними
+коротко напиши, кто это: «парень в тёмном капюшоне и
+респираторе», «летающий дрон корпорации», «тёмный
+переулок». Пустая подпись — просто образец внешности.
+💡 Ровный фон, герой хорошо виден.
+💡 Больше образцов — чуть дольше; ставь, что нужно.
+
+===================================================
+`;
+const CFG = {
+    NeronH3Frames: { slots: SLOTS, help: () => HELP_TEXT, grid: "_frames_grid" },
+    NeronH3Cast: { slots: CAST_SLOTS, help: () => CAST_HELP, grid: "_frames_grid" },
+};
+function slotsOf(node) { return (CFG[node?.comfyClass || node?.type] || CFG.NeronH3Frames).slots; }
+
+function showHelpDialog(text = HELP_TEXT) {
     const overlay = document.createElement("div");
     overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;" +
         "align-items:center;justify-content:center;";
@@ -85,7 +137,7 @@ function showHelpDialog() {
     box.style.cssText = "background:#1a1a1a;color:#e0e0e0;border:1px solid #444;border-radius:8px;padding:20px;" +
         "max-width:820px;max-height:85vh;overflow-y:auto;font:13px/1.5 monospace;white-space:pre-wrap;" +
         "box-shadow:0 8px 32px rgba(0,0,0,0.8);";
-    box.textContent = HELP_TEXT;
+    box.textContent = text;
     const btn = document.createElement("button");
     btn.textContent = "Close / Закрыть";
     btn.style.cssText = "display:block;margin:16px auto 0;padding:8px 24px;background:#2a5d9c;color:#fff;" +
@@ -97,10 +149,10 @@ function showHelpDialog() {
     document.body.append(overlay);
 }
 
-// ---------- раскладка: 4 в ряд на широкой ноде, 2×2 на узкой ----------
-function layout(width) {
-    const cols = width >= 560 ? 4 : 2;
-    const rows = 4 / cols;
+// ---------- раскладка: все в ряд на широкой ноде, по два на узкой ----------
+function layout(width, n = 4) {
+    const cols = width >= 560 ? n : Math.min(2, n);
+    const rows = Math.ceil(n / cols);
     const slotW = Math.max(60, (width - PAD * 2 - GAP * (cols - 1)) / cols);
     const imgH = Math.round(slotW * 1.25);
     const slotH = CAP_H + imgH + INFO_H;
@@ -108,7 +160,7 @@ function layout(width) {
 }
 
 function slotRect(node, i, top) {
-    const L = layout(node.size[0]);
+    const L = layout(node.size[0], slotsOf(node).length);
     const c = i % L.cols, r = Math.floor(i / L.cols);
     const x = PAD + c * (L.slotW + GAP), y = top + r * (L.slotH + GAP);
     return { x, y, w: L.slotW, h: L.slotH, img: { x: x + 4, y: y + CAP_H, w: L.slotW - 8, h: L.imgH },
@@ -200,8 +252,9 @@ function gridTop(node) {
 }
 
 function drawGrid(node, ctx, top) {
-    for (let i = 0; i < SLOTS.length; i++) {
-        const s = SLOTS[i], R = slotRect(node, i, top);
+    const SL = slotsOf(node);
+    for (let i = 0; i < SL.length; i++) {
+        const s = SL[i], R = slotRect(node, i, top);
         const w = widgetOf(node, s.widget);
         const val = w?.value;
         const fromWire = false;
@@ -273,7 +326,7 @@ function drawGrid(node, ctx, top) {
 
 function slotAt(node, pos) {
     const top = gridTop(node);
-    for (let i = 0; i < SLOTS.length; i++) {
+    for (let i = 0; i < slotsOf(node).length; i++) {
         const R = slotRect(node, i, top);
         if (inside(pos, R)) return { i, R };
     }
@@ -287,7 +340,7 @@ function clickAt(node, pos) {
     const now = Date.now();
     if (now - lastClick < 400) return true;      // виджет и нода могут сообщить об одном клике дважды
     lastClick = now;
-    const s = SLOTS[hit.i];
+    const s = slotsOf(node)[hit.i];
     const val = widgetOf(node, s.widget)?.value;
     if (val && val !== NONE && inside(pos, hit.R.close)) { setSlot(node, s, NONE); return true; }
     pickFile(node, s);
@@ -302,7 +355,7 @@ function fixHeight(node) {
         let need = node.computeSize()[1];
         if (top !== undefined) {
             const btn = node.widgets.find((w) => w.type === "button");
-            need = top + layout(node.size[0]).height + 6 + (btn ? 28 : 0) + 16 + 8;
+            need = top + layout(node.size[0], slotsOf(node).length).height + 6 + (btn ? 28 : 0) + 16 + 8;
         }
         if (Math.abs(node.size[1] - need) > 2) node.setSize([node.size[0], need]);
         app.graph?.setDirtyCanvas(true, true);
@@ -312,7 +365,8 @@ function fixHeight(node) {
 app.registerExtension({
     name: "Neron.H3.Frames",
     async beforeRegisterNodeDef(nodeType, nodeData) {
-        if (nodeData.name !== NODE) return;
+        if (!CFG[nodeData.name]) return;
+        const cfg = CFG[nodeData.name];
         const origCreated = nodeType.prototype.onNodeCreated;
         const origConfigure = nodeType.prototype.onConfigure;
         const origExecuted = nodeType.prototype.onExecuted;
@@ -323,12 +377,12 @@ app.registerExtension({
         nodeType.prototype.onNodeCreated = function () {
             const r = origCreated?.apply(this, arguments);
             const node = this;
-            node.color = "#1e3a4a";
-            node.bgcolor = "#10232e";
+            node.color = nodeData.name === "NeronH3Cast" ? "#24402f" : "#1e3a4a";
+            node.bgcolor = nodeData.name === "NeronH3Cast" ? "#12261b" : "#10232e";
             node.resizable = true;
             node.__neronSummary = "";
             // имена файлов храним в обычных списках (сохраняются со схемой), но не показываем — вместо них окна
-            for (const s of SLOTS) {
+            for (const s of cfg.slots) {
                 const w = widgetOf(node, s.widget);
                 if (w) w.hidden = true;
             }
@@ -337,14 +391,14 @@ app.registerExtension({
                 name: "_frames_grid", type: "neron_frames", value: "", serialize: false,
                 options: { serialize: false },
                 draw(ctx, n, width, y) { drawGrid(n, ctx, y); },
-                computeSize(width) { return [width, layout(width ?? node.size[0]).height]; },
+                computeSize(width) { return [width, layout(width ?? node.size[0], cfg.slots.length).height]; },
                 mouse(e, pos, n) {
                     const t = e?.type || "";
                     if (t === "pointerdown" || t === "mousedown") return clickAt(n, pos);
                     return true;
                 },
             });
-            node.addWidget("button", "📖 Help / Справка", null, () => showHelpDialog());
+            node.addWidget("button", "📖 Help / Справка", null, () => showHelpDialog(cfg.help()));
             addBlank(node, "_frames_info", 16);       // место под строку отчёта
             try {
                 node.setSize([Math.max(node.size[0], 620), node.size[1]]);
@@ -355,7 +409,7 @@ app.registerExtension({
         };
         nodeType.prototype.onConfigure = function () {
             const r = origConfigure?.apply(this, arguments);
-            for (const s of SLOTS) { const w = widgetOf(this, s.widget); if (w) w.hidden = true; }
+            for (const s of cfg.slots) { const w = widgetOf(this, s.widget); if (w) w.hidden = true; }
             setTimeout(() => fixHeight(this), 50);
             return r;
         };
@@ -380,9 +434,9 @@ app.registerExtension({
             try {
                 const gm = app.canvas.graph_mouse;
                 const hit = slotAt(this, [gm[0] - this.pos[0], gm[1] - this.pos[1]]);
-                if (hit) slot = SLOTS[hit.i];
+                if (hit) slot = cfg.slots[hit.i];
             } catch (_) {}
-            if (!slot) slot = SLOTS.find((s) => { const v = widgetOf(this, s.widget)?.value; return !v || v === NONE; }) || SLOTS[0];
+            if (!slot) slot = cfg.slots.find((s) => { const v = widgetOf(this, s.widget)?.value; return !v || v === NONE; }) || cfg.slots[0];
             upload(this, slot, file);
             return true;
         };

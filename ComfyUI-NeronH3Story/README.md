@@ -19,6 +19,9 @@ MiniMax H3»), перехлёст вырезается, звук сводитс�
   🎬 Neron AutoPrompter (Qwen 3.5 9B, скачается сам).
 - **🎞 Neron H3 Блок** — один отрезок: свой текст, свои картинки, свои LoRA.
 - **🎨 Neron H3 Набор LoRA** — до 3 LoRA с силой, наборы цепляются друг за друга.
+- **🗂 Neron H3 Картотека** — до трёх образцов на весь ролик (герой, второй герой или существо, место или предмет) с
+  подписью «кто это». Провод `cast` в движок: каждый образец идёт в **каждый** блок, герой не «плывёт», даже если в
+  кадрах-навигаторах его нет. Работает и с автопромтером (номера его картинок не сдвигаются).
 
 **Три способа работать** (процессы в `workflows/`)
 1. **С автопромтером** — `Neron_H3_Story_AutoPrompter.json`: 🖼 Кадры + сценарий + 🎨 LoRA на весь ролик →
@@ -49,6 +52,10 @@ MiniMax H3»), перехлёст вырезается, звук сводитс�
 - включить «быстрое внимание INT8»;
 - 🚀 Быстро и меньше шагов; размер кадра поменьше; ролик короче или блоки длиннее (меньше стыков).
 
+**🎨 Цвет блоков** (⚙ эксперт, по умолчанию 0.3). Новый блок начинается с повтора хвоста прошлого — по этому
+стыку видно, уплыл ли цвет (теплее, холоднее, темнее), и движок подтягивает цвет блока к прошлому на эту долю.
+0 — выкл; если цвет не уплыл — ничего не меняется. Новое — проверяется.
+
 **Совет.** В сложных сценах (несколько героев, существо с картинки) первый кадр лучше давать **горизонтальным**:
 с вертикальным H3 иногда чудит — например, белый тигр с картинки становится рыжим. Горизонтальный — держит.
 
@@ -77,6 +84,10 @@ smoothly.
   🎬 Neron AutoPrompter (Qwen 3.5 9B, downloads itself).
 - **🎞 Neron H3 Block** — one part: its own text, its own pictures, its own LoRAs.
 - **🎨 Neron H3 LoRA Set** — up to 3 LoRAs with strength; sets chain into each other.
+- **🗂 Neron H3 Cast** — up to three references for the whole video (hero, second hero or creature, place or object)
+  with a «who is it» label. The `cast` wire into the engine: each reference goes into **every** block, so the hero
+  does not drift even when the middle pictures do not show him. Works with the AutoPrompter too (its picture numbers
+  do not shift).
 
 **Three ways to work** (workflows in `workflows/`)
 1. **With the AutoPrompter** — `Neron_H3_Story_AutoPrompter.json`: 🖼 Frames + scenario + 🎨 LoRAs for the whole
@@ -106,6 +117,10 @@ models (bf16) — 1 h 30 min; 🚀 Fast 6 steps, a 30 s portrait video — 44 mi
   loads);
 - turn on "fast INT8 attention";
 - 🚀 Fast and fewer steps; a smaller frame; a shorter video or longer blocks (fewer seams).
+
+**🎨 Block color** (⚙ expert, 0.3 by default). Each new block starts by repeating the previous tail — that seam
+shows any color drift (warmer, colder, darker), and the engine pulls the block's color toward the previous one by
+this share. 0 — off; no drift — nothing changes. New — being tested.
 
 **Tip.** In complex scenes (several characters, a creature from a picture) it is better to give a **landscape**
 first frame: with a portrait one H3 sometimes goes off — for example, a white tiger from the picture turns orange.

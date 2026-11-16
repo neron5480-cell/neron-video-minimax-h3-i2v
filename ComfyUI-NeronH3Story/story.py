@@ -282,14 +282,54 @@ def block_refs_prompt(prompt, start_no, who, mids):
     return (prompt.rstrip() + " " + " ".join(lines)) if lines else prompt
 
 
+def cast_prompt(prompt, start_no, cast):
+    """🗂 Картотека: каждый образец — <Picture N> с подписью «кто это»; что уже упомянуто в промпте — не дублируем."""
+    lines = []
+    for i, c in enumerate(cast):
+        n = start_no + i
+        if f"<Picture {n}>" in prompt:
+            continue
+        name = (c.get("name") or "").strip()
+        lines.append(f"<Picture {n}> shows {name}: keep exactly this look whenever {name} appears." if name else
+                     f"Also use <Picture {n}> as a reference for how the people, creatures, places and objects of "
+                     f"this video look.")
+    return (prompt.rstrip() + " " + " ".join(lines)) if lines else prompt
+
+
+COLOR_STD_LIMITS = (0.7, 1.4)        # контраст подгоняем не больше чем в 1,4 раза — дальше уже «не тот кадр»
+
+
+def match_colors(video, ref_tail, head, strength, chunk=16):
+    """Подгонка цвета блока к прошлому. Мерка — стык: первые S кадров нового блока повторяют хвост прошлого, значит,
+    разница их цвета и есть «уплывание». Среднее и разброс по каналам RGB → линейная поправка всего блока, на долю
+    strength (0…1). Считается по кускам и на месте — без лишней памяти. → величина сдвига (0…1)."""
+    s = float(strength)
+    if s <= 0:
+        return 0.0
+    r = ref_tail.float().reshape(-1, 3)
+    h = head.float().reshape(-1, 3)
+    mr, sr = r.mean(0), r.std(0)
+    mh, sh = h.mean(0), h.std(0)
+    ratio = (sr / sh.clamp(min=1e-4)).clamp(*COLOR_STD_LIMITS)
+    a = 1.0 + s * (ratio - 1.0)
+    b = s * (mr - mh * ratio)
+    for i in range(0, int(video.shape[0]), chunk):
+        v = video[i:i + chunk]
+        v.mul_(a.to(v.dtype)).add_(b.to(v.dtype)).clamp_(0.0, 1.0)
+    return float((mr - mh).abs().max())
+
+
 def generate(prompts, width, height, length, mode, seed, models, first_frame=None, appearance=None,
              keep_appearance=True, seam=SEAMS[0], seam_frames=22, ref_quality="auto", fast_attention=False,
-             global_loras=(), block_loras=None, total_frames=None, block_images=None, fast_steps=6, ref_audios=()):
+             global_loras=(), block_loras=None, total_frames=None, block_images=None, fast_steps=6, ref_audios=(),
+             cast=(), color_match=0.0):
     """→ (видео [T,H,W,3] float32, звук, последний кадр, число кадров, отчёт-строки).
     global_loras — [(имя, сила)] на весь ролик; block_loras[k] — [(имя, сила)] только для блока k;
     total_frames — обрезать готовый ролик ровно до этой длины;
     block_images[k] — {"who": образец «кто/где» (только блоки 2+), "mid": [навигаторы], "last": кадр конца};
-    ref_audios — до 3 звуковых образцов (голос, музыка, фон) → <Audio 1..3> в КАЖДЫЙ блок."""
+    ref_audios — до 3 звуковых образцов (голос, музыка, фон) → <Audio 1..3> в КАЖДЫЙ блок;
+    cast — 🗂 Картотека [{"image", "name"}] → образцы с подписью в КАЖДЫЙ блок (после навигаторов: номера картинок
+    автопромтера не сдвигаются); color_match — подгонка цвета блока к прошлому по стыку (0 — выкл)."""
     check_comfy()
     t0 = time.time()
     report = []
@@ -331,6 +371,9 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
     elif use_ref:
         report.append("🔒 Внешний вид: " + ("отдельный образец" if appearance is not None else "первый кадр")
                       + " → <Picture 1> в каждом блоке")
+    cast = [c for c in (cast or ()) if c and c.get("image") is not None]
+    if cast:
+        report.append("🗂 Картотека: " + ", ".join((c.get("name") or "образец") for c in cast) + " — в каждый блок")
     free("перед стартом")
     vram_log("старт")
 
@@ -346,7 +389,7 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
         bi = block_images[k] or {}
         who = bi.get("who") if k > 0 else None
         mids = [m for m in (bi.get("mid") or []) if m is not None]
-        refs = ([ref] if use_ref else []) + ([who] if who is not None else []) + mids
+        refs = ([ref] if use_ref else []) + ([who] if who is not None else []) + mids + [c["image"] for c in cast]
         p = with_continuity(p, k)
         if use_ref:
             p = with_appearance(p)
@@ -365,6 +408,8 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
                 tags.append(f"<Picture {no}> навигатор {i + 1}")
                 no += 1
             report.append(f"Блок {k + 1}: " + ", ".join(tags))
+        if cast:
+            p = cast_prompt(p, len(refs) - len(cast) + 1, cast)
         if refs or auds:
             kw = {}
             if refs:
@@ -500,6 +545,12 @@ def generate(prompts, width, height, length, mode, seed, models, first_frame=Non
         del avae, out
         free(f"{label}: аудио-VAE выгружен")
 
+        # подгонка цвета: стык нового блока повторяет хвост прошлого — по нему видно, насколько уплыл цвет
+        if k > 0 and clip_seam and S >= 5 and float(color_match) > 0 and prev_video is not None:
+            drift = match_colors(video, prev_video[-S:], video[:S], color_match)
+            if drift >= 0.01:
+                report.append(f"{label}: цвет подогнан к прошлому блоку (уплыл на {drift * 100:.0f} %, "
+                              f"поправка ×{float(color_match):g})")
         # склейка: у блоков 2+ первые S кадров повторяют хвост прошлого — в ролик не идут
         if k == 0:
             chunks.append(video.half())

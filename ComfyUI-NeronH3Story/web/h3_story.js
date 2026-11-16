@@ -26,6 +26,8 @@ const GROUPS = [
       fill: "rgba(120, 200, 160, 0.15)", border: "rgba(120, 200, 160, 0.75)", label: "rgba(190, 255, 220, 1.0)" },
     { name: "🚀 БЫСТРО / FAST", widgets: ["fast_steps", "fast_lora_model"],
       fill: "rgba(180, 120, 220, 0.15)", border: "rgba(180, 120, 220, 0.75)", label: "rgba(230, 200, 255, 1.0)" },
+    { name: "🎨 ЦВЕТ БЛОКОВ / BLOCK COLOR", widgets: ["color_match"],
+      fill: "rgba(220, 170, 120, 0.15)", border: "rgba(220, 170, 120, 0.75)", label: "rgba(255, 220, 190, 1.0)" },
 ];
 
 function wv(node, name) {
@@ -300,10 +302,12 @@ const MAX_BLOCKS = 12;
 const LORA_TYPE = "NERON_H3_LORAS";
 const BLOCK_TYPE = "NERON_H3_BLOCK";
 const STORY_TYPE = "NERON_H3_STORY";
+const CAST_TYPE = "NERON_H3_CAST";
 const EXTRA_OUTPUTS = [["frames", "IMAGE"], ["audio", "AUDIO"], ["last_frame", "IMAGE"], ["frames_count", "INT"]];
 
 function canon() {
-    const list = [["story", STORY_TYPE], ["first_frame", "IMAGE"], ["appearance", "IMAGE"], ["lora_all", LORA_TYPE]];
+    const list = [["story", STORY_TYPE], ["first_frame", "IMAGE"], ["appearance", "IMAGE"], ["cast", CAST_TYPE],
+                  ["lora_all", LORA_TYPE]];
     for (let k = 1; k <= MAX_BLOCKS; k++)
         list.push([`prompt_${k}`, "STRING"], [`block_${k}`, BLOCK_TYPE], [`lora_${k}`, LORA_TYPE]);
     return list.concat([["ref_audio_1", "AUDIO"], ["ref_audio_2", "AUDIO"], ["ref_audio_3", "AUDIO"],
@@ -329,7 +333,7 @@ function wantedSet(node) {
     const ex = wv(node, "expert") === true;
     const st = storyLinked(node);
     const n = wantedBlocks(node);
-    const want = new Set(["story"]);
+    const want = new Set(["story", "cast"]);     // 🗂 Картотека — всегда: и с AutoPrompter, и без
     if (!st) {
         want.add("first_frame");
         for (let k = 1; k <= n; k++) want.add(`prompt_${k}`);
@@ -679,6 +683,19 @@ as <Picture 1> into EVERY block, as an identity-only
 sample: faces, hair, clothes — not its background or
 poses. Turn off if the subject must change by story.
 
+📌 🗂 CAST 📌
+The 🗂 Neron H3 Cast node — up to three labelled
+references (hero, creature, place) on the 'cast' input.
+Each goes into EVERY block after the block's own
+pictures, with its label: the hero does not drift even
+when the middle pictures do not show him.
+
+📌 🎨 BLOCK COLOR (expert, 0.3) 📌
+Each new block starts by repeating the previous tail —
+that seam shows any color drift (warmer, colder,
+darker). The block is pulled toward the previous one
+by this share. 0 — off; no drift — nothing changes.
+
 📌 🎞 BLOCK PICTURES (expert) 📌
 Block 1 first frame — the opening frame.
 Blocks 2+ first frame — a "who / where" sample.
@@ -806,6 +823,19 @@ H3 делает картинку и звук вместе — голоса, ша
 'appearance') идёт <Picture 1> в КАЖДЫЙ блок — только
 как образец внешности: лица, волосы, одежда, а не его
 фон и позы. Сними, если объект по сюжету меняется.
+
+📌 🗂 КАРТОТЕКА 📌
+Нода 🗂 Neron H3 Картотека — до трёх образцов с
+подписью (герой, существо, место) на вход 'cast'.
+Каждый идёт в КАЖДЫЙ блок после картинок блока, с
+подписью «кто это»: герой не «плывёт», даже если в
+кадрах-навигаторах его нет.
+
+📌 🎨 ЦВЕТ БЛОКОВ (эксперт, 0.3) 📌
+Новый блок начинается с повтора хвоста прошлого —
+по этому стыку видно, уплыл ли цвет (теплее, холоднее,
+темнее). Цвет блока подтягивается к прошлому на эту
+долю. 0 — выкл; не уплыл — ничего не меняется.
 
 📌 КАРТИНКИ 🎞 БЛОКА (эксперт) 📌
 Первый кадр блока 1 — начало ролика.
