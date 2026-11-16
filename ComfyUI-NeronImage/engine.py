@@ -217,6 +217,8 @@ Cover, in this order, whatever applies:
 
 Rules:
 - Do not add new people, characters or animals the user did not ask for. Background props and environment details are welcome.
+- Every object appears exactly once. Introduce each person, piece of furniture, lamp, window, machine or prop one time only; later sentences about light, camera or mood may refer back to it ("the lamp", "her dress") but must never describe it again as if it were another one. Give explicit counts where a model might duplicate things: "a single armchair", "one floor lamp", "two identical gears".
+- Never repeat a sentence, phrase or detail.
 - Describe only what can be seen: no sounds, smells or story.
 - Text in the image: only words the user explicitly asked for, written exactly, in quotes. Otherwise no text, letters, logos or watermarks.
 - Treat people with dignity; assume clothing covers intimate anatomy.
@@ -279,18 +281,31 @@ def _clean(text):
     return t
 
 
-def _generate(clip, text, system, max_len, temperature, seed):
+def _dedupe(text):
+    """Убрать повторённые предложения (маленькая модель иногда пишет одно и то же дважды — Krea рисует дубли)."""
+    parts = re.split(r"(?<=[.!?])\s+", text.strip())
+    seen, out = set(), []
+    for p in parts:
+        k = re.sub(r"\W+", " ", p.lower()).strip()
+        if k and k in seen:
+            continue
+        seen.add(k)
+        out.append(p)
+    return " ".join(out)
+
+
+def _generate(clip, text, system, max_len, temperature, seed, repetition=1.05):
     try:
         tokens = clip.tokenize(text, min_length=1, thinking=False, system_prompt=system)
     except TypeError:                      # старый ComfyUI без system_prompt — инструкцию кладём в само сообщение
         tokens = clip.tokenize(system + "\n\nUser's Input:\n" + text, min_length=1)
     kw = dict(do_sample=True, max_length=int(max_len), temperature=float(temperature), top_k=64, top_p=0.95,
-              min_p=0.05, repetition_penalty=1.05, seed=int(seed))
+              min_p=0.05, repetition_penalty=float(repetition), seed=int(seed))
     try:
         ids = clip.generate(tokens, presence_penalty=0.0, mtp=True, **kw)
     except TypeError:
         ids = clip.generate(tokens, **kw)
-    return _clean(clip.decode(ids))
+    return _dedupe(_clean(clip.decode(ids)))
 
 
 def autoprompt(clip, text, mode, seed=0, temperature=0.7, custom=""):
@@ -305,7 +320,7 @@ def autoprompt(clip, text, mode, seed=0, temperature=0.7, custom=""):
     if key in _PROMPT_CACHE:
         return _PROMPT_CACHE[key], True
     send("✍ автопромтер / prompter")
-    out = _generate(clip, text, system, max_len, temperature, seed)
+    out = _generate(clip, text, system, max_len, temperature, seed, 1.12 if mode == MODE_DETAIL else 1.05)
     if len(out) < 8:                       # модель ничего толкового не сказала — берём свой текст
         log.warning("%s автопромтер вернул пустое — беру промпт как есть", TAG)
         out = text
