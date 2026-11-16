@@ -517,6 +517,24 @@ function openModelsDialog(greeting) {
     render();
 }
 
+// ---------- многострочные поля ComfyUI: внутрь рамки (Роман 16.11: поле промпта вылезало за края рамки) ----------
+const TEXT_FIELDS = ["text", "prompter_instruction"];
+function tidyTextareas(node) {
+    for (const name of TEXT_FIELDS) {
+        const w = getWidget(node, name);
+        const el = w?.inputEl || w?.element;
+        const ta = el?.tagName === "TEXTAREA" ? el : el?.querySelector?.("textarea");
+        if (!ta || ta.__neronTidy) continue;
+        ta.__neronTidy = true;
+        ta.style.boxSizing = "border-box";
+        ta.style.marginLeft = "12px";
+        ta.style.marginRight = "12px";
+        ta.style.width = "calc(100% - 24px)";
+        ta.style.borderRadius = "6px";
+        ta.style.border = "1px solid #2f4870";
+    }
+}
+
 // ---------- итоговый промпт на ноде ----------
 const EDIT_BTN = "✏ Править итоговый промпт / Edit final prompt";
 const PROMPT_BOX_H = 130;
@@ -813,7 +831,7 @@ app.registerExtension({
             node.addWidget("button", "📖 Help / Справка", null, () => showHelpDialog());
             addPromptBox(node);
             node.addWidget("button", EDIT_BTN, null, () => editFinalPrompt(node));
-            for (const t of [50, 300, 800]) setTimeout(() => applyExpert(node, specs), t);
+            for (const t of [50, 300, 800]) setTimeout(() => { applyExpert(node, specs); tidyTextareas(node); }, t);
             setupClock(node);
             hookDownload();
             DL.nodes.add(node);

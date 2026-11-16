@@ -118,6 +118,11 @@ class NeronImage:
                 "scheduler": (schedulers, _exp("расписание / scheduler", default=E.SCHEDULER if E.SCHEDULER in
                               schedulers else schedulers[0],
                               tooltip="Рецепт авторов — simple.\n\nEN: The authors' recipe — simple.")),
+                "prompter_instruction": ("STRING", _exp("своя инструкция промптеру / own prompter instruction",
+                                         default="", multiline=True,
+                                         placeholder="пусто — официальная инструкция Krea / empty — official",
+                                         tooltip="Пусто — официальная инструкция (Comfy-Org / Krea). Можно вписать "
+                                                 "свою — по-английски.\n\nEN: Empty — the official instruction.")),
                 "prompter_seed": ("INT", _exp("вариант промпта / prompt variant", default=0, min=0, max=999999,
                                   tooltip="Другой номер — автопромтер распишет иначе. Сам промпт меняется только от "
                                           "этого номера, а не от «варианта» картинки.\n\nEN: Another number — the "
@@ -126,11 +131,6 @@ class NeronImage:
                                         min=0.1, max=1.5, step=0.05,
                                         tooltip="Ниже — ближе к твоим словам, выше — смелее придумывает.\n\nEN: Lower "
                                                 "— closer to your words; higher — bolder.")),
-                "prompter_instruction": ("STRING", _exp("своя инструкция промптеру / own prompter instruction",
-                                         default="", multiline=True,
-                                         placeholder="пусто — официальная инструкция Krea / empty — official",
-                                         tooltip="Пусто — официальная инструкция (Comfy-Org / Krea). Можно вписать "
-                                                 "свою — по-английски.\n\nEN: Empty — the official instruction.")),
                 "style_lora": ([E.NO_LORA] + E.files("loras"), _exp("стиль (LoRA) / style (LoRA)", default=E.NO_LORA,
                                tooltip="Необязательно. Официальные стили Krea 2 (Comfy-Org/Krea-2, папка loras): "
                                        "krea2_darkbrush, krea2_retroanime, krea2_softwatercolor… Слова-ключ стиля "
@@ -188,9 +188,14 @@ class NeronImage:
                 "«📥 Модели» — она скачает только недостающее и разложит по папкам.\n\nEN: Missing models. Press "
                 "«📥 Модели / Models» on the node — it downloads only what is missing.")
         un = E.base(models["unet"]).lower()
-        if "raw" in un:
-            notes.append("⚠ Выбрана RAW — это база для обучения LoRA; для неё нужны ~52 шага и CFG 3.5, до 1K. "
-                         "Для картинок авторы советуют Turbo. EN: RAW selected — the authors recommend Turbo.")
+        raw = "raw" in un
+        if raw:
+            notes.append("⚠ Выбрана RAW — сырая база для обучения LoRA, не «богаче» Turbo (тот же размер; Turbo — это "
+                         "RAW + доводка по красоте). Для картинок авторы советуют krea2_turbo_bf16. EN: RAW is the "
+                         "untuned base; the authors recommend Turbo for pictures.")
+            if int(steps) == E.STEPS and float(cfg) == E.CFG:        # рецепт Turbo не годится — берём рецепт авторов для RAW
+                steps, cfg = E.RAW_STEPS, E.RAW_CFG
+                notes.append(f"RAW: рецепт авторов — {steps} шага, CFG {cfg:g}, негатив пустой (дольше в ~13 раз)")
         elif "bf16" not in un:
             notes.append(f"ℹ Модель: {E.base(models['unet'])} — сжатая. Максимум качества — krea2_turbo_bf16 "
                          "(«📥 Модели»). EN: a compressed model; bf16 is the maximum.")
@@ -201,6 +206,9 @@ class NeronImage:
             notes.append(f"Размер с проводов: {int(width)}×{int(height)} → {w}×{h}")
         else:
             w, h = E.frame_size(aspect, quality)
+        if raw and w * h > E.RAW_MAX_AREA * 1.02:
+            w, h = E.cap_area(w, h, E.RAW_MAX_AREA)
+            notes.append(f"RAW обучена до 1K — кадр уменьшен до {w}×{h}")
         notes.append(f"Кадр: {w}×{h} ({w * h / 1e6:.1f} Мп) · шаги {int(steps)} · CFG {float(cfg):g} · "
                      f"{sampler} / {scheduler}")
 

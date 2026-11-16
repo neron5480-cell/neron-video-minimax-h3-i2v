@@ -20,6 +20,8 @@ log = logging.getLogger("Neron.Image")
 TAG = "[Neron Image]"
 CLIP_TYPE = "krea2"
 STEPS, CFG, SAMPLER, SCHEDULER = 8, 1.0, "euler", "simple"     # рецепт авторов Krea 2 Turbo
+RAW_STEPS, RAW_CFG = 52, 3.5                                    # рецепт авторов для RAW (README krea-ai/krea-2)
+RAW_MAX_AREA = 1024 * 1024                                      # RAW обучена «up to 1k resolution»
 GRID = 16                                                       # сторона кратна 16 (VAE 8 × патч 2)
 
 
@@ -154,6 +156,11 @@ def frame_size(aspect, quality):
     return _grid(side * r), _grid(side / r)
 
 
+def cap_area(w, h, area):
+    k = math.sqrt(area / float(w * h))
+    return _grid(w * k), _grid(h * k)
+
+
 def wired_size(width, height):
     """Размер с проводов: кратно 16, не меньше 256, не больше 2048×2048 по площади (паспорт Turbo)."""
     w, h = max(256, int(width)), max(256, int(height))
@@ -282,7 +289,10 @@ def generate(models, prompt, width, height, count, seed, steps, cfg, sampler, sc
     clip = load_clip(models["clip"])
     send("📝 текст / text")
     pos = node("CLIPTextEncode", clip=clip, text=prompt)[0]
-    neg = node("ConditioningZeroOut", conditioning=pos)[0]
+    if float(cfg) > 1.0:                   # CFG включён (RAW): негатив — пустой текст, как у авторов Krea
+        neg = node("CLIPTextEncode", clip=clip, text="")[0]
+    else:                                  # Turbo, CFG 1: негатив не используется (как в шаблоне Comfy-Org)
+        neg = node("ConditioningZeroOut", conditioning=pos)[0]
     model = load_unet(models["unet"])
     if lora_name:
         model = node("LoraLoaderModelOnly", model=model, lora_name=lora_name, strength_model=float(lora_strength))[0]
