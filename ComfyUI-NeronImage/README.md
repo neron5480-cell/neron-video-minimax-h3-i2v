@@ -4,7 +4,7 @@
 
 Одна нода: пишешь, что нарисовать (можно по-русски), получаешь картинку до 2K на **Krea 2 Turbo**. Модели официальные, от Comfy-Org.
 
-**Что видно сразу:** что нарисовать · автопромтер · форма кадра · качество (1K / 1.5K / **2K**) · вариант.
+**Что видно сразу:** что нарисовать · автопромтер · форма кадра · качество (1K / 1.5K / **2K**) · резкость · вариант.
 **За ⚙ экспертом:** число картинок, шаги, CFG, сэмплер, настройки автопромтера, стиль (LoRA), «держать модели», выбор файлов.
 
 ### Автопромтер
@@ -18,6 +18,12 @@
 - любой язык на входе превращается в английский промпт.
 
 Готовый промпт видно внизу ноды и на выходе `prompt`. Если текст и режим не менялись, промптер второй раз не запускается. Кнопка **✏ Править итоговый промпт** ставит готовый промпт в поле для ручной правки.
+
+### Резкость
+После рисования края становятся чётче благодаря мягкой нерезкой маске. Новых деталей она не добавляет. По умолчанию **1.0**, проверено на 2K. Подбирайте под сюжет:
+- крупный портрет — 0.5–0.8, чтобы кожа не «песочила»;
+- пейзаж, ткань, техника — 1.0–1.3;
+- 0 — картинка ровно как нарисовала модель.
 
 ### Модели — кнопка «📥 Модели» (Comfy-Org/Krea-2)
 | Файл | Папка | Размер |
@@ -40,7 +46,7 @@
 
 One node: write what to draw (in any language) and get a picture up to 2K with **Krea 2 Turbo**. The models are official, from Comfy-Org.
 
-**Always visible:** what to draw · prompter · aspect · quality (1K / 1.5K / **2K**) · seed.
+**Always visible:** what to draw · prompter · aspect · quality (1K / 1.5K / **2K**) · sharpness · seed.
 **Behind ⚙ expert:** image count, steps, CFG, sampler, prompter settings, style LoRA, keep models loaded, model files.
 
 ### Prompter
@@ -54,6 +60,12 @@ It is the same Qwen3-VL 4B that encodes text for Krea, so there is nothing extra
 - input in any language becomes an English prompt.
 
 The final prompt is shown at the bottom of the node and on the `prompt` output. If the text and mode have not changed, the prompter does not run again. **✏ Edit final prompt** puts the prompt into the text field so you can edit it by hand.
+
+### Sharpness
+After drawing, a gentle unsharp mask makes the edges crisper without adding new detail. The default is **1.0**, tested at 2K. Tune it to the picture:
+- close-up portraits — 0.5–0.8, so the skin does not look grainy;
+- landscapes, fabric, machines — 1.0–1.3;
+- 0 — exactly as the model drew it.
 
 ### Models — the «📥 Models» button (Comfy-Org/Krea-2)
 - `krea2_turbo_bf16` — 26.3 GB, goes to `models/diffusion_models`;
