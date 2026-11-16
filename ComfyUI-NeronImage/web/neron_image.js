@@ -597,6 +597,18 @@ const HELP_TEXT = `
 • 🌐 подправить — только перевод и лёгкая шлифовка, близко к твоим словам.
 • ✍ как есть — текст уходит в модель без изменений (пиши по-английски).
 • Это тот же Qwen3-VL 4B, что кодирует текст для Krea, — отдельно ничего качать не надо.
+
+⚠ ГДЕ АВТОПРОМТЕР НЕ СПРАВИТСЯ (проверено вживую)
+Он маленький (4B) и отлично расписывает лёгкие сцены: один-два героя, пейзаж, предмет,
+механизм. Насыщенная сцена — много персонажей, и каждого надо прописать отдельно, —
+ему не по силам: люди выходят похожими друг на друга, и правками инструкции это не лечится.
+Для таких сцен:
+• напиши промпт сам (по-английски) и поставь «✍ как есть»;
+• или попроси большую ИИ (Gemini, ChatGPT, Claude…) — вставь ей текст ниже со своей идеей,
+  а её ответ — в ноду с «✍ как есть»:
+
+  Перепиши мою идею в промпт для генератора картинок Krea 2 / FLUX: один абзац на английском, 150–300 слов. Сначала главное, потом место, свет, камера, стиль. КАЖДОГО персонажа опиши отдельно и по-разному: возраст, телосложение, лицо, причёска, одежда (крой, ткань, цвет), поза, что делает, где стоит в кадре. Никаких двух одинаковых. Только промпт, без пояснений. Идея: …
+
 • Тот же текст и режим — промптер второй раз не гоняется: «вариант» меняет только картинку.
 • Хочешь поправить промпт руками — кнопка «✏ Править итоговый промпт»: он встанет в поле,
   а автопромтер переключится на «как есть».
@@ -649,6 +661,15 @@ PROMPTER
 • polish — translation and light polishing only, close to your words.
 • as is — your text goes to the model unchanged (write in English).
 • It is the same Qwen3-VL 4B that encodes text for Krea — nothing extra to download.
+
+⚠ WHERE THE PROMPTER FALLS SHORT (tested live)
+It is small (4B) and great for light scenes: one or two characters, a landscape, an object,
+a machine. A busy scene with many characters, each of whom must be described separately, is
+beyond it: the people come out alike, and no instruction tweak fixes that. For such scenes
+write the prompt yourself (in English) with «✍ as is», or ask a big AI (Gemini, ChatGPT,
+Claude…) to write it — ask it to describe EVERY character separately and differently — and
+paste its answer with «✍ as is».
+
 • Same text and mode — the prompter is not run again: «seed» only changes the picture.
 • To edit the prompt by hand — «✏ Edit final prompt»: it goes into the text field and
   the prompter switches to «as is».

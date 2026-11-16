@@ -19,6 +19,10 @@
 
 Готовый промпт видно внизу ноды и на выходе `prompt`. Если текст и режим не менялись, промптер второй раз не запускается. Кнопка **✏ Править итоговый промпт** ставит готовый промпт в поле для ручной правки.
 
+> ⚠ **Где автопромтер не справится** (проверено вживую). Он маленький (4B) и отлично расписывает лёгкие сцены: один-два героя, пейзаж, предмет, механизм. Насыщенная сцена, где много персонажей и каждого надо прописать отдельно, ему не по силам: люди выходят похожими, и правками инструкции это не лечится. Для таких сцен напишите промпт сами (по-английски) или попросите большую ИИ (Gemini, ChatGPT, Claude…) и вставьте ответ с **✍ как есть**. Просьба для ИИ:
+>
+> *Перепиши мою идею в промпт для генератора картинок Krea 2 / FLUX: один абзац на английском, 150–300 слов. Сначала главное, потом место, свет, камера, стиль. КАЖДОГО персонажа опиши отдельно и по-разному: возраст, телосложение, лицо, причёска, одежда (крой, ткань, цвет), поза, что делает, где стоит в кадре. Никаких двух одинаковых. Только промпт, без пояснений. Идея: …*
+
 ### Резкость
 После рисования края становятся чётче благодаря мягкой нерезкой маске. Новых деталей она не добавляет. По умолчанию **1.0**, проверено на 2K. Подбирайте под сюжет:
 - крупный портрет — 0.5–0.8, чтобы кожа не «песочила»;
@@ -60,6 +64,8 @@ It is the same Qwen3-VL 4B that encodes text for Krea, so there is nothing extra
 - input in any language becomes an English prompt.
 
 The final prompt is shown at the bottom of the node and on the `prompt` output. If the text and mode have not changed, the prompter does not run again. **✏ Edit final prompt** puts the prompt into the text field so you can edit it by hand.
+
+> ⚠ **Where the prompter falls short** (tested live). It is small (4B) and great for light scenes: one or two characters, a landscape, an object, a machine. A busy scene with many characters, each described separately, is beyond it: the people come out alike, and no instruction tweak fixes that. For such scenes write the prompt yourself (in English) or ask a big AI (Gemini, ChatGPT, Claude…) to describe *every character separately and differently*, then paste its answer with **✍ as is**.
 
 ### Sharpness
 After drawing, a gentle unsharp mask makes the edges crisper without adding new detail. The default is **1.0**, tested at 2K. Tune it to the picture:

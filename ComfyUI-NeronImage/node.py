@@ -92,10 +92,15 @@ class NeronImage:
                                      "✨ расписать — официальная инструкция Krea: сдержанно, без выдуманных деталей.\n"
                                      "🌐 подправить — только перевод и лёгкая шлифовка.\n"
                                      "✍ как есть — текст уходит в модель без изменений (пиши по-английски).\n"
+                                     "⚠ Промптер маленький: лёгкие сцены — отлично; много персонажей, каждого надо прописать — "
+                                     "напиши промпт сам или попроси большую ИИ (Gemini, ChatGPT…) и вставь с «✍ как "
+                                     "есть» (готовая просьба — в 📖 Справке).\n"
                                      "Готовый промпт видно внизу ноды и на выходе prompt. Тот же текст и режим — "
                                      "промптер второй раз не гоняется.\n\nEN: every detail — your words stay, gaps "
                                      "are filled with concrete details; expand — the official, restrained Krea "
-                                     "instruction; polish — translate and lightly fix; as is — unchanged.")),
+                                     "instruction; polish — translate and lightly fix; as is — unchanged. The prompter is "
+                                     "small: busy scenes with many characters — write the prompt yourself or use a big AI "
+                                     "and paste it with «as is».")),
                 "aspect": (E.ASPECT_NAMES, _main("форма кадра / aspect", default=E.ASPECT_NAMES[0],
                            tooltip="Соотношение сторон картинки.\n\nEN: Picture aspect ratio.")),
                 "quality": (E.QUALITY_NAMES, _main("качество / quality", default=E.QUALITY_NAMES[2],
