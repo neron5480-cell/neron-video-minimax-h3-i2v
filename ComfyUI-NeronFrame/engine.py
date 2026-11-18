@@ -441,7 +441,13 @@ def _pe_text(name):
 # любых картинок; идёт и в просьбу усилителю, и дописывается к его тексту.
 FRAME_KEEP = ("Unless the request explicitly asks to change the framing or the camera, <Picture {p}> keeps its exact "
               "framing, camera position, angle and zoom, and every object in it stays in place unchanged; nothing is "
-              "cropped, moved or replaced.")
+              "cropped, moved or replaced. Any object of <Picture {p}> that the added person touches, sits, lies or "
+              "stands on is that very same object from <Picture {p}>, with exactly the same shape, design, material, "
+              "color and count of such objects; the person uses what is already in the scene and no new or different "
+              "object appears in its place.")
+# 18.11 Роман: «нам нужна точность сцены» — усилитель назвал плетёный шезлонг «тёмным деревянным», и модель
+# нарисовала другой шезлонг (и один вместо двух). Вторая фраза — общее правило про предметы, с которыми человек
+# взаимодействует.
 
 
 def pe_request(roles, scene, extra_label, aspect_ratio):
