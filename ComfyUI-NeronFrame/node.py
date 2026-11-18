@@ -191,6 +191,13 @@ class NeronFrameBuilder:
                                           "от 🖼 Neron Image; загрузка, перевод, выгрузка). По прогонам: по-русски "
                                           "модель просьбу почти не понимает.\n\nEN: On — a Russian request is "
                                           "translated into English first.")),
+            "text_style": (E.TEXT_STYLES, _exp("язык текста для H3 / text style", default=E.TEXT_STYLES[0],
+                           tooltip="Как нода говорит с моделью. 🎬 разделами, как в нашем видео H3 (Замена героя): "
+                                   "subject_definitions / summary / retention_analysis / detailed_description. 📝 тот же "
+                                   "порядок сплошным текстом — как велит инструкция H3 Image. ✍ прежний (0.3): роли "
+                                   "картинок + просьба. Сравнивай на одном варианте (seed = fixed).\n\nEN: how the "
+                                   "node talks to the model: video-style sections, the same order as plain text, or "
+                                   "the old roles + request.")),
         })
         return {
             "required": req,
@@ -228,7 +235,7 @@ class NeronFrameBuilder:
     def build(self, expert=False, hero_image=NONE, place_image=NONE, extra_image=NONE, pose_image=NONE,
               extra_label="", scene="", aspect=E.ASPECT_NAMES[0], quality=E.QUALITY_NAMES[2], sharpness=0.5, seed=1,
               pose_blur=1.0, own_prompt="", steps=E.STEPS, sampler=E.SAMPLER, scheduler=E.SCHEDULER,
-              keep_loaded=False, unet_model=AUTO_MODEL, clip_model=AUTO_MODEL, vae_model=AUTO_MODEL, base=None, translate_request=True, cast=None,
+              keep_loaded=False, unet_model=AUTO_MODEL, clip_model=AUTO_MODEL, vae_model=AUTO_MODEL, base=None, translate_request=True, text_style=None, cast=None,
               hero=None, place=None, pose=None, width=None, height=None):
         notes = []
         if not E.has_node("MiniMaxH3ImageConditioning"):
@@ -276,7 +283,7 @@ class NeronFrameBuilder:
                 notes.append(tr_note)
             if E.has_cyrillic(extra_label):
                 extra_label, _ = E.translate(extra_label)
-        text = (own_prompt or "").strip() or E.build_prompt(order, scene, extra_label)
+        text = (own_prompt or "").strip() or E.build_prompt(order, scene, extra_label, text_style)
         notes.append("Текст: " + ("свой" if (own_prompt or "").strip() else "собран нодой"))
 
         # ---- размер ----

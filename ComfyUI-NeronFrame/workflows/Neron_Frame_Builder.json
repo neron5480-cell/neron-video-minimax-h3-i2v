@@ -100,7 +100,8 @@
           "clip_model": "🤖 авто — из пакета / auto — from pack",
           "vae_model": "🤖 авто — из пакета / auto — from pack",
           "base": "🤖 место (если есть) — кладём героя в сцену / place",
-          "translate_request": true
+          "translate_request": true,
+          "text_style": "🎬 как в видео H3 — разделами / video style"
         }
       },
       "widgets_values": [
@@ -126,7 +127,8 @@
         "🤖 авто — из пакета / auto — from pack",
         "🤖 авто — из пакета / auto — from pack",
         "🤖 место (если есть) — кладём героя в сцену / place",
-        true
+        true,
+        "🎬 как в видео H3 — разделами / video style"
       ]
     },
     {

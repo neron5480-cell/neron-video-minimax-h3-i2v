@@ -239,14 +239,93 @@ def order_roles(present, base=BASE[0]):
     return [r for r in first + ["extra", "pose"] if r in present]
 
 
-def build_prompt(roles, scene, extra_label=""):
-    """Нейтральный текст: только РОЛИ картинок + просьба человека как есть.
-    18.11 Роман: «ты строишь системник под конкретную сцену — это неверно, картинки разные». Никаких «сидит», «грязь»,
-    «ноги на земле» — всё, что делает герой, где он и во что одет, приходит только из просьбы."""
+TEXT_STYLES = ["🎬 как в видео H3 — разделами / video style", "📝 сплошным текстом — как в инструкции H3 Image / plain",
+               "✍ просто роли + просьба (0.3) / roles + request"]
+
+
+def build_prompt(roles, scene, extra_label="", style=None):
+    """Текст для H3 Image на её «языке» (18.11, Роман: «H3 прекрасно дорисовывает в кадр с добавочного в видео — ядро
+    то же»): 1) кто есть кто — <Subject N> из <Picture N>; 2) итог + для КАЖДОГО Subject что сохраняется / меняется;
+    3) новое и изменённое — просьба человека. Нейтрально, под любые картинки: ничего про «сидит», «грязь» и т. п.
+    style: 🎬 — разделами, как в нашем видео (Замена героя); 📝 — сплошным текстом, как велит инструкция PE H3 Image;
+    ✍ — прежний текст 0.3 (роли + просьба). Что лучше — решают прогоны Романа."""
+    style = style or TEXT_STYLES[0]
     num = {r: i + 1 for i, r in enumerate(roles)}
     scene = (scene or "").strip()
-    roles_text = {}
     place_base = bool(roles) and roles[0] == "place"
+    if style == TEXT_STYLES[2]:
+        return _roles_and_request(roles, num, scene, extra_label, place_base)
+
+    # ---- Subject N: по порядку картинок; поза — не Subject (только подсказка позы) ----
+    subj, defs = {}, []
+    what = (extra_label or "").strip() or "an additional element"
+    for r in roles:
+        if r == "pose":
+            continue
+        subj[r] = len(subj) + 1
+        n, p = subj[r], num[r]
+        if r == "place":
+            defs.append(f"<Subject {n}> is the scene in <Picture {p}>: the place, its objects and furniture, the "
+                        "camera view and the lighting.")
+        elif r == "hero":
+            defs.append(f"<Subject {n}> is the person from <Picture {p}>: face, hair, skin tone, body proportions and "
+                        "outfit.")
+        elif r == "extra":
+            defs.append(f"<Subject {n}> is {what} from <Picture {p}>.")
+    if "pose" in num:
+        defs.append(f"<Picture {num['pose']}> gives only the body pose and camera angle; nothing else is taken from it.")
+
+    S = lambda r: f"<Subject {subj[r]}>"
+    if "hero" in subj and "place" in subj:
+        overview = (f"The target image shows exactly one {S('hero')} inside {S('place')}"
+                    + (f", together with {S('extra')}" if "extra" in subj else "") + ".")
+    elif "hero" in subj:
+        overview = f"The target image shows exactly one {S('hero')}" + (f" with {S('extra')}" if "extra" in subj else "") + "."
+    elif "place" in subj:
+        overview = f"The target image shows {S('place')}" + (f" with {S('extra')}" if "extra" in subj else "") + "."
+    else:
+        overview = ""
+
+    keep = []
+    if "place" in subj:
+        if place_base:
+            keep.append(f"{S('place')}: fully_preserved - the same scene, objects, furniture, camera view and light; "
+                        f"{S('place')} is the leading frame and sets the scale, perspective and lighting, everything "
+                        "added adapts to it.")
+        else:
+            keep.append(f"{S('place')}: partially_preserved - the same place, look and light, framed anew for the "
+                        "target image.")
+    if "hero" in subj:
+        keep.append(f"{S('hero')}: partially_preserved - the same identity: face, hair, skin tone and body proportions; "
+                    "the outfit stays unless the request changes it; pose and position follow the request"
+                    + (f" and <Picture {num['pose']}>" if "pose" in num else "") + ".")
+    if "extra" in subj:
+        keep.append(f"{S('extra')}: fully_preserved - as it looks in <Picture {num['extra']}>.")
+
+    if not scene:
+        if "hero" in subj and "place" in subj:
+            scene = f"{S('hero')} is naturally placed in {S('place')}."
+        elif "hero" in subj:
+            scene = f"A high quality photo of {S('hero')}."
+
+    if style == TEXT_STYLES[0]:
+        out = ["subject_definitions:"] + defs
+        if overview:
+            out += ["", "summary:", "[image editing + reference generation] " + overview]
+        if keep:
+            out += ["", "retention_analysis:"] + keep
+        if scene:
+            out += ["", "detailed_description:", scene]
+        return "\n".join(out).strip()
+    # 📝 сплошным текстом
+    plain_keep = [k.replace(": fully_preserved - ", " is kept: ").replace(": partially_preserved - ", " keeps ")
+                  for k in keep]
+    parts = defs + ([overview] if overview else []) + plain_keep + ([scene] if scene else [])
+    return " ".join(parts)
+
+
+def _roles_and_request(roles, num, scene, extra_label, place_base):
+    roles_text = {}
     if "place" in num:
         roles_text["place"] = (f"<Picture {num['place']}> is the scene to edit." if place_base
                                else f"<Picture {num['place']}> shows the location.")
@@ -260,7 +339,7 @@ def build_prompt(roles, scene, extra_label=""):
     if "pose" in num:
         roles_text["pose"] = (f"<Picture {num['pose']}> shows only the body pose and camera angle to use; take nothing "
                               "else from it.")
-    parts = [roles_text[r] for r in roles if r in roles_text]          # по порядку номеров
+    parts = [roles_text[r] for r in roles if r in roles_text]
     if not scene:
         if place_base and "hero" in num:
             scene = f"Place the person from <Picture {num['hero']}> naturally in the scene."
