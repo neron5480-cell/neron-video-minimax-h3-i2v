@@ -1,18 +1,18 @@
 {
-  "_comment": "Модели для 🧩 Neron Сборка кадра — только то, что нужно ЭТОЙ ноде, только официальные (Comfy-Org). alternatives — другие версии того же файла: если лежит любая, файл не качается. Текстовый энкодер — тот же, что у H3 Story / Engine / Замены героя: если он у вас есть, повторно не качается.",
+  "_comment": "Модели для 🧩 Neron Сборка кадра — только то, что нужно ЭТОЙ ноде, только официальные (Comfy-Org). alternatives — другие версии того же файла: если лежит любая, файл не качается. У модели рисования замен нет нарочно: пакет — на максимум (bf16); сжатые нода берёт сама, если bf16 нет. Текстовый энкодер — тот же, что у H3 Story / Engine / Замены героя: если он у вас есть, повторно не качается.",
   "default": "h3image",
   "packs": {
     "h3image": {
-      "title": "MiniMax H3 Image · сборка кадра по образцам / frame from references",
-      "description": "Всё для сборки кадра по картинкам-образцам (официально, Comfy-Org):\n• модель MiniMax H3 Image (int8, ≈21 ГБ) — правка и сборка картинки по образцам <Picture 1>, <Picture 2>…;\n• VAE картинок H3 Image;\n• текстовый энкодер Qwen3-VL 32B — ОБЩИЙ с H3 Story / Engine / Заменой героя: если уже лежит (nvfp4 или int8), не качаю.\n\nEN: Everything to build a frame from reference pictures (official, Comfy-Org): the MiniMax H3 Image model (int8, ≈21 GB), its VAE, and the Qwen3-VL 32B text encoder shared with H3 Story / Engine / Hero Swap (skipped if you have it).",
-      "known_size_note": "≈ 21 ГБ + энкодер, если его нет (точный размер окно узнаёт у сервера) / ≈ 21 GB + encoder if missing",
+      "title": "MiniMax H3 Image · bf16 — максимум качества / maximum quality",
+      "description": "Всё для сборки кадра по картинкам-образцам (официально, Comfy-Org):\n• модель MiniMax H3 Image bf16 — полная точность, без сжатия (40,2 ГБ). Уговор: для картинок качество важнее времени; сжатые версии (int8 21 ГБ, w4a8 12,5 ГБ) нода берёт сама, если bf16 нет, и пишет об этом;\n• VAE картинок H3 Image;\n• текстовый энкодер Qwen3-VL 32B — ОБЩИЙ с H3 Story / Engine / Заменой героя: если уже лежит (nvfp4 или int8), не качаю.\n\nEN: The MiniMax H3 Image model in bf16 — full precision (40.2 GB; compressed int8 / w4a8 are used if bf16 is missing), its VAE, and the Qwen3-VL 32B text encoder shared with H3 (skipped if present).",
+      "known_size_note": "≈ 40 ГБ + энкодер, если его нет / ≈ 40 GB + encoder if missing",
       "files": [
         {
           "role": "unet",
           "kind": "diffusion_models",
           "repo": "Comfy-Org/MiniMax-H3-Image",
           "gated": false,
-          "path": "diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors"
+          "path": "diffusion_models/minimax_h3_image_pruned_bf16.safetensors"
         },
         {
           "role": "clip",

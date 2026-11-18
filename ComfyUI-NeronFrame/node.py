@@ -73,16 +73,24 @@ def _samplers():
         return [E.SAMPLER], [E.SCHEDULER]
 
 
+UNET_FALLBACK = ["minimax_h3_image_pruned_bf16.safetensors", "minimax_h3_image_pruned_int8_convrot.safetensors",
+                 "minimax_h3_image_pruned_w4a8.safetensors"]     # если bf16 нет — сжатые, по убыванию качества
+
+
 def auto_file(role):
+    names = []
     try:
         for e in downloader.default_pack()[1]["files"]:
             if e["role"] == role:
-                for n in [downloader.file_name(e)] + list(e.get("alternatives") or []):
-                    f = E.find_file(ROLES[role], n)
-                    if f:
-                        return f
+                names = [downloader.file_name(e)] + list(e.get("alternatives") or [])
     except Exception:
         pass
+    if role == "unet":
+        names += [n for n in UNET_FALLBACK if n not in names]
+    for n in names:
+        f = E.find_file(ROLES[role], n)
+        if f:
+            return f
     return None
 
 
@@ -130,9 +138,10 @@ class NeronFrameBuilder:
                                     "Пусто — «ещё один элемент сцены».\n\nEN: briefly, what the extra picture shows.")),
             "scene": ("STRING", _main("что происходит / what happens", default="", multiline=True,
                       placeholder="Например / e.g.: " + E.SCENE_EXAMPLE,
-                      tooltip="Только суть сцены: что делает герой, крупность, свет, настроение. Остальное («сохрани "
-                              "героя, поставь в место, в позу») нода пишет сама. Лучше по-английски, можно "
-                              "по-русски.\n\nEN: Just the gist: action, shot size, light, mood.")),
+                      tooltip="Твоя просьба: что делает герой, где именно, во что одет, крупность, свет. Нода сама пишет "
+                              "только, какая картинка что значит (сцена, человек, доп. образец, поза) — остальное "
+                              "только отсюда. Лучше по-английски, можно по-русски.\n\nEN: Your request: action, "
+                              "where, clothing, shot, light. The node only says which picture is what.")),
             "aspect": (E.ASPECT_NAMES, _main("форма кадра / aspect", default=E.ASPECT_NAMES[0],
                        tooltip="🤖 — как у картинки места (нет места — как у героя).\n\nEN: auto — like the place "
                                "picture (or the hero).")),
@@ -247,7 +256,7 @@ class NeronFrameBuilder:
 
         order = E.order_roles([r for r in pics if pics[r] is not None], base or E.BASE[0])
         if order and order[0] == "place" and pics["hero"] is not None:
-            notes.append("Основа кадра: место — героя вставляем в сцену")
+            notes.append("Основа кадра: место — <Picture 1> сцена, героя вставляем в неё")
         images = []
         for r in order:
             im = E.to_ref_size(pics[r][:1, ..., :3])          # как в официальном шаблоне: образец → 4 Мп
@@ -277,6 +286,9 @@ class NeronFrameBuilder:
             else:
                 models[role] = E.find_file(ROLES[role], v) or auto_file(role)
         missing = [r for r, f in models.items() if not f]
+        if models.get("unet") and "bf16" not in E.base(models["unet"]).lower():
+            notes.append(f"ℹ Модель: {E.base(models['unet'])} — сжатая. Максимум качества — "
+                         "minimax_h3_image_pruned_bf16 («📥 Модели»). EN: a compressed model; bf16 is the maximum.")
         if missing:
             raise E.FriendlyError(
                 f"{E.TAG} Не хватает моделей: " + ", ".join(ROLE_NAMES[m] for m in missing) + ". Нажми на ноде "

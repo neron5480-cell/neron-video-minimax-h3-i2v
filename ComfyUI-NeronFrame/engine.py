@@ -239,54 +239,37 @@ def order_roles(present, base=BASE[0]):
 
 
 def build_prompt(roles, scene, extra_label=""):
-    """roles: роли в порядке <Picture N> ('hero', 'place', 'extra', 'pose'). Возвращает английский текст."""
+    """Нейтральный текст: только РОЛИ картинок + просьба человека как есть.
+    18.11 Роман: «ты строишь системник под конкретную сцену — это неверно, картинки разные». Никаких «сидит», «грязь»,
+    «ноги на земле» — всё, что делает герой, где он и во что одет, приходит только из просьбы."""
     num = {r: i + 1 for i, r in enumerate(roles)}
     scene = (scene or "").strip()
-    parts = []
-    keep = ("face, hair, outfit, equipment, colors and body proportions, exactly as they are in that picture")
-    keep_id = "the same face, hair, skin tone and body proportions as in that picture"
-    if roles and roles[0] == "place" and "hero" in num:
-        p, h = num["place"], num["hero"]
-        line = f"Edit <Picture {p}>: add the single character from <Picture {h}> into this scene"
-        if "pose" in num:
-            line += f", in the body pose and camera angle shown in <Picture {num['pose']}>"
-        parts.append(line + ".")
-        # 18.11 Роман: «физика / пропорции покинули чат» — в тексте стояло «feet on the ground, sitting on a seat»,
-        # а просили «лежит на лежаке»: модель тянула и посадку, и лёжку. Теперь опора — общими словами.
-        parts.append(f"Keep the scene of <Picture {p}> as it is: the same layout, furniture, objects and lighting. "
-                     "Put the character at a believable spot in it with correct scale, perspective and natural human "
-                     "proportions, resting with real weight on whatever surface supports the body, lit by the "
-                     "scene's own light, with matching shadows.")
-        parts.append(f"Preserve the identity of the character from <Picture {h}>: {keep_id}. Keep the outfit "
-                     "from that picture unless the request below asks for different clothing.")
-        if scene:
-            scene = f"Where and how the character is placed: {scene}"
-    elif "hero" in num:
-        h = num["hero"]
-        line = f"Generate a high quality shot of the single character in <Picture {h}>"
-        if "pose" in num:
-            line += f" with the body pose and camera angle shown in <Picture {num['pose']}>"
-        parts.append(line + ".")
-        # 18.11, первый прогон Романа: «dirt and wear» в общем тексте → модель вымазала грязью ноги чистой девушке.
-        # Износ и грязь — только если они есть на самом образце или в сцене; общий текст — без них.
-        parts.append(f"Preserve the exact appearance of the character in <Picture {h}>: {keep}.")
-        if "place" in num:
-            parts.append(f"Place the character naturally in the location shown in <Picture {num['place']}>, "
-                         "matching its lighting, perspective, weather and atmosphere.")
-    elif "place" in num:
-        parts.append(f"Generate a high quality shot set in the location shown in <Picture {num['place']}>, "
-                     "keeping its look, lighting and atmosphere.")
-        if "pose" in num:
-            parts.append(f"A figure takes the body pose and camera angle shown in <Picture {num['pose']}>.")
+    roles_text = {}
+    place_base = bool(roles) and roles[0] == "place"
+    if "place" in num:
+        roles_text["place"] = (f"<Picture {num['place']}> is the scene to edit." if place_base
+                               else f"<Picture {num['place']}> shows the location.")
+    if "hero" in num:
+        who = "the person to add to the scene" if place_base else "the main character"
+        roles_text["hero"] = (f"<Picture {num['hero']}> shows {who}: keep the same face, hair, skin tone and body "
+                              "proportions, and the same outfit unless the request asks for other clothing.")
     if "extra" in num:
         what = (extra_label or "").strip() or "an additional element of the scene"
-        parts.append(f"<Picture {num['extra']}> shows {what}; include it exactly as it looks there.")
+        roles_text["extra"] = f"<Picture {num['extra']}> shows {what}."
     if "pose" in num:
-        parts.append(f"<Picture {num['pose']}> is only a guide for the position of the body and the camera angle; "
-                     "take nothing else from it.")
+        roles_text["pose"] = (f"<Picture {num['pose']}> shows only the body pose and camera angle to use; take nothing "
+                              "else from it.")
+    parts = [roles_text[r] for r in roles if r in roles_text]          # по порядку номеров
+    if not scene:
+        if place_base and "hero" in num:
+            scene = f"Place the person from <Picture {num['hero']}> naturally in the scene."
+        elif "hero" in num and "place" in num:
+            scene = f"Show the character from <Picture {num['hero']}> in the location from <Picture {num['place']}>."
+        elif "hero" in num:
+            scene = f"A high quality photo of the character from <Picture {num['hero']}>."
     if scene:
-        parts.append(scene)
-    return " ".join(parts) if parts else scene
+        parts.append(f"Request: {scene}")
+    return " ".join(parts)
 
 
 # ---------------- сборка ----------------

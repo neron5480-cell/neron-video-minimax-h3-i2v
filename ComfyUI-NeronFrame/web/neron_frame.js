@@ -858,9 +858,10 @@ const HELP_TEXT = `
    • ДОП. ОБРАЗЕЦ — одежда, предмет, второй персонаж; ниже подпиши, что это;
    • ПОЗА — фото, набросок, кадр из фильма, 3D-манекен. Нода её РАЗМОЕТ: модель
      возьмёт только положение тела и ракурс, а не вид манекена.
-2. «Что происходит» — только суть: что делает герой, крупность, свет, настроение.
-   «Сохрани героя, поставь в место, в позу» нода напишет сама. Длинный текст —
-   «📝 Большой редактор». Лучше по-английски, можно по-русски.
+2. «Что происходит» — твоя просьба: что делает герой, где именно, во что одет, свет.
+   Нода сама пишет ТОЛЬКО, какая картинка что значит (сцена, человек, доп. образец,
+   поза) — ничего не додумывает. Длинный текст — «📝 Большой редактор».
+   Лучше по-английски, можно по-русски.
 3. Форма кадра (🤖 — как у места), качество (по умолчанию 16 Мп — лучшее по словам
    авторов H3 Image; для картинок время не важно), Run.
 4. Внизу — итоговый текст, что ушло в модель (там видно, кто какой <Picture N>).
@@ -884,7 +885,8 @@ const HELP_TEXT = `
 • Держать модели — для серии кадров. Выкл — память свободна для видео.
 
 МОДЕЛИ — «📥 Модели» (официально, Comfy-Org):
-• minimax_h3_image_pruned_int8_convrot — ≈21 ГБ;
+• minimax_h3_image_pruned_bf16 — полная точность, 40,2 ГБ (качество важнее времени);
+  нет её — нода возьмёт сжатую (int8 21 ГБ / w4a8 12,5 ГБ), если лежит, и напишет об этом;
 • minimax_h3_image_vae_fp16;
 • текстовый энкодер Qwen3-VL 32B — ОБЩИЙ с H3 Story / Engine / Заменой героя:
   если уже лежит (nvfp4 или int8) — не качается.
@@ -905,8 +907,8 @@ HOW TO USE
    (clothing, object, second character — label it below), POSE (photo, sketch, film
    frame, 3D mannequin — the node BLURS it, so only the body position and camera angle
    are taken).
-2. «What happens» — just the gist: action, shot size, light, mood. «Keep the hero, put
-   him into the place and the pose» the node writes itself. English is best.
+2. «What happens» — your request: action, where, clothing, light. The node only says which
+   picture is what (scene, person, extra, pose) and adds nothing else. English is best.
 3. Aspect (auto — like the place), quality, Run.
 4. The final prompt (with the <Picture N> order) is shown at the bottom.
 
@@ -917,7 +919,8 @@ extra of this frame, one wire into 🎬 H3 Story so the video keeps the same her
 it; hero — the hero is drawn, the place is only a background reference), pose blur (1.0
 proven; 0 — none), own full prompt (see the <Picture N> order in the final prompt), 6 steps euler / simple (official), keep models loaded.
 
-MODELS — «📥 Models» (official, Comfy-Org): minimax_h3_image_pruned_int8_convrot (≈21 GB),
+MODELS — «📥 Models» (official, Comfy-Org): minimax_h3_image_pruned_bf16 (40.2 GB, full precision;
+compressed int8 / w4a8 are used if it is missing),
 its VAE, and the Qwen3-VL 32B text encoder shared with H3 (skipped if you have it).
 `;
 
