@@ -217,8 +217,10 @@ def build_prompt(roles, scene, extra_label=""):
         if "pose" in num:
             line += f" with the body pose and camera angle shown in <Picture {num['pose']}>"
         parts.append(line + ".")
+        # 18.11, первый прогон Романа: «dirt and wear» в общем тексте → модель вымазала грязью ноги чистой девушке.
+        # Износ и грязь — только если они есть на самом образце или в сцене; общий текст — без них.
         parts.append(f"Preserve the exact appearance of the character in <Picture {h}>: face, hair, outfit, "
-                     "equipment, materials, colors, dirt and wear, and body proportions.")
+                     "equipment, colors and body proportions, exactly as they are in that picture.")
         if "place" in num:
             parts.append(f"Place the character naturally in the location shown in <Picture {num['place']}>, "
                          "matching its lighting, perspective, weather and atmosphere.")
