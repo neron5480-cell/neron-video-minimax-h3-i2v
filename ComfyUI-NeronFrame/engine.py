@@ -196,6 +196,27 @@ def sharpen(image, amount):
     return (image[..., :3] + float(amount) * (image[..., :3] - blur)).clamp(0, 1)
 
 
+REF_MP = 4.0      # официальный шаблон: каждый образец сначала приводится к 4 Мп (кратно 32) — «модель плохо работает
+                  # на малом разрешении». 18.11 Роман: «портит лица» — у нас образцы шли как есть (герой 0,7 Мп).
+
+
+def to_ref_size(image, mp=REF_MP):
+    """Образец → ≈ mp мегапикселей, стороны кратны 32, форма сохраняется (как ResizeImageMaskNode в шаблоне)."""
+    b, h, w, c = image.shape
+    k = math.sqrt(mp * 1e6 / float(w * h))
+    nw, nh = max(GRID, int(round(w * k / GRID)) * GRID), max(GRID, int(round(h * k / GRID)) * GRID)
+    if (nw, nh) == (w, h):
+        return image[..., :3]
+    t = image[..., :3].movedim(-1, 1)
+    try:
+        import comfy.utils
+        t = comfy.utils.common_upscale(t, nw, nh, "lanczos", "disabled")
+    except Exception:
+        import torch.nn.functional as F
+        t = F.interpolate(t, size=(nh, nw), mode="bicubic", align_corners=False).clamp(0, 1)
+    return t.movedim(1, -1)
+
+
 def pose_blur_px(image, strength):
     """Сила размытия позы → сигма в пикселях по размеру картинки (FoxFurEssence: 5 пикс. на ~1 Мп)."""
     h, w = int(image.shape[1]), int(image.shape[2])

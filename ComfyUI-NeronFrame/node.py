@@ -248,7 +248,7 @@ class NeronFrameBuilder:
             notes.append("Основа кадра: место — героя вставляем в сцену")
         images = []
         for r in order:
-            im = pics[r][:1, ..., :3]
+            im = E.to_ref_size(pics[r][:1, ..., :3])          # как в официальном шаблоне: образец → 4 Мп
             if r == "pose" and float(pose_blur) > 0:
                 im = E.gaussian_blur(im, E.pose_blur_px(im, pose_blur))
             images.append(im)
