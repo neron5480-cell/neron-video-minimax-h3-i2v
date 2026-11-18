@@ -136,9 +136,11 @@ class NeronFrameBuilder:
             "aspect": (E.ASPECT_NAMES, _main("форма кадра / aspect", default=E.ASPECT_NAMES[0],
                        tooltip="🤖 — как у картинки места (нет места — как у героя).\n\nEN: auto — like the place "
                                "picture (or the hero).")),
-            "quality": (E.QUALITY_NAMES, _main("качество / quality", default=E.QUALITY_NAMES[1],
-                        tooltip="Площадь кадра. Официальный шаблон — 4 Мп. 8 Мп — детальнее, но на 16 ГБ заметно "
-                                "дольше.\n\nEN: Frame area; the official template uses 4 MP.")),
+            "quality": (E.QUALITY_NAMES, _main("качество / quality", default=E.QUALITY_NAMES[2],
+                        tooltip="Площадь кадра. Авторы MiniMax H3 Image: модель работает от 4 до 20 Мп, лучше всего "
+                                "около 16 Мп. Для картинок время не важно — по умолчанию 16 Мп. Официальный шаблон "
+                                "Comfy-Org — 4 Мп.\n\nEN: Frame area; the authors say 4–20 MP works, about 16 MP is "
+                                "best — the default.")),
             "sharpness": ("FLOAT", _main("резкость / sharpness", default=0.5, min=0.0, max=1.5, step=0.05,
                           display="slider",
                           tooltip="Чётче края после рисования (как в 🖼 Neron Image). 0 — как нарисовала модель.\n\n"
@@ -210,7 +212,7 @@ class NeronFrameBuilder:
         return h.hexdigest()
 
     def build(self, expert=False, hero_image=NONE, place_image=NONE, extra_image=NONE, pose_image=NONE,
-              extra_label="", scene="", aspect=E.ASPECT_NAMES[0], quality=E.QUALITY_NAMES[1], sharpness=0.5, seed=1,
+              extra_label="", scene="", aspect=E.ASPECT_NAMES[0], quality=E.QUALITY_NAMES[2], sharpness=0.5, seed=1,
               pose_blur=1.0, own_prompt="", steps=E.STEPS, sampler=E.SAMPLER, scheduler=E.SCHEDULER,
               keep_loaded=False, unet_model=AUTO_MODEL, clip_model=AUTO_MODEL, vae_model=AUTO_MODEL, base=None, cast=None,
               hero=None, place=None, pose=None, width=None, height=None):

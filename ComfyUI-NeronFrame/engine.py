@@ -138,10 +138,10 @@ ASPECTS = [
     ("🎬 21:9 кино / cinema", 21, 9),
 ]
 ASPECT_NAMES = [a[0] for a in ASPECTS]
-QUALITY = [
-    ("⚡ 2 Мп — черновик, быстрее / draft, faster", 2.0),
+QUALITY = [         # 18.11 УГОВОР С РОМАНОМ: для картинок время НЕ важно — главное качество
     ("🎯 4 Мп — как в официальном шаблоне / official", 4.0),
-    ("💎 8 Мп — максимум для 16 ГБ, дольше / maximum, slower", 8.0),
+    ("💎 8 Мп — детальнее / more detail", 8.0),
+    ("👑 16 Мп — лучшее по словам авторов H3 Image / best per the authors", 16.0),
 ]
 QUALITY_NAMES = [q[0] for q in QUALITY]
 
