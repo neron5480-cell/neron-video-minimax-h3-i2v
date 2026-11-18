@@ -99,7 +99,8 @@
           "unet_model": "🤖 авто — из пакета / auto — from pack",
           "clip_model": "🤖 авто — из пакета / auto — from pack",
           "vae_model": "🤖 авто — из пакета / auto — from pack",
-          "base": "🤖 место (если есть) — кладём героя в сцену / place"
+          "base": "🤖 место (если есть) — кладём героя в сцену / place",
+          "translate_request": true
         }
       },
       "widgets_values": [
@@ -124,7 +125,8 @@
         "🤖 авто — из пакета / auto — from pack",
         "🤖 авто — из пакета / auto — from pack",
         "🤖 авто — из пакета / auto — from pack",
-        "🤖 место (если есть) — кладём героя в сцену / place"
+        "🤖 место (если есть) — кладём героя в сцену / place",
+        true
       ]
     },
     {

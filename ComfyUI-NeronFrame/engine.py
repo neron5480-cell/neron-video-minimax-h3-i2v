@@ -13,6 +13,7 @@
 """
 import logging
 import math
+import re
 
 log = logging.getLogger("Neron.Frame")
 TAG = "[Neron Frame]"
@@ -270,6 +271,71 @@ def build_prompt(roles, scene, extra_label=""):
     if scene:
         parts.append(f"Request: {scene}")
     return " ".join(parts)
+
+
+# ---------------- перевод просьбы ----------------
+# 18.11 по фактам (Роман): та же просьба по-английски — героиня легла и переоделась; по-русски — модель её не
+# поняла и скопировала героиню с фото. Переводим русскую просьбу маленьким Qwen3-VL 4B (тот, что у 🖼 Neron Image /
+# Krea 2) — загрузить, перевести, выгрузить; потом уже большой энкодер H3.
+TRANSLATOR = "qwen3vl_4b_fp8_scaled.safetensors"
+TRANSLATE_SYSTEM = ("Translate the user's text into natural English for an image-editing model. Translate faithfully "
+                    "and completely: keep every detail, keep tags like <Picture 1> exactly as they are, add nothing, "
+                    "explain nothing. If the text is already English, return it unchanged. Output only the "
+                    "translation.")
+_CYR = re.compile("[А-Яа-яЁё]")
+_TR_CACHE = {}
+
+
+def has_cyrillic(text):
+    return bool(_CYR.search(text or ""))
+
+
+def _clean(text):
+    t = (text or "").strip()
+    _, sep, rest = t.partition("</think>")
+    if sep:
+        t = rest
+    t = t.replace("<think>", "").replace("**", "").strip()
+    t = re.sub(r"^\s*(english\s+)?translation\s*:\s*", "", t, flags=re.I)
+    if len(t) > 2 and t[0] == t[-1] and t[0] in "\"'«":
+        t = t[1:-1].strip()
+    return t
+
+
+def translate(text):
+    """Русский → английский. Возвращает (текст, заметка). Нет переводчика — текст как есть и честная заметка."""
+    text = (text or "").strip()
+    if not has_cyrillic(text):
+        return text, ""
+    if text in _TR_CACHE:
+        return _TR_CACHE[text], "Просьба переведена (из памяти)"
+    name = find_file("text_encoders", TRANSLATOR)
+    if not name:
+        return text, ("⚠ Просьба по-русски, а переводчика нет (qwen3vl_4b_fp8_scaled — ставится с 🖼 Neron Image). "
+                      "Модель лучше понимает английский — напиши просьбу по-английски. EN: write the request in English.")
+    send("🌐 перевод просьбы / translating")
+    clip = node("CLIPLoader", clip_name=name, type="krea2", device="default")[0]
+    try:
+        try:
+            tokens = clip.tokenize(text, min_length=1, thinking=False, system_prompt=TRANSLATE_SYSTEM)
+        except TypeError:
+            tokens = clip.tokenize(TRANSLATE_SYSTEM + "\n\nText:\n" + text, min_length=1)
+        kw = dict(do_sample=True, max_length=600, temperature=0.2, top_k=20, top_p=0.9, min_p=0.05,
+                  repetition_penalty=1.05, seed=0)
+        try:
+            ids = clip.generate(tokens, presence_penalty=0.0, mtp=True, **kw)
+        except TypeError:
+            ids = clip.generate(tokens, **kw)
+        out = _clean(clip.decode(ids))
+    finally:
+        del clip
+        free("переводчик → энкодер H3")
+    if len(out) < 3 or has_cyrillic(out):
+        return text, "⚠ Перевод не вышел — просьба ушла как есть. EN: translation failed, sent as is."
+    if len(_TR_CACHE) > 64:
+        _TR_CACHE.clear()
+    _TR_CACHE[text] = out
+    return out, "Просьба переведена на английский"
 
 
 # ---------------- сборка ----------------

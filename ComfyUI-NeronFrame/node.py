@@ -186,6 +186,11 @@ class NeronFrameBuilder:
                              "рисуется герой, а место — образец фона (свободнее, но может «пристроить» фон).\n\nEN: "
                              "place — the place picture is the base and the hero is inserted; hero — the hero is "
                              "drawn and the place is a background reference.")),
+            "translate_request": ("BOOLEAN", _exp("перевод просьбы / translate request", default=True,
+                                  tooltip="Вкл — просьбу по-русски нода переводит на английский (маленький Qwen3-VL 4B "
+                                          "от 🖼 Neron Image; загрузка, перевод, выгрузка). По прогонам: по-русски "
+                                          "модель просьбу почти не понимает.\n\nEN: On — a Russian request is "
+                                          "translated into English first.")),
         })
         return {
             "required": req,
@@ -223,7 +228,7 @@ class NeronFrameBuilder:
     def build(self, expert=False, hero_image=NONE, place_image=NONE, extra_image=NONE, pose_image=NONE,
               extra_label="", scene="", aspect=E.ASPECT_NAMES[0], quality=E.QUALITY_NAMES[2], sharpness=0.5, seed=1,
               pose_blur=1.0, own_prompt="", steps=E.STEPS, sampler=E.SAMPLER, scheduler=E.SCHEDULER,
-              keep_loaded=False, unet_model=AUTO_MODEL, clip_model=AUTO_MODEL, vae_model=AUTO_MODEL, base=None, cast=None,
+              keep_loaded=False, unet_model=AUTO_MODEL, clip_model=AUTO_MODEL, vae_model=AUTO_MODEL, base=None, translate_request=True, cast=None,
               hero=None, place=None, pose=None, width=None, height=None):
         notes = []
         if not E.has_node("MiniMaxH3ImageConditioning"):
@@ -265,6 +270,12 @@ class NeronFrameBuilder:
             images.append(im)
         notes.append("Образцы: " + (" · ".join(f"<Picture {i + 1}> {r}" for i, r in enumerate(order)) or "нет"))
 
+        if translate_request and not (own_prompt or "").strip():
+            scene, tr_note = E.translate(scene)
+            if tr_note:
+                notes.append(tr_note)
+            if E.has_cyrillic(extra_label):
+                extra_label, _ = E.translate(extra_label)
         text = (own_prompt or "").strip() or E.build_prompt(order, scene, extra_label)
         notes.append("Текст: " + ("свой" if (own_prompt or "").strip() else "собран нодой"))
 
