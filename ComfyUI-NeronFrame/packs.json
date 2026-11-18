@@ -1,0 +1,37 @@
+{
+  "_comment": "Модели для 🧩 Neron Сборка кадра — только то, что нужно ЭТОЙ ноде, только официальные (Comfy-Org). alternatives — другие версии того же файла: если лежит любая, файл не качается. Текстовый энкодер — тот же, что у H3 Story / Engine / Замены героя: если он у вас есть, повторно не качается.",
+  "default": "h3image",
+  "packs": {
+    "h3image": {
+      "title": "MiniMax H3 Image · сборка кадра по образцам / frame from references",
+      "description": "Всё для сборки кадра по картинкам-образцам (официально, Comfy-Org):\n• модель MiniMax H3 Image (int8, ≈21 ГБ) — правка и сборка картинки по образцам <Picture 1>, <Picture 2>…;\n• VAE картинок H3 Image;\n• текстовый энкодер Qwen3-VL 32B — ОБЩИЙ с H3 Story / Engine / Заменой героя: если уже лежит (nvfp4 или int8), не качаю.\n\nEN: Everything to build a frame from reference pictures (official, Comfy-Org): the MiniMax H3 Image model (int8, ≈21 GB), its VAE, and the Qwen3-VL 32B text encoder shared with H3 Story / Engine / Hero Swap (skipped if you have it).",
+      "known_size_note": "≈ 21 ГБ + энкодер, если его нет (точный размер окно узнаёт у сервера) / ≈ 21 GB + encoder if missing",
+      "files": [
+        {
+          "role": "unet",
+          "kind": "diffusion_models",
+          "repo": "Comfy-Org/MiniMax-H3-Image",
+          "gated": false,
+          "path": "diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors"
+        },
+        {
+          "role": "clip",
+          "kind": "text_encoders",
+          "repo": "Comfy-Org/MiniMax-H3",
+          "gated": false,
+          "path": "text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+          "alternatives": [
+            "qwen3vl_32b_minimax_h3_int8_convrot.safetensors"
+          ]
+        },
+        {
+          "role": "vae",
+          "kind": "vae",
+          "repo": "Comfy-Org/MiniMax-H3-Image",
+          "gated": false,
+          "path": "vae/minimax_h3_image_vae_fp16.safetensors"
+        }
+      ]
+    }
+  }
+}
