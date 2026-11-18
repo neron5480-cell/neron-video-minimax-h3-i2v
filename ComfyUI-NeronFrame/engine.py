@@ -294,7 +294,7 @@ def build_prompt(roles, scene, extra_label="", style=None):
         if place_base:
             keep.append(f"{S('place')}: fully_preserved - the same scene, objects, furniture, camera view and light; "
                         f"{S('place')} is the leading frame and sets the scale, perspective and lighting, everything "
-                        "added adapts to it.")
+                        "added adapts to it. " + FRAME_KEEP.format(p=num['place']))
         else:
             keep.append(f"{S('place')}: partially_preserved - the same place, look and light, framed anew for the "
                         "target image.")
@@ -436,6 +436,14 @@ def _pe_text(name):
         return f.read()
 
 
+# 18.11 Роман: «в системнике надо написать, что кадр сохраняется, как и положение камеры, если этого не требует
+# пользователь» (усилитель писал «сцена сохранена», а модель наезжала камерой и меняла мебель). Общее правило — для
+# любых картинок; идёт и в просьбу усилителю, и дописывается к его тексту.
+FRAME_KEEP = ("Unless the request explicitly asks to change the framing or the camera, <Picture {p}> keeps its exact "
+              "framing, camera position, angle and zoom, and every object in it stays in place unchanged; nothing is "
+              "cropped, moved or replaced.")
+
+
 def pe_request(roles, scene, extra_label, aspect_ratio):
     """Короткая просьба для усилителя: роли картинок (кто ведущий) + просьба человека как есть (любой язык)."""
     num = {r: i + 1 for i, r in enumerate(roles)}
@@ -443,7 +451,7 @@ def pe_request(roles, scene, extra_label, aspect_ratio):
     place_base = bool(roles) and roles[0] == "place"
     if "place" in num:
         bits.append(f"<Picture {num['place']}> is the base scene and the leading frame: keep it and fit everything added "
-                    "to its scale, perspective and light." if place_base else
+                    "to its scale, perspective and light. " + FRAME_KEEP.format(p=num['place']) if place_base else
                     f"<Picture {num['place']}> is the location reference.")
     if "hero" in num:
         bits.append(f"<Picture {num['hero']}> is the person to " + ("place into the scene" if place_base else "show")

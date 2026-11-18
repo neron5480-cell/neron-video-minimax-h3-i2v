@@ -319,6 +319,8 @@ class NeronFrameBuilder:
             cap, pe_note = E.enhance(images, E.pe_request(order, scene, extra_label, f"{int(w) // g}:{int(h) // g}"))
             notes.append(pe_note)
             text = cap
+            if text and order and order[0] == "place":
+                text = text.rstrip() + " " + E.FRAME_KEEP.format(p=1)
         if not text:
             if translate_request:
                 scene, tr_note = E.translate(scene)
