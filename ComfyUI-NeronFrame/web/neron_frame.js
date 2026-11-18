@@ -24,7 +24,7 @@ const GROUPS = [
       fill: "rgba( 90, 140, 200, 0.15)", border: "rgba( 90, 140, 200, 0.75)", label: "rgba(180, 215, 255, 1.0)" },
     { name: "КАДР / FRAME", widgets: ["aspect", "quality", "sharpness", "seed", "control_after_generate"],
       fill: "rgba(120, 170, 120, 0.15)", border: "rgba(120, 170, 120, 0.75)", label: "rgba(200, 245, 200, 1.0)" },
-    { name: "ПОЗА И ТЕКСТ / POSE & TEXT", widgets: ["pose_blur", "own_prompt"],
+    { name: "ПОЗА И ТЕКСТ / POSE & TEXT", widgets: ["base", "pose_blur", "own_prompt"],
       fill: "rgba( 90, 200, 200, 0.15)", border: "rgba( 90, 200, 200, 0.75)", label: "rgba(180, 255, 255, 1.0)" },
     { name: "РИСОВАНИЕ / SAMPLING", widgets: ["steps", "sampler", "scheduler"],
       fill: "rgba(200, 160,  90, 0.15)", border: "rgba(200, 160,  90, 0.75)", label: "rgba(255, 225, 170, 1.0)" },
@@ -871,8 +871,12 @@ const HELP_TEXT = `
 
 ⚙ ЭКСПЕРТ
 • Размытие позы 1.0 — как в проверенном процессе; 0 — без размытия.
-• Свой текст целиком — вместо того, что пишет нода; картинки по порядку:
-  герой, место, доп. образец, поза (пустые окна пропускаются) = <Picture 1>, 2…
+• Основа кадра: 🤖 место (по умолчанию) — картинка места становится основой, героя
+  ВСТАВЛЯЮТ в сцену: перспектива и мебель сохраняются, герой садится на то, что есть.
+  👤 герой — рисуется герой, место только образец фона (свободнее, но фон «плывёт»).
+  В «что происходит» пиши, КУДА поставить: «сидит на диване в беседке слева».
+• Свой текст целиком — вместо того, что пишет нода; порядок <Picture N> смотри
+  в итоговом тексте внизу (с местом: место, герой, доп. образец, поза).
 • Шаги 6, euler / simple — официальный шаблон Comfy-Org.
 • Держать модели — для серии кадров. Выкл — память свободна для видео.
 
@@ -906,8 +910,9 @@ HOW TO USE
 BUS: input cast — H3 Story Cast fills EMPTY windows; output cast — the hero, place and
 extra of this frame, one wire into 🎬 H3 Story so the video keeps the same hero.
 
-⚙ EXPERT: pose blur (1.0 proven; 0 — none), own full prompt (<Picture N> in the order
-hero, place, extra, pose), 6 steps euler / simple (official), keep models loaded.
+⚙ EXPERT: frame base (auto — the place picture is the base and the hero is inserted into
+it; hero — the hero is drawn, the place is only a background reference), pose blur (1.0
+proven; 0 — none), own full prompt (see the <Picture N> order in the final prompt), 6 steps euler / simple (official), keep models loaded.
 
 MODELS — «📥 Models» (official, Comfy-Org): minimax_h3_image_pruned_int8_convrot (≈21 GB),
 its VAE, and the Qwen3-VL 32B text encoder shared with H3 (skipped if you have it).

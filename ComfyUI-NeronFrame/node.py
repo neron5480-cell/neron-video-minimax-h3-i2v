@@ -153,8 +153,8 @@ class NeronFrameBuilder:
             "own_prompt": ("STRING", _exp("свой текст целиком / own full prompt", default="", multiline=True,
                            placeholder="пусто — нода пишет сама / empty — the node writes it",
                            tooltip="Профи: свой текст вместо того, что пишет нода. Ссылайся на картинки как "
-                                   "<Picture 1>, <Picture 2>… в порядке: герой, место, доп. образец, поза (пустые окна "
-                                   "пропускаются).\n\nEN: Your own full prompt; refer to <Picture N> in the order "
+                                   "<Picture 1>, <Picture 2>… Порядок — в итоговом тексте внизу ноды (с местом основа — место: "
+                                   "место, герой, доп. образец, поза; пустые окна пропускаются).\n\nEN: Your own full prompt; refer to <Picture N> in the order "
                                    "hero, place, extra, pose (empty windows are skipped).")),
             "steps": ("INT", _exp("шаги / steps", default=E.STEPS, min=2, max=20,
                       tooltip="Официально — 6 (модель обучена на этой сетке).\n\nEN: Officially 6.")),
@@ -169,6 +169,12 @@ class NeronFrameBuilder:
             "clip_model": _model_combo("clip", "текстовый энкодер / text encoder"),
             "vae_model": _model_combo("vae", "VAE"),
             # новое — строго в конец: сохранённые схемы хранят значения по порядку
+            "base": (E.BASE, _exp("основа кадра / frame base", default=E.BASE[0],
+                     tooltip="🤖 место — картинка места становится основой (<Picture 1>), героя вставляют в неё: "
+                             "место и перспектива сохраняются, герой садится на то, что есть в сцене.\n👤 герой — "
+                             "рисуется герой, а место — образец фона (свободнее, но может «пристроить» фон).\n\nEN: "
+                             "place — the place picture is the base and the hero is inserted; hero — the hero is "
+                             "drawn and the place is a background reference.")),
         })
         return {
             "required": req,
@@ -206,7 +212,7 @@ class NeronFrameBuilder:
     def build(self, expert=False, hero_image=NONE, place_image=NONE, extra_image=NONE, pose_image=NONE,
               extra_label="", scene="", aspect=E.ASPECT_NAMES[0], quality=E.QUALITY_NAMES[1], sharpness=0.5, seed=1,
               pose_blur=1.0, own_prompt="", steps=E.STEPS, sampler=E.SAMPLER, scheduler=E.SCHEDULER,
-              keep_loaded=False, unet_model=AUTO_MODEL, clip_model=AUTO_MODEL, vae_model=AUTO_MODEL, cast=None,
+              keep_loaded=False, unet_model=AUTO_MODEL, clip_model=AUTO_MODEL, vae_model=AUTO_MODEL, base=None, cast=None,
               hero=None, place=None, pose=None, width=None, height=None):
         notes = []
         if not E.has_node("MiniMaxH3ImageConditioning"):
@@ -237,7 +243,9 @@ class NeronFrameBuilder:
             raise E.FriendlyError(f"{E.TAG} Положи хотя бы героя или место и напиши, что происходит.\n\nEN: Add at "
                                   f"least a hero or a place and write what happens.")
 
-        order = [r for r in ("hero", "place", "extra", "pose") if pics[r] is not None]
+        order = E.order_roles([r for r in pics if pics[r] is not None], base or E.BASE[0])
+        if order and order[0] == "place" and pics["hero"] is not None:
+            notes.append("Основа кадра: место — героя вставляем в сцену")
         images = []
         for r in order:
             im = pics[r][:1, ..., :3]

@@ -206,12 +206,37 @@ def pose_blur_px(image, strength):
 SCENE_EXAMPLE = ("he crouches in a dark alley, examining a broken drone, cold light from a single lamp")
 
 
+BASE = ["🤖 место (если есть) — кладём героя в сцену / place", "👤 герой — рисуем героя заново / hero"]
+
+
+def order_roles(present, base=BASE[0]):
+    """Порядок <Picture N>. 18.11 (Роман): «модель не поняла, куда переместить девушку» — при герое первым модель
+    рисует героя и «пристраивает» фон. Родная нода считает image_1 картинкой, которую правят, — поэтому при месте
+    основа кадра — МЕСТО (<Picture 1>), а героя в него вставляем."""
+    first = ["place", "hero"] if (base != BASE[1] and "place" in present) else ["hero", "place"]
+    return [r for r in first + ["extra", "pose"] if r in present]
+
+
 def build_prompt(roles, scene, extra_label=""):
-    """roles: список ролей в порядке <Picture N> — 'hero', 'place', 'extra', 'pose'. Возвращает английский текст."""
+    """roles: роли в порядке <Picture N> ('hero', 'place', 'extra', 'pose'). Возвращает английский текст."""
     num = {r: i + 1 for i, r in enumerate(roles)}
     scene = (scene or "").strip()
     parts = []
-    if "hero" in num:
+    keep = ("face, hair, outfit, equipment, colors and body proportions, exactly as they are in that picture")
+    if roles and roles[0] == "place" and "hero" in num:
+        p, h = num["place"], num["hero"]
+        line = f"Edit <Picture {p}>: add the single character from <Picture {h}> into this scene"
+        if "pose" in num:
+            line += f", in the body pose and camera angle shown in <Picture {num['pose']}>"
+        parts.append(line + ".")
+        parts.append(f"Keep the scene of <Picture {p}> as it is: the same layout, furniture, objects and lighting. "
+                     "Put the character at a believable spot in it with correct scale and perspective, in real "
+                     "contact with the surfaces — feet on the ground, sitting on a seat that exists in the scene — lit "
+                     "by the scene's own light, with matching shadows.")
+        parts.append(f"Preserve the exact appearance of the character from <Picture {h}>: {keep}.")
+        if scene:
+            scene = f"Where and how the character is placed: {scene}"
+    elif "hero" in num:
         h = num["hero"]
         line = f"Generate a high quality shot of the single character in <Picture {h}>"
         if "pose" in num:
@@ -219,8 +244,7 @@ def build_prompt(roles, scene, extra_label=""):
         parts.append(line + ".")
         # 18.11, первый прогон Романа: «dirt and wear» в общем тексте → модель вымазала грязью ноги чистой девушке.
         # Износ и грязь — только если они есть на самом образце или в сцене; общий текст — без них.
-        parts.append(f"Preserve the exact appearance of the character in <Picture {h}>: face, hair, outfit, "
-                     "equipment, colors and body proportions, exactly as they are in that picture.")
+        parts.append(f"Preserve the exact appearance of the character in <Picture {h}>: {keep}.")
         if "place" in num:
             parts.append(f"Place the character naturally in the location shown in <Picture {num['place']}>, "
                          "matching its lighting, perspective, weather and atmosphere.")
