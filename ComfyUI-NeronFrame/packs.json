@@ -4,8 +4,8 @@
   "packs": {
     "h3image": {
       "title": "MiniMax H3 Image · bf16 — максимум качества / maximum quality",
-      "description": "Всё для сборки кадра по картинкам-образцам (официально, Comfy-Org):\n• модель MiniMax H3 Image bf16 — полная точность, без сжатия (40,2 ГБ). Уговор: для картинок качество важнее времени; сжатые версии (int8 21 ГБ, w4a8 12,5 ГБ) нода берёт сама, если bf16 нет, и пишет об этом;\n• VAE картинок H3 Image;\n• текстовый энкодер Qwen3-VL 32B — ОБЩИЙ с H3 Story / Engine / Заменой героя: если уже лежит (nvfp4 или int8), не качаю.\n\nEN: The MiniMax H3 Image model in bf16 — full precision (40.2 GB; compressed int8 / w4a8 are used if bf16 is missing), its VAE, and the Qwen3-VL 32B text encoder shared with H3 (skipped if present).",
-      "known_size_note": "≈ 40 ГБ + энкодер, если его нет / ≈ 40 GB + encoder if missing",
+      "description": "Всё для сборки кадра по картинкам-образцам (официально, Comfy-Org):\n• модель MiniMax H3 Image bf16 — полная точность, без сжатия (40,2 ГБ). Уговор: для картинок качество важнее времени; сжатые версии (int8 21 ГБ, w4a8 12,5 ГБ) нода берёт сама, если bf16 нет, и пишет об этом;\n• VAE картинок H3 Image;\n• усилитель промпта Qwen3.5 9B (6,8 ГБ) — смотрит на картинки и пишет подробное описание кадра на «языке H3», как в официальном шаблоне;\n• текстовый энкодер Qwen3-VL 32B — ОБЩИЙ с H3 Story / Engine / Заменой героя: если уже лежит (nvfp4 или int8), не качаю.\n\nEN: The MiniMax H3 Image model in bf16 — full precision (40.2 GB; compressed int8 / w4a8 are used if bf16 is missing), its VAE, the Qwen3.5 9B prompt enhancer (6.8 GB, as in the official template), and the Qwen3-VL 32B text encoder shared with H3 (skipped if present).",
+      "known_size_note": "≈ 47 ГБ + энкодер, если его нет / ≈ 47 GB + encoder if missing",
       "files": [
         {
           "role": "unet",
@@ -30,6 +30,14 @@
           "repo": "Comfy-Org/MiniMax-H3-Image",
           "gated": false,
           "path": "vae/minimax_h3_image_vae_fp16.safetensors"
+        },
+        {
+          "role": "pe",
+          "kind": "text_encoders",
+          "repo": "Comfy-Org/Qwen3.5",
+          "gated": false,
+          "path": "text_encoders/qwen3.5_9b_w4a8_gptq.safetensors",
+          "note": "усилитель промпта H3 Image (как в официальном шаблоне) / prompt enhancer"
         }
       ]
     }

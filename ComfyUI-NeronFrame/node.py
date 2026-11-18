@@ -7,6 +7,7 @@
 """
 import hashlib
 import logging
+import math
 import os
 
 import numpy as np
@@ -198,6 +199,12 @@ class NeronFrameBuilder:
                                    "картинок + просьба. Сравнивай на одном варианте (seed = fixed).\n\nEN: how the "
                                    "node talks to the model: video-style sections, the same order as plain text, or "
                                    "the old roles + request.")),
+            "enhancer": ("BOOLEAN", _exp("усилитель H3 (Qwen3.5 9B) / enhancer", default=True,
+                         tooltip="Вкл — Qwen3.5 9B смотрит на сами картинки и пишет описание кадра на языке H3, как в "
+                                 "официальном шаблоне Comfy-Org: кто на какой картинке, что сохранить, что изменить, "
+                                 "подробно новое (поза, опора, свет, тени). Понимает русский. Готовый текст — внизу "
+                                 "ноды. Выкл — каркас H3 ноды + перевод.\n\nEN: On — Qwen3.5 9B looks at the pictures "
+                                 "and writes the frame description in the H3 format, as in the official template.")),
         })
         return {
             "required": req,
@@ -235,7 +242,7 @@ class NeronFrameBuilder:
     def build(self, expert=False, hero_image=NONE, place_image=NONE, extra_image=NONE, pose_image=NONE,
               extra_label="", scene="", aspect=E.ASPECT_NAMES[0], quality=E.QUALITY_NAMES[2], sharpness=0.5, seed=1,
               pose_blur=1.0, own_prompt="", steps=E.STEPS, sampler=E.SAMPLER, scheduler=E.SCHEDULER,
-              keep_loaded=False, unet_model=AUTO_MODEL, clip_model=AUTO_MODEL, vae_model=AUTO_MODEL, base=None, translate_request=True, text_style=None, cast=None,
+              keep_loaded=False, unet_model=AUTO_MODEL, clip_model=AUTO_MODEL, vae_model=AUTO_MODEL, base=None, translate_request=True, text_style=None, enhancer=True, cast=None,
               hero=None, place=None, pose=None, width=None, height=None):
         notes = []
         if not E.has_node("MiniMaxH3ImageConditioning"):
@@ -277,15 +284,6 @@ class NeronFrameBuilder:
             images.append(im)
         notes.append("Образцы: " + (" · ".join(f"<Picture {i + 1}> {r}" for i, r in enumerate(order)) or "нет"))
 
-        if translate_request and not (own_prompt or "").strip():
-            scene, tr_note = E.translate(scene)
-            if tr_note:
-                notes.append(tr_note)
-            if E.has_cyrillic(extra_label):
-                extra_label, _ = E.translate(extra_label)
-        text = (own_prompt or "").strip() or E.build_prompt(order, scene, extra_label, text_style)
-        notes.append("Текст: " + ("свой" if (own_prompt or "").strip() else "собран нодой"))
-
         # ---- размер ----
         if width is not None and height is not None and int(width) > 0 and int(height) > 0:
             w, h = E.wired_size(width, height)
@@ -311,6 +309,25 @@ class NeronFrameBuilder:
             raise E.FriendlyError(
                 f"{E.TAG} Не хватает моделей: " + ", ".join(ROLE_NAMES[m] for m in missing) + ". Нажми на ноде "
                 "«📥 Модели» — она скачает только недостающее.\n\nEN: Missing models. Press «📥 Модели / Models».")
+
+        # ---- текст: свой → усилитель H3 (смотрит на картинки) → каркас H3 ноды ----
+        text = (own_prompt or "").strip()
+        if text:
+            notes.append("Текст: свой")
+        if not text and enhancer and images:
+            g = math.gcd(int(w), int(h))
+            cap, pe_note = E.enhance(images, E.pe_request(order, scene, extra_label, f"{int(w) // g}:{int(h) // g}"))
+            notes.append(pe_note)
+            text = cap
+        if not text:
+            if translate_request:
+                scene, tr_note = E.translate(scene)
+                if tr_note:
+                    notes.append(tr_note)
+                if E.has_cyrillic(extra_label):
+                    extra_label, _ = E.translate(extra_label)
+            text = E.build_prompt(order, scene, extra_label, text_style)
+            notes.append("Текст: каркас H3 ноды")
 
         try:
             image = E.generate(models, text, images, w, h, int(seed), int(steps), sampler, scheduler)

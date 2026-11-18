@@ -11,8 +11,11 @@
   5. Резкость после проявки — та же мягкая нерезкая маска, что в 🖼 Neron Image.
 Память — по очереди: энкодер (32B) → выгрузка → модель → VAE. Модели между прогонами по умолчанию не держим.
 """
+import hashlib
+import json
 import logging
 import math
+import os
 import re
 
 log = logging.getLogger("Neron.Frame")
@@ -415,6 +418,115 @@ def translate(text):
         _TR_CACHE.clear()
     _TR_CACHE[text] = out
     return out, "Просьба переведена на английский"
+
+
+# ---------------- усилитель H3 (PE) — как в официальном шаблоне ----------------
+# 18.11 Роман: «каркас без мяса — нода картинок не видит» → нужен «глаз»: Qwen3.5 9B (Comfy-Org/Qwen3.5), который
+# смотрит на сами картинки и пишет описание кадра на языке H3 (Subject по тому, что видно; что сохранить / изменить;
+# подробно новое). Модель и инструкции — ровно как в официальном шаблоне Comfy-Org (pe/system.txt, pe/task.txt — MIT,
+# см. pe/SOURCE.md); TextGenerate: thinking вкл, 8196 токенов, temperature 1, top_k 20, top_p 0.95. Ответ — JSON,
+# берём expanded_caption.
+PE_MODEL = "qwen3.5_9b_w4a8_gptq.safetensors"
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_PE_CACHE = {}
+
+
+def _pe_text(name):
+    with open(os.path.join(_HERE, "pe", name), "r", encoding="utf-8") as f:
+        return f.read()
+
+
+def pe_request(roles, scene, extra_label, aspect_ratio):
+    """Короткая просьба для усилителя: роли картинок (кто ведущий) + просьба человека как есть (любой язык)."""
+    num = {r: i + 1 for i, r in enumerate(roles)}
+    bits = []
+    place_base = bool(roles) and roles[0] == "place"
+    if "place" in num:
+        bits.append(f"<Picture {num['place']}> is the base scene and the leading frame: keep it and fit everything added "
+                    "to its scale, perspective and light." if place_base else
+                    f"<Picture {num['place']}> is the location reference.")
+    if "hero" in num:
+        bits.append(f"<Picture {num['hero']}> is the person to " + ("place into the scene" if place_base else "show")
+                    + " — keep their identity; exactly one such person in the target image.")
+    if "extra" in num:
+        bits.append(f"<Picture {num['extra']}> is {(extra_label or '').strip() or 'an additional element to include'}.")
+    if "pose" in num:
+        bits.append(f"<Picture {num['pose']}> gives only the body pose and camera angle.")
+    scene = (scene or "").strip()
+    if scene:
+        bits.append("Request: " + scene)
+    elif "hero" in num and "place" in num:
+        bits.append("Request: place the person naturally in the scene.")
+    bits.append(f"User Aspect Ratio Selection: {aspect_ratio}")
+    return " ".join(bits)
+
+
+def _img_key(images):
+    h = hashlib.sha256()
+    for im in images:
+        t = im[:1, ::16, ::16, :3].float()
+        h.update(str(tuple(im.shape)).encode())
+        h.update(f"{float(t.mean()):.5f}:{float(t.std()):.5f}".encode())
+    return h.hexdigest()
+
+
+def _parse_caption(text):
+    t = (text or "").strip()
+    _, sep, rest = t.partition("</think>")
+    if sep:
+        t = rest.strip()
+    a, b = t.find("{"), t.rfind("}")
+    if a >= 0 and b > a:
+        try:
+            cap = json.loads(t[a:b + 1]).get("expanded_caption")
+            if cap:
+                return str(cap).strip()
+        except Exception:
+            pass
+    m = re.search(r'"expanded_caption"\s*:\s*"((?:[^"\\]|\\.)*)"', t, flags=re.S)
+    if m:
+        try:
+            return json.loads('"' + m.group(1) + '"').strip()
+        except Exception:
+            return m.group(1).strip()
+    return ""
+
+
+def enhance(images, request, seed=0):
+    """Возвращает (описание кадра, заметка). Нет модели / не вышло — ("", заметка), нода берёт свой каркас H3."""
+    key = (request, _img_key(images), int(seed))
+    if key in _PE_CACHE:
+        return _PE_CACHE[key], "Описание кадра — усилитель Qwen3.5 9B (из памяти)"
+    name = find_file("text_encoders", PE_MODEL)
+    if not name:
+        return "", ("⚠ Усилителя нет (qwen3.5_9b_w4a8_gptq — «📥 Модели»): текст — каркас H3 ноды. EN: the prompt "
+                    "enhancer is missing; the node's H3 skeleton is used.")
+    send("👁 усилитель смотрит на картинки / enhancer")
+    clip = node("CLIPLoader", clip_name=name, type=CLIP_TYPE, device="default")[0]
+    try:
+        prompt = _pe_text("task.txt").replace("{input text}", request)
+        system = _pe_text("system.txt")
+        try:
+            tokens = clip.tokenize(prompt, images=[im[:1, ..., :3] for im in images], min_length=1, thinking=True,
+                                   system_prompt=system)
+        except TypeError:
+            tokens = clip.tokenize(system + "\n\n" + prompt, images=[im[:1, ..., :3] for im in images], min_length=1)
+        kw = dict(do_sample=True, max_length=8196, temperature=1.0, top_k=20, top_p=0.95, min_p=0.0,
+                  repetition_penalty=1.0, seed=int(seed))
+        try:
+            ids = clip.generate(tokens, presence_penalty=0.0, mtp=True, **kw)
+        except TypeError:
+            ids = clip.generate(tokens, **kw)
+        cap = _parse_caption(clip.decode(ids))
+    finally:
+        del clip
+        free("усилитель → энкодер H3")
+    if len(cap) < 20:
+        return "", "⚠ Усилитель не дал описания — текст: каркас H3 ноды. EN: enhancer failed, skeleton used."
+    if len(_PE_CACHE) > 32:
+        _PE_CACHE.clear()
+    _PE_CACHE[key] = cap
+    return cap, "Описание кадра — усилитель Qwen3.5 9B (как в официальном шаблоне)"
 
 
 # ---------------- сборка ----------------
