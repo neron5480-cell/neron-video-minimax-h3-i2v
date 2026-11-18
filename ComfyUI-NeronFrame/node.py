@@ -148,16 +148,16 @@ class NeronFrameBuilder:
             "seed": ("INT", _main("вариант / seed", default=1, min=0, max=0xffffffffffffffff,
                      control_after_generate=True,
                      tooltip="Другой номер — другой вариант того же кадра.\n\nEN: Another number — another take.")),
-            "pose_blur": ("FLOAT", _exp("размытие позы / pose blur", default=1.0, min=0.0, max=3.0, step=0.1,
-                          tooltip="1.0 — как в проверенном процессе (≈5 пикс. на 1 Мп): модель берёт позу, но не "
-                                  "вид манекена или фото. 0 — без размытия (может скопировать одежду с позы).\n\n"
-                                  "EN: 1.0 — as in the proven workflow; 0 — no blur.")),
             "own_prompt": ("STRING", _exp("свой текст целиком / own full prompt", default="", multiline=True,
                            placeholder="пусто — нода пишет сама / empty — the node writes it",
                            tooltip="Профи: свой текст вместо того, что пишет нода. Ссылайся на картинки как "
                                    "<Picture 1>, <Picture 2>… Порядок — в итоговом тексте внизу ноды (с местом основа — место: "
                                    "место, герой, доп. образец, поза; пустые окна пропускаются).\n\nEN: Your own full prompt; refer to <Picture N> in the order "
                                    "hero, place, extra, pose (empty windows are skipped).")),
+            "pose_blur": ("FLOAT", _exp("размытие позы / pose blur", default=1.0, min=0.0, max=3.0, step=0.1,
+                          tooltip="1.0 — как в проверенном процессе (≈5 пикс. на 1 Мп): модель берёт позу, но не "
+                                  "вид манекена или фото. 0 — без размытия (может скопировать одежду с позы).\n\n"
+                                  "EN: 1.0 — as in the proven workflow; 0 — no blur.")),
             "steps": ("INT", _exp("шаги / steps", default=E.STEPS, min=2, max=20,
                       tooltip="Официально — 6 (модель обучена на этой сетке).\n\nEN: Officially 6.")),
             "sampler": (samplers, _exp("сэмплер / sampler", default=E.SAMPLER if E.SAMPLER in samplers else samplers[0],

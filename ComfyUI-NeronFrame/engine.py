@@ -244,17 +244,21 @@ def build_prompt(roles, scene, extra_label=""):
     scene = (scene or "").strip()
     parts = []
     keep = ("face, hair, outfit, equipment, colors and body proportions, exactly as they are in that picture")
+    keep_id = "the same face, hair, skin tone and body proportions as in that picture"
     if roles and roles[0] == "place" and "hero" in num:
         p, h = num["place"], num["hero"]
         line = f"Edit <Picture {p}>: add the single character from <Picture {h}> into this scene"
         if "pose" in num:
             line += f", in the body pose and camera angle shown in <Picture {num['pose']}>"
         parts.append(line + ".")
+        # 18.11 Роман: «физика / пропорции покинули чат» — в тексте стояло «feet on the ground, sitting on a seat»,
+        # а просили «лежит на лежаке»: модель тянула и посадку, и лёжку. Теперь опора — общими словами.
         parts.append(f"Keep the scene of <Picture {p}> as it is: the same layout, furniture, objects and lighting. "
-                     "Put the character at a believable spot in it with correct scale and perspective, in real "
-                     "contact with the surfaces — feet on the ground, sitting on a seat that exists in the scene — lit "
-                     "by the scene's own light, with matching shadows.")
-        parts.append(f"Preserve the exact appearance of the character from <Picture {h}>: {keep}.")
+                     "Put the character at a believable spot in it with correct scale, perspective and natural human "
+                     "proportions, resting with real weight on whatever surface supports the body, lit by the "
+                     "scene's own light, with matching shadows.")
+        parts.append(f"Preserve the identity of the character from <Picture {h}>: {keep_id}. Keep the outfit "
+                     "from that picture unless the request below asks for different clothing.")
         if scene:
             scene = f"Where and how the character is placed: {scene}"
     elif "hero" in num:
