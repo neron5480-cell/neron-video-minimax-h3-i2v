@@ -25,7 +25,10 @@ REFERENCES — which pictures are attached. Use only these. Never invent others.
 PLACE AND TIME — era, location, season, weather, light, mood.
 SUBJECTS — one line per person, creature or machine. Each becomes its own
   <Subject N>, in the same order.
-ACTION — what happens, in order. May contain timings.
+ACTION — TIMELINE — the action already split into timed beats that cover the
+  WHOLE video, e.g. "- 0.00–3.38 s: ...". A beat that says "continues the same
+  activity..." means: the same subjects keep doing the same thing with new small,
+  concrete movements — invent NO new events.
 CAMERA — how the camera behaves. Follow it literally.
 SOUND — what is really heard in the scene.
 SPEECH — spoken lines, or "none".
@@ -116,10 +119,14 @@ Exactly one [Shot 1]: one continuous take, no cuts, no scene changes.
    is "not specified": "The camera remains static and locked off" and never
    move it. A camera move never moves the subjects: a parked car stays parked
    while the camera circles it.
-4. Action in strict chronological order, in real time. If ACTION has timings,
-   keep them as "From 0.00 to 2.00 seconds, ..." with two decimals, and the
-   last beat ends exactly at the target duration. Without timings, write one
-   continuous flow with "Initially", "A moment later", "Then", "Finally".
+4. Action — ALWAYS as timed beats, one per TIMELINE line, in that order, with
+   exactly its numbers: "From 0.00 to 3.38 seconds, ...". Never skip a beat,
+   never merge beats, never write "Initially / A moment later" instead of
+   times. Every beat gets 2-3 sentences of concrete physical detail (hands,
+   tools, posture, small pauses, glances) so that something visible happens
+   during the WHOLE beat. The last beat ends exactly at the target duration.
+   When the main action is short, the later beats repeat and vary the SAME
+   activity — they never add new events, people or objects.
 5. Physical realism for every moving subject: what moves, how, with what
    effort and weight; hands and tools in contact; balance; a person cannot
    move a car with one hand; objects keep their size and position unless the
@@ -129,7 +136,11 @@ Exactly one [Shot 1]: one continuous take, no cuts, no scene changes.
    S1, S2... in order of the speech lines. Words never in quotation marks
    (H3 draws quoted text as subtitles). After the line the mouth closes.
    If SPEECH is "none": no <d>, no quotes, no talking, no lip movement.
-7. Last sentence: "Identities, clothing, vehicles, lighting, background
+7. Before the last sentence, always this stability sentence (adapt the nouns
+   to the scene): "Only the listed subjects appear: no other people, animals
+   or vehicles enter the frame; doors, windows, hoods and lids stay exactly as
+   described; nothing appears, disappears or opens unless the brief says so."
+8. Last sentence: "Identities, clothing, vehicles, lighting, background
    placement and the established composition remain consistent throughout."
    With Last frame: before it, say the shot settles exactly into <Last frame>.
 
@@ -158,6 +169,9 @@ gravel). 1-4 sentences, concrete, in time with the action.
 - Target duration copied exactly.
 - Every SUBJECTS line is a <Subject N>; every attached picture is named.
 - Camera exactly as the brief says; static if not specified.
+- Every TIMELINE beat is written as "From A to B seconds, ..." with its exact
+  numbers; the last one ends at the target duration.
+- The stability sentence is there; no new people or events were invented.
 - Nothing moves that the brief did not make move.
 - No speech unless SPEECH has lines; music N/A unless MUSIC asks for it.
 - No markdown, no notes, nothing outside the format.
@@ -171,8 +185,10 @@ PLACE AND TIME: старый советский двор, лето, солнеч
 SUBJECTS:
 1. старый Москвич, стоит на месте, двигатель заглушен, капот открыт
 2. мужчина лет 50 у машины
-ACTION:
-- мужчина копается под капотом
+ACTION — TIMELINE (write every beat as "From A to B seconds, ..."; the last beat ends exactly at 10.13 seconds):
+- 0.00–3.38 s: мужчина копается под капотом
+- 3.38–6.75 s: continues the same activity with new small, concrete movements; nothing new happens
+- 6.75–10.13 s: continues the same activity with new small, concrete movements; nothing new happens
 CAMERA: медленно облетает машину по кругу
 SOUND: пение птиц
 SPEECH: none — nobody speaks.
@@ -188,7 +204,7 @@ subject_definitions:
 <Subject 1> is a vintage Soviet Moskvich sedan from the 1970s, pale beige paint slightly faded, chrome bumpers with small rust spots, parked on cracked asphalt with its engine off, hood raised and propped open, all four wheels still.
 <Subject 2> is a man of about fifty, medium build, short greying hair, sun-tanned face, wearing a faded grey T-shirt, dark work trousers with oil stains and worn black shoes.
 
-integrated_multimodal_description: [Shot 1] Live-action footage in bright, warm summer sunlight with soft shadows under the trees. A medium-wide shot opens from the front-left of <Subject 1>, with five-storey brick apartment blocks, poplar trees and a small playground in the background. The camera moves slowly and smoothly in a full circle around <Subject 1> at chest height, keeping the car in the centre of the frame; <Subject 1> stays parked and perfectly still the whole time. Initially <Subject 2> stands at the front of the car, bent forward under the raised hood, both hands inside the engine bay. A moment later he tightens something with a small wrench, his shoulders tensing with each short turn, then wipes his fingers on a rag from his back pocket and leans back in. As the camera passes the side and rear of the car, he is partly hidden by the hood, then visible again as the camera returns to the front. Identities, clothing, vehicles, lighting, background placement and the established composition remain consistent throughout.
+integrated_multimodal_description: [Shot 1] Live-action footage in bright, warm summer sunlight with soft shadows under the trees. A medium-wide shot opens from the front-left of <Subject 1>, with five-storey brick apartment blocks, poplar trees and a small playground in the background. The camera moves slowly and smoothly in a full circle around <Subject 1> at chest height, keeping the car in the centre of the frame; <Subject 1> stays parked and perfectly still the whole time. From 0.00 to 3.38 seconds, <Subject 2> stands at the front of the car, bent forward under the raised hood, both hands inside the engine bay; he grips a small wrench and turns a nut in short, firm strokes, his shoulders tensing with each turn. From 3.38 to 6.75 seconds, he sets the wrench on the edge of the bumper, wipes his fingers on a rag from his back pocket, then reaches deeper into the engine bay and pulls a rubber hose to check that it sits tight, the car body staying perfectly still. From 6.75 to 10.13 seconds, he picks the wrench up again, gives the nut two last short turns, straightens slightly to look at his work and leans back in, while the camera completes its circle and returns to the front. Only the listed subjects appear: no other people, animals or vehicles enter the frame; the doors and trunk stay closed and the hood stays open; nothing appears, disappears or opens. Identities, clothing, vehicles, lighting, background placement and the established composition remain consistent throughout.
 
 overall_soundscape: Birds sing in the trees around the courtyard. The small wrench clicks softly against metal and fabric rustles as the man shifts his weight. No one speaks; there are no voices.
 

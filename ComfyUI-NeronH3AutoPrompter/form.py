@@ -261,7 +261,7 @@ def build_brief(data, pictures=0, last_frame=False):
     if f["heroes"]:
         out.append("SUBJECTS:\n" + "\n".join(f"{i + 1}. {h}" for i, h in enumerate(f["heroes"])))
     if f["action"]:
-        out.append("ACTION:\n" + "\n".join(f"- {a}" for a in f["action"]))
+        out.append(timeline(f["action"], grid_frames(seconds(data)) / FPS, grid_seconds_text(seconds(data))))
     out.append("CAMERA: " + (" ".join(f["camera"]) if f["camera"] else "not specified — the camera remains static."))
     out.append("SOUND: " + (" ".join(f["sound"]) if f["sound"] else "not specified — only the quiet natural "
                                                                     "ambience of the place."))
@@ -271,6 +271,32 @@ def build_brief(data, pictures=0, last_frame=False):
     if f["pictures"]:
         out.append("NOTES ON PICTURES: " + " ".join(f["pictures"]))
     return tags("\n".join(out))
+
+
+BEAT_SEC = 3.5            # примерно столько секунд на один отрезок действия
+CONTINUE = "continues the same activity with new small, concrete movements; nothing new happens"
+
+
+def _t(x):
+    return f"{x:.2f}"
+
+
+def timeline(actions, total, end=None):
+    """Действие → разметка по секундам на ВСЮ длину ролика (маленькая LLM слушается готовых цифр).
+    Свои секунды у человека — оставляем, последний отрезок дотягиваем до конца. Иначе — ровные отрезки:
+    строка действия на отрезок; не хватает строк — «продолжает то же занятие» (иначе модель досочиняет события)."""
+    end = end or _t(total)
+    if any(_TIME.match(a) for a in actions):
+        return ("ACTION — TIMELINE (the person's own timings; keep them, and the last beat ends exactly at "
+                f"{end} seconds):\n" + "\n".join(f"- {a}" for a in actions))
+    n = max(len(actions), min(5, max(1, round(total / BEAT_SEC))))
+    step = total / n
+    rows = []
+    for i in range(n):
+        a, b = _t(i * step), (end if i == n - 1 else _t((i + 1) * step))
+        rows.append(f"- {a}–{b} s: {actions[i] if i < len(actions) else CONTINUE}")
+    return ("ACTION — TIMELINE (write every beat as \"From A to B seconds, ...\"; the last beat ends exactly at "
+            f"{end} seconds):\n" + "\n".join(rows))
 
 
 def has_content(data):

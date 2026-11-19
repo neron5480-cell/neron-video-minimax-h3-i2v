@@ -114,6 +114,12 @@ if __name__ == "__main__":
     assert "no pictures attached — text-to-video" in b2 and "SPEECH:\n1. он: «Привет»" in b2 and "CAMERA: наезд" in b2
     assert form.clean_answer("Ok!\n<think>..</think>```\nTarget duration 5.17 seconds.\n```") == \
         "Target duration 5.17 seconds."
+    t = form.build_brief({"seconds": 10, "action": "чинит"})
+    assert "- 0.00–3.38 s: чинит" in t and "- 6.75–10.13 s: continues the same activity" in t, t
+    t = form.build_brief({"seconds": 5, "action": "a\nb\nc\nd"})
+    assert "- 0.00–1.29 s: a" in t and "- 3.88–5.17 s: d" in t, t
+    t = form.build_brief({"seconds": 10, "action": "0-2 с: a\n2-5 с: b"})
+    assert "own timings" in t and "10.13 seconds" in t and "- 0-2 с: a" in t, t
     assert not form.has_content({"music": "piano", "pictures": "x"}) and form.has_content({"camera": "static"})
     js = js_all()
     if js is not None:
