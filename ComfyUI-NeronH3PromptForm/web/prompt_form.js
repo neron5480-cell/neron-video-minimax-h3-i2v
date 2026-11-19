@@ -24,6 +24,8 @@ const UI = {
             "напр.: тихая гитара издалека, из радиоприёмника"],
         pictures: ["🖼 Картинки", "кто или что на каждом образце",
             "напр.: <Picture 1> — этот мужчина, <Picture 2> — этот мотоцикл"],
+        time: "⏱ Длина ролика", timeHint: "пишется в начало промпта — движки любят знать время", sec: "с",
+        timeOpt: "Длина ролика в начале промпта",
         preview: "👁 Что уйдёт в движок", empty: "Заполни участки — здесь появится готовый промпт.",
         chars: "знаков", of: "из", filled: "участков", copy: "📋 Копировать", copied: "✓ Скопировано",
         expert: "⚙ эксперт", help: "📖 справка",
@@ -48,6 +50,8 @@ const UI = {
             "e.g.: a quiet guitar far away, from a radio"],
         pictures: ["🖼 Pictures", "who or what is on each reference",
             "e.g.: <Picture 1> — this man, <Picture 2> — this motorcycle"],
+        time: "⏱ Clip length", timeHint: "goes to the start of the prompt — engines like to know the time", sec: "s",
+        timeOpt: "Clip length at the start of the prompt",
         preview: "👁 What goes to the engine", empty: "Fill in the sections — the finished prompt appears here.",
         chars: "chars", of: "of", filled: "sections", copy: "📋 Copy", copied: "✓ Copied",
         expert: "⚙ expert", help: "📖 help",
@@ -63,6 +67,7 @@ const HELP = `📝 NERON H3 БЛАНК ПРОМПТА
 H3 лучше всего работает с подробным промптом. Обычно его пишут «простынёй» — и теряют половину: забыли звук, не сказали про камеру, смешали двух героев в одну фразу. Бланк делит промпт на участки: у каждого видно, что сюда писать и зачем. Пишешь сам — это не автопромтер. Нода склеивает всё в один связный текст и отдаёт его проводом в движок.
 
 КАК
+0. ⏱ Длина ролика — ползунок сверху (1–15 с). Нода сама пишет её в начало промпта: «Длительность ролика — 5 секунд (0–5 с).» Движки любят знать время. Ставь ту же длину, что в движке.
 1. Заполни нужные участки. Пустые в промпт не идут — для простой сцены хватит двух-трёх.
 2. Герои — каждый с новой строки. Действие — по порядку, можно по секундам («0–2 с: …»).
 3. Внизу — «Что уйдёт в движок»: ровно тот текст, что получит модель.
@@ -75,6 +80,7 @@ H3 лучше всего работает с подробным промптом
 <Картинка 1>, <image 2> и т. п. нода сама превратит в <Picture 1>, <Picture 2> — так модель их узнаёт.
 
 ⚙ ЭКСПЕРТ
+• Длина ролика в начале промпта — можно выключить.
 • Связки — «В кадре:», «Камера:», «Звук сцены:»… Выключи — участки пойдут как есть, через пробел.
 • «Без музыки.» — если участок «Музыка» пуст, дописывается явно (иначе H3 может добавить музыку сама).
 
@@ -86,6 +92,7 @@ H3 лучше всего работает с подробным промптом
 H3 works best with a detailed prompt. People usually write one long wall of text and lose half of it: forgot the sound, said nothing about the camera, merged two characters into one phrase. The form splits the prompt into sections, each showing what goes there and why. You write it yourself — this is not an autoprompter. The node joins everything into one coherent text and sends it to the engine by wire.
 
 HOW
+0. ⏱ Clip length — the slider at the top (1–15 s). The node writes it at the start of the prompt: "Video duration: 5 seconds (0–5 s)." Engines like to know the time. Set the same length as in the engine.
 1. Fill in the sections you need. Empty ones are skipped — two or three are enough for a simple scene.
 2. Characters — each on a new line. Action — in order, per second is fine ("0–2 s: …").
 3. At the bottom, "What goes to the engine" shows exactly the text the model gets.
@@ -98,6 +105,7 @@ REFERENCES
 <Картинка 1>, <image 2> etc. become <Picture 1>, <Picture 2> — that is how the model recognises them.
 
 ⚙ EXPERT
+• Clip length at the start of the prompt — can be turned off.
 • Links — «In the frame:», «Camera:», «Scene sound:»… Turn off to join sections as they are.
 • «No music.» — if Music is empty it is added explicitly (otherwise H3 may add music by itself).`;
 
@@ -134,6 +142,18 @@ function textLang(data) {
     if (cyr || lat) return cyr >= lat ? "RU" : "EN";
     return String(data.lang || "RU").toUpperCase() === "EN" ? "EN" : "RU";
 }
+const SEC_MIN = 1, SEC_MAX = 15, SEC_DEFAULT = 5;
+function seconds(data) {
+    let v = Math.round(Number(data.seconds ?? SEC_DEFAULT));
+    if (!Number.isFinite(v)) v = SEC_DEFAULT;
+    return Math.max(SEC_MIN, Math.min(SEC_MAX, v));
+}
+function durationLine(n, lang) {
+    if (lang === "EN") return `Video duration: ${n} second${n === 1 ? "" : "s"} (0–${n} s).`;
+    const word = (n % 10 === 1 && n % 100 !== 11) ? "секунда"
+        : ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) ? "секунды" : "секунд";
+    return `Длительность ролика — ${n} ${word} (0–${n} с).`;
+}
 export function compileForm(data) {
     const lang = textLang(data);
     const L = LINKS[lang];
@@ -164,6 +184,7 @@ export function compileForm(data) {
         parts.push(text);
     }
     if (useLinks && noMusic && !f.music.length && parts.length) parts.push(L.no_music);
+    if (parts.length && data.time !== false) parts.unshift(durationLine(seconds(data), lang));
     return parts.join(" ").replace(TAG, (_, n) => `<Picture ${n}>`).trim();
 }
 
@@ -177,6 +198,10 @@ const CSS = `
 .nrf-pill.on{background:#3d5a80;border-color:#6d9ad0;color:#fff}
 .nrf-sp{flex:1}
 .nrf-sec{margin-bottom:7px}
+.nrf-time{display:flex;align-items:center;gap:10px;margin:2px 0 4px}
+.nrf-time input[type=range]{flex:1;accent-color:#6d9ad0;cursor:pointer}
+.nrf-time .v{min-width:46px;text-align:right;font-weight:600;color:#fff;font-size:14px}
+.nrf-time.off{opacity:.45}
 .nrf-lab{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:2px}
 .nrf-lab b{color:#f0f0f0;font-weight:600;white-space:nowrap}
 .nrf-lab i{color:#8d9aa8;font-style:normal;font-size:11.5px;text-align:right}
@@ -242,6 +267,7 @@ function readState(node) {
     try { data = JSON.parse(w?.value || "{}") || {}; } catch (_) { data = { action: String(w?.value || ""), links: false }; }
     if (typeof data !== "object" || Array.isArray(data)) data = {};
     if (!data.lang) data.lang = defaultLang();
+    if (data.seconds == null) data.seconds = SEC_DEFAULT;
     return data;
 }
 function writeState(node) {
@@ -269,6 +295,21 @@ function build(node) {
     bar.append(ru, en, el("span", "nrf-sp"), exp, hlp);
     inner.appendChild(bar);
 
+    const timeSec = el("div", "nrf-sec");
+    const timeLab = el("div", "nrf-lab");
+    const tb = el("b"), ti = el("i");
+    timeLab.append(tb, ti);
+    const timeRow = el("div", "nrf-time");
+    const range = document.createElement("input");
+    range.type = "range"; range.min = SEC_MIN; range.max = SEC_MAX; range.step = 1;
+    range.value = seconds(st.state);
+    const tv = el("span", "v");
+    timeRow.append(range, tv);
+    timeSec.append(timeLab, timeRow);
+    inner.appendChild(timeSec);
+    range.addEventListener("input", () => { st.state.seconds = Number(range.value); paintTime(); changed(); });
+    for (const ev of ["pointerdown", "mousedown", "wheel"]) range.addEventListener(ev, (e) => e.stopPropagation());
+
     const expBox = el("div", "nrf-exp");
     const mk = (key) => {
         const lab = el("label");
@@ -281,6 +322,7 @@ function build(node) {
         expBox.appendChild(lab);
         return t;
     };
+    const tTime = mk("time");
     const tLinks = mk("links");
     const tNoMusic = mk("no_music");
     const clr = el("span", "nrf-pill");
@@ -321,6 +363,11 @@ function build(node) {
         ta.style.height = Math.max(32, ta.scrollHeight + 2) + "px";
     }
     function lang() { return st.state.lang === "EN" ? "EN" : "RU"; }
+    function paintTime() {
+        const T = UI[lang()];
+        tv.textContent = `${seconds(st.state)} ${T.sec}`;
+        timeRow.classList.toggle("off", st.state.time === false);
+    }
     function paint() {
         const T = UI[lang()];
         ru.classList.toggle("on", lang() === "RU");
@@ -329,6 +376,10 @@ function build(node) {
         exp.classList.toggle("on", !!st.state.expert);
         hlp.textContent = T.help;
         expBox.style.display = st.state.expert ? "" : "none";
+        tb.textContent = T.time;
+        ti.textContent = T.timeHint;
+        tTime.textContent = T.timeOpt;
+        paintTime();
         tLinks.textContent = T.links;
         tNoMusic.textContent = T.noMusic;
         clr.textContent = T.clear;
@@ -407,8 +458,10 @@ function build(node) {
         st.state = readState(node);
         for (const key of SECTIONS) st.boxes[key].value = st.state[key] || "";
         const cbs = expBox.querySelectorAll("input");
-        cbs[0].checked = st.state.links !== false;
-        cbs[1].checked = st.state.no_music !== false;
+        cbs[0].checked = st.state.time !== false;
+        cbs[1].checked = st.state.links !== false;
+        cbs[2].checked = st.state.no_music !== false;
+        range.value = seconds(st.state);
         paint();
     };
     writeState(node);

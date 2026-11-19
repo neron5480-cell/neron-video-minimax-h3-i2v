@@ -67,6 +67,26 @@ def text_lang(data):
     return "EN" if str(data.get("lang", "RU")).upper() == "EN" else "RU"
 
 
+SEC_MIN, SEC_MAX, SEC_DEFAULT = 1, 15, 5
+
+
+def seconds(data):
+    try:
+        v = int(round(float(data.get("seconds", SEC_DEFAULT))))
+    except Exception:
+        v = SEC_DEFAULT
+    return max(SEC_MIN, min(SEC_MAX, v))
+
+
+def duration_line(n, lang):
+    """Длительность — в начало промпта: движки любят, когда им говорят время ролика."""
+    if lang == "EN":
+        return f"Video duration: {n} second{'' if n == 1 else 's'} (0–{n} s)."
+    word = "секунда" if n % 10 == 1 and n % 100 != 11 else \
+        "секунды" if n % 10 in (2, 3, 4) and n % 100 not in (12, 13, 14) else "секунд"
+    return f"Длительность ролика — {n} {word} (0–{n} с)."
+
+
 def compile_form(data):
     """data — dict бланка: lang, links, no_music и тексты участков. → готовый промпт (str)."""
     lang = text_lang(data)
@@ -109,6 +129,8 @@ def compile_form(data):
         parts.append(text)
     if use_links and no_music and not f["music"] and parts:
         parts.append(L["no_music"])
+    if parts and data.get("time", True) is not False:
+        parts.insert(0, duration_line(seconds(data), lang))
     return tags(" ".join(parts)).strip()
 
 
