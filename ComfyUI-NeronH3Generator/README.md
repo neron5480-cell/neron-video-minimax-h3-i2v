@@ -2,9 +2,16 @@
 
 ## 🇷🇺 Русский
 
-**Что это.** Генератор видео со звуком на MiniMax H3. **Мотор — Neron MiniMax H3 Generator (Lite) без изменений**
-(файлы `pipeline.py`, `hd.py`, `frames.py`, `memory.py`, `lora_cache.py` — копии один в один). Новое — вид в стиле
-бланка и полоса хода работы.
+**Что это.** Генератор видео со звуком на MiniMax H3 в стиле бланка, с полосой хода работы.
+
+**Мотор (⚙, по умолчанию — официальный).** Официальный — по рецепту шаблонов ComfyUI: картинка — **якорный первый
+кадр** (`MiniMaxH3ImageToVideo`, модель fl2va), без картинки — текст → видео, несколько образцов — модель **ref2va**
+со своей турбо-LoRA (`MiniMaxH3ReferenceToVideo`); без сдвига сигм. От Lite взято только то, что даёт скорость:
+раскодировка плитками под свободную видеопамять, кэш LoRA, очистка памяти (`pipeline.py` и др. — копии Lite без
+изменений). Почему: Lite подаёт картинку модели fl2va как «образец» — со 2–5-й секунды модель «уплывает».
+«Lite (как раньше)» оставлен для сравнения. HD-режимы пока работают на моторе Lite.
+**Внимание (⚙):** sparse — официальный ускоритель H3 «Model Sparse Attention» (sol-attn; первые 20% шагов полные,
+текст и звук — точно), полное — как в штатном процессе, INT8 — как в Lite.
 
 **Новичок видит:**
 - 🎬 **Режим** — Турбо (8 шагов) · Обычный (20) · Баланс HD · Чисто HD.
@@ -29,9 +36,16 @@
 
 ## 🇬🇧 English
 
-**What it is.** A video-with-sound generator on MiniMax H3. **The engine is Neron MiniMax H3 Generator (Lite),
-unchanged** (`pipeline.py`, `hd.py`, `frames.py`, `memory.py`, `lora_cache.py` are exact copies). New: a form-style
-look and a progress bar.
+**What it is.** A video-with-sound generator on MiniMax H3 with a form-style look and a progress bar.
+
+**Engine (⚙, default — official).** Official follows the ComfyUI templates: a picture is an **anchored first frame**
+(`MiniMaxH3ImageToVideo`, fl2va model), no picture — text to video, several references — the **ref2va** model with its
+turbo LoRA (`MiniMaxH3ReferenceToVideo`); no sigma shift. From Lite only the speed parts: tiled decoding sized to free
+VRAM, LoRA cache, memory cleanup (`pipeline.py` etc. are unchanged Lite copies). Why: Lite feeds the picture to the
+fl2va model as a "reference" and the model drifts after 2–5 s. "Lite (as before)" is kept for comparison. HD modes
+still run on the Lite engine.
+**Attention (⚙):** sparse — the official H3 accelerator "Model Sparse Attention" (sol-attn; first 20% of steps full,
+text and sound exact), full — as in the stock workflow, INT8 — as in Lite.
 
 **A beginner sees:**
 - 🎬 **Mode** — Turbo (8 steps) · Normal (20) · Balance HD · Clean HD.

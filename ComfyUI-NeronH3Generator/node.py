@@ -27,6 +27,9 @@ from .memory import free_between_stages, log_vram
 from .lora_cache import NO_LORA
 from . import pipeline
 from . import hd
+from . import official
+
+ENGINES = ["официальный / official", "Lite (как раньше) / as before"]
 
 
 log = logging.getLogger("Neron.H3.Generator")
@@ -230,6 +233,12 @@ class NeronH3GeneratorBlank:
                 "seed": ("INT", {
                     "default": 1, "min": 0, "max": 0xFFFFFFFFFFFFFFFF,
                 }),
+                "attention": (official.ATTN, {"default": official.ATTN_DEFAULT,
+                              "tooltip": "sparse — официальный ускоритель H3 (первые 20% шагов полные); полное — как "
+                                         "в штатном процессе; INT8 — как в Lite (быстро, но бывает морфинг)."}),
+                "engine": (ENGINES, {"default": ENGINES[0],
+                           "tooltip": "официальный — картинка как якорный первый кадр (как в шаблонах ComfyUI); "
+                                      "Lite — как раньше (картинка как образец), для сравнения."}),
             },
             "optional": {
                 "prompt": ("STRING", {"forceInput": True}),
@@ -237,6 +246,7 @@ class NeronH3GeneratorBlank:
                 "ref_image_1": ("IMAGE",),
                 "ref_image_2": ("IMAGE",),
                 "ref_image_3": ("IMAGE",),
+                "last_frame": ("IMAGE",),
                 "ref_video": ("IMAGE",),
                 "ref_video_audio": ("AUDIO",),
                 "ref_audio": ("AUDIO",),
@@ -374,6 +384,8 @@ class NeronH3GeneratorBlank:
             return self._generate_hd(mode, prompt, width, height, total_frames, kwargs)
 
         is_turbo = mode.startswith("Turbo")
+        if str(kwargs.get("engine", ENGINES[0])) == ENGINES[0]:
+            return self._generate_official(prompt, mode, is_turbo, width, height, total_frames, kwargs)
         steps = (
             int(kwargs.get("turbo_steps", 8)) if is_turbo
             else int(kwargs.get("normal_steps", 20))
@@ -442,7 +454,32 @@ class NeronH3GeneratorBlank:
                     "После генерации (FREE AFTER RUN)",
                 )
 
+        _RUN["warn"] = _RUN.get("warn", []) + ["Мотор: Lite (как раньше) — картинка как образец"]
         return {"ui": {"text": [self._report(mode, width, height, frames_count, steps, seed, user_loras)]},
+                "result": (video, audio, last_frame, frames_count)}
+
+    def _generate_official(self, prompt, mode, is_turbo, width, height, total_frames, kwargs):
+        steps = int(kwargs.get("turbo_steps", 8)) if is_turbo else int(kwargs.get("normal_steps", 20))
+        seed = int(kwargs.get("seed", 1))
+        loras = self._collect_loras(kwargs)
+        free_between_stages("Перед стартом генерации")
+        try:
+            video, audio, last_frame, frames_count, notes = official.generate(
+                prompt=prompt, images=[kwargs.get("ref_image_" + str(i)) for i in range(4)],
+                last_frame=kwargs.get("last_frame"), width=width, height=height, length=total_frames,
+                is_turbo=is_turbo, steps=steps, seed=seed, user_loras=loras, models=self._resolve_models(kwargs),
+                attention=str(kwargs.get("attention", official.ATTN_DEFAULT)),
+                decode_tile_size=int(kwargs.get("decode_tile_size", 0) or 0),
+                ref_video=kwargs.get("ref_video"), ref_video_audio=kwargs.get("ref_video_audio"),
+                ref_audio=kwargs.get("ref_audio"))
+        except Exception:
+            free_between_stages("После ошибки")
+            raise
+        finally:
+            if kwargs.get("FREE AFTER RUN / ОЧИСТКА ПОСЛЕ", True):
+                free_between_stages("После генерации (FREE AFTER RUN)")
+        _RUN["warn"] = _RUN.get("warn", []) + notes
+        return {"ui": {"text": [self._report(mode, width, height, frames_count, steps, seed, loras)]},
                 "result": (video, audio, last_frame, frames_count)}
 
     def _report(self, mode, w, h, frames, steps, seed, loras):

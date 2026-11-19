@@ -11,9 +11,9 @@ const HD_MODES = ["Баланс HD / Balance HD", "Чисто HD / Clean HD", "�
 
 // входы, которыми управляет нода: порядок и тип
 const INPUTS = [["prompt", "STRING"], ["length_in", "INT"], ["ref_image_0", "IMAGE"], ["ref_image_1", "IMAGE"],
-    ["ref_image_2", "IMAGE"], ["ref_image_3", "IMAGE"], ["ref_video", "IMAGE"], ["ref_video_audio", "AUDIO"],
+    ["ref_image_2", "IMAGE"], ["ref_image_3", "IMAGE"], ["last_frame", "IMAGE"], ["ref_video", "IMAGE"], ["ref_video_audio", "AUDIO"],
     ["ref_audio", "AUDIO"], ["width", "INT"], ["height", "INT"]];
-const EXPERT_INPUTS = ["ref_video", "ref_video_audio", "ref_audio", "width", "height"];
+const EXPERT_INPUTS = ["last_frame", "ref_video", "ref_video_audio", "ref_audio", "width", "height"];
 
 const UI = {
     RU: {
@@ -29,7 +29,7 @@ const UI = {
         step: "шаг", passed: "прошло", left: "осталось ~", done: "✅ Готово за", error: "❌ Ошибка — подробности в консоли",
         expert: "⚙ эксперт", help: "📖 справка",
         manual: "свой размер", w: "ширина", h: "высота", div: "кратно",
-        lora: "LoRA", strength: "сила", models: "Модели", unet: "модель H3", clip: "текстовый энкодер",
+        lora: "LoRA", strength: "сила", models: "Модели", motor: "Мотор", attn: "внимание", engine: "мотор", unet: "модель H3", clip: "текстовый энкодер",
         vae_v: "VAE видео", vae_a: "VAE звука", turbo_lora: "турбо-LoRA",
         steps_n: "шаги «Обычный»", steps_t: "шаги «Турбо»", seed: "сид", after: "после запуска",
         tile: "плитка раскодировки (0 — авто)", free: "очищать память после запуска",
@@ -48,7 +48,7 @@ const UI = {
         step: "step", passed: "elapsed", left: "left ~", done: "✅ Done in", error: "❌ Error — see the console",
         expert: "⚙ expert", help: "📖 help",
         manual: "custom size", w: "width", h: "height", div: "multiple of",
-        lora: "LoRA", strength: "strength", models: "Models", unet: "H3 model", clip: "text encoder",
+        lora: "LoRA", strength: "strength", models: "Models", motor: "Engine", attn: "attention", engine: "engine", unet: "H3 model", clip: "text encoder",
         vae_v: "video VAE", vae_a: "audio VAE", turbo_lora: "turbo LoRA",
         steps_n: "Normal steps", steps_t: "Turbo steps", seed: "seed", after: "after run",
         tile: "decode tile (0 — auto)", free: "free memory after the run",
@@ -69,7 +69,7 @@ const HELP = `🎥 NERON H3 GENERATOR — БЛАНК
 5. ▶ Run. Полоса покажет этапы: модель → текст → генерация (шаги, сколько осталось) → раскодировка → звук → «Готово за …».
 
 ⚙ ЭКСПЕРТ
-Свой размер, 3 LoRA, модели, шаги, сид, плитка раскодировки, очистка памяти, входы видео-образца / звука / размера.
+Мотор: официальный (картинка — якорный первый кадр, как в шаблонах ComfyUI) или Lite (как раньше, для сравнения). Внимание: sparse (официальный ускоритель H3) / полное / INT8. Свой размер, 3 LoRA, модели, шаги, сид, плитка раскодировки, очистка памяти, входы последнего кадра, видео-образца, звука и размера.
 
 ────────────────────────
 
@@ -86,7 +86,7 @@ HOW
 5. ▶ Run. The bar shows the stages: model → text → generating (steps, time left) → decoding → sound → "Done in …".
 
 ⚙ EXPERT
-Custom size, 3 LoRAs, models, steps, seed, decode tile, memory cleanup, reference video / audio / size inputs.`;
+Engine: official (the picture is an anchored first frame, as in ComfyUI templates) or Lite (as before, for comparison). Attention: sparse (official H3 accelerator) / full / INT8. Custom size, 3 LoRAs, models, steps, seed, decode tile, memory cleanup, last frame, reference video, audio and size inputs.`;
 
 // ---------------- оформление ----------------
 const CSS = `
@@ -222,7 +222,8 @@ function syncInputs(node) {
 
 // синхронизация: prompt от автопромтера → его frames_count в length_in и его картинки img_k в ref_image_k
 // (только туда, где у автопромтера картинка подана, а у нас вход свободен; свои провода человека не трогаем)
-const PAIRS = [["image_0", "img_0", "ref_image_0"], ["image_1", "img_1", "ref_image_1"], ["image_2", "img_2", "ref_image_2"]];
+const PAIRS = [["image_0", "img_0", "ref_image_0"], ["image_1", "img_1", "ref_image_1"], ["image_2", "img_2", "ref_image_2"],
+    ["last_frame", "last_frm", "last_frame"]];
 function autoLength(node) {
     const pi = inIdx(node, "prompt");
     if (pi < 0 || node.inputs[pi].link == null) return;
@@ -334,7 +335,7 @@ function build(node) {
             const vals = [...w.options.values];
             if (w.value != null && !vals.includes(w.value)) vals.unshift(w.value);   // файл из схемы, которого нет в списке
             for (const v of vals) {
-                const o = document.createElement("option"); o.value = v; o.textContent = String(v).split(/[\\/]/).pop();
+                const o = document.createElement("option"); o.value = v; o.textContent = String(v).includes(" / ") ? pick(v, lang()) : String(v).split(/[\\/]/).pop();
                 input.appendChild(o);
             }
             input.onchange = () => set(name, input.value);
@@ -347,6 +348,9 @@ function build(node) {
         }
         ctl.push([name, input, t, key]);
     }
+    const hMotor = el("h4"); expBox.appendChild(hMotor);
+    const gMotor = el("div", "ngb-grid"); expBox.appendChild(gMotor);
+    field(gMotor, "engine", "engine"); field(gMotor, "attn", "attention");
     const hSize = el("h4"); expBox.appendChild(hSize);
     const gSize = el("div", "ngb-grid"); expBox.appendChild(gSize);
     const manLab = el("label"), manCb = document.createElement("input"), manT = el("span");
@@ -419,7 +423,7 @@ function build(node) {
         paintTime();
         picNote.textContent = T.pics;
         expBox.style.display = P.ngb_expert ? "" : "none";
-        hSize.textContent = T.size; hLora.textContent = T.lora; hMod.textContent = T.models;
+        hMotor.textContent = T.motor; hSize.textContent = T.size; hLora.textContent = T.lora; hMod.textContent = T.models;
         manCb.checked = manual; manT.textContent = T.manual;
         for (const [name, input, t, key] of ctl) {
             if (key) t.textContent = T[key] || key;
