@@ -402,3 +402,16 @@ def fix_header(text, pictures, last_frame, dur):
     if last_frame:
         body = re.sub(r"(?<![<\w])Last frame(?![>\w])", "<Last frame>", body)
     return head + "\n\n" + body
+
+
+_SPK = re.compile(r"\(S(\d+)\)")
+
+
+def renumber_speakers(text):
+    """(S2) … (S1) → кто заговорил первым — S1, второй — S2: номер за человеком, по порядку появления."""
+    order = {}
+    for m in _SPK.finditer(text):
+        order.setdefault(m.group(1), str(len(order) + 1))
+    if all(k == v for k, v in order.items()):
+        return text
+    return _SPK.sub(lambda m: f"(S{order[m.group(1)]})", text)

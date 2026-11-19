@@ -219,6 +219,7 @@ class NeronH3AutoPrompterBlank:
             raise RuntimeError(f"{TAG} LLM не сработала / LLM failed:\n{answer}")
         # шапку и метку ставим сами — по тому, что реально подано (маленькая LLM в них путается)
         text = F.fix_header(text, len(pics), last_frame is not None, brief_dur)
+        text = F.renumber_speakers(text)
         note = f"LLM {time.time() - t0:.0f} с, {model.split('/')[-1]}" + (f" ({picked})" if picked else "") + \
                f", картинки: {', '.join(shown) or 'нет — текст → видео'}"
         if tries:

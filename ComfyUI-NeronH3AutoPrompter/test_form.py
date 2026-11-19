@@ -131,6 +131,8 @@ if __name__ == "__main__":
     assert h == "Target duration 5.17 seconds.\n\nsummary:\n[text-to-video generation] B", h
     b = form.build_brief({"action": "x"})
     assert "no lines given" in b and "indistinctly" in b
+    assert form.renumber_speakers("A (S2) says x. B (S1) says y. A (S2) again.") == "A (S1) says x. B (S2) says y. A (S1) again."
+    assert form.renumber_speakers("A (S1) x (S2) y") == "A (S1) x (S2) y"
     assert not form.has_content({"music": "piano", "pictures": "x"}) and form.has_content({"camera": "static"})
     js = js_all()
     if js is not None:

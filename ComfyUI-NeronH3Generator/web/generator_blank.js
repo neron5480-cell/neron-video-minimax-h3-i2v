@@ -520,6 +520,17 @@ function build(node) {
     });
     if (w) { w.serialize = false; w.computeSize = (width) => [width, contentH()]; }
     node.__ngbPaint = paint;
+    // надпись «10 с · 243 кадра» следит за ползунком автопромтера (раз в секунду, только текст)
+    let lastSync = "";
+    node.__ngbSyncTimer = setInterval(() => {
+        if (!root.isConnected) return;
+        if (!linked(node, "length_in")) return;
+        const ss = sourceSeconds(node);
+        const k = String(ss);
+        if (k !== lastSync) { lastSync = k; paintTime(); }
+    }, 1000);
+    const removed = node.onRemoved;
+    node.onRemoved = function () { clearInterval(node.__ngbSyncTimer); return removed?.apply(this, arguments); };
     paint();
     setTimeout(() => { lastH = 0; paint(); }, 60);
     setTimeout(() => { lastH = 0; paint(); }, 400);
