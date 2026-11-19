@@ -62,7 +62,7 @@ const HELP = `🎥 NERON H3 GENERATOR — БЛАНК
 Генератор видео со звуком на MiniMax H3. Мотор — проверенный Neron MiniMax H3 Generator (Lite), без изменений. Новое — вид: только нужное, остальное за ⚙, и полоса хода работы.
 
 КАК
-1. Провод prompt — от 🎬 Neron H3 AutoPrompter — Бланк. Как только подключишь, нода сама протянет и длину (frames_count → length_in): длина задаётся в одном месте — на бланке.
+1. Провод prompt — от 🎬 Neron H3 AutoPrompter — Бланк. Как только подключишь, нода сама протянет длину (frames_count → length_in) и картинки, поданные в автопромтер (img_0 → ref_image_0 и т. д.). Длина и картинки задаются в одном месте.
 2. Режим: Турбо (8 шагов, быстро), Обычный (20 шагов), Баланс HD / Чисто HD (полный размер модели, дольше).
 3. Размер — пресеты по паспорту модели (короткая сторона 768). Нестандартный размер даёт глюки.
 4. Картинки — подключи к ref_image_0, появится следующий слот (до 4). Нет картинок — текст → видео.
@@ -79,7 +79,7 @@ const HELP = `🎥 NERON H3 GENERATOR — БЛАНК
 A video-with-sound generator on MiniMax H3. The engine is the proven Neron MiniMax H3 Generator (Lite), unchanged. New: the look — only what you need, the rest under ⚙, and a progress bar.
 
 HOW
-1. The prompt wire — from 🎬 Neron H3 AutoPrompter — Form. Once connected, the node also wires the length (frames_count → length_in): the length is set in one place — on the form.
+1. The prompt wire — from 🎬 Neron H3 AutoPrompter — Form. Once connected, the node wires the length (frames_count → length_in) and the pictures given to the autoprompter (img_0 → ref_image_0 etc.) by itself.
 2. Mode: Turbo (8 steps, fast), Normal (20 steps), Balance HD / Clean HD (the model's full size, slower).
 3. Size — presets on the model passport (short side 768). Odd sizes cause glitches.
 4. Pictures — connect to ref_image_0, the next slot appears (up to 4). No pictures — text to video.
@@ -220,16 +220,27 @@ function syncInputs(node) {
     }
 }
 
-// синхронизация длины: prompt от автопромтера → его frames_count в наш length_in
+// синхронизация: prompt от автопромтера → его frames_count в length_in и его картинки img_k в ref_image_k
+// (только туда, где у автопромтера картинка подана, а у нас вход свободен; свои провода человека не трогаем)
+const PAIRS = [["image_0", "img_0", "ref_image_0"], ["image_1", "img_1", "ref_image_1"], ["image_2", "img_2", "ref_image_2"]];
 function autoLength(node) {
     const pi = inIdx(node, "prompt");
-    if (pi < 0 || node.inputs[pi].link == null || linked(node, "length_in")) return;
+    if (pi < 0 || node.inputs[pi].link == null) return;
     const l = getLink(node.inputs[pi].link);
     const src = l && app.graph.getNodeById(l.origin_id);
     if (!src || !AUTOPROMPTERS.includes(src.type || src.comfyClass)) return;
-    const out = (src.outputs || []).findIndex((o) => o.name === "frames_count");
-    const li = inIdx(node, "length_in");
-    if (out >= 0 && li >= 0) src.connect(out, node, li);
+    const outI = (name) => (src.outputs || []).findIndex((o) => o.name === name);
+    if (!linked(node, "length_in")) {
+        const out = outI("frames_count"), li = inIdx(node, "length_in");
+        if (out >= 0 && li >= 0) src.connect(out, node, li);
+    }
+    for (const [sIn, sOut, ours] of PAIRS) {
+        const si = (src.inputs || []).findIndex((i) => i.name === sIn);
+        if (si < 0 || src.inputs[si].link == null || linked(node, ours)) continue;
+        if (inIdx(node, ours) < 0) syncInputs(node);          // слот появляется после предыдущего
+        const out = outI(sOut), ti = inIdx(node, ours);
+        if (out >= 0 && ti >= 0) src.connect(out, node, ti);
+    }
 }
 function sourceSeconds(node) {
     const li = inIdx(node, "length_in");
@@ -553,6 +564,25 @@ api.addEventListener("progress", (e) => {
 api.addEventListener("execution_error", (e) => {
     const n = ours(e.detail?.node_id ?? current);
     if (n) { n.__ngbRun.state = "error"; n.__ngbRun.repaint?.(); }
+});
+
+// перед каждым запуском — ещё раз подтянуть провода (картинку могли подать в автопромтер позже)
+app.registerExtension({
+    name: "Neron.H3GeneratorBlank.autowire",
+    async setup() {
+        const orig = app.graphToPrompt;
+        if (!orig || orig.__ngbWrapped) return;
+        const wrapped = async function (...args) {
+            try {
+                for (const n of app.graph?._nodes || app.graph?.nodes || []) {
+                    if (n.type === NODE || n.comfyClass === NODE) { autoLength(n); syncInputs(n); }
+                }
+            } catch (e) { console.error("[Neron H3 Generator Бланк] autowire", e); }
+            return orig.apply(this, args);
+        };
+        wrapped.__ngbWrapped = true;
+        app.graphToPrompt = wrapped;
+    },
 });
 
 app.registerExtension({

@@ -351,6 +351,11 @@ class NeronH3GeneratorBlank:
 
         _RUN["pass"] = 0
         _RUN["t0"] = time.time()
+        _RUN["warn"] = []
+        if "<Picture" in prompt and kwargs.get("ref_image_0") is None:
+            _RUN["warn"].append("⚠ Промпт говорит о <Picture 1>, а картинка не подключена к ref_image_0 — модель "
+                                "рисует с нуля. EN: the prompt refers to <Picture 1> but ref_image_0 is empty.")
+            log.warning("[H3 Generator Бланк] %s", _RUN["warn"][-1])
         _send("start")
         mode = str(kwargs.get("MODE / РЕЖИМ", "Turbo / Турбо"))
         seconds = clamp_seconds(
@@ -446,6 +451,7 @@ class NeronH3GeneratorBlank:
                  f"Длина: {frames} кадров ({frames / DEFAULT_FPS:.2f} с)", f"Сид: {seed}"]
         if loras:
             lines.append("LoRA: " + ", ".join(f"{n.split('/')[-1]} ×{st:g}" for n, st in loras))
+        lines = _RUN.get("warn", []) + lines
         lines.append(f"Готово за {int(took // 60)} мин {int(took % 60)} с")
         return "\n".join(lines)
 
@@ -472,7 +478,7 @@ class NeronH3GeneratorBlank:
             if kwargs.get("FREE AFTER RUN / ОЧИСТКА ПОСЛЕ", True):
                 free_between_stages("После генерации (FREE AFTER RUN)")
         took = time.time() - _RUN.get("t0", time.time())
-        report = list(report) + [f"Готово за {int(took // 60)} мин {int(took % 60)} с"]
+        report = _RUN.get("warn", []) + list(report) + [f"Готово за {int(took // 60)} мин {int(took % 60)} с"]
         return {"ui": {"text": ["\n".join(report)]},
                 "result": (video, audio, last_frame, frames_count)}
 
