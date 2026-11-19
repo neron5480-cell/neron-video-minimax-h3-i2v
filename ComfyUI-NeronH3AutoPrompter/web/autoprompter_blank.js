@@ -21,8 +21,8 @@ const UI = {
             "напр.: стоит у ворот на уровне груди, не двигается. Или: медленно облетает машину по кругу."],
         sound: ["🔊 Звук сцены", "что реально слышно в кадре",
             "напр.: скрип ключа, звон металла о бетон, гудение лампы, дождь по жестяной крыше."],
-        speech: ["🗣 Речь", "слова — в кавычках «…»; пусто — никто не говорит",
-            "напр.: мужчина хрипло, по-русски, себе под нос: «Ну и зараза…»\nкаждая реплика — с новой строки"],
+        speech: ["🗣 Речь", "кто (как в «Героях»), как, на каком языке, слова — «…»; пусто — без слов",
+            "напр.:\nженщина, на 7 секунде, удивлённо, по-русски: «Ты ещё долго?»\nмужчина, не поднимая головы, устало: «Минут десять»"],
         music: ["🎵 Музыка", "отдельно от шумов; пусто — без музыки",
             "напр.: тихая гитара издалека, из радиоприёмника"],
         pictures: ["🖼 Картинки", "кто или что на каждой картинке (image_0 = <Picture 1>…)",
@@ -51,8 +51,8 @@ const UI = {
             "e.g.: stands at the gate at chest height, does not move. Or: slowly circles the car."],
         sound: ["🔊 Scene sound", "what is really heard in the frame",
             "e.g.: the wrench creaking, metal ringing on concrete, the lamp humming, rain on the tin roof."],
-        speech: ["🗣 Speech", "words in quotes \"…\"; empty — nobody speaks",
-            "e.g.: the man, hoarse, in English, under his breath: \"Damn thing…\"\neach line on a new line"],
+        speech: ["🗣 Speech", "who (as in Characters), how, which language, words in \"…\"; empty — no words",
+            "e.g.:\nthe woman, at 7 s, surprised, in English: \"Still not done?\"\nthe man, without looking up, tired: \"Ten more minutes\""],
         music: ["🎵 Music", "separate from noises; empty — no music",
             "e.g.: a quiet guitar far away, from a radio"],
         pictures: ["🖼 Pictures", "who or what is on each picture (image_0 = <Picture 1>…)",
@@ -81,8 +81,9 @@ const HELP = `🎬 NERON H3 AUTOPROMPTER — БЛАНК
 1. ⏱ Длина ролика — ползунок. Кадры уходят в движок сами: выход frames_count → вход length_in.
 2. Заполни участки. Пустые не нужны: для простой сцены хватит трёх-четырёх.
 3. Герои — каждый с новой строки. У машин и механизмов — состояние: стоит, едет, заглушена.
+3а. Действие — можно с секундами прямо во фразе: «на 7 секунде подходит женщина» — событие встанет ровно туда.
 4. Камера — словами: как написал, так и снимет. Пусто — камера неподвижна. Пресетов нет — они не нужны.
-5. Речь — слова в кавычках «…», лучше указать язык. Пусто или «нет» — никто не говорит. Музыка пуста — музыки нет.
+5. Речь — одна реплика на строку: кто (тем же словом, что в «Героях»), как, на каком языке, слова в кавычках «…»; можно «на 7 секунде». Пусто — никто не говорит словами; если в «Действии» люди разговаривают — тихо и неразборчиво. Музыка пуста — музыки нет.
 6. Картинки — по желанию: image_0 = <Picture 1>, image_1 = <Picture 2>… last_frame — последний кадр. Нет картинок — текст → видео.
 7. ▶ Run. Внизу появится готовый промпт — ровно то, что уйдёт в движок. Выход minimax_prompt → вход prompt движка.
 
@@ -100,8 +101,9 @@ HOW
 1. ⏱ Clip length — the slider. Frames go to the engine by themselves: frames_count output → length_in input.
 2. Fill in the sections. Two or three empty ones are fine.
 3. Characters — each on a new line. For machines give their state: parked, moving, engine off.
+3a. Action — seconds can sit inside the phrase: "at 7 s a woman walks up" — the event lands exactly there.
 4. Camera — in words: shot exactly as written. Empty — static. No presets — they are not needed.
-5. Speech — words in quotes "…", better name the language. Empty or "no" — nobody speaks. Music empty — no music.
+5. Speech — one line per utterance: who (the same word as in Characters), how, which language, words in quotes "…"; "at 7 s" is fine. Empty — no words; if people talk in the Action, they talk quietly and indistinctly. Music empty — no music.
 6. Pictures — optional: image_0 = <Picture 1>, image_1 = <Picture 2>… last_frame — the final frame. No pictures — text to video.
 7. ▶ Run. The finished prompt appears at the bottom — exactly what goes to the engine. minimax_prompt output → engine prompt input.
 

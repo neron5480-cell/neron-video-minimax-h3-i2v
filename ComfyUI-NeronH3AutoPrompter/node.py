@@ -204,6 +204,7 @@ class NeronH3AutoPrompterBlank:
                 messages.append({"role": "assistant", "content": "I see it."})
                 shown.append(label.split(" (")[0].rstrip(":"))
         messages.append({"role": "user", "content": "Brief:\n" + brief})
+        brief_dur = brief.split(" seconds", 1)[0].replace("TARGET DURATION:", "").strip()
 
         t0 = time.time()
         answer, tries = ml._ask_reliably(messages, max_tokens, temperature)
@@ -216,6 +217,8 @@ class NeronH3AutoPrompterBlank:
         head = text[:20].lower()
         if not text or head.startswith(("ошибка", "error", "❌", "⚠")):
             raise RuntimeError(f"{TAG} LLM не сработала / LLM failed:\n{answer}")
+        # шапку и метку ставим сами — по тому, что реально подано (маленькая LLM в них путается)
+        text = F.fix_header(text, len(pics), last_frame is not None, brief_dur)
         note = f"LLM {time.time() - t0:.0f} с, {model.split('/')[-1]}" + (f" ({picked})" if picked else "") + \
                f", картинки: {', '.join(shown) or 'нет — текст → видео'}"
         if tries:

@@ -108,10 +108,10 @@ if __name__ == "__main__":
     b = form.build_brief({"seconds": 10, "heroes": "машина\nмужчина", "action": "чинит", "speech": "нет",
                           "music": "-"}, 1, True)
     assert b.startswith("TARGET DURATION: 10.13 seconds.\nREFERENCES: Picture 1, Last frame attached"), b
-    assert "SUBJECTS:\n1. машина\n2. мужчина" in b and "SPEECH: none — nobody speaks." in b and "MUSIC: none." in b, b
+    assert "SUBJECTS:\n1. машина\n2. мужчина" in b and "SPEECH: no lines given" in b and "MUSIC: none." in b, b
     assert "CAMERA: not specified — the camera remains static." in b, b
     b2 = form.build_brief({"action": "x", "speech": "он: «Привет»", "camera": "наезд"})
-    assert "no pictures attached — text-to-video" in b2 and "SPEECH:\n1. он: «Привет»" in b2 and "CAMERA: наезд" in b2
+    assert "no pictures attached — text-to-video" in b2 and "1. он: «Привет»" in b2 and "CAMERA: наезд" in b2
     assert form.clean_answer("Ok!\n<think>..</think>```\nTarget duration 5.17 seconds.\n```") == \
         "Target duration 5.17 seconds."
     t = form.build_brief({"seconds": 10, "action": "чинит"})
@@ -120,6 +120,17 @@ if __name__ == "__main__":
     assert "- 0.00–1.29 s: a" in t and "- 3.88–5.17 s: d" in t, t
     t = form.build_brief({"seconds": 10, "action": "0-2 с: a\n2-5 с: b"})
     assert "own timings" in t and "10.13 seconds" in t and "- 0-2 с: a" in t, t
+    t = form.timeline(["чинит", "на 7 секунде подходит женщина"], 10.125, "10.13")
+    assert "- 0.00–7.00 s: чинит" in t and "- 7.00–10.13 s: на 7 секунде" in t, t
+    assert form.moment("мужчина 50 лет, 3 стула") is None and form.moment("at 9 s he sits") == 9.0
+    h = form.fix_header("Target duration 10.13 seconds. Summary tag: [x]\n\nsummary:\nA by Picture 1 and Picture 3.",
+                        1, False, "10.13")
+    assert h.startswith("How the reference pictures align") and "summary:\n[keyframe completion + reference generation] A"\
+        in h and "<Picture 1>" in h and "Picture 3." in h and "Summary tag" not in h, h
+    h = form.fix_header("summary:\n[t] B", 0, False, "5.17")
+    assert h == "Target duration 5.17 seconds.\n\nsummary:\n[text-to-video generation] B", h
+    b = form.build_brief({"action": "x"})
+    assert "no lines given" in b and "indistinctly" in b
     assert not form.has_content({"music": "piano", "pictures": "x"}) and form.has_content({"camera": "static"})
     js = js_all()
     if js is not None:

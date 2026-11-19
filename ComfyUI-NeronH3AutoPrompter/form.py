@@ -265,8 +265,10 @@ def build_brief(data, pictures=0, last_frame=False):
     out.append("CAMERA: " + (" ".join(f["camera"]) if f["camera"] else "not specified — the camera remains static."))
     out.append("SOUND: " + (" ".join(f["sound"]) if f["sound"] else "not specified — only the quiet natural "
                                                                     "ambience of the place."))
-    out.append("SPEECH:\n" + "\n".join(f"{i + 1}. {s}" for i, s in enumerate(f["speech"])) if f["speech"]
-               else "SPEECH: none — nobody speaks.")
+    out.append("SPEECH (one line per utterance, in order; the speaker is the subject named in the line):\n"
+               + "\n".join(f"{i + 1}. {s}" for i, s in enumerate(f["speech"])) if f["speech"]
+               else "SPEECH: no lines given — nobody says clear words. If the ACTION has people talking, they talk "
+                    "quietly and indistinctly: lips move, a low murmur, no words can be made out.")
     out.append("MUSIC: " + (" ".join(f["music"]) if f["music"] else "none."))
     if f["pictures"]:
         out.append("NOTES ON PICTURES: " + " ".join(f["pictures"]))
@@ -281,6 +283,21 @@ def _t(x):
     return f"{x:.2f}"
 
 
+_AT = re.compile(r"(\d+(?:[.,]\d+)?)\s*(?:-?\s*(?:й|ой|ю|ую|ей))?\s*"
+                 r"(?:секунд[аеуы]?|секунде|сек|с|seconds?|secs?|s)(?![^\W\d_])", re.I)
+
+
+def moment(line):
+    """«на 7 секунде», «at 7 s», «с 5 по 8 секунду» → 7.0 / 5.0 (первая названная секунда) или None."""
+    m = _AT.search(line)
+    if not m:
+        return None
+    try:
+        return float(m.group(1).replace(",", "."))
+    except ValueError:
+        return None
+
+
 def timeline(actions, total, end=None):
     """Действие → разметка по секундам на ВСЮ длину ролика (маленькая LLM слушается готовых цифр).
     Свои секунды у человека — оставляем, последний отрезок дотягиваем до конца. Иначе — ровные отрезки:
@@ -289,6 +306,31 @@ def timeline(actions, total, end=None):
     if any(_TIME.match(a) for a in actions):
         return ("ACTION — TIMELINE (the person's own timings; keep them, and the last beat ends exactly at "
                 f"{end} seconds):\n" + "\n".join(f"- {a}" for a in actions))
+    marks = [moment(a) for a in actions]
+    if any(m is not None for m in marks):
+        # события «на N секунде» — ровно туда; строки без секунд — поровну между соседями; первая — с нуля
+        t = list(marks)
+        if t[0] is None:
+            t[0] = 0.0
+        i = 0
+        while i < len(t):
+            if t[i] is None:
+                j = i
+                while j < len(t) and t[j] is None:
+                    j += 1
+                lo, hi = t[i - 1], (t[j] if j < len(t) else total)
+                for k in range(i, j):
+                    t[k] = lo + (hi - lo) * (k - i + 1) / (j - i + 1)
+                i = j
+            else:
+                i += 1
+        t = [min(max(0.0, x), total) for x in t]
+        rows = []
+        for i, a in enumerate(actions):
+            b = end if i == len(actions) - 1 else _t(max(t[i], t[i + 1]))
+            rows.append(f"- {_t(t[i])}–{b} s: {a}")
+        return ("ACTION — TIMELINE (each event starts exactly at its time; write every beat as \"From A to B "
+                f"seconds, ...\"; the last beat ends exactly at {end} seconds):\n" + "\n".join(rows))
     n = max(len(actions), min(5, max(1, round(total / BEAT_SEC))))
     step = total / n
     rows = []
@@ -317,3 +359,46 @@ def clean_answer(text):
             t = t[i:]
             break
     return tags(t).strip()
+
+
+def alignment(pictures, last_frame, dur):
+    """Шапка родного формата H3 — по тому, что реально подано (LLM в ней путается)."""
+    if not pictures and not last_frame:
+        return f"Target duration {dur} seconds.", "[text-to-video generation]"
+    parts = []
+    if pictures:
+        parts.append("<Picture 1> aligns with the 0.00-second mark of the target video and is the leading first frame")
+    if last_frame:
+        parts.append(f"<Last frame> aligns with the {dur}-second mark of the target video and is the final frame")
+    extra = [f"<Picture {i}>" for i in range(2, int(pictures) + 1)]
+    if extra:
+        parts.append(" and ".join(extra) + (" supplies" if len(extra) == 1 else " supply") +
+                     " additional visual references that are integrated into the same continuous scene")
+    head = "How the reference pictures align with the target video - " + "; ".join(parts) + \
+           f". Target duration {dur} seconds."
+    if extra:
+        tag = "[reference generation" + (" + morphing narrative]" if last_frame else "]")
+    elif last_frame:
+        tag = "[keyframe completion + morphing narrative]"
+    else:
+        tag = "[keyframe completion + reference generation]"
+    return head, tag
+
+
+_PIC = re.compile(r"(?<![<\w])Picture (\d+)(?![>\w])")
+
+
+def fix_header(text, pictures, last_frame, dur):
+    """Ответ LLM → правильная шапка и метка summary; «Picture 1» → «<Picture 1>» (только поданные картинки)."""
+    i = text.find("summary:")
+    if i < 0:
+        return text
+    head, tag = alignment(pictures, last_frame, dur)
+    body = re.sub(r"Summary tag:\s*", "", text[i:], flags=re.I)
+    m = re.match(r"summary:\s*(\[[^\]\n]*\]\s*)?", body)
+    body = "summary:\n" + tag + " " + body[m.end():].lstrip()
+    body = _PIC.sub(lambda mm: f"<Picture {mm.group(1)}>" if 1 <= int(mm.group(1)) <= int(pictures) else mm.group(0),
+                    body)
+    if last_frame:
+        body = re.sub(r"(?<![<\w])Last frame(?![>\w])", "<Last frame>", body)
+    return head + "\n\n" + body
