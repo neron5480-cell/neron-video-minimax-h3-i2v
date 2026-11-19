@@ -1,5 +1,16 @@
 # Changelog / История изменений
 
+## 🧹 Neron 3.0.0 — чистка: каждая папка самостоятельна (main, 19.11.2026)
+
+**RU:** по итогам тестов Романа в пакете остались только рабочие проекты, и **каждая папка работает сама по себе** — свои ноды и свой код, без соседей.
+- **Остались:** 🎬 H3 Story · 🎬 LTX Engine (+ LTX AutoPrompter) · 🖼 Neron Image (Krea 2) · 🎨 Restore Studio · 🎛 Perception Relay · 🎹 Audio Studio · 🎨 Neron Theme · 🖥 Neron Studio (стол).
+- **Убраны из пакета** (код сохранён в ветке dev): H3 Engine, Neron Studio H3 (Lite-генератор, AutoPrompter, Image Processor, Video Clarity), Fixed Camera H3, H3 LoRA Selector, Interactive Processor, Hero Swap, Dialog Autoprompter / Multi-Image LLM, старые процессы `workflow/`, README_INSTALL.
+- **Независимость:** 📝 Story AutoPrompter — свой код LLM и камера H3 в `ComfyUI-NeronH3Story/llm` (свой llama-server, порт 8766); 🎬 LTX AutoPrompter переехал в `ComfyUI-NeronLTXEngine` (своя копия кода LLM, порт 8765); Restore Studio — свой процесс в `restore_studio/workflows` и своя копия Manual Color & Upscale.
+- Стол: убраны плитки на удалённое (Диалог, H3 Raw, H3 v3.0, Full Pipeline, папка «Тест»), добавлена плитка «Картинка по тексту» (Neron Image).
+- Проверено: каждая папка грузится в одиночку, без соседей.
+
+**EN:** cleanup after Roman's tests — only working projects stay, and every folder is self-contained. Kept: H3 Story, LTX Engine (+ its AutoPrompter, now inside it), Neron Image, Restore Studio (own workflow and color/upscale copy), Perception Relay, Audio Studio, Neron Theme, Neron Studio. Removed from the pack (code kept in the dev branch): H3 Engine, Neron Studio H3, Fixed Camera H3, H3 LoRA Selector, Interactive Processor, Hero Swap, Dialog Autoprompter, old workflows. The Story AutoPrompter carries its own LLM code.
+
 ## 🖼 Neron Image 0.4 — большой редактор промпта (main 2.4.1, 16.11.2026)
 
 **RU:**

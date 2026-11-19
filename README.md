@@ -4,7 +4,7 @@
 
 Привет, друзья!
 
-В этом репозитории живут мои кастомные ноды для ComfyUI. Здесь собраны **независимые проекты**: генерация видео, пост-обработка видео и музыка. Используйте их по отдельности или вместе, как вам удобно.
+В этом репозитории живут мои кастомные ноды для ComfyUI. Здесь собраны **независимые проекты**: видео (H3 Story, LTX), картинки (Krea 2, реставрация), пост-обработка видео, музыка, темы и рабочий стол. **Каждая папка работает сама по себе** — у неё свои ноды и свой код, соседи не нужны.
 
 ---
 
@@ -42,17 +42,10 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 
 Папка ноды должна лежать **сразу** в `custom_nodes`, без лишней вложенности:
 ```
-✅ custom_nodes/ComfyUI-NeronH3Engine/__init__.py
-❌ custom_nodes/neron-video-minimax-h3-i2v-main/ComfyUI-NeronH3Engine/__init__.py
+✅ custom_nodes/ComfyUI-NeronH3Story/__init__.py
+❌ custom_nodes/neron-video-minimax-h3-i2v-main/ComfyUI-NeronH3Story/__init__.py
 ```
-Ноды из папки `Neron_Studio_H3` копируются **по отдельности** (папки внутри неё), а не вся папка целиком.
-
-**Общий код — одна копия.** Некоторые папки берут код у соседей, поэтому копируйте их вместе:
-- `ComfyUI-H3-Static-Camera` и `NeronStudio-Image-Processor` → нужна `ComfyUI-Interactive-Processor` (загрузка и цвет картинки);
-- `NeronStudio-AutoPrompter` → нужна `ComfyUI-H3-Static-Camera` (камера H3);
-- `ComfyUI-NeronH3Story` (его 📝 Story AutoPrompter) → нужна `NeronStudio-AutoPrompter` (сервер LLM) и `ComfyUI-H3-Static-Camera`.
-
-Не хватит соседа — в консоли будет понятная ошибка с именем нужной папки.
+**Каждая папка самостоятельна** — копируйте только ту, что нужна: соседние папки ей не нужны.
 
 ### ⚠️ Не смешивайте способы
 
@@ -78,22 +71,6 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 - **RU / EN** — по языку системы, переключатель на столе.
 - Проверенные процессы лежат внутри как есть (`ComfyUI-NeronStudio/workflows`). Модели к ним — по заметкам в самих процессах.
 
-## 🎬 Проект 1: NERON H3 ENGINE v2.0 «Hard» (Видео-генерация, новый)
-
-👋 Нода и воркфлоу лежат в папке **[`ComfyUI-NeronH3Engine`](ComfyUI-NeronH3Engine/)**.
-
-Максимум качества, который MiniMax H3 может дать на домашнем компьютере. Без апскейлов и трюков: честная генерация в паспорте модели.
-
-* Режимы **⚡ Турбо / Качество / Максимум**.
-* Паспорт модели: до 1344×768 и до 15 секунд; всё, что больше, нода сама ужимает.
-* Модели грузятся по очереди, раскодировка защищена от нехватки памяти.
-* Часы генерации, режим эксперта и справка 📖 на двух языках прямо на ноде.
-* Работает и с лёгкими (квантованными) моделями.
-
-*Подробности — в [README внутри папки](ComfyUI-NeronH3Engine/README.md).*
-
----
-
 ## 🎬 NERON H3 STORY — длинные ролики MiniMax H3 до 45 секунд (новое)
 
 👋 Ноды и воркфлоу лежат в папке **[`ComfyUI-NeronH3Story`](ComfyUI-NeronH3Story/)**.
@@ -107,26 +84,6 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 * Настроено на качество — это долго (30 с ≈ 45 мин – 1,5 ч на RTX 5070 Ti); как ускорить — в README.
 
 *Подробности — в [README внутри папки](ComfyUI-NeronH3Story/README.md).*
-
----
-
-## 🎭 NERON H3 ЗАМЕНА ГЕРОЯ / HERO SWAP — человек с фото в вашем клипе (новое, тест)
-
-> **⚠ АВТОР НЕ НЕСЁТ ОТВЕТСТВЕННОСТИ ЗА ИСПОЛЬЗОВАНИЕ ЭТОГО ИНСТРУМЕНТА И ЗА СОЗДАННЫЙ С ЕГО ПОМОЩЬЮ КОНТЕНТ — В ТОМ
-> ЧИСЛЕ ФЕЙКИ, ПОДМЕНУ ЛИЧНОСТИ И ЭРОТИЧЕСКИЙ КОНТЕНТ. ЭТО ТОЛЬКО ИНСТРУМЕНТ. ВСЯ ОТВЕТСТВЕННОСТЬ — НА ПОЛЬЗОВАТЕЛЕ.
-> ИСПОЛЬЗУЙТЕ ТОЛЬКО С СОГЛАСИЯ ЛЮДЕЙ НА ФОТО И В ВИДЕО И В РАМКАХ ЗАКОНА.**
-
-👋 Нода и воркфлоу лежат в папке **[`ComfyUI-NeronH3Swap`](ComfyUI-NeronH3Swap/)**.
-
-Клип + фото → тот же клип (движение, камера, свет, звук) с человеком с фото. Без промптов: подключили, нажали Run.
-
-* **🧍 весь облик**, **🙂 лицо и причёска** или **👤 только лицо**.
-* Движок — **MiniMax H3 Ref2VA** + LoRA замены (Akatz Labs) + турбо, 8 шагов; маски — **SAM 3.1** (родные ноды).
-* Оригинал в образце **размывается** — модель не копирует его черты; губы ложатся на звук клипа.
-* Модели качает сама (кнопка **📥 Модели**). 480p / 5 с ≈ 5–7 мин на 16 ГБ.
-* В справке ноды — таблица «что видно → что поменять» под ваши фото и клип.
-
-*Подробности — в [README внутри папки](ComfyUI-NeronH3Swap/README.md).*
 
 ---
 
@@ -145,24 +102,25 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 
 ---
 
-## 🎬 Проект 2: NERON STUDIO H3 (Готовый процесс видео-генерации, v1.0 «Lite»)
+## 🎬 NERON LTX ENGINE — видео LTX 2.5 одной нодой
 
-👋 Все ноды, воркфлоу и инструкции лежат в папке **[`Neron_Studio_H3`](Neron_Studio_H3/)**.
+👋 Папка **[`ComfyUI-NeronLTXEngine`](ComfyUI-NeronLTXEngine/)**.
 
-Готовый пайплайн для генерации видео и звука (MiniMax H3) с уже настроенными нодами. Полный цикл: от подготовки стартового кадра до финальной склейки. Без «лапши» из проводов.
-
-**Состав пайплайна:**
-1. **Start Frame (🖼 Neron Studio Image Processor)** — подготовка стартового кадра.
-2. **Neron AutoPrompter** — LLM-режиссёр и камера-оператор.
-3. **Neron MiniMax H3 Generator** — сердце системы (вся генерация в одной ноде).
-4. **Neron Video Clarity** — пост-обработка (стабилизация, дефликер, без апскейла).
-5. **Video Combine** — финальная склейка.
-
-*Инструкция по установке и модели — в [README внутри папки](Neron_Studio_H3/README.md).*
+* **🎬 Neron LTX Engine** — первый / промежуточные / последний кадр, звук, модели качает сам.
+* **🎬 Neron LTX AutoPrompter** — промпт под LTX с физикой и камерой; живёт в той же папке, LLM качает сам.
 
 ---
 
-## 🎛 Проект 3: PERCEPTION RELAY — Эстафета восприятия (Пост-обработка видео)
+## 🎨 RESTORE STUDIO — реставрация старых фото
+
+👋 Папка **[`restore_studio`](restore_studio/)**, процесс `restore_studio/workflows/Neron_Restore_Studio_Photoshop.json`.
+
+* Баланс белого, уровни, шумодав, царапины, цвет, резкость, апскейл; пресеты; 🖥 Live Preview — результат вживую.
+* Восстановление лиц и раскраска — через установленные у вас пакеты (CodeFormer / DDColor), если они есть.
+
+---
+
+## 🎛 PERCEPTION RELAY — Эстафета восприятия (Пост-обработка видео)
 
 👋 Все ноды, воркфлоу и инструкции лежат в папке **[`ComfyUI-PerceptionRelay`](ComfyUI-PerceptionRelay/)**.
 
@@ -189,7 +147,7 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 
 ---
 
-## 🎹 Проект 4: NERONAUDIOSTUDIO (Музыкальная студия)
+## 🎹 NERON AUDIO STUDIO (Музыкальная студия)
 
 👋 Все аудио-ноды лежат в папке **[`NeronAudioStudio`](NeronAudioStudio/)**.
 
@@ -221,7 +179,7 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 
 ---
 
-## 🎨 Проект 5: NERON THEME (Темы для всего ComfyUI)
+## 🎨 NERON THEME (Темы для всего ComfyUI)
 
 👋 Нода лежит в папке **[`NeronTheme`](NeronTheme/)**.
 
@@ -242,32 +200,16 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 
 ## 🗺 Карта: какую ноду брать
 
-| Задача | Берите | Ещё есть (для старых воркфлоу) |
+| Задача | Берите | Папка |
 |---|---|---|
-| Подготовить первый кадр | **🖼 Neron Studio Image Processor** — пресеты подрезаются по центру, Сброс и Справка | Interactive Image Processor (пресеты растягивают картинку); Smart Load & Resize Image и Manual Color & Upscale Panel — *legacy*, тот же код |
-| Сгенерировать видео H3 | **🎬 Neron H3 Engine** — качество | 🎥 Neron MiniMax H3 Generator (Lite) — для воркфлоу Neron Studio H3 |
-| Длинный ролик H3 (5–45 с) | **🎬 Neron H3 Story** + **🖼 Кадры** + **📝 Story AutoPrompter** (или ноды **🎞 Блок**) | — |
-| Заменить человека в клипе на человека с фото | **🎭 Neron H3 Замена героя / Hero Swap** | — |
-| Нарисовать картинку по тексту | **🖼 Neron Image / Картинка (Krea 2)** | — |
-| Сгенерировать видео LTX 2.5 | **🎬 Neron LTX Engine** — первый / промежуточные / последний кадр, звук, модели качает сам; **🎬 Neron LTX AutoPrompter** — промпт под LTX с физикой и камерой, LLM качает сам | — |
-| Написать промпт | **🎬 Neron AutoPrompter** — промпт под H3 по картинке и брифу | 🎬 Neron Dialog Autoprompter и 🧠 Multi-Image LLM — диалоговый режим |
-| Камера H3 | **⚡ Fixed Camera H3** | — |
-| Тема оформления | **Neron Theme 🎨 / Темы ComfyUI** | «Тема Audio Studio (legacy)» — чтобы открывались старые схемы студии |
-
-Код загрузки и цвета картинки — **один на все четыре ноды обработки**: исправление в нём сразу работает везде.
-В Image Processor режим «Отключено» = картинка как есть; **резкость 0 = выключено**.
-
-## 📦 Самостоятельные ноды (в корне)
-
-Эти ноды остаются в корне для обратной совместимости: старые воркфлоу продолжают работать.
-
-| Папка | Что это | Воркфлоу |
-|---|---|---|
-| [`ComfyUI-H3-Lora-Selector`](ComfyUI-H3-Lora-Selector/) | H3 LoRA Selector — 5 слотов LoRA | `workflow/neronVideoMinimaxH3_v2.0.json`, `workflow/neronSmartMiniMaxH3_v1.0.json` |
-| [`ComfyUI-H3-Static-Camera`](ComfyUI-H3-Static-Camera/) | Fixed Camera H3 Presets; Smart Load & Resize Image и Manual Color & Upscale Panel (*legacy*, код берут из `ComfyUI-Interactive-Processor`) | `workflow/neronVideoMinimaxH3_v2.0.json`, `workflow/neronSmartMiniMaxH3_v1.0.json` |
-| [`ComfyUI-Interactive-Processor`](ComfyUI-Interactive-Processor/) | Interactive Image Processor + **общий код картинки** для всех нод обработки | `workflow/neronVideoMinimaxH3_v2.0.json`, `workflow/neronSmartMiniMaxH3_v1.0.json` |
-| [`neron_dialog_autoprompter`](neron_dialog_autoprompter/) | Neron Dialog Autoprompter, Neron Multi-Image LLM | `workflow/neronSmartMiniMaxH3_v1.0.json` |
-| [`restore_studio`](restore_studio/) | Restore Studio, Live Preview | `workflow/Neron_Restore_Studio_Photoshop.json` |
+| Длинный ролик H3 (5–45 с) | **🎬 Neron H3 Story** + **🖼 Кадры** + **📝 Story AutoPrompter** (или **🎞 Блок**) | `ComfyUI-NeronH3Story` |
+| Видео LTX 2.5 | **🎬 Neron LTX Engine** + **🎬 Neron LTX AutoPrompter** | `ComfyUI-NeronLTXEngine` |
+| Картинка по тексту | **🖼 Neron Image / Картинка (Krea 2)** | `ComfyUI-NeronImage` |
+| Реставрация фото | **🎨 Restore Studio** + 🖥 Live Preview | `restore_studio` |
+| Улучшить видео | **Perception Relay** — пульт и карточки | `ComfyUI-PerceptionRelay` |
+| Музыка и звук | **Neron Audio Studio** | `NeronAudioStudio` |
+| Тема оформления | **Neron Theme 🎨 / Темы ComfyUI** | `NeronTheme` |
+| Рабочий стол | **🖥 Neron Studio** | `ComfyUI-NeronStudio` |
 
 ## ❓ Частые вопросы
 
@@ -283,7 +225,7 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 
 Hi friends!
 
-This repository contains my custom nodes for ComfyUI. It holds **independent projects**: video generation, video post-processing and music. Use them separately or together, however you like.
+This repository contains my custom nodes for ComfyUI. It holds **independent projects**: video (H3 Story, LTX), images (Krea 2, restoration), video post-processing, music, themes and a desktop. **Every folder works on its own** — its own nodes and code, no neighbours needed.
 
 ---
 
@@ -320,17 +262,10 @@ https://github.com/neron5480-cell/neron-video-minimax-h3-i2v
 
 A node folder must sit **directly** in `custom_nodes`, with no extra level:
 ```
-✅ custom_nodes/ComfyUI-NeronH3Engine/__init__.py
-❌ custom_nodes/neron-video-minimax-h3-i2v-main/ComfyUI-NeronH3Engine/__init__.py
+✅ custom_nodes/ComfyUI-NeronH3Story/__init__.py
+❌ custom_nodes/neron-video-minimax-h3-i2v-main/ComfyUI-NeronH3Story/__init__.py
 ```
-Nodes from `Neron_Studio_H3` are copied **one by one** (the folders inside it), not the whole folder.
-
-**Shared code lives in one copy.** Some folders use code from their neighbours, so copy them together:
-- `ComfyUI-H3-Static-Camera` and `NeronStudio-Image-Processor` → need `ComfyUI-Interactive-Processor` (image loading and color);
-- `NeronStudio-AutoPrompter` → needs `ComfyUI-H3-Static-Camera` (the H3 camera);
-- `ComfyUI-NeronH3Story` (its 📝 Story AutoPrompter) → needs `NeronStudio-AutoPrompter` (the LLM server) and `ComfyUI-H3-Static-Camera`.
-
-If a neighbour is missing, the console names the folder you need.
+**Every folder is self-contained** — copy only the one you need; it does not need its neighbours.
 
 ### ⚠️ Do not mix the two options
 
@@ -356,22 +291,6 @@ Tiles, folders and your own background — and every Neron workflow one click aw
 - **RU / EN** — from the system language, with a switch on the desk.
 - Tested workflows ship inside as they are (`ComfyUI-NeronStudio/workflows`). Their models — see the notes inside each workflow.
 
-## 🎬 Project 1: NERON H3 ENGINE v2.0 "Hard" (Video Generation, new)
-
-👋 The node and workflow live in the **[`ComfyUI-NeronH3Engine`](ComfyUI-NeronH3Engine/)** folder.
-
-The best quality MiniMax H3 can give on a home PC. No upscales, no tricks: honest generation inside the model passport.
-
-* **⚡ Turbo / Quality / Maximum** modes.
-* Model passport: up to 1344×768 and up to 15 seconds; anything bigger is clamped by the node.
-* Models load one at a time, the VAE decode is protected from running out of memory.
-* Run clock, expert mode and bilingual 📖 Help right on the node.
-* Works with light (quantized) models too.
-
-*Details are in the [README inside the folder](ComfyUI-NeronH3Engine/README.md).*
-
----
-
 ## 🎬 NERON H3 STORY — long MiniMax H3 videos up to 45 seconds (new)
 
 👋 The nodes and workflows live in the **[`ComfyUI-NeronH3Story`](ComfyUI-NeronH3Story/)** folder.
@@ -385,26 +304,6 @@ The same quality H3 engine, but a **5–45 s video with sound** — a chain of b
 * Tuned for quality — it takes time (30 s ≈ 45 min – 1.5 h on an RTX 5070 Ti); how to speed up — in the README.
 
 *Details are in the [README inside the folder](ComfyUI-NeronH3Story/README.md).*
-
----
-
-## 🎭 NERON H3 HERO SWAP — the person from your photo in your clip (new, test)
-
-> **⚠ THE AUTHOR IS NOT RESPONSIBLE FOR HOW THIS TOOL IS USED OR FOR CONTENT MADE WITH IT, INCLUDING DEEPFAKES,
-> IDENTITY SUBSTITUTION AND EROTIC CONTENT. IT IS ONLY A TOOL. ALL RESPONSIBILITY LIES WITH THE USER. USE IT ONLY WITH
-> THE CONSENT OF THE PEOPLE IN THE PHOTO AND VIDEO AND WITHIN THE LAW.**
-
-👋 The node and workflow live in the **[`ComfyUI-NeronH3Swap`](ComfyUI-NeronH3Swap/)** folder.
-
-Clip + photo → the same clip (motion, camera, light, sound) with the person from the photo. No prompts: wire it, press Run.
-
-* **🧍 whole look**, **🙂 face & hair** or **👤 face only**.
-* Engine — **MiniMax H3 Ref2VA** + swap LoRA (Akatz Labs) + turbo, 8 steps; masks — **SAM 3.1** (native nodes).
-* The original in the reference is **blurred** — the model does not copy its features; lips follow the clip's sound.
-* Downloads its models (the **📥 Models** button). 480p / 5 s ≈ 5–7 min on 16 GB.
-* The node's help has a «what you see → what to change» table for your photo and clip.
-
-*Details are in the [README inside the folder](ComfyUI-NeronH3Swap/README.md).*
 
 ---
 
@@ -423,24 +322,25 @@ Write what to draw, in any language, and get a picture up to **2K**. One node in
 
 ---
 
-## 🎬 Project 2: NERON STUDIO H3 (Ready-made video pipeline, v1.0 "Lite")
+## 🎬 NERON LTX ENGINE — LTX 2.5 video in one node
 
-👋 All nodes, workflows and instructions live in the **[`Neron_Studio_H3`](Neron_Studio_H3/)** folder.
+👋 Folder **[`ComfyUI-NeronLTXEngine`](ComfyUI-NeronLTXEngine/)**.
 
-A ready-made pipeline for video and audio generation (MiniMax H3) with pre-tuned nodes. Full cycle: from initial frame preparation to final muxing. No "spaghetti" wires.
-
-**Pipeline contents:**
-1. **Start Frame (🖼 Neron Studio Image Processor)** — initial frame preparation.
-2. **Neron AutoPrompter** — LLM director and camera operator.
-3. **Neron MiniMax H3 Generator** — the core system (all generation in one node).
-4. **Neron Video Clarity** — post-processing (stabilization, deflicker, no upscale).
-5. **Video Combine** — final muxing.
-
-*Installation and model instructions are in the [README inside the folder](Neron_Studio_H3/README.md).*
+* **🎬 Neron LTX Engine** — first / middle / last frames, audio, downloads its models.
+* **🎬 Neron LTX AutoPrompter** — an LTX prompt with physics and camera; lives in the same folder, downloads its LLM.
 
 ---
 
-## 🎛 Project 3: PERCEPTION RELAY (Video Post-processing)
+## 🎨 RESTORE STUDIO — old photo restoration
+
+👋 Folder **[`restore_studio`](restore_studio/)**, workflow `restore_studio/workflows/Neron_Restore_Studio_Photoshop.json`.
+
+* White balance, levels, denoise, scratches, color, sharpness, upscale; presets; 🖥 Live Preview.
+* Face restore and colorization use packs you have installed (CodeFormer / DDColor), if present.
+
+---
+
+## 🎛 PERCEPTION RELAY (Video Post-processing)
 
 👋 All nodes, workflows and instructions live in the **[`ComfyUI-PerceptionRelay`](ComfyUI-PerceptionRelay/)** folder.
 
@@ -467,7 +367,7 @@ AI video looks "fake" not because of resolution. It looks fake because the viewe
 
 ---
 
-## 🎹 Project 4: NERONAUDIOSTUDIO (Music Studio)
+## 🎹 NERON AUDIO STUDIO (Music Studio)
 
 👋 All audio nodes live in the **[`NeronAudioStudio`](NeronAudioStudio/)** folder.
 
@@ -499,7 +399,7 @@ Main feature: **audio plays directly on the node, no need to hit Queue just to l
 
 ---
 
-## 🎨 Project 5: NERON THEME (Themes for the whole ComfyUI)
+## 🎨 NERON THEME (Themes for the whole ComfyUI)
 
 👋 The node lives in the **[`NeronTheme`](NeronTheme/)** folder.
 
@@ -520,32 +420,16 @@ Details in the **[README inside NeronTheme](NeronTheme/README.md)**.
 
 ## 🗺 Map: which node to use
 
-| Task | Use | Also there (for old workflows) |
+| Task | Use | Folder |
 |---|---|---|
-| Prepare the first frame | **🖼 Neron Studio Image Processor** — presets are center-cropped, Reset and Help | Interactive Image Processor (presets stretch the picture); Smart Load & Resize Image and Manual Color & Upscale Panel — *legacy*, same code |
-| Generate H3 video | **🎬 Neron H3 Engine** — quality | 🎥 Neron MiniMax H3 Generator (Lite) — for the Neron Studio H3 workflows |
-| Long H3 video (5–45 s) | **🎬 Neron H3 Story** + **🖼 Frames** + **📝 Story AutoPrompter** (or **🎞 Block** nodes) | — |
-| Swap the person in a clip for the person from a photo | **🎭 Neron H3 Hero Swap** | — |
-| Draw a picture from text | **🖼 Neron Image (Krea 2)** | — |
-| Generate LTX 2.5 video | **🎬 Neron LTX Engine** — first / middle / last frames, audio, downloads its models; **🎬 Neron LTX AutoPrompter** — an LTX prompt with physics and camera, downloads its LLM | — |
-| Write the prompt | **🎬 Neron AutoPrompter** — an H3 prompt from a picture and a brief | 🎬 Neron Dialog Autoprompter and 🧠 Multi-Image LLM — dialog mode |
-| H3 camera | **⚡ Fixed Camera H3** | — |
-| UI theme | **Neron Theme 🎨 / Темы ComfyUI** | "Old Audio Studio theme (legacy)" — so old studio workflows open |
-
-The image loading and color code is **one for all four image nodes**: a fix there works everywhere at once.
-In Image Processor, Disabled = the picture as is; **sharpness 0 = off**.
-
-## 📦 Standalone nodes (in the root)
-
-These nodes stay in the root for backward compatibility: old workflows keep working.
-
-| Folder | What it is | Workflow |
-|---|---|---|
-| [`ComfyUI-H3-Lora-Selector`](ComfyUI-H3-Lora-Selector/) | H3 LoRA Selector — 5 LoRA slots | `workflow/neronVideoMinimaxH3_v2.0.json`, `workflow/neronSmartMiniMaxH3_v1.0.json` |
-| [`ComfyUI-H3-Static-Camera`](ComfyUI-H3-Static-Camera/) | Fixed Camera H3 Presets; Smart Load & Resize Image and Manual Color & Upscale Panel (*legacy*, code from `ComfyUI-Interactive-Processor`) | `workflow/neronVideoMinimaxH3_v2.0.json`, `workflow/neronSmartMiniMaxH3_v1.0.json` |
-| [`ComfyUI-Interactive-Processor`](ComfyUI-Interactive-Processor/) | Interactive Image Processor + **shared image code** for all image nodes | `workflow/neronVideoMinimaxH3_v2.0.json`, `workflow/neronSmartMiniMaxH3_v1.0.json` |
-| [`neron_dialog_autoprompter`](neron_dialog_autoprompter/) | Neron Dialog Autoprompter, Neron Multi-Image LLM | `workflow/neronSmartMiniMaxH3_v1.0.json` |
-| [`restore_studio`](restore_studio/) | Restore Studio, Live Preview | `workflow/Neron_Restore_Studio_Photoshop.json` |
+| Long H3 video (5–45 s) | **🎬 Neron H3 Story** + **🖼 Frames** + **📝 Story AutoPrompter** (or **🎞 Block**) | `ComfyUI-NeronH3Story` |
+| LTX 2.5 video | **🎬 Neron LTX Engine** + **🎬 Neron LTX AutoPrompter** | `ComfyUI-NeronLTXEngine` |
+| Text to image | **🖼 Neron Image (Krea 2)** | `ComfyUI-NeronImage` |
+| Photo restoration | **🎨 Restore Studio** + 🖥 Live Preview | `restore_studio` |
+| Enhance video | **Perception Relay** — pult and cards | `ComfyUI-PerceptionRelay` |
+| Music and sound | **Neron Audio Studio** | `NeronAudioStudio` |
+| UI theme | **Neron Theme 🎨** | `NeronTheme` |
+| Desktop | **🖥 Neron Studio** | `ComfyUI-NeronStudio` |
 
 ## ❓ FAQ
 

@@ -37,7 +37,7 @@ EN: open the workflow; the **📥 Models** window opens by itself, accept the LT
 
 ## 🎬 Neron LTX AutoPrompter
 
-**RU** · Автопромтер под LTX 2.5 (лежит в `Neron_Studio_H3/NeronStudio-AutoPrompter`). Бриф + камера + кадры → подробный промпт: кадр до мелочей, физика каждого движения, путь вокруг препятствий, точные позы, звук. Камеру модель ставит первой фразой, длину ролика нода пишет первой строкой. LLM (Qwen 3.5 9B) и llama-server нода находит или скачивает сама. Готовый процесс — `workflows/Neron_LTX_AutoPrompter.json`.
+**RU** · Автопромтер под LTX 2.5 (лежит здесь же, в папке `autoprompter` — своя копия, без соседних папок). Бриф + камера + кадры → подробный промпт: кадр до мелочей, физика каждого движения, путь вокруг препятствий, точные позы, звук. Камеру модель ставит первой фразой, длину ролика нода пишет первой строкой. LLM (Qwen 3.5 9B) и llama-server нода находит или скачивает сама. Готовый процесс — `workflows/Neron_LTX_AutoPrompter.json`.
 
 **EN** · An AutoPrompter for LTX 2.5. Brief + camera + frames → a detailed prompt with physics, obstacles, exact poses and sound. Finds or downloads its LLM (Qwen 3.5 9B) and llama-server by itself. Workflow: `workflows/Neron_LTX_AutoPrompter.json`.
 

@@ -261,33 +261,25 @@ const u = (k, arg) => tx(UI[k]).replace("%", arg ?? "");
 const VIEWS = {
   home: { t: ["Стол", "Desktop"], tiles: [
     { id: "f-video", ico: "🎬", t: ["Видео", "Video"], s: "ok", go: "video", paint: "film", w: 6, h: 3,
-      meta: ["фото → видео · длинные ролики · диалог · улучшение", "photo → video · long clips · dialogue · enhance"] },
+      meta: ["фото → видео · длинные ролики · улучшение", "photo → video · long clips · enhance"] },
     { id: "f-image", ico: "🖼", t: ["Картинки", "Images"], s: "ok", go: "image", paint: "outpaint", w: 6, h: 3,
-      meta: ["расширение · реставрация · качество", "outpaint · restoration · quality"] },
+      meta: ["картинка по тексту · расширение · реставрация · качество", "text to image · outpaint · restoration · quality"] },
     { id: "f-audio", ico: "🎵", t: ["Звук", "Sound"], s: "ok", go: "audio", paint: "eq", w: 4, h: 2,
       meta: ["Audio Studio · DJ-пульт · сведение", "Audio Studio · DJ pult · mixing"] },
-    { id: "f-test", ico: "🧪", t: ["Тест", "Test"], s: "alpha", go: "test", paint: "lab", w: 4, h: 2,
-      meta: ["новое на проверку — помоги найти ошибки", "new things to try — help find bugs"] },
     { id: "models", ico: "📥", t: ["Модели", "Models"], s: "ok", wf: "models", paint: "models", w: 4, h: 2,
       meta: ["качает сама · докачка с обрыва", "downloads itself · resumes after a drop"] },
   ] },
   video: { up: "home", t: ["Видео", "Video"], tiles: [
     { id: "v-i2v", ico: "🎬", t: ["Фото → видео", "Photo → video"], s: "ok", go: "i2v", paint: "film", w: 5, h: 3,
-      meta: ["MiniMax H3 v3.0 · LTX Engine · LTX 2.3", "MiniMax H3 v3.0 · LTX Engine · LTX 2.3"] },
+      meta: ["LTX Engine · LTX 2.3", "LTX Engine · LTX 2.3"] },
     { id: "v-long", ico: "🎞", t: ["Длинный ролик", "Long video"], s: "ok", go: "long", paint: "chain", w: 7, h: 3,
-      meta: ["до 45 с · H3 Story · Full Pipeline", "up to 45 s · H3 Story · Full Pipeline"] },
-    { id: "dialog", ico: "💬", t: ["Диалог", "Dialogue"], s: "ok", wf: "dialog", paint: "talk", w: 4, h: 2,
-      meta: ["Smart MiniMax H3 v1.0 · герои говорят", "Smart MiniMax H3 v1.0 · characters talk"] },
+      meta: ["до 45 с · H3 Story", "up to 45 s · H3 Story"] },
     { id: "scail", ico: "🕺", t: ["Движение по видео", "Motion from video"], s: "ok", wf: "scail", paint: "pose", w: 4, h: 2,
       meta: ["SCAIL · Wan 2.1 · позы из ролика", "SCAIL · Wan 2.1 · poses from a clip"] },
     { id: "clarity", ico: "✨", t: ["Улучшить видео", "Enhance video"], s: "ok", wf: "clarity", paint: "split", w: 4, h: 2,
       meta: ["Perception Relay · стабилизация · плавность", "Perception Relay · stabilize · smoothness"] },
-    { id: "raw", ico: "⚙", t: ["Для профи · H3 Raw", "For pros · H3 Raw"], s: "ok", wf: "raw", paint: "timing", w: 4, h: 2,
-      meta: ["голый движок H3 · без автопромтера", "bare H3 engine · no autoprompter"] },
   ] },
   i2v: { up: "video", t: ["Фото → видео", "Photo → video"], tiles: [
-    { id: "h3v3", ico: "🎥", t: ["MiniMax H3 I2V v3.0", "MiniMax H3 I2V v3.0"], s: "ok", wf: "h3v3", paint: "film", w: 4, h: 3,
-      meta: ["камера · автопромтер · LoRA", "camera · autoprompter · LoRA"] },
     { id: "ltx", ico: "🎞", t: ["LTX Engine · автопромтер", "LTX Engine · autoprompter"], s: "ok", wf: "ltx", paint: "film", w: 4, h: 3,
       meta: ["LTX 2.5 · модели качает сама", "LTX 2.5 · downloads its models"] },
     { id: "ltx23", ico: "📽", t: ["LTX 2.3 · фото → видео", "LTX 2.3 · image → video"], s: "ok", wf: "ltx23", paint: "chain", w: 4, h: 3,
@@ -296,8 +288,6 @@ const VIEWS = {
   long: { up: "video", t: ["Длинный ролик", "Long video"], tiles: [
     { id: "story", ico: "🎞", t: ["H3 Story", "H3 Story"], s: "ok", wf: "story", paint: "chain", w: 6, h: 3,
       meta: ["до 45 с · блоки без стыков · со звуком", "up to 45 s · seamless blocks · with sound"] },
-    { id: "full", ico: "🎬", t: ["Full Pipeline · Auto Director", "Full Pipeline · Auto Director"], s: "ok", wf: "full", paint: "film", w: 6, h: 3,
-      meta: ["автопромтер → H3 → улучшение", "autoprompter → H3 → enhance"] },
   ] },
   image: { up: "home", t: ["Картинки", "Images"], tiles: [
     { id: "outpaint", ico: "↔", t: ["Расширение изображения", "Expand an image"], s: "ok", wf: "outpaint", paint: "outpaint", w: 4, h: 3,
@@ -306,8 +296,8 @@ const VIEWS = {
       meta: ["Restore Studio · DDColor · CodeFormer", "Restore Studio · DDColor · CodeFormer"] },
     { id: "upscale", ico: "🔍", t: ["Улучшить качество", "Improve quality"], s: "ok", wf: "upscale", paint: "loupe", w: 4, h: 3,
       meta: ["апскейл · лица · шумодав", "upscale · faces · denoise"] },
-    { id: "imagegen", ico: "🖼", t: ["Генератор кадра", "Image generator"], s: "soon", paint: "forming", w: 3, h: 2,
-      meta: ["текст + образцы", "text + references"] },
+    { id: "imagegen", ico: "🖼", t: ["Картинка по тексту", "Text to image"], s: "ok", wf: "image", paint: "forming", w: 4, h: 3,
+      meta: ["Neron Image · Krea 2 · до 2K", "Neron Image · Krea 2 · up to 2K"] },
     { id: "edit", ico: "✏", t: ["Редактор словами", "Edit with words"], s: "soon", paint: "typing", w: 3, h: 2,
       meta: ["«надень юбку с картинки 2»", "«put on the skirt from picture 2»"] },
     { id: "tryon", ico: "👗", t: ["Примерочная", "Try-on"], s: "soon", paint: "tryon", w: 3, h: 2,
@@ -318,14 +308,6 @@ const VIEWS = {
   audio: { up: "home", t: ["Звук", "Sound"], tiles: [
     { id: "audio", ico: "🎵", t: ["Audio Studio 2.0 · DJ-пульт", "Audio Studio 2.0 · DJ pult"], s: "ok", wf: "audio", paint: "eq", w: 8, h: 3,
       meta: ["звук, музыка, сведение, клип со звуком", "sound, music, mixing, clip with sound"] },
-  ] },
-  test: { up: "home", t: ["Тест", "Test"], report: true, tiles: [
-    { id: "one", ico: "🎬", t: ["H3 One · единый движок", "H3 One · unified engine"], s: "alpha", wf: "one", paint: "film", w: 5, h: 3,
-      meta: ["5 режимов · помоги проверить", "5 modes · help us test it"] },
-    { id: "swap", ico: "🎭", t: ["Замена героя", "Hero swap"], s: "alpha", wf: "swap", paint: "swap", w: 4, h: 3,
-      meta: ["видео + фото «на кого»", "video + photo «who to put in»"] },
-    { id: "timing", ico: "⏱", t: ["Последний замер · H3 One", "Last benchmark · H3 One"], s: "alpha", wf: "timing", paint: "timing", w: 3, h: 3,
-      meta: ["🚀 Быстро · 768×768 · 5 с", "🚀 Fast · 768×768 · 5 s"] },
   ] },
 };
 const BY = {};                                         // BY[папка][id] → плитка

@@ -8,7 +8,8 @@
   2. БЛОК — подробный промпт каждого блока отдельно: продолжение стыка, действия по секундам, физика, звук,
      ссылки на картинки <Picture N> — ровно в той нумерации, которую соберёт движок.
 Выход story — шина в движок (план, промпты, картинки, LoRA). Выход prompts — текст для глаз.
-Сервер LLM, модели, скачивание и надёжный повтор — от нашего 🎬 Neron AutoPrompter (папка NeronStudio-AutoPrompter):
+Сервер LLM, модели, скачивание и надёжный повтор — своя копия в папке llm/ (из 🎬 Neron AutoPrompter; с 19.11 Story
+не зависит от соседних папок):
 Story ничего в нём не меняет, только пользуется.
 """
 import logging
@@ -24,47 +25,36 @@ from types import SimpleNamespace
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
 
-NEEDED = ["NeronMultiImageLLM", "_ask_reliably", "_image_to_data_uri_small", "_stop_llama_server",
-          "_find_llama_server", "_ensure_server_running", "_llm_list", "NeronLTXAutoPrompter"]
 _AP_MISSING = []
+_AP = None
 
 
 def _ap():
-    """Код нашего 🎬 Neron AutoPrompter (папка NeronStudio-AutoPrompter), уже загруженный ComfyUI.
-    Своей копии сервера LLM у Story нет — иначе два llama-server спорили бы за один порт.
-    Модули этой папки импортируют функции друг у друга, поэтому каждое нужное имя берём из ЛЮБОГО её модуля:
-    это один и тот же объект, где бы он ни лежал."""
-    got = {}
-    for m in list(sys.modules.values()):
-        f = str(getattr(m, "__file__", "") or "").replace("\\", "/")
-        if "/NeronStudio-AutoPrompter/" not in f:
-            continue
-        for name in NEEDED:
-            if name not in got and hasattr(m, name):
-                got[name] = getattr(m, name)
-    for m in list(sys.modules.values()):                     # камера H3 — нода Fixed Camera H3 (одна копия в пакете)
-        f = str(getattr(m, "__file__", "") or "").replace("\\", "/")
-        if "camera" not in got and ("/ComfyUI-H3-Static-Camera/" in f or "/NeronStudio-AutoPrompter/" in f) \
-                and hasattr(m, "MyH3StaticCamera"):
-            got["camera"] = m.MyH3StaticCamera
-    _AP_MISSING[:] = [n for n in NEEDED if n not in got]
-    if _AP_MISSING:
+    """Свой код LLM-сервера (папка llm/ внутри Story — копия NeronStudio-AutoPrompter, порт 8766) и камера H3
+    (llm/h3_static_camera.py). 19.11 (Роман): процесс самостоятельный — без соседних папок."""
+    global _AP
+    if _AP is not None:
+        return _AP
+    try:
+        from .llm import dialog_node, multi_llm, ltx_autoprompter, h3_static_camera
+    except Exception as e:
+        _AP_MISSING[:] = [f"llm ({e})"]
         return None
-    ns = SimpleNamespace(**got)
-    ns.LTX = got["NeronLTXAutoPrompter"]
-    return ns
+    _AP = SimpleNamespace(
+        NeronMultiImageLLM=multi_llm.NeronMultiImageLLM, _ask_reliably=multi_llm._ask_reliably,
+        _image_to_data_uri_small=multi_llm._image_to_data_uri_small, _stop_llama_server=multi_llm._stop_llama_server,
+        _find_llama_server=dialog_node._find_llama_server, _ensure_server_running=dialog_node._ensure_server_running,
+        _llm_list=dialog_node._llm_list, LTX=ltx_autoprompter.NeronLTXAutoPrompter,
+        camera=h3_static_camera.MyH3StaticCamera)
+    return _AP
 
 
 def _need_ap():
     ap = _ap()
     if ap is None:
-        raise RuntimeError("[H3 Story AutoPrompter] Не найден 🎬 Neron AutoPrompter (папка NeronStudio-AutoPrompter): "
-                           "Story AutoPrompter пользуется его сервером LLM и моделями. Поставь пакет Neron целиком "
-                           "(Manager → Install via Git URL) или папку NeronStudio-AutoPrompter в custom_nodes и "
-                           "перезапусти ComfyUI. Если папка стоит — она старая: обнови её (нужен LTX AutoPrompter от "
-                           "04.11). Не найдено: " + ", ".join(_AP_MISSING) + "\n\nEN: 🎬 Neron AutoPrompter "
-                           "(NeronStudio-AutoPrompter folder) not found or outdated — the Story AutoPrompter uses its LLM "
-                           "server. Missing: " + ", ".join(_AP_MISSING))
+        raise RuntimeError("[H3 Story AutoPrompter] Не загрузился свой код LLM (папка llm/ внутри ComfyUI-NeronH3Story): "
+                           + ", ".join(_AP_MISSING) + ". Переустанови папку ComfyUI-NeronH3Story целиком и перезапусти "
+                           "ComfyUI.\n\nEN: the Story's own LLM code (llm/ folder) failed to load: " + ", ".join(_AP_MISSING))
     return ap
 
 log = logging.getLogger("Neron.H3.StoryAutoPrompter")

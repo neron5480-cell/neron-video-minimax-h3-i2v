@@ -16,36 +16,28 @@ _STATIC = os.path.join(_HERE, "static")
 # плитка → процессы Neron по порядку предпочтения.
 # «@имя» — копия проверенного процесса, которая лежит в самом Neron Studio (папка workflows) — как есть, без правок;
 # остальное — путь внутри пакета Neron (если стоит весь пакет — берётся его версия).
-_ONE = "ComfyUI-NeronH3One/workflows/Neron_H3_One.json"
 _STORY = "ComfyUI-NeronH3Story/workflows/Neron_H3_Story_AutoPrompter.json"
-_RESTORE = "workflow/Neron_Restore_Studio_Photoshop.json"
+_RESTORE = "restore_studio/workflows/Neron_Restore_Studio_Photoshop.json"
 WORKFLOWS = {
     # 🎬 Видео
-    "h3v3": ["@neronVideoMinimaxH3_v3.0.json"],
     "ltx": ["@Neron_LTX_Engine_AutoPrompter.json",
             "ComfyUI-NeronLTXEngine/workflows/Neron_LTX_AutoPrompter.json",
             "ComfyUI-NeronLTXEngine/workflows/Neron_LTX_Engine.json"],
     "ltx23": ["@Neron_LTX_2.3_Image_to_Video.json"],
     "story": [_STORY, "ComfyUI-NeronH3Story/workflows/Neron_H3_Story.json"],
-    "full": ["@Neron_H3_Full_Pipeline.json", "Neron_Studio_H3/Neron_H3_Full_Pipeline.json"],
-    "dialog": ["@neronSmartMiniMaxH3_v1.0.json", "workflow/neronSmartMiniMaxH3_v1.0.json"],
     "scail": ["@Neron_SCAIL_Wan21_gguf.json"],
     "clarity": ["@perception_relay_pult.json",
                 "ComfyUI-PerceptionRelay/workflows/perception_relay_pult.json",
                 "ComfyUI-PerceptionRelay/workflows/perception_relay_basic.json"],
-    "raw": ["@Neron_H3_Raw_Engine.json"],
     # 🖼 Картинки
-    "outpaint": ["@Neron_Flux_Fill_PreProcessor.json", "workflow/Neron_Flux_Fill_PreProcessor.json"],
-    "restore": ["@Neron_Restore_Studio_Photoshop.json", _RESTORE],
-    "upscale": ["@Neron_Restore_Studio_Photoshop.json", _RESTORE],
+    "image": ["ComfyUI-NeronImage/workflows/Neron_Image_Krea2.json"],
+    "outpaint": ["@Neron_Flux_Fill_PreProcessor.json"],
+    "restore": [_RESTORE],
+    "upscale": [_RESTORE],
     # 🎵 Звук
     "audio": ["@Neron_Audio_Studio_v2.0.json", "NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json"],
-    # 🧪 Тест (альфа)
-    "one": [_ONE],
-    "timing": [_ONE],
-    "swap": ["ComfyUI-NeronH3One/workflows/Neron_H3_Swap.json"],
     # служебное
-    "models": [_ONE, _STORY],
+    "models": [_STORY],
 }
 
 
