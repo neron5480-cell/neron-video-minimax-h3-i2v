@@ -485,7 +485,7 @@ class NeronH3GeneratorBlank:
     def _report(self, mode, w, h, frames, steps, seed, loras):
         took = time.time() - _RUN.get("t0", time.time())
         lines = [f"Режим: {mode.split(' / ')[0]}, {steps} шагов", f"Размер: {w}×{h}",
-                 f"Длина: {frames} кадров ({frames / DEFAULT_FPS:.2f} с)", f"Сид: {seed}"]
+                 f"Длина: {frames} кадров ({(frames * 200 + DEFAULT_FPS) // (2 * DEFAULT_FPS) / 100:.2f} с)", f"Сид: {seed}"]
         if loras:
             lines.append("LoRA: " + ", ".join(f"{n.split('/')[-1]} ×{st:g}" for n, st in loras))
         lines = _RUN.get("warn", []) + lines
