@@ -10,53 +10,57 @@ const UI = {
     RU: {
         place: ["🌍 Место и время", "держит эпоху и настроение до конца ролика",
             "напр.: 1978 год, гараж на окраине городка, поздняя осень, вечер. Одна лампа под жестяным абажуром. Настроение тихое, усталое."],
-        heroes: ["👤 Герои и механизмы", "каждого — с новой строки, чтобы не было клонов",
-            "напр.:\nМужчина лет 55, седые усы, кепка, засаленная клетчатая рубашка, на руках мазут.\nМотоцикл «Урал» с коляской, тёмно-зелёный, краска облуплена."],
+        heroes: ["👤 Герои и механизмы", "каждого — с новой строки; у машин — стоит / едет",
+            "напр.:\nМужчина лет 55, седые усы, кепка, засаленная клетчатая рубашка, на руках мазут.\nМотоцикл «Урал» с коляской, тёмно-зелёный, стоит на месте, заглушен."],
         action: ["🎬 Действие", "что происходит, по порядку; можно по секундам",
             "напр.:\n0–2 с: мужчина затягивает гайку, ключ срывается.\n2–4 с: трясёт ушибленной рукой.\n4–5 с: садится на ящик, вытирает лоб."],
         camera: ["🎥 Камера", "без этого H3 сама гуляет камерой или режет план",
             "напр.: стоит у ворот на уровне груди, не двигается. Один непрерывный план."],
         sound: ["🔊 Звук сцены", "что реально слышно в кадре",
             "напр.: скрип ключа, звон металла о бетон, гудение лампы, дождь по жестяной крыше."],
-        speech: ["🗣 Речь", "кто, что и каким голосом",
-            "напр.: мужчина хрипло, себе под нос: «Ну и зараза…»"],
+        speech: ["🗣 Речь", "слова — в кавычках «…»; пусто — никто не говорит",
+            "напр.: мужчина хрипло, по-русски, себе под нос: «Ну и зараза…»\nкаждая реплика — с новой строки"],
         music: ["🎵 Музыка", "отдельно от шумов; пусто — без музыки",
             "напр.: тихая гитара издалека, из радиоприёмника"],
         pictures: ["🖼 Картинки", "кто или что на каждом образце",
             "напр.: <Picture 1> — этот мужчина, <Picture 2> — этот мотоцикл"],
         time: "⏱ Длина ролика", timeHint: "пишется в начало промпта — движки любят знать время", sec: "с",
         timeOpt: "Длина ролика в начале промпта",
+        format: "Формат:", fmtH3: "родной H3", fmtText: "простой текст",
+        noSpeech: "Речь пуста → дописать «Голосов и речи нет.»",
         preview: "👁 Что уйдёт в движок", empty: "Заполни участки — здесь появится готовый промпт.",
         chars: "знаков", of: "из", filled: "участков", copy: "📋 Копировать", copied: "✓ Скопировано",
         expert: "⚙ эксперт", help: "📖 справка",
-        links: "Связки между участками («В кадре:», «Камера:»…)",
-        noMusic: "Музыка пуста → дописать «Без музыки.»",
+        links: "Связки между участками («В кадре:», «Камера:»…) — для простого текста",
+        noMusic: "Музыка пуста → «Без музыки» (в H3: N/A)",
         clear: "🧹 Очистить бланк", clearAsk: "Очистить все участки бланка?",
     },
     EN: {
         place: ["🌍 Place and time", "keeps the era and mood to the end of the clip",
             "e.g.: 1978, a garage on the edge of a small town, late autumn, evening. One lamp under a tin shade. Quiet, tired mood."],
-        heroes: ["👤 Characters and machines", "each on a new line, so there are no clones",
-            "e.g.:\nA man of about 55, grey moustache, cap, greasy checked shirt, oil on his hands.\nA dark green Ural motorcycle with a sidecar, peeling paint."],
+        heroes: ["👤 Characters and machines", "each on a new line; for machines — parked / moving",
+            "e.g.:\nA man of about 55, grey moustache, cap, greasy checked shirt, oil on his hands.\nA dark green Ural motorcycle with a sidecar, parked, engine off."],
         action: ["🎬 Action", "what happens, in order; per second is fine",
             "e.g.:\n0–2 s: the man tightens a nut, the wrench slips.\n2–4 s: he shakes his hurt hand.\n4–5 s: sits on a crate, wipes his forehead."],
         camera: ["🎥 Camera", "without it H3 moves the camera or cuts on its own",
             "e.g.: stands at the gate at chest height, does not move. One continuous shot."],
         sound: ["🔊 Scene sound", "what is really heard in the frame",
             "e.g.: the wrench creaking, metal ringing on concrete, the lamp humming, rain on the tin roof."],
-        speech: ["🗣 Speech", "who says what, in what voice",
-            "e.g.: the man, hoarse, under his breath: \"Damn thing…\""],
+        speech: ["🗣 Speech", "words in quotes \"…\"; empty — nobody speaks",
+            "e.g.: the man, hoarse, in English, under his breath: \"Damn thing…\"\neach line on a new line"],
         music: ["🎵 Music", "separate from noises; empty — no music",
             "e.g.: a quiet guitar far away, from a radio"],
         pictures: ["🖼 Pictures", "who or what is on each reference",
             "e.g.: <Picture 1> — this man, <Picture 2> — this motorcycle"],
         time: "⏱ Clip length", timeHint: "goes to the start of the prompt — engines like to know the time", sec: "s",
         timeOpt: "Clip length at the start of the prompt",
+        format: "Format:", fmtH3: "native H3", fmtText: "plain text",
+        noSpeech: "Speech empty → add «No voices or speech.»",
         preview: "👁 What goes to the engine", empty: "Fill in the sections — the finished prompt appears here.",
         chars: "chars", of: "of", filled: "sections", copy: "📋 Copy", copied: "✓ Copied",
         expert: "⚙ expert", help: "📖 help",
-        links: "Links between sections («In the frame:», «Camera:»…)",
-        noMusic: "Music empty → add «No music.»",
+        links: "Links between sections («In the frame:», «Camera:»…) — plain text only",
+        noMusic: "Music empty → «No music» (in H3: N/A)",
         clear: "🧹 Clear the form", clearAsk: "Clear all sections of the form?",
     },
 };
@@ -64,64 +68,73 @@ const UI = {
 const HELP = `📝 NERON H3 БЛАНК ПРОМПТА
 
 🇷🇺 ЗАЧЕМ
-H3 лучше всего работает с подробным промптом. Обычно его пишут «простынёй» — и теряют половину: забыли звук, не сказали про камеру, смешали двух героев в одну фразу. Бланк делит промпт на участки: у каждого видно, что сюда писать и зачем. Пишешь сам — это не автопромтер. Нода склеивает всё в один связный текст и отдаёт его проводом в движок.
+H3 лучше всего работает с подробным промптом. Обычно его пишут «простынёй» — и теряют половину: забыли звук, не сказали про камеру, смешали двух героев в одну фразу. Бланк делит промпт на участки: у каждого видно, что сюда писать и зачем. Пишешь сам — это не автопромтер. Нода собирает всё в один промпт и отдаёт его проводом в движок.
 
 КАК
-0. ⏱ Длина ролика — ползунок сверху (1–15 с). Нода сама пишет её в начало промпта: «Длительность ролика — 5 секунд (0–5 с).» Движки любят знать время. Ставь ту же длину, что в движке.
+0. ⏱ Длина ролика — ползунок сверху (1–15 с). Нода сама пишет её в начало промпта. Ставь ту же длину, что в движке.
 1. Заполни нужные участки. Пустые в промпт не идут — для простой сцены хватит двух-трёх.
-2. Герои — каждый с новой строки. Действие — по порядку, можно по секундам («0–2 с: …»).
-3. Внизу — «Что уйдёт в движок»: ровно тот текст, что получит модель.
-4. Выход «prompt» — в вход prompt движка (например, 🎬 Neron H3 Engine — Hard).
+2. Герои — каждый с новой строки. У машин и механизмов укажи состояние: стоит, едет, заглушена.
+3. Действие — по порядку, можно по секундам («0–2 с: …»).
+4. Речь — слова в кавычках «…», каждая реплика с новой строки, лучше указать язык («по-русски»). Пусто или «нет» — никто не говорит.
+5. Внизу — «Что уйдёт в движок»: ровно тот текст, что получит модель.
+6. Выход «prompt» — в вход prompt движка (например, 🎬 Neron H3 Engine — Hard).
+
+ФОРМАТ (⚙ эксперт)
+• Родной H3 (по умолчанию) — так модель учили: поля summary, subject_definitions, integrated_multimodal_description, overall_soundscape, non_diegetic_music. Названия полей английские — это служебные метки, их ставит нода. Твой текст остаётся на твоём языке. Реплики идут как (S1) <d>слова</d>; нет реплик — нет <d>. Музыки нет — N/A.
+• Простой текст — связный абзац со связками («В кадре:», «Камера:»…).
+Сравни оба на одном бланке — где модель слушается лучше.
 
 ЯЗЫК
-Пиши на русском или английском — H3 понимает оба одинаково. Плашка RU / EN меняет только надписи ноды. Связки между участками нода берёт на языке твоего текста — промпт не превратится в смесь языков.
+Пиши на русском или английском — H3 понимает оба. Плашка RU / EN меняет только надписи ноды.
 
 ОБРАЗЦЫ
 <Картинка 1>, <image 2> и т. п. нода сама превратит в <Picture 1>, <Picture 2> — так модель их узнаёт.
-
-⚙ ЭКСПЕРТ
-• Длина ролика в начале промпта — можно выключить.
-• Связки — «В кадре:», «Камера:», «Звук сцены:»… Выключи — участки пойдут как есть, через пробел.
-• «Без музыки.» — если участок «Музыка» пуст, дописывается явно (иначе H3 может добавить музыку сама).
 
 ────────────────────────
 
 📝 NERON H3 PROMPT FORM
 
 🇬🇧 WHY
-H3 works best with a detailed prompt. People usually write one long wall of text and lose half of it: forgot the sound, said nothing about the camera, merged two characters into one phrase. The form splits the prompt into sections, each showing what goes there and why. You write it yourself — this is not an autoprompter. The node joins everything into one coherent text and sends it to the engine by wire.
+H3 works best with a detailed prompt. People usually write one long wall of text and lose half of it: forgot the sound, said nothing about the camera, merged two characters into one phrase. The form splits the prompt into sections, each showing what goes there and why. You write it yourself — this is not an autoprompter. The node builds one prompt and sends it to the engine by wire.
 
 HOW
-0. ⏱ Clip length — the slider at the top (1–15 s). The node writes it at the start of the prompt: "Video duration: 5 seconds (0–5 s)." Engines like to know the time. Set the same length as in the engine.
+0. ⏱ Clip length — the slider at the top (1–15 s). The node writes it at the start of the prompt. Set the same length as in the engine.
 1. Fill in the sections you need. Empty ones are skipped — two or three are enough for a simple scene.
-2. Characters — each on a new line. Action — in order, per second is fine ("0–2 s: …").
-3. At the bottom, "What goes to the engine" shows exactly the text the model gets.
-4. The "prompt" output goes into the engine's prompt input (e.g. 🎬 Neron H3 Engine — Hard).
+2. Characters — each on a new line. For cars and machines give their state: parked, moving, engine off.
+3. Action — in order, per second is fine ("0–2 s: …").
+4. Speech — words in quotes "…", each line on a new line, better name the language ("in English"). Empty or "no" — nobody speaks.
+5. At the bottom, "What goes to the engine" shows exactly the text the model gets.
+6. The "prompt" output goes into the engine's prompt input (e.g. 🎬 Neron H3 Engine — Hard).
+
+FORMAT (⚙ expert)
+• Native H3 (default) — the way the model was trained: fields summary, subject_definitions, integrated_multimodal_description, overall_soundscape, non_diegetic_music. Field names are English service labels set by the node; your text stays in your language. Speech goes as (S1) <d>words</d>; no speech — no <d>. No music — N/A.
+• Plain text — one paragraph with links ("In the frame:", "Camera:"…).
+Compare both on the same form to see which the model follows better.
 
 LANGUAGE
-Write in Russian or English — H3 understands both equally. The RU / EN switch changes only the node's labels. The links between sections follow the language of your text, so the prompt never becomes a mix of languages.
+Write in Russian or English — H3 understands both. The RU / EN switch changes only the node's labels.
 
 REFERENCES
-<Картинка 1>, <image 2> etc. become <Picture 1>, <Picture 2> — that is how the model recognises them.
-
-⚙ EXPERT
-• Clip length at the start of the prompt — can be turned off.
-• Links — «In the frame:», «Camera:», «Scene sound:»… Turn off to join sections as they are.
-• «No music.» — if Music is empty it is added explicitly (otherwise H3 may add music by itself).`;
+<Картинка 1>, <image 2> etc. become <Picture 1>, <Picture 2> — that is how the model recognises them.`;
 
 // ---------------- склейка (как form.py) ----------------
 const LINKS = {
     RU: { hero1: "В кадре: ", heroN: "Также в кадре: ", first: "Сначала: ", then: "Затем: ", last: "В конце: ",
           camera: "Камера: ", sound: "Звук сцены: ", speech: "Речь: ", music: "Музыка: ", no_music: "Без музыки.",
-          pictures: "Образцы: ", camera_word: ["камер"] },
+          pictures: "Образцы: ", camera_word: ["камер"], is: " — ", static: "Камера неподвижна.",
+          no_speech: "Голосов и речи нет." },
     EN: { hero1: "In the frame: ", heroN: "Also in the frame: ", first: "First: ", then: "Then: ", last: "Finally: ",
           camera: "Camera: ", sound: "Scene sound: ", speech: "Speech: ", music: "Music: ", no_music: "No music.",
-          pictures: "References: ", camera_word: ["camera"] },
+          pictures: "References: ", camera_word: ["camera"], is: " is ", static: "The camera remains static.",
+          no_speech: "No voices or speech." },
 };
 const BULLET = /^\s*(?:\d{1,2}\s*[).]|[-–—•*])\s+/u;
 const TIME = /^\s*\d+(?:[.,]\d+)?\s*(?:[-–—]\s*\d+(?:[.,]\d+)?)?\s*(?:с|сек|s|sec)(?![\p{L}\p{N}_])/iu;
 const TAG = /<\s*(?:картинка|картинке|изображение|фото|picture|image|pic|img)\s*(\d+)\s*>/giu;
+const QUOTE = /«([^»]*)»|“([^”]*)”|"([^"]*)"/gu;
 const ENDS = ".!?…";
+const NEG = new Set(["нет", "не", "без", "ничего", "никакой", "никакая", "никакой музыки", "без музыки", "без речи",
+    "тишина", "no", "none", "nothing", "n/a", "na", "-", "—", "–", "0"]);
 
 function end(s) {
     s = s.trim();
@@ -134,6 +147,10 @@ function end(s) {
 function lines(text) {
     return String(text || "").replace(/\r/g, "").split("\n").map((l) => l.replace(BULLET, "").trim()).filter(Boolean);
 }
+function negative(ls) {
+    const t = ls.join(" ").trim().toLowerCase().replace(/^[.!…,; ]+|[.!…,; ]+$/gu, "");
+    return NEG.has(t);
+}
 // язык связок — по самому тексту (как text_lang в form.py); плашка RU / EN меняет только надписи
 function textLang(data) {
     const allt = SECTIONS.map((k) => String(data[k] || "")).join(" ").replace(TAG, " ");
@@ -142,11 +159,20 @@ function textLang(data) {
     if (cyr || lat) return cyr >= lat ? "RU" : "EN";
     return String(data.lang || "RU").toUpperCase() === "EN" ? "EN" : "RU";
 }
-const SEC_MIN = 1, SEC_MAX = 15, SEC_DEFAULT = 5;
+const SEC_MIN = 1, SEC_MAX = 15, SEC_DEFAULT = 5, FPS = 24;
 function seconds(data) {
     let v = Math.round(Number(data.seconds ?? SEC_DEFAULT));
     if (!Number.isFinite(v)) v = SEC_DEFAULT;
     return Math.max(SEC_MIN, Math.min(SEC_MAX, v));
+}
+function gridFrames(sec) {
+    let n = Math.max(5, sec * FPS);
+    while (n % 17 !== 5) n++;
+    return n;
+}
+function gridSecondsText(sec) {
+    const c = Math.floor((gridFrames(sec) * 200 + FPS) / (2 * FPS));
+    return `${Math.floor(c / 100)}.${String(c % 100).padStart(2, "0")}`;
 }
 function durationLine(n, lang) {
     if (lang === "EN") return `Video duration: ${n} second${n === 1 ? "" : "s"} (0–${n} s).`;
@@ -154,14 +180,15 @@ function durationLine(n, lang) {
         : ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) ? "секунды" : "секунд";
     return `Длительность ролика — ${n} ${word} (0–${n} с).`;
 }
-export function compileForm(data) {
-    const lang = textLang(data);
+function dialogue(line, k) {
+    const body = line.replace(QUOTE, (m, a, b, c) => "<d>" + [a, b, c].find((g) => g !== undefined).trim() + "</d>");
+    return `(S${k}) ` + end(body);
+}
+const joined = (ls) => ls.map(end).join(" ");
+
+function compileText(data, f, lang) {
     const L = LINKS[lang];
-    const useLinks = data.links !== false;
-    const noMusic = data.no_music !== false;
-    const f = {};
-    for (const k of SECTIONS) f[k] = lines(data[k]);
-    const joined = (ls) => ls.map(end).join(" ");
+    const useLinks = data.links !== false, noMusic = data.no_music !== false, noSpeech = data.no_speech !== false;
     const parts = [];
     if (f.place.length) parts.push(joined(f.place));
     if (f.heroes.length) {
@@ -183,9 +210,44 @@ export function compileForm(data) {
         }
         parts.push(text);
     }
+    if (useLinks && noSpeech && !f.speech.length && parts.length) parts.push(L.no_speech);
     if (useLinks && noMusic && !f.music.length && parts.length) parts.push(L.no_music);
     if (parts.length && data.time !== false) parts.unshift(durationLine(seconds(data), lang));
-    return parts.join(" ").replace(TAG, (_, n) => `<Picture ${n}>`).trim();
+    return parts.join(" ");
+}
+
+function compileH3(data, f, lang) {
+    const L = LINKS[lang];
+    const noMusic = data.no_music !== false, noSpeech = data.no_speech !== false;
+    if (!["place", "heroes", "action", "camera", "sound", "speech", "music"].some((k) => f[k].length)) return "";
+    const blocks = [], head = [];
+    if (f.pictures.length) head.push("How the reference pictures align with the target video - " + joined(f.pictures));
+    if (data.time !== false) head.push(`Target duration ${gridSecondsText(seconds(data))} seconds.`);
+    if (head.length) blocks.push(head.join(" "));
+    const summary = joined(f.place.concat(f.action.slice(0, 1)));
+    if (summary) blocks.push("summary:\n" + summary);
+    if (f.heroes.length) {
+        blocks.push("subject_definitions:\n" + f.heroes.map((h, i) => end(`<Subject ${i + 1}>${L.is}${h.replace(/\.+$/u, "")}`)).join("\n"));
+    }
+    const shot = [f.camera.length ? joined(f.camera) : L.static];
+    if (f.action.length) shot.push(joined(f.action));
+    f.speech.forEach((s, i) => shot.push(dialogue(s, i + 1)));
+    blocks.push("integrated_multimodal_description: [Shot 1] " + shot.join(" "));
+    let sound = joined(f.sound);
+    if (noSpeech && !f.speech.length) sound = (sound + " " + L.no_speech).trim();
+    if (sound) blocks.push("overall_soundscape: " + sound);
+    if (f.music.length) blocks.push("non_diegetic_music: " + joined(f.music));
+    else if (noMusic) blocks.push("non_diegetic_music: N/A");
+    return blocks.join("\n\n");
+}
+
+export function compileForm(data) {
+    const lang = textLang(data);
+    const f = {};
+    for (const k of SECTIONS) f[k] = lines(data[k]);
+    for (const k of ["speech", "music"]) if (negative(f[k])) f[k] = [];
+    const out = String(data.format || "h3") === "text" ? compileText(data, f, lang) : compileH3(data, f, lang);
+    return out.replace(TAG, (_, n) => `<Picture ${n}>`).trim();
 }
 
 // ---------------- оформление ----------------
@@ -268,6 +330,7 @@ function readState(node) {
     if (typeof data !== "object" || Array.isArray(data)) data = {};
     if (!data.lang) data.lang = defaultLang();
     if (data.seconds == null) data.seconds = SEC_DEFAULT;
+    if (!data.format) data.format = "h3";
     return data;
 }
 function writeState(node) {
@@ -322,7 +385,15 @@ function build(node) {
         expBox.appendChild(lab);
         return t;
     };
+    const fmtRow = el("div");
+    fmtRow.style.cssText = "display:flex;gap:6px;align-items:center;margin:2px 0 5px";
+    const fmtLab = el("span"), fH3 = el("span", "nrf-pill"), fText = el("span", "nrf-pill");
+    fmtRow.append(fmtLab, fH3, fText);
+    expBox.appendChild(fmtRow);
+    fH3.onclick = () => { st.state.format = "h3"; changed(); paint(); };
+    fText.onclick = () => { st.state.format = "text"; changed(); paint(); };
     const tTime = mk("time");
+    const tNoSpeech = mk("no_speech");
     const tLinks = mk("links");
     const tNoMusic = mk("no_music");
     const clr = el("span", "nrf-pill");
@@ -380,6 +451,14 @@ function build(node) {
         ti.textContent = T.timeHint;
         tTime.textContent = T.timeOpt;
         paintTime();
+        fmtLab.textContent = T.format;
+        fH3.textContent = T.fmtH3;
+        fText.textContent = T.fmtText;
+        const h3 = (st.state.format || "h3") !== "text";
+        fH3.classList.toggle("on", h3);
+        fText.classList.toggle("on", !h3);
+        tNoSpeech.textContent = T.noSpeech;
+        tLinks.parentElement.style.opacity = h3 ? "0.45" : "1";
         tLinks.textContent = T.links;
         tNoMusic.textContent = T.noMusic;
         clr.textContent = T.clear;
@@ -397,7 +476,8 @@ function build(node) {
         const T = UI[lang()];
         let n = 0;
         for (const key of SECTIONS) {
-            const ok = lines(st.state[key]).length > 0;
+            const ls = lines(st.state[key]);
+            const ok = ls.length > 0 && !((key === "speech" || key === "music") && negative(ls));
             st.boxes[key].classList.toggle("ok", ok);
             if (ok) n++;
         }
@@ -459,8 +539,9 @@ function build(node) {
         for (const key of SECTIONS) st.boxes[key].value = st.state[key] || "";
         const cbs = expBox.querySelectorAll("input");
         cbs[0].checked = st.state.time !== false;
-        cbs[1].checked = st.state.links !== false;
-        cbs[2].checked = st.state.no_music !== false;
+        cbs[1].checked = st.state.no_speech !== false;
+        cbs[2].checked = st.state.links !== false;
+        cbs[3].checked = st.state.no_music !== false;
         range.value = seconds(st.state);
         paint();
     };
