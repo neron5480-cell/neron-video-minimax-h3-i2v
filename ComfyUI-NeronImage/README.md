@@ -8,6 +8,8 @@
 
 Ещё проще, когда пакет виден в Manager: найди **Neron Image — Krea 2** и нажми Install — обновления будут приходить сами, папку менять руками не надо.
 
+Если Manager пишет «'neron-image' is not a CNR node» — это опоздание его списка сразу после публикации. Закрой и открой Comfy Desktop ещё раз: список обновится, и Install сработает. Если папка `ComfyUI-NeronImage` уже лежит в `custom_nodes`, перед установкой из Manager убери её, чтобы не получилось две копии.
+
 Язык меняется кнопками **RU / EN** в самой верхней строке ноды: вместе с подписями меняются справка, окно моделей и готовый процесс. Всё остальное настраивать не надо.
 
 **Тема уже включена.** Процесс приходит со своим оформлением и включает его сам, отдельную ноду тем ставить не надо. Другой вид выбирается кнопкой **«🎨 Сменить оформление»** в разделе ⚙ эксперт. Маленькая свёрнутая нода **«🎨 Тема»** слева просто хранит выбор — трогать её не надо. Оформление переключается вместе с языком и действует только в этом процессе: открыл другую схему — ComfyUI снова обычный.
@@ -19,6 +21,8 @@
 3. Open `workflows/Neron_Image_Krea2.json`, press «📥 Models» on the node — it downloads what is missing and puts it in the right folders. Then write what to draw and press Run.
 
 Even easier once the pack shows up in Manager: find **Neron Image — Krea 2** and press Install — updates arrive on their own, no folder swapping.
+
+If Manager says «'neron-image' is not a CNR node», its list is one step behind right after publication. Close and reopen Comfy Desktop once: the list refreshes and Install works. If the `ComfyUI-NeronImage` folder is already in `custom_nodes`, remove it before installing from Manager so you don't get two copies.
 
 The **RU / EN** buttons in the top row of the node switch the whole process: labels, help, model window and the ready workflow.
 
