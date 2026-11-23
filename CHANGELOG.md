@@ -1,5 +1,17 @@
 # Changelog / История изменений
 
+## 🌀 Neron H3 Engine 0.5.0 — голый движок на одной шине (main 3.4.0, 23.11.2026)
+
+**RU:**
+- Остался **один вход — шина данных** и **один выход — последний кадр**. Убраны четыре провода под кадры, отдельная шина кадров, провод промта и выходы «Кадры» / «Файл». Ролик по-прежнему показывается в ноде и сохраняется в `output/NeronH3`.
+- Убрано окно «Итоговый промпт»: в движке остаётся одно поле текста. Автопромптер — отдельная нода и будет писать в общий канал.
+- Шина теперь несёт не только промт, кадры и длительность, но и размер кадра. Приоритет: шина → ручное → пресет.
+- Панель перестраивается по факту подключения шины. Без неё видны промт, четыре окна кадров, стандартные пресеты размера и ручной режим с ползунками, длительность, резкость и эксперт. С шиной остаются качество, резкость, ход работы, видео и эксперт.
+- Ручной размер перестал прятаться в эксперте: переключатель и ползунки на виду, точные числа — в эксперте.
+- Живая проверка: загрузка готового workflow, RU / EN, появление и скрытие органов при подключении шины, ручной размер, эксперт, прокрутка видео в ноде; генерация дала 768×448, 24 к/с, ~5,17 с со звуком.
+
+**EN:** one data-bus input and one last-frame output remain. The four frame wires, a separate frame bus, the prompt wire and the frames/file outputs are gone; the clip still plays inside the node and is saved to `output/NeronH3`. The duplicate «Final prompt» box is gone — the engine keeps a single text field and the autoprompter stays a separate node writing to the bus. The bus now carries size as well as prompt, frames and duration, with bus → manual → preset priority. The panel rebuilds itself when the bus is connected: standalone shows the prompt, four frame windows, standard size presets plus custom sliders, duration, sharpness and expert; on the bus only quality, sharpness, progress, video and expert stay. Live-checked workflow loading, RU / EN, panel switching, custom size, expert, in-node video and a 768×448, 24 fps, ~5.17 s clip with audio.
+
 ## 🌀 Neron H3 Engine 0.4.0 — полный режим эксперта (main 3.3.0, 23.11.2026)
 
 **RU:**

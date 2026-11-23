@@ -209,6 +209,7 @@ class Engine:
         got = bus.resolve(
             bus_data, prompt, seconds, frame_count,
             {"first": first_frame, "mid_1": mid_1, "mid_2": mid_2, "last": last_frame},
+            width, height,
         )
         prompt = got["prompt"]
         if not str(prompt or "").strip():
@@ -223,7 +224,7 @@ class Engine:
         steps = int(steps) if steps and int(steps) >= 4 else (8 if mode == "turbo" else 20)
         length = hw.snap_length(float(got["frame_count"]) / FPS if got["frame_count"] else got["seconds"])
         fw, fh = hw.size_from_format(frame_format)
-        width, height = hw.snap_size(width or fw, height or fh, mode)
+        width, height = hw.snap_size(got["width"] or fw, got["height"] or fh, mode)
         self.status(self.t("mode_turbo" if mode == "turbo" else "mode_power"), 2)
 
         files = self._files(mode, options)

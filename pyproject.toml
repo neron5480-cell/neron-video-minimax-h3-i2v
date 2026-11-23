@@ -1,7 +1,7 @@
 [project]
 name = "neron-video-minimax-h3"
 description = "Neron nodes for ComfyUI — every folder self-contained: H3 Story (long MiniMax H3 videos with sound, AutoPrompter), H3 Engine (standalone MiniMax H3 without autoprompter), LTX 2.5 Engine + AutoPrompter, Neron Image (Krea 2 text-to-image up to 2K), Restore Studio, Perception Relay (video post-processing), Audio Studio, Neron Theme, Neron Studio desktop. RU/EN. / Ноды Neron, каждая папка самостоятельна: H3 Story, движок H3 без автопромптера, LTX Engine, картинки Krea 2, реставрация, Perception Relay, Audio Studio, темы, рабочий стол."
-version = "3.3.0"
+version = "3.4.0"
 license = { file = "LICENSE" }
 dependencies = ["imageio-ffmpeg", "soundfile"]
 

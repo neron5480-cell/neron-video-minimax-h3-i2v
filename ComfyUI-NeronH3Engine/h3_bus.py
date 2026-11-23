@@ -66,13 +66,15 @@ def frames(first=None, mid_1=None, mid_2=None, last=None) -> dict:
             "mid_win": [2 if mid_1 is not None else None, 3 if mid_2 is not None else None]}
 
 
-def bundle(prompt=None, seconds=None, frame_count=None, frames_data=None, source="process") -> dict:
-    """RU: сообщение будущего автопромптера: промт, длительность, кадры.
+def bundle(prompt=None, seconds=None, frame_count=None, frames_data=None,
+           width=None, height=None, source="process") -> dict:
+    """RU: сообщение внешнего блока: промт, длительность, кадры и размер.
 
-    EN: a future autoprompter message: prompt, duration and frames.
+    EN: an external block message: prompt, duration, frames and size.
     """
     return {"source": source, "prompt": prompt, "seconds": seconds,
-            "frame_count": frame_count, "frames": frames_data or {}}
+            "frame_count": frame_count, "width": width, "height": height,
+            "frames": frames_data or {}}
 
 
 def _pick(bus_value, manual_value):
@@ -80,7 +82,8 @@ def _pick(bus_value, manual_value):
     return bus_value if bus_value not in (None, "", NONE) else manual_value
 
 
-def resolve(bus=None, prompt=None, seconds=None, frame_count=None, manual_frames=None):
+def resolve(bus=None, prompt=None, seconds=None, frame_count=None, manual_frames=None,
+            width=None, height=None):
     """RU: один ответ для движка. Приоритет: шина → ручное → авто."""
     bus = bus if isinstance(bus, dict) else {}
     got = dict(bus.get("frames") or {})
@@ -91,6 +94,8 @@ def resolve(bus=None, prompt=None, seconds=None, frame_count=None, manual_frames
         "prompt": _pick(bus.get("prompt"), prompt),
         "seconds": _pick(bus.get("seconds"), seconds),
         "frame_count": _pick(bus.get("frame_count"), frame_count),
+        "width": _pick(bus.get("width"), width),
+        "height": _pick(bus.get("height"), height),
         "frames": got,
         "source": bus.get("source", "manual"),
     }

@@ -9,7 +9,6 @@ const AUTO = "по умолчанию";
 
 const UI = {
   RU: {
-    promptWire: "Промпт проводом",
     prompt: "ЧТО ПРОИСХОДИТ",
     promptHint: "Своими словами — можно по-русски",
     promptPh: "Например: вечерний город после дождя, велосипедист проезжает по мосту, камера следует сбоку, звук шин и далёкий трафик",
@@ -35,9 +34,6 @@ const UI = {
     done: "✅ Готово",
     error: "❌ Ошибка — подробности в консоли",
     step: "шаг",
-    final: "ИТОГОВЫЙ ПРОМПТ",
-    finalPh: "Здесь появится промпт, который ушёл в модель.",
-    editFinal: "✏ Править итоговый промпт",
     models: "📥 Модели",
     run: "▶ Создать видео",
     help: "📖 справка",
@@ -64,18 +60,15 @@ const UI = {
     previews: "Раскадровка во время счёта",
     file: "Имя файла",
     reset: "🔄 Сбросить настройки",
-    noteWire: "Промт идёт проводом — поле «что происходит» не работает.",
-    noteNoWire: "Чтобы промт шёл проводом, подключи вход «Промпт проводом».",
-    noteSize: "Провода ширины и высоты подключены — форма кадра не работает.",
+    busNote: "Данные приходят с шины: промт, кадры, размер и длительность.",
     modelsText: "Модели H3 ищутся сами во всех папках ComfyUI. Недостающие файлы докачиваются с места обрыва. Ничего указывать не надо.",
-    helpText: "1. Напиши, что происходит в кадре, хоть по-русски.\n2. Выбери пресет или двигай ползунки: длительность и резкость.\n3. При желании положи картинки в четыре окна кадров.\n4. Нажми «Создать видео».\n\nЕсли нужно выбрать файл модели или подключить лоры, открой «⚙ эксперт». Там же спрятаны точные числа. Ролик появится в ноде, а последний кадр можно подать в следующий прогон.",
+    helpText: "1. Напиши, что происходит в кадре, хоть по-русски.\n2. Выбери пресет или двигай ползунки: длительность и резкость. Размер — стандартный или свой.\n3. При желании положи картинки в четыре окна кадров.\n4. Нажми «Создать видео».\n\nЕсли подключить внешний блок к единственному входу-шине, движок станет голым: промт, кадры, размер и длительность придут с шины, останутся качество, резкость, ход работы, видео и «⚙ эксперт». Ролик появится в ноде, а последний кадр подаётся в следующий прогон.",
     aspectNames: { auto: "Авто", "16:9": "16:9 широкий", "9:16": "9:16 высокий", "1:1": "1:1 квадрат", "4:3": "4:3", "3:2": "3:2" },
     modeNames: { auto: "авто", turbo: "турбо", power: "качество" },
     presetNames: { "обычный": "обычный", "быстрый": "быстрый", "качество": "качество", "кино": "кино", "стык кадров": "стык кадров" },
     afterNames: { fixed: "не менять", increment: "увеличить", decrement: "уменьшить", randomize: "случайно" },
   },
   EN: {
-    promptWire: "Prompt by wire",
     prompt: "WHAT HAPPENS",
     promptHint: "In your own words — any language works",
     promptPh: "For example: a rainy city bridge at dusk, a cyclist crossing, side tracking shot, tyre hiss and distant traffic",
@@ -101,9 +94,6 @@ const UI = {
     done: "✅ Done",
     error: "❌ Error — see the console",
     step: "step",
-    final: "FINAL PROMPT",
-    finalPh: "The prompt sent to the model appears here.",
-    editFinal: "✏ Edit final prompt",
     models: "📥 Models",
     run: "▶ Create video",
     help: "📖 help",
@@ -130,11 +120,9 @@ const UI = {
     previews: "Storyboard while rendering",
     file: "File name",
     reset: "🔄 Reset settings",
-    noteWire: "A prompt wire is connected — the «what happens» field is ignored.",
-    noteNoWire: "Connect the «Prompt by wire» input to use a wired prompt.",
-    noteSize: "Width and height wires are connected — frame shape is ignored.",
+    busNote: "Data comes from the bus: prompt, frames, size and duration.",
     modelsText: "H3 models are discovered in every ComfyUI model folder. Missing files resume automatically. Nothing to set up.",
-    helpText: "1. Describe what happens in the frame — any language works.\n2. Pick a preset or move the sliders: duration and sharpness.\n3. Optionally drop pictures into the four frame windows.\n4. Press «Create video».\n\nOpen «⚙ expert» to choose model files or add LoRAs. Exact numbers are there too. The clip appears in the node. Feed its last frame into the next run to continue.",
+    helpText: "1. Describe what happens in the frame — any language works.\n2. Pick a preset or move the sliders: duration and sharpness. Size is standard or custom.\n3. Optionally drop pictures into the four frame windows.\n4. Press «Create video».\n\nConnect an external block to the single data bus and the engine turns bare: prompt, frames, size and duration arrive on the bus; only quality, sharpness, progress, video and «⚙ expert» stay. The clip appears in the node; its last frame feeds the next run.",
     aspectNames: { auto: "Auto", "16:9": "16:9 wide", "9:16": "9:16 tall", "1:1": "1:1 square", "4:3": "4:3", "3:2": "3:2" },
     modeNames: { auto: "auto", turbo: "turbo", power: "quality" },
     presetNames: { "обычный": "ordinary", "быстрый": "fast", "качество": "quality", "кино": "cinema", "стык кадров": "seam" },
@@ -180,7 +168,6 @@ const CSS = `
 .nh select,.nh input,.nh textarea{background:#141f2c;color:#e9f0fa;border:1px solid #43556c;border-radius:6px;padding:5px 8px;font:12.5px "Segoe UI",Arial,sans-serif;width:100%}
 .nh textarea{background:#101a2b;border-color:#334c72;border-radius:7px;padding:8px 10px;resize:vertical;outline:none}
 .nh .nh-prompt{min-height:72px}
-.nh .nh-final{min-height:58px;font-size:12px}
 .nh-btn{background:#2f4561;color:#fff;border:1px solid #52749b;border-radius:6px;padding:5px 11px;cursor:pointer;font:12px "Segoe UI",Arial,sans-serif;margin-top:5px}
 .nh-btn:hover{background:var(--nh-head)}
 .nh-btn.main{background:var(--nh-accent);border-color:var(--nh-accent);font-weight:600;width:100%;padding:8px;margin-top:5px}
@@ -266,26 +253,13 @@ function hideNative(node) {
   }
 }
 function syncSlotLabels(node) {
-  const t = T(node);
   const ins = {
-    prompt_in: t.promptWire,
-    first_frame: t.first,
-    mid_frame_1: t.mid1,
-    mid_frame_2: t.mid2,
-    last_frame: t.last,
-    frames_bus: langOf(node) === "RU" ? "Шина кадров" : "Frame bus",
-    bundle: langOf(node) === "RU" ? "Шина процесса" : "Process bus",
+    bundle: langOf(node) === "RU" ? "Шина данных" : "Data bus",
   };
   const outRu = langOf(node) === "RU";
   const outs = {
-    frames: outRu ? "Кадры" : "Frames",
-    path: outRu ? "Файл" : "File",
     last_image_out: outRu ? "Последний кадр" : "Last frame",
-    "Кадры": outRu ? "Кадры" : "Frames",
-    "Файл": outRu ? "Файл" : "File",
     "Последний кадр": outRu ? "Последний кадр" : "Last frame",
-    "Frames": outRu ? "Кадры" : "Frames",
-    "File": outRu ? "Файл" : "File",
     "Last frame": outRu ? "Последний кадр" : "Last frame",
   };
   for (const i of node.inputs || []) if (ins[i.name]) i.label = ins[i.name];
@@ -438,18 +412,6 @@ function buildPanel(node) {
   };
   presetSel.onchange = () => applyPreset(node, presetSel.value);
 
-  const wireCheck = el("label", "nh-check");
-  const wireBox = document.createElement("input");
-  wireBox.type = "checkbox";
-  wireBox.onchange = () => {
-    setw(node, "prompt_wire", wireBox.checked);
-    manualOf(node).add("prompt_wire");
-    node.__nhPaint?.();
-  };
-  const wireLabel = el("span");
-  wireCheck.append(wireBox, wireLabel);
-  inner.appendChild(wireCheck);
-
   const promptSec = el("div", "nh-sec");
   const promptLab = el("div", "nh-lab");
   const promptB = el("b"), promptI = el("i");
@@ -459,7 +421,6 @@ function buildPanel(node) {
   promptArea.oninput = () => {
     setw(node, "prompt", promptArea.value);
     manualOf(node).add("prompt");
-    node.__nhFinal.value = promptArea.value;
   };
   promptSec.append(promptLab, promptArea);
   inner.appendChild(promptSec);
@@ -481,7 +442,7 @@ function buildPanel(node) {
     sel.onchange = () => { setw(node, name, sel.value); manualOf(node).add(name); node.__nhPaint?.(); };
     r.append(s, sel);
     clipSec.appendChild(r);
-    controls[key] = { select: sel, label: s, name };
+    controls[key] = { row: r, select: sel, label: s, name };
     return sel;
   }
   function rowSlider(name, key, min, max, step, human) {
@@ -496,12 +457,28 @@ function buildPanel(node) {
     };
     r.append(s, range, val);
     clipSec.appendChild(r);
-    controls[key] = { range, val, label: s, name, human };
+    controls[key] = { row: r, range, val, label: s, name, human };
   }
   rowSelect("frame_format", "aspect");
   rowSlider("seconds", "duration", 5, 15, 1, (v) => `${v} ${LANG === "RU" ? "с" : "s"}`);
   rowSelect("mode", "mode");
   rowSlider("sharpness", "sharp", 0, 2, 0.05, (v) => Number(v).toFixed(2));
+  const sizeCheck = el("label", "nh-check"), sizeBox = document.createElement("input");
+  sizeBox.type = "checkbox";
+  sizeBox.onchange = () => {
+    if (sizeBox.checked && !W(node, "width")?.value) {
+      setw(node, "width", 768);
+      setw(node, "height", 448);
+    }
+    setw(node, "manual_size", sizeBox.checked);
+    manualOf(node).add("manual_size");
+    node.__nhPaint?.();
+  };
+  const sizeLabel = el("span");
+  sizeCheck.append(sizeBox, sizeLabel);
+  clipSec.appendChild(sizeCheck);
+  rowSlider("width", "widthSlider", 256, 1344, 32, (v) => `${v} px`);
+  rowSlider("height", "heightSlider", 256, 1344, 32, (v) => `${v} px`);
   inner.appendChild(clipSec);
 
   const framesSec = el("div", "nh-sec");
@@ -558,18 +535,6 @@ function buildPanel(node) {
   track.appendChild(fill);
   progSec.append(progLab, board, track);
   inner.appendChild(progSec);
-
-  const finalSec = el("div", "nh-sec");
-  const finalLab = el("div", "nh-lab"), finalB = el("b");
-  finalLab.append(finalB);
-  const finalArea = el("textarea", "nh-final");
-  finalArea.placeholder = t0.finalPh;
-  finalArea.oninput = () => {
-    setw(node, "prompt_override", finalArea.value);
-    manualOf(node).add("prompt_override");
-  };
-  finalSec.append(finalLab, finalArea);
-  inner.appendChild(finalSec);
 
   const note = el("div", "nh-note");
   note.style.display = "none";
@@ -662,12 +627,6 @@ function buildPanel(node) {
   for (let i = 1; i <= 5; i++) loraRow(i);
 
   expBox.appendChild(hFine);
-  const sizeCheck = el("label", "nh-check"), sizeBox = document.createElement("input");
-  sizeBox.type = "checkbox";
-  sizeBox.onchange = () => { setw(node, "manual_size", sizeBox.checked); manualOf(node).add("manual_size"); node.__nhPaint?.(); };
-  const sizeLabel = el("span");
-  sizeCheck.append(sizeBox, sizeLabel);
-  expBox.appendChild(sizeCheck);
   const widthRow = expRow("width", "width", "number");
   const heightRow = expRow("height", "height", "number");
   expRow("steps", "steps", "number");
@@ -694,20 +653,18 @@ function buildPanel(node) {
       setw(node, `lora_${i}_strength`, 1);
     }
     setw(node, "prompt", "");
-    setw(node, "prompt_override", "");
     node.__nhPaint?.();
   };
   expBox.appendChild(resetBtn);
   inner.appendChild(expBox);
-  inner.insertBefore(expBox, wireCheck);
 
   node.__nhEls = {
-    root, inner, ru, en, exp, hlp, presetSel, wireBox, wireLabel,
-    promptB, promptI, promptArea, clipB, controls, framesB, framesI,
-    frameEls, varB, seedSpan, seedInput, afterSpan, afterSel,
-    progB, progR, board, fill, finalB, finalArea, note, modelsBtn,
+    root, inner, ru, en, exp, hlp, presetSel,
+    promptSec, promptB, promptI, promptArea, clipB, controls, framesSec, framesB, framesI,
+    frameEls, varSec, varB, seedSpan, seedInput, afterSpan, afterSel,
+    progB, progR, board, fill, note, modelsBtn,
     runBtn, expBox, expNote, modelsTitle, lorasTitle, loraHint, refreshBtn, hFine,
-    sizeBox, sizeLabel, widthRow, heightRow, previewBox, previewLabel, resetBtn,
+    sizeCheck, sizeBox, sizeLabel, widthRow, heightRow, previewBox, previewLabel, resetBtn,
   };
   node.__nhBoard = [];
 
@@ -770,23 +727,27 @@ function buildPanel(node) {
     for (const o of e.presetSel.options) o.textContent = t.presetNames[o.value] || o.value;
     e.presetSel.value = W(node, "preset")?.value || "обычный";
 
-    const wired = linked(node, "prompt_in");
-    const wireFlag = wired || !!W(node, "prompt_wire")?.value;
-    e.wireBox.checked = wireFlag;
-    e.wireBox.disabled = false;
-    e.wireLabel.textContent = t.promptWire;
+    const onBus = linked(node, "bundle");
+    const manualSize = !!W(node, "manual_size")?.value;
+    e.promptSec.style.display = onBus ? "none" : "";
+    e.framesSec.style.display = onBus ? "none" : "";
+    e.varSec.style.display = onBus ? "none" : "";
+    e.presetSel.style.display = onBus ? "none" : "";
+    e.controls.aspect.row.style.display = onBus ? "none" : "";
+    e.controls.duration.row.style.display = onBus ? "none" : "";
+    e.sizeCheck.style.display = onBus ? "none" : "";
+    e.controls.widthSlider.row.style.display = (!onBus && manualSize) ? "" : "none";
+    e.controls.heightSlider.row.style.display = e.controls.widthSlider.row.style.display;
     e.promptB.textContent = t.prompt;
     e.promptI.textContent = t.promptHint;
     e.promptArea.placeholder = t.promptPh;
     if (document.activeElement !== e.promptArea) e.promptArea.value = W(node, "prompt")?.value ?? "";
-    e.promptArea.style.display = wireFlag ? "none" : "";
 
     e.clipB.textContent = t.frame;
     e.framesB.textContent = t.frames;
     e.framesI.textContent = t.frameHint;
     e.varB.textContent = t.variant;
     e.progB.textContent = t.progress;
-    e.finalB.textContent = t.final;
     e.modelsBtn.textContent = t.models;
     e.runBtn.textContent = t.run;
     e.expNote.textContent = t.expertNote;
@@ -798,12 +759,6 @@ function buildPanel(node) {
     e.sizeLabel.textContent = t.sizeMode;
     e.previewLabel.textContent = t.previews;
     e.resetBtn.textContent = t.reset;
-    if (document.activeElement !== e.finalArea) {
-      const override = W(node, "prompt_override")?.value;
-      e.finalArea.value = override || e.promptArea.value;
-      node.__nhFinal = e.finalArea;
-    }
-    e.finalArea.placeholder = t.finalPh;
 
     e.controls.aspect.label.textContent = t.aspect;
     e.controls.duration.label.textContent = t.duration;
@@ -830,6 +785,14 @@ function buildPanel(node) {
     sec.val.textContent = sec.human(Number(sec.range.value), t);
     sh.range.value = W(node, "sharpness")?.value ?? 1;
     sh.val.textContent = sh.human(Number(sh.range.value), t);
+    const ws = e.controls.widthSlider, hs = e.controls.heightSlider;
+    ws.label.textContent = t.width;
+    hs.label.textContent = t.height;
+    for (const c of [ws, hs]) {
+      const v = Number(W(node, c.name)?.value || 0);
+      c.range.value = v || c.range.min;
+      c.val.textContent = `${c.range.value} px`;
+    }
 
     for (const [key, slot] of Object.entries(e.frameEls)) {
       const value = W(node, slot.widgetName)?.value || NONE;
@@ -858,10 +821,9 @@ function buildPanel(node) {
     e.seedSpan.textContent = t.seed;
     if (document.activeElement !== e.seedInput) e.seedInput.value = W(node, "seed")?.value ?? 0;
 
-    const sizeLinked = linked(node, "width") || linked(node, "height");
-    e.widthRow.style.display = W(node, "manual_size")?.value || sizeLinked ? "" : "none";
+    e.widthRow.style.display = manualSize ? "" : "none";
     e.heightRow.style.display = e.widthRow.style.display;
-    e.sizeBox.checked = !!W(node, "manual_size")?.value;
+    e.sizeBox.checked = manualSize;
     e.previewBox.checked = !!W(node, "previews")?.value;
     for (const key of ["width", "height", "steps", "file"]) {
       const c = e.controls[key];
@@ -904,7 +866,7 @@ function buildPanel(node) {
       weight.range.style.opacity = dim;
       weight.val.style.opacity = dim;
     }
-    const why = sizeLinked ? t.noteSize : (W(node, "prompt_wire")?.value && !wired ? t.noteNoWire : (wireFlag ? t.noteWire : ""));
+    const why = onBus ? t.busNote : "";
     e.note.textContent = why;
     e.note.style.display = why ? "" : "none";
     e.expBox.style.display = W(node, "expert")?.value ? "" : "none";
