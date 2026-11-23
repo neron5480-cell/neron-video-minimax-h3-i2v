@@ -1,0 +1,16 @@
+[project]
+name = "neron-image"
+description = "🖼 Neron Image — картинка по тексту на Krea 2 до 2K: автопромптер, RU/EN и тема внутри процесса. Text-to-image on Krea 2 with a built-in prompter, RU/EN and the theme included."
+version = "0.5.0"
+license = { file = "LICENSE" }
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/neron5480-cell/neron-video-minimax-h3-i2v"
+Documentation = "https://github.com/neron5480-cell/neron-video-minimax-h3-i2v#readme"
+"Bug Tracker" = "https://github.com/neron5480-cell/neron-video-minimax-h3-i2v/issues"
+
+[tool.comfy]
+PublisherId = "neron"
+DisplayName = "🖼 Neron Image — Krea 2"
+Icon = "https://raw.githubusercontent.com/neron5480-cell/neron-video-minimax-h3-i2v/main/docs/img/neron_icon.png"

@@ -1051,7 +1051,12 @@ function buildPanel(node, specs) {
 // ============================================================
 //  РЕГИСТРАЦИЯ
 // ============================================================
-app.registerExtension({
+// Если процесс стоит и отдельным пакетом, и в общей базе — панель рисуется один раз.
+const registerOnce = (ext) => {
+    if ((app.extensions || []).some((e) => e && e.name === ext.name)) return;
+    app.registerExtension(ext);
+};
+registerOnce({
     name: "Neron.Image.Common",
     async beforeRegisterNodeDef(nodeType, nodeData) {
         if (nodeData.name === THEME_NODE) {

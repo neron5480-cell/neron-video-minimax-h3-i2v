@@ -110,7 +110,12 @@ async function sync() {
     canvasTransparent(true);
 }
 
-app.registerExtension({
+// Одна и та же тема может прийти и из отдельного пакета, и из процесса — фон включаем один раз.
+const registerOnce = (ext) => {
+    if ((app.extensions || []).some((e) => e && e.name === ext.name)) return;
+    app.registerExtension(ext);
+};
+registerOnce({
     name: "Neron.Theme.CanvasBackground",
     async setup() {
         // Neron Studio сообщает о смене фона; настройки меняются в том же браузере — ловим и событие хранилища

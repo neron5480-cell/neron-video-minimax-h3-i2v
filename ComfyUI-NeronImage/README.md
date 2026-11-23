@@ -6,6 +6,8 @@
 2. Перезапусти Comfy Desktop.
 3. В меню процессов открой `workflows/Neron_Image_Krea2.json`, нажми на ноде кнопку «📥 Модели» — она сама докачает недостающее и разложит по папкам. Потом напиши, что нарисовать, и нажми кнопку запуска.
 
+Ещё проще, когда пакет виден в Manager: найди **Neron Image — Krea 2** и нажми Install — обновления будут приходить сами, папку менять руками не надо.
+
 Язык меняется кнопками **RU / EN** в самой верхней строке ноды: вместе с подписями меняются справка, окно моделей и готовый процесс. Всё остальное настраивать не надо.
 
 **Тема уже включена.** Процесс приходит со своим оформлением и включает его сам, отдельную ноду тем ставить не надо. Другой вид выбирается кнопкой **«🎨 Сменить оформление»** в разделе ⚙ эксперт. Маленькая свёрнутая нода **«🎨 Тема»** слева просто хранит выбор — трогать её не надо. Оформление переключается вместе с языком.
@@ -15,6 +17,8 @@
 1. Put the `ComfyUI-NeronImage` folder into `ComfyUI/custom_nodes/` (Comfy Desktop has its own custom_nodes folder; open it from the app menu).
 2. Restart Comfy Desktop.
 3. Open `workflows/Neron_Image_Krea2.json`, press «📥 Models» on the node — it downloads what is missing and puts it in the right folders. Then write what to draw and press Run.
+
+Even easier once the pack shows up in Manager: find **Neron Image — Krea 2** and press Install — updates arrive on their own, no folder swapping.
 
 The **RU / EN** buttons in the top row of the node switch the whole process: labels, help, model window and the ready workflow.
 
