@@ -40,7 +40,7 @@ class NeronH3EngineNode(io.ComfyNode):
                 io.String.Input("prompt", multiline=True, socketless=True, tooltip="Что происходит в кадре"),
                 io.Int.Input("seconds", default=5, min=5, max=15, socketless=True, tooltip="Длительность, сек"),
                 io.Combo.Input("mode", options=["auto", "turbo", "power"], default="auto", socketless=True,
-                               tooltip="Авто выбирает по видеопамяти и оперативке"),
+                               tooltip="«По железу» выбирает турбо (8 шагов) или качество (20 шагов) по видеопамяти и оперативке"),
                 io.Int.Input("seed", default=0, min=0, max=0xFFFFFFFFFFFFFFFF, socketless=True,
                              control_after_generate=True),
                 io.Int.Input("width", default=0, min=0, max=2048, socketless=True, advanced=True,

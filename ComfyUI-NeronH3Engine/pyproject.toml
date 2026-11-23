@@ -1,7 +1,7 @@
 [project]
 name = "neron-h3-engine"
 description = "🌀 Neron H3 Engine — самостоятельный движок MiniMax H3 для ComfyUI: один вход-шина, один выход последнего кадра, пресеты размера, ручной режим и эксперт с моделями и лорами."
-version = "0.5.1"
+version = "0.5.2"
 license = { file = "LICENSE" }
 dependencies = []
 requires-python = ">=3.11"

@@ -16,11 +16,12 @@ const UI = {
     frame: "РОЛИК",
     aspect: "Форма кадра",
     duration: "Длительность",
-    mode: "Качество",
+    mode: "Режим",
+    modeHint: "По железу: турбо (8 шагов) или качество (20 шагов). Авто само решает по видеопамяти.",
     sharp: "Резкость",
     sharpHint: "1.0 — проверенное значение",
     frames: "КАДРЫ",
-    frameHint: "нажми или перетащи картинку",
+    frameHint: "нажми или перетащи картинку — окно подстроится под неё",
     first: "Первый",
     mid1: "Промежуточный 1",
     mid2: "Промежуточный 2",
@@ -62,9 +63,9 @@ const UI = {
     reset: "🔄 Сбросить настройки",
     busNote: "Данные приходят с шины: промт, кадры, размер и длительность.",
     modelsText: "Модели H3 ищутся сами во всех папках ComfyUI. Недостающие файлы докачиваются с места обрыва. Ничего указывать не надо.",
-    helpText: "1. Напиши, что происходит в кадре, хоть по-русски.\n2. Выбери пресет или двигай ползунки: длительность и резкость. Размер — стандартный или свой.\n3. При желании положи картинки в четыре окна кадров.\n4. Нажми «Создать видео».\n\nЕсли подключить внешний блок к единственному входу-шине, движок станет голым: промт, кадры, размер и длительность придут с шины, останутся качество, резкость, ход работы, видео и «⚙ эксперт». Ролик появится в ноде, а последний кадр подаётся в следующий прогон.",
-    aspectNames: { auto: "Авто", "16:9": "16:9 широкий", "9:16": "9:16 высокий", "1:1": "1:1 квадрат", "4:3": "4:3", "3:2": "3:2" },
-    modeNames: { auto: "авто", turbo: "турбо", power: "качество" },
+    helpText: "1. Напиши, что происходит в кадре, хоть по-русски.\n2. Выбери пресет или двигай ползунки: длительность и резкость. Размер «от первого кадра» возьмёт пропорции картинки; свой размер главнее.\n3. При желании положи картинки в четыре окна кадров — окно само подстроится под картинку и покажет её целиком.\n4. «Режим — по железу» сам выберет турбо (8 шагов) или качество (20 шагов); подробности появятся в ходе работы.\n5. Нажми «Создать видео».\n\nЕсли подключить внешний блок к единственному входу-шине, движок станет голым: промт, кадры, размер и длительность придут с шины, останутся качество, резкость, ход работы, видео и «⚙ эксперт». Ролик появится в ноде, а последний кадр подаётся в следующий прогон.",
+    aspectNames: { auto: "от первого кадра", "16:9": "16:9 широкий", "9:16": "9:16 высокий", "1:1": "1:1 квадрат", "4:3": "4:3 — классика", "3:2": "3:2 — фото" },
+    modeNames: { auto: "по железу", turbo: "турбо — быстро", power: "качество — медленно" },
     presetNames: { "обычный": "обычный", "быстрый": "быстрый", "качество": "качество", "кино": "кино", "стык кадров": "стык кадров" },
     afterNames: { fixed: "не менять", increment: "увеличить", decrement: "уменьшить", randomize: "случайно" },
   },
@@ -76,11 +77,12 @@ const UI = {
     frame: "CLIP",
     aspect: "Frame shape",
     duration: "Duration",
-    mode: "Quality",
+    mode: "Mode",
+    modeHint: "By hardware: turbo (8 steps) or quality (20 steps). Auto decides from available VRAM.",
     sharp: "Sharpness",
     sharpHint: "1.0 is the tested value",
     frames: "FRAMES",
-    frameHint: "click or drop a picture",
+    frameHint: "click or drop a picture — the window fits it",
     first: "First",
     mid1: "Middle 1",
     mid2: "Middle 2",
@@ -122,9 +124,9 @@ const UI = {
     reset: "🔄 Reset settings",
     busNote: "Data comes from the bus: prompt, frames, size and duration.",
     modelsText: "H3 models are discovered in every ComfyUI model folder. Missing files resume automatically. Nothing to set up.",
-    helpText: "1. Describe what happens in the frame — any language works.\n2. Pick a preset or move the sliders: duration and sharpness. Size is standard or custom.\n3. Optionally drop pictures into the four frame windows.\n4. Press «Create video».\n\nConnect an external block to the single data bus and the engine turns bare: prompt, frames, size and duration arrive on the bus; only quality, sharpness, progress, video and «⚙ expert» stay. The clip appears in the node; its last frame feeds the next run.",
-    aspectNames: { auto: "Auto", "16:9": "16:9 wide", "9:16": "9:16 tall", "1:1": "1:1 square", "4:3": "4:3", "3:2": "3:2" },
-    modeNames: { auto: "auto", turbo: "turbo", power: "quality" },
+    helpText: "1. Describe what happens in the frame — any language works.\n2. Pick a preset or move the sliders: duration and sharpness. «From first frame» takes the picture's proportions; a custom size wins.\n3. Optionally drop pictures into the four frame windows — each window fits its picture and shows it whole.\n4. «By hardware» picks turbo (8 steps) or quality (20 steps); the exact choice appears in progress.\n5. Press «Create video».\n\nConnect an external block to the single data bus and the engine turns bare: prompt, frames, size and duration arrive on the bus; only quality, sharpness, progress, video and «⚙ expert» stay. The clip appears in the node; its last frame feeds the next run.",
+    aspectNames: { auto: "from first frame", "16:9": "16:9 wide", "9:16": "9:16 tall", "1:1": "1:1 square", "4:3": "4:3 — classic", "3:2": "3:2 — photo" },
+    modeNames: { auto: "by hardware", turbo: "turbo — fast", power: "quality — slow" },
     presetNames: { "обычный": "ordinary", "быстрый": "fast", "качество": "quality", "кино": "cinema", "стык кадров": "seam" },
     afterNames: { fixed: "keep", increment: "increase", decrement: "decrease", randomize: "random" },
   },
@@ -190,9 +192,9 @@ const CSS = `
 .nh-lora input[type=range]{padding:0;border:0;background:transparent;accent-color:var(--nh-accent)}
 .nh-mini{font-size:11px;color:#a9b8c9;margin:3px 0 5px}
 .nh-note{font-size:11.5px;color:#e0b98a;background:#2c261c;border:1px solid #615338;border-radius:6px;padding:6px 9px;margin:5px 0}
-.nh-frames{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.nh-frame{position:relative;height:76px;border:1px dashed #465b73;border-radius:7px;background:#101a26;overflow:hidden;cursor:pointer}
-.nh-frame img{width:100%;height:100%;object-fit:cover;display:block}
+.nh-frames{display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:start}
+.nh-frame{position:relative;height:var(--nh-frame-h,76px);min-height:76px;border:1px dashed #465b73;border-radius:7px;background:#101a26;overflow:hidden;cursor:pointer;transition:height .12s}
+.nh-frame img{width:100%;height:100%;object-fit:contain;display:block}
 .nh-frame span{position:absolute;left:4px;bottom:3px;font-size:10.5px;color:#e7eef7;background:#0009;padding:1px 5px;border-radius:5px}
 .nh-frame b{position:absolute;right:3px;top:3px;font-size:13px;color:#fff;background:#0009;width:18px;height:18px;line-height:17px;text-align:center;border-radius:50%;display:none}
 .nh-frame:hover b{display:block}
@@ -355,6 +357,15 @@ function frameUrl(value) {
   return api.apiURL(`/view?filename=${encodeURIComponent(file)}&type=input&subfolder=${encodeURIComponent(sub)}`);
 }
 
+function fitFrameTile(slot) {
+  const img = slot.img;
+  if (!img.naturalWidth || !img.naturalHeight) return;
+  const width = slot.tile.clientWidth || 160;
+  const height = Math.max(76, Math.min(190, Math.round(width * img.naturalHeight / img.naturalWidth)));
+  slot.tile.style.setProperty("--nh-frame-h", `${height}px`);
+  app.graph?.setDirtyCanvas?.(true, false);
+}
+
 async function uploadFrame(node, widgetName, file) {
   if (!file || !file.type?.startsWith("image/")) return;
   const body = new FormData();
@@ -426,8 +437,8 @@ function buildPanel(node) {
   inner.appendChild(promptSec);
 
   const clipSec = el("div", "nh-sec");
-  const clipLab = el("div", "nh-lab"), clipB = el("b");
-  clipLab.append(clipB);
+  const clipLab = el("div", "nh-lab"), clipB = el("b"), clipI = el("i");
+  clipLab.append(clipB, clipI);
   clipSec.appendChild(clipLab);
   const controls = {};
   function rowSelect(name, key) {
@@ -510,7 +521,9 @@ function buildPanel(node) {
       node.__nhPaint?.();
     };
     grid.appendChild(tile);
-    frameEls[key] = { img, cap, tile, widgetName };
+    const slot = { img, cap, tile, widgetName };
+    img.onload = () => fitFrameTile(slot);
+    frameEls[key] = slot;
   }
   framesSec.append(framesLab, grid);
   inner.appendChild(framesSec);
@@ -660,7 +673,7 @@ function buildPanel(node) {
 
   node.__nhEls = {
     root, inner, ru, en, exp, hlp, presetSel,
-    promptSec, promptB, promptI, promptArea, clipB, controls, framesSec, framesB, framesI,
+    promptSec, promptB, promptI, promptArea, clipB, clipI, controls, framesSec, framesB, framesI,
     frameEls, varSec, varB, seedSpan, seedInput, afterSpan, afterSel,
     progB, progR, board, fill, note, modelsBtn,
     runBtn, expBox, expNote, modelsTitle, lorasTitle, loraHint, refreshBtn, hFine,
@@ -744,6 +757,7 @@ function buildPanel(node) {
     if (document.activeElement !== e.promptArea) e.promptArea.value = W(node, "prompt")?.value ?? "";
 
     e.clipB.textContent = t.frame;
+    e.clipI.textContent = t.modeHint;
     e.framesB.textContent = t.frames;
     e.framesI.textContent = t.frameHint;
     e.varB.textContent = t.variant;
@@ -763,6 +777,7 @@ function buildPanel(node) {
     e.controls.aspect.label.textContent = t.aspect;
     e.controls.duration.label.textContent = t.duration;
     e.controls.mode.label.textContent = t.mode;
+    e.controls.mode.select.title = t.modeHint;
     e.controls.sharp.label.textContent = t.sharp;
     for (const key of ["aspect", "mode"]) {
       const c = e.controls[key], w = W(node, c.name);
@@ -799,6 +814,8 @@ function buildPanel(node) {
       slot.cap.textContent = t[key] + (value === NONE ? "" : " · " + value.split("/").pop());
       const url = frameUrl(value);
       if (slot.img.getAttribute("src") !== url) slot.img.src = url;
+      if (url) fitFrameTile(slot);
+      else slot.tile.style.removeProperty("--nh-frame-h");
       slot.img.style.opacity = url ? "1" : "0";
     }
 

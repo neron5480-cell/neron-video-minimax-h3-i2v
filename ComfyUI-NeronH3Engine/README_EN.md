@@ -15,10 +15,11 @@ The workflow has one node, **one data-bus input** and **one output — the last 
 
 - **RU / EN** switches the whole process: labels, statuses, help and colours. The look follows this workflow and leaves when it is gone. Other processes are untouched.
 - **Preset** is a quick choice: ordinary, fast, quality, cinema, seam. Moving a slider afterwards overrides the preset.
-- **Size** is standard (auto, 16:9, 9:16, 1:1, 4:3, 3:2) or **custom**: turn on «Custom size» and move the width and height sliders. Exact numbers and steps stay under **⚙ expert**.
+- **Size** is «from first frame», 16:9 wide, 9:16 tall, 1:1 square, 4:3 classic, 3:2 photo or **custom**. «From first frame» takes the proportions of the picture you loaded; an explicit format or «Custom size» wins. Exact numbers and steps stay under **⚙ expert**. Priority: bus, manual, preset, then first frame.
+- **Mode** is «by hardware», «turbo — fast» (8 steps) or «quality — slow» (20 steps). «By hardware» decides from VRAM and RAM; progress shows what it picked.
 - **Sliders** set duration and sharpness. Sharpness stays visible even when the engine runs from the bus.
 - **⚙ expert** is not only numbers. It holds the main diffusion model, text encoder, video and audio VAE, turbo LoRA and up to five extra LoRAs. Each extra LoRA has its own on/off switch, file and weight from −3 to 3; enabled LoRAs are applied to the model in order. A file that does not fit is skipped and the rest keep working. If you change nothing, everything stays on default — exactly like the tested ready workflow.
-- **Four frame windows.** Drop pictures into First, Middle 1, Middle 2 and Last. There are no separate frame wires any more.
+- **Four frame windows.** Drop pictures into First, Middle 1, Middle 2 and Last. Each window fits its picture and shows it whole, without cropping. There are no separate frame wires any more.
 - **Data bus.** Connect an external block to the single input and the panel turns bare: prompt, frames, size and duration arrive on the bus; only quality, sharpness, progress, video and expert remain. Priority: bus, then manual, then preset.
 - **Last frame** is the only output. Feed it into the next run or back into the autoprompter to continue the same scene.
 - **Duration** runs from 5 to 15 seconds. Shorter clips are not supported; 24 fps and native stereo audio.

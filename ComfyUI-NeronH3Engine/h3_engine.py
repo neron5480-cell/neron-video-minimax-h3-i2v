@@ -220,12 +220,15 @@ class Engine:
         mid_2 = _as_image(got["frames"].get("mid_2"))
         last_frame = _as_image(got["frames"].get("last"))
 
-        mode = hw.choose_mode(mode)
+        asked_mode = str(mode or "auto").lower()
+        mode = hw.choose_mode(asked_mode)
         steps = int(steps) if steps and int(steps) >= 4 else (8 if mode == "turbo" else 20)
         length = hw.snap_length(float(got["frame_count"]) / FPS if got["frame_count"] else got["seconds"])
-        fw, fh = hw.size_from_format(frame_format)
-        width, height = hw.snap_size(got["width"] or fw, got["height"] or fh, mode)
-        self.status(self.t("mode_turbo" if mode == "turbo" else "mode_power"), 2)
+        width, height = hw.target_size(got["width"], got["height"], frame_format, mode, first_frame)
+        status_key = ("auto_turbo" if mode == "turbo" else "auto_power") if asked_mode == "auto" else (
+            "mode_turbo" if mode == "turbo" else "mode_power"
+        )
+        self.status(self.t(status_key), 2)
 
         files = self._files(mode, options)
         self._load(files, mode, options)

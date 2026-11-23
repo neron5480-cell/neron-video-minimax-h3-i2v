@@ -37,6 +37,35 @@ def size_from_format(fmt: str) -> tuple[int | None, int | None]:
     return FORMATS.get(str(fmt), FORMATS["auto"])
 
 
+def size_from_frame(frame) -> tuple[int, int]:
+    """RU: пропорции первого кадра → размер H3 без растягивания."""
+    from comfy_extras.nodes_minimax_h3 import adapt_canvas
+
+    shape = getattr(frame, "shape", None)
+    if not shape or len(shape) < 2:
+        return FORMATS["auto"]
+    try:
+        h, w = int(shape[-3]), int(shape[-2]) if len(shape) >= 3 else (int(shape[0]), int(shape[1]))
+        if w > 0 and h > 0:
+            return adapt_canvas(w, h)
+    except Exception:
+        pass
+    return FORMATS["auto"]
+
+
+def target_size(width=None, height=None, frame_format="auto", mode="auto",
+                first_frame=None) -> tuple[int, int]:
+    """RU: шина/ручной размер → формат → первый кадр → стандарт, затем сетка H3."""
+    w, h = int(width or 0), int(height or 0)
+    fmt = str(frame_format or "auto").lower()
+    if (not w or not h) and fmt != "auto":
+        w, h = size_from_format(fmt)
+    if (not w or not h) and first_frame is not None:
+        w, h = size_from_frame(first_frame)
+    if not w or not h:
+        w, h = FORMATS["auto"]
+    return snap_size(w, h, mode)
+
 
 def gpu_info() -> dict:
     vram = 0
