@@ -33,6 +33,7 @@ from comfy_extras.nodes_video import CreateVideo
 from . import h3_bus as bus
 from . import h3_catalog as catalog
 from . import h3_hw as hw
+from .h3_loras import LoraStack
 from . import h3_i18n as i18n
 from .h3_preview import Storyboard
 
@@ -44,9 +45,12 @@ def _base(path: str) -> str:
 
 
 def _as_image(value):
-    """RU: из UI приходит тензор, из API — имя файла из input/; принимаем оба вида."""
-    if isinstance(value, str) and value.strip():
-        return nodes.LoadImage().load_image(value.strip())[0]
+    """RU: из UI приходит тензор, из API — имя файла из input/; пустое имя — нет кадра."""
+    if isinstance(value, str):
+        name = value.strip()
+        if not name or name == bus.NONE:
+            return None
+        return nodes.LoadImage().load_image(name)[0]
     return value
 
 
@@ -93,10 +97,20 @@ class Engine:
         if self.board:
             self.board.send(text, 0, None, pct)
 
-    def _files(self, mode: str):
-        keys = ["diffusion", "vae_video", "vae_audio"]
-        keys.append("text_turbo" if mode == "turbo" else "text_power")
-        if mode == "turbo":
+    def _files(self, mode: str, options: dict | None = None):
+        options = options or {}
+        auto = (None, "", catalog.AUTO)
+        text_key = "text_turbo" if mode == "turbo" else "text_power"
+        keys = []
+        if options.get("diffusion_model") in auto:
+            keys.append("diffusion")
+        if options.get(text_key + "_model") in auto:
+            keys.append(text_key)
+        if options.get("video_vae_model") in auto:
+            keys.append("vae_video")
+        if options.get("audio_vae_model") in auto:
+            keys.append("vae_audio")
+        if mode == "turbo" and options.get("turbo_lora", catalog.AUTO) in auto:
             keys.append("turbo_lora")
         self.status(self.t("checking"), 1)
 
@@ -106,18 +120,61 @@ class Engine:
 
         return catalog.ensure_many(keys, local_status)
 
-    def _load(self, paths: dict, mode: str):
+    @staticmethod
+    def _pick(options: dict, key: str, paths: dict, fallback_key: str,
+              allow_none: bool = False) -> str:
+        choice = options.get(key)
+        if choice in (None, "", catalog.AUTO):
+            return _base(paths.get(fallback_key, ""))
+        if choice == catalog.NONE:
+            return "" if not allow_none else catalog.NONE
+        return str(choice)
+
+    def _load(self, paths: dict, mode: str, options: dict | None = None):
         self.status(self.t("loading"), 25)
-        model = nodes.UNETLoader().load_unet(_base(paths["diffusion"]), "default")[0]
+        options = options or {}
         text_key = "text_turbo" if mode == "turbo" else "text_power"
-        clip = nodes.CLIPLoader().load_clip(_base(paths[text_key]), "minimax", "default")[0]
-        vae = nodes.VAELoader().load_vae(_base(paths["vae_video"]))[0]
-        audio_vae = nodes.VAELoader().load_vae(_base(paths["vae_audio"]))[0]
+        diffusion = self._pick(options, "diffusion_model", paths, "diffusion")
+        text = self._pick(options, text_key + "_model", paths, text_key)
+        video_vae = self._pick(options, "video_vae_model", paths, "vae_video")
+        audio_vae_name = self._pick(options, "audio_vae_model", paths, "vae_audio")
+        if not all((diffusion, text, video_vae, audio_vae_name)):
+            raise ValueError(self.t("err_files"))
+
+        model = nodes.UNETLoader().load_unet(diffusion, "default")[0]
+        clip = nodes.CLIPLoader().load_clip(text, "minimax", "default")[0]
+        vae = nodes.VAELoader().load_vae(video_vae)[0]
+        audio_vae = nodes.VAELoader().load_vae(audio_vae_name)[0]
+
+        def report(index, name, weight, ok):
+            key = ("turbo_ok" if ok else "turbo_skip") if index == 0 else (
+                "lora_ok" if ok else "lora_skip"
+            )
+            self.status(self.t(key, n=index, name=os.path.basename(name), w=weight), 28)
+
+        stack = LoraStack(status=report)
+        slots = []
         if mode == "turbo":
-            # RU: официальный шаблон вешает турбо-LoRA только на модель, не на текст.
-            model = nodes.LoraLoaderModelOnly().load_lora_model_only(
-                model, _base(paths["turbo_lora"]), 1.0
-            )[0]
+            turbo = self._pick(options, "turbo_lora", paths, "turbo_lora", allow_none=True)
+            try:
+                turbo_weight = float(options.get("turbo_lora_strength", 1.0))
+            except Exception:
+                turbo_weight = 1.0
+            slots.append({
+                "enabled": True,
+                "name": turbo,
+                "strength": turbo_weight,
+                "index": 0,
+            })
+        for i in range(1, 6):
+            slots.append({
+                "enabled": bool(options.get(f"lora_{i}_enabled")),
+                "name": options.get(f"lora_{i}_name", catalog.NONE),
+                "strength": options.get(f"lora_{i}_strength", 1.0),
+                "index": i,
+            })
+        model, _ = stack.apply(model, slots)
+
         self.loaded = {"model": model, "clip": clip, "vae": vae, "audio_vae": audio_vae}
         return self.loaded
 
@@ -148,7 +205,7 @@ class Engine:
     def run(self, prompt=None, first_frame=None, mid_1=None, mid_2=None, last_frame=None,
             seconds=5.0, frame_count=None, mode="auto", seed=0, width=None, height=None,
             steps=0, sharpness=1.0, frame_format="auto", previews=True,
-            bus_data=None, video_name="NeronH3/H3"):
+            bus_data=None, video_name="NeronH3/H3", options=None):
         got = bus.resolve(
             bus_data, prompt, seconds, frame_count,
             {"first": first_frame, "mid_1": mid_1, "mid_2": mid_2, "last": last_frame},
@@ -169,8 +226,8 @@ class Engine:
         width, height = hw.snap_size(width or fw, height or fh, mode)
         self.status(self.t("mode_turbo" if mode == "turbo" else "mode_power"), 2)
 
-        files = self._files(mode)
-        self._load(files, mode)
+        files = self._files(mode, options)
+        self._load(files, mode, options)
         self.board = Storyboard(self.loaded["vae"], self.node_id, steps, self.lang, self.previews)
 
         self.status(self.t("encoding"), 30)

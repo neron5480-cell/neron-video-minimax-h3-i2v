@@ -5,6 +5,7 @@ import { api } from "../../scripts/api.js";
 
 const NODE = "NeronH3Engine";
 const NONE = "— нет —";
+const AUTO = "по умолчанию";
 
 const UI = {
   RU: {
@@ -41,7 +42,21 @@ const UI = {
     run: "▶ Создать видео",
     help: "📖 справка",
     expert: "⚙ эксперт",
-    expertNote: "Здесь только тонкие настройки. Для обычной работы не нужны.",
+    expertNote: "Здесь выбираются файлы моделей и лоры. Для обычной работы не нужно.",
+    modelsTitle: "ФАЙЛЫ МОДЕЛЕЙ",
+    mainModel: "Основная модель",
+    textTurbo: "Текст: турбо",
+    textPower: "Текст: качество",
+    videoVae: "Видео-кодек",
+    audioVae: "Звук-кодек",
+    turboLora: "Турбо-лора",
+    turboWeight: "Сила",
+    lorasTitle: "ДОПОЛНИТЕЛЬНЫЕ ЛОРЫ",
+    loraHint: "Включённые лоры применяются по порядку. Неподходящий файл пропускается.",
+    refreshModels: "🔄 Обновить списки",
+    fineTitle: "ТОЧНЫЕ ЧИСЛА",
+    autoModel: "по умолчанию",
+    noneModel: "нет",
     sizeMode: "Свой размер",
     width: "Ширина",
     height: "Высота",
@@ -53,7 +68,7 @@ const UI = {
     noteNoWire: "Чтобы промт шёл проводом, подключи вход «Промпт проводом».",
     noteSize: "Провода ширины и высоты подключены — форма кадра не работает.",
     modelsText: "Модели H3 ищутся сами во всех папках ComfyUI. Недостающие файлы докачиваются с места обрыва. Ничего указывать не надо.",
-    helpText: "1. Напиши, что происходит в кадре, хоть по-русски.\n2. Выбери пресет или двигай ползунки: длительность и резкость.\n3. При желании положи картинки в четыре окна кадров.\n4. Нажми «Создать видео».\n\nРолик появится в ноде, а последний кадр можно подать в следующий прогон.",
+    helpText: "1. Напиши, что происходит в кадре, хоть по-русски.\n2. Выбери пресет или двигай ползунки: длительность и резкость.\n3. При желании положи картинки в четыре окна кадров.\n4. Нажми «Создать видео».\n\nЕсли нужно выбрать файл модели или подключить лоры, открой «⚙ эксперт». Там же спрятаны точные числа. Ролик появится в ноде, а последний кадр можно подать в следующий прогон.",
     aspectNames: { auto: "Авто", "16:9": "16:9 широкий", "9:16": "9:16 высокий", "1:1": "1:1 квадрат", "4:3": "4:3", "3:2": "3:2" },
     modeNames: { auto: "авто", turbo: "турбо", power: "качество" },
     presetNames: { "обычный": "обычный", "быстрый": "быстрый", "качество": "качество", "кино": "кино", "стык кадров": "стык кадров" },
@@ -93,7 +108,21 @@ const UI = {
     run: "▶ Create video",
     help: "📖 help",
     expert: "⚙ expert",
-    expertNote: "Fine settings only. Not needed for ordinary work.",
+    expertNote: "Model files and extra LoRAs live here. Not needed for ordinary work.",
+    modelsTitle: "MODEL FILES",
+    mainModel: "Main model",
+    textTurbo: "Text: turbo",
+    textPower: "Text: quality",
+    videoVae: "Video VAE",
+    audioVae: "Audio VAE",
+    turboLora: "Turbo LoRA",
+    turboWeight: "Weight",
+    lorasTitle: "EXTRA LoRAS",
+    loraHint: "Enabled LoRAs are applied in order. A file that does not fit is skipped.",
+    refreshModels: "🔄 Refresh lists",
+    fineTitle: "EXACT NUMBERS",
+    autoModel: "default",
+    noneModel: "none",
     sizeMode: "Custom size",
     width: "Width",
     height: "Height",
@@ -105,7 +134,7 @@ const UI = {
     noteNoWire: "Connect the «Prompt by wire» input to use a wired prompt.",
     noteSize: "Width and height wires are connected — frame shape is ignored.",
     modelsText: "H3 models are discovered in every ComfyUI model folder. Missing files resume automatically. Nothing to set up.",
-    helpText: "1. Describe what happens in the frame — any language works.\n2. Pick a preset or move the sliders: duration and sharpness.\n3. Optionally drop pictures into the four frame windows.\n4. Press «Create video».\n\nThe clip appears in the node. Feed its last frame into the next run to continue.",
+    helpText: "1. Describe what happens in the frame — any language works.\n2. Pick a preset or move the sliders: duration and sharpness.\n3. Optionally drop pictures into the four frame windows.\n4. Press «Create video».\n\nOpen «⚙ expert» to choose model files or add LoRAs. Exact numbers are there too. The clip appears in the node. Feed its last frame into the next run to continue.",
     aspectNames: { auto: "Auto", "16:9": "16:9 wide", "9:16": "9:16 tall", "1:1": "1:1 square", "4:3": "4:3", "3:2": "3:2" },
     modeNames: { auto: "auto", turbo: "turbo", power: "quality" },
     presetNames: { "обычный": "ordinary", "быстрый": "fast", "качество": "quality", "кино": "cinema", "стык кадров": "seam" },
@@ -164,6 +193,15 @@ const CSS = `
 .nh-check input{width:auto}
 .nh-exp{background:#1a2532;border:1px solid #4a4b3d;border-radius:7px;padding:8px 10px;margin:6px 0 9px}
 .nh-exp h4{margin:7px 0 4px;font-size:11.5px;color:#f0cd8a;font-weight:600;letter-spacing:.4px}
+.nh-exp .nh-row{margin:3px 0}
+.nh-exp .nh-row>span{min-width:98px;font-size:11.5px}
+.nh-exp select{padding:4px 6px;font-size:11.5px}
+.nh-lora{display:grid;grid-template-columns:20px 1fr 70px 34px;gap:6px;align-items:center;margin:3px 0}
+.nh-lora input[type=checkbox]{width:auto;margin:0}
+.nh-lora select{padding:4px 6px;font-size:11.5px}
+.nh-lora .nh-val{min-width:34px;text-align:right;font-size:11px}
+.nh-lora input[type=range]{padding:0;border:0;background:transparent;accent-color:var(--nh-accent)}
+.nh-mini{font-size:11px;color:#a9b8c9;margin:3px 0 5px}
 .nh-note{font-size:11.5px;color:#e0b98a;background:#2c261c;border:1px solid #615338;border-radius:6px;padding:6px 9px;margin:5px 0}
 .nh-frames{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .nh-frame{position:relative;height:76px;border:1px dashed #465b73;border-radius:7px;background:#101a26;overflow:hidden;cursor:pointer}
@@ -300,6 +338,27 @@ function applyPreset(node, key) {
   node.__nhPaint?.();
 }
 
+async function refreshExpertOptions(node, btn) {
+  if (btn) btn.disabled = true;
+  try {
+    const r = await api.fetchApi("/object_info/NeronH3Engine");
+    const j = await r.json();
+    const info = j.NeronH3Engine || {};
+    const defs = { ...(info.input?.required || {}), ...(info.input?.optional || {}) };
+    for (const w of node.widgets || []) {
+      const values = defs[w.name]?.[1]?.options;
+      if (!Array.isArray(values)) continue;
+      w.options = w.options || {};
+      w.options.values = values;
+    }
+    node.__nhPaint?.();
+  } catch (e) {
+    console.warn("[Neron H3] model list refresh failed", e);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
 function dialog(node, title, text) {
   const wrap = el("div", "nh-dlg");
   const box = el("div", "nh-dlg-box");
@@ -372,7 +431,11 @@ function buildPanel(node) {
   ru.onclick = () => setLang(node, "RU");
   en.onclick = () => setLang(node, "EN");
   hlp.onclick = () => dialog(node, t0.help, t0.helpText);
-  exp.onclick = () => { setw(node, "expert", !W(node, "expert")?.value); node.__nhPaint?.(); };
+  exp.onclick = () => {
+    setw(node, "expert", !W(node, "expert")?.value);
+    node.__nhPaint?.();
+    if (W(node, "expert")?.value) refreshExpertOptions(node);
+  };
   presetSel.onchange = () => applyPreset(node, presetSel.value);
 
   const wireCheck = el("label", "nh-check");
@@ -523,11 +586,10 @@ function buildPanel(node) {
   const expBox = el("div", "nh-exp");
   const expNote = el("div", "nh-note");
   expBox.appendChild(expNote);
-  function expRow(name, key, kind, labelKey) {
-    const r = el("div", "nh-row"), s = el("span"), input = document.createElement(kind === "check" ? "input" : "input");
-    if (kind === "check") input.type = "checkbox";
-    else if (kind === "number") input.type = "number";
-    else input.type = "text";
+  const modelsTitle = el("h4"), lorasTitle = el("h4"), hFine = el("h4");
+  function expRow(name, key, kind) {
+    const r = el("div", "nh-row"), s = el("span"), input = document.createElement("input");
+    input.type = kind === "check" ? "checkbox" : (kind === "number" ? "number" : "text");
     input.onchange = () => {
       const v = kind === "check" ? input.checked : (kind === "number" ? Number(input.value) : input.value);
       setw(node, name, v);
@@ -539,7 +601,66 @@ function buildPanel(node) {
     controls[key] = { input, label: s, name, kind };
     return r;
   }
-  const hFine = el("h4");
+  function expSelect(name, key) {
+    const r = el("div", "nh-row"), s = el("span"), sel = el("select");
+    sel.onchange = () => { setw(node, name, sel.value); manualOf(node).add(name); node.__nhPaint?.(); };
+    r.append(s, sel);
+    expBox.appendChild(r);
+    controls[key] = { select: sel, label: s, name };
+    return r;
+  }
+  function expWeight(name, key) {
+    const r = el("div", "nh-row"), s = el("span"), val = el("span", "nh-val"), range = document.createElement("input");
+    range.type = "range"; range.min = -3; range.max = 3; range.step = 0.05;
+    range.oninput = () => {
+      setw(node, name, Number(range.value));
+      manualOf(node).add(name);
+      val.textContent = Number(range.value).toFixed(2);
+    };
+    r.append(s, range, val);
+    expBox.appendChild(r);
+    controls[key] = { range, val, label: s, name };
+    return r;
+  }
+  function loraRow(i) {
+    const wrap = el("div", "nh-lora");
+    const on = document.createElement("input"); on.type = "checkbox";
+    const sel = document.createElement("select");
+    const range = document.createElement("input");
+    range.type = "range"; range.min = -3; range.max = 3; range.step = 0.05;
+    const val = el("span", "nh-val");
+    on.onchange = () => { setw(node, `lora_${i}_enabled`, on.checked); manualOf(node).add(`lora_${i}_enabled`); };
+    sel.onchange = () => { setw(node, `lora_${i}_name`, sel.value); manualOf(node).add(`lora_${i}_name`); };
+    range.oninput = () => {
+      setw(node, `lora_${i}_strength`, Number(range.value));
+      manualOf(node).add(`lora_${i}_strength`);
+      val.textContent = Number(range.value).toFixed(2);
+    };
+    wrap.append(on, sel, range, val);
+    expBox.appendChild(wrap);
+    controls[`lora${i}On`] = { input: on, name: `lora_${i}_enabled` };
+    controls[`lora${i}Name`] = { select: sel, name: `lora_${i}_name` };
+    controls[`lora${i}Weight`] = { range, val, name: `lora_${i}_strength` };
+    return wrap;
+  }
+
+  expBox.appendChild(modelsTitle);
+  expSelect("diffusion_model", "mainModel");
+  expSelect("text_turbo_model", "textTurbo");
+  expSelect("text_power_model", "textPower");
+  expSelect("video_vae_model", "videoVae");
+  expSelect("audio_vae_model", "audioVae");
+  expSelect("turbo_lora", "turboLora");
+  expWeight("turbo_lora_strength", "turboWeight");
+  const refreshBtn = el("button", "nh-btn", t0.refreshModels);
+  refreshBtn.onclick = () => refreshExpertOptions(node, refreshBtn);
+  expBox.appendChild(refreshBtn);
+
+  expBox.appendChild(lorasTitle);
+  expBox.appendChild(el("div", "nh-mini", t0.loraHint));
+  const loraHint = expBox.lastChild;
+  for (let i = 1; i <= 5; i++) loraRow(i);
+
   expBox.appendChild(hFine);
   const sizeCheck = el("label", "nh-check"), sizeBox = document.createElement("input");
   sizeBox.type = "checkbox";
@@ -547,35 +668,46 @@ function buildPanel(node) {
   const sizeLabel = el("span");
   sizeCheck.append(sizeBox, sizeLabel);
   expBox.appendChild(sizeCheck);
-  const widthRow = expRow("width", "width", "number", "width");
-  const heightRow = expRow("height", "height", "number", "height");
-  expRow("steps", "steps", "number", "steps");
+  const widthRow = expRow("width", "width", "number");
+  const heightRow = expRow("height", "height", "number");
+  expRow("steps", "steps", "number");
   const previewCheck = el("label", "nh-check"), previewBox = document.createElement("input");
   previewBox.type = "checkbox";
   previewBox.onchange = () => { setw(node, "previews", previewBox.checked); manualOf(node).add("previews"); };
   const previewLabel = el("span");
   previewCheck.append(previewBox, previewLabel);
   expBox.appendChild(previewCheck);
-  expRow("video_name", "file", "text", "file");
+  expRow("video_name", "file", "text");
   const resetBtn = el("button", "nh-btn", t0.reset);
   resetBtn.onclick = () => {
     node.__nhManual = new Set();
     applyPreset(node, W(node, "preset")?.value || "обычный");
     for (const [widgetName] of FRAME_SLOTS) setw(node, widgetName, NONE);
+    for (const name of ["diffusion_model", "text_turbo_model", "text_power_model",
+                        "video_vae_model", "audio_vae_model", "turbo_lora"]) {
+      setw(node, name, AUTO);
+    }
+    setw(node, "turbo_lora_strength", 1);
+    for (let i = 1; i <= 5; i++) {
+      setw(node, `lora_${i}_enabled`, false);
+      setw(node, `lora_${i}_name`, NONE);
+      setw(node, `lora_${i}_strength`, 1);
+    }
     setw(node, "prompt", "");
     setw(node, "prompt_override", "");
     node.__nhPaint?.();
   };
   expBox.appendChild(resetBtn);
   inner.appendChild(expBox);
+  inner.insertBefore(expBox, wireCheck);
 
   node.__nhEls = {
     root, inner, ru, en, exp, hlp, presetSel, wireBox, wireLabel,
     promptB, promptI, promptArea, clipB, controls, framesB, framesI,
     frameEls, varB, seedSpan, seedInput, afterSpan, afterSel,
     progB, progR, board, fill, finalB, finalArea, note, modelsBtn,
-    runBtn, expBox, expNote, hFine, sizeBox, sizeLabel, widthRow, heightRow,
-    previewBox, previewLabel, resetBtn,
+    runBtn, expBox, expNote, modelsTitle, lorasTitle, loraHint, refreshBtn, hFine,
+    sizeBox, sizeLabel, widthRow, heightRow, previewBox, previewLabel, resetBtn,
   };
   node.__nhBoard = [];
 
@@ -613,6 +745,22 @@ function buildPanel(node) {
   function paint() {
     const t = T(node);
     const e = node.__nhEls;
+    function fillSelect(sel, values) {
+      const list = Array.isArray(values) ? values : [];
+      const same = sel.options.length === list.length &&
+        [...sel.options].every((o, i) => o.value === list[i]);
+      if (!same) {
+        sel.innerHTML = "";
+        for (const v of list) {
+          const o = document.createElement("option");
+          o.value = v;
+          sel.appendChild(o);
+        }
+      }
+      for (const o of sel.options) {
+        o.textContent = o.value === AUTO ? t.autoModel : (o.value === NONE ? t.noneModel : o.value);
+      }
+    }
     syncSlotLabels(node);
     e.ru.classList.toggle("on", langOf(node) === "RU");
     e.en.classList.toggle("on", langOf(node) === "EN");
@@ -642,7 +790,11 @@ function buildPanel(node) {
     e.modelsBtn.textContent = t.models;
     e.runBtn.textContent = t.run;
     e.expNote.textContent = t.expertNote;
-    e.hFine.textContent = t.expert;
+    e.modelsTitle.textContent = t.modelsTitle;
+    e.lorasTitle.textContent = t.lorasTitle;
+    e.loraHint.textContent = t.loraHint;
+    e.refreshBtn.textContent = t.refreshModels;
+    e.hFine.textContent = t.fineTitle;
     e.sizeLabel.textContent = t.sizeMode;
     e.previewLabel.textContent = t.previews;
     e.resetBtn.textContent = t.reset;
@@ -716,6 +868,41 @@ function buildPanel(node) {
       if (!c) continue;
       c.label.textContent = key === "file" ? t.file : t[key];
       if (document.activeElement !== c.input) c.input.value = W(node, c.name)?.value ?? "";
+    }
+    const modelRows = [
+      ["mainModel", t.mainModel], ["textTurbo", t.textTurbo],
+      ["textPower", t.textPower], ["videoVae", t.videoVae],
+      ["audioVae", t.audioVae], ["turboLora", t.turboLora],
+    ];
+    for (const [key, label] of modelRows) {
+      const c = e.controls[key];
+      if (!c) continue;
+      c.label.textContent = label;
+      const w = W(node, c.name);
+      fillSelect(c.select, w?.options?.values || w?.options?.options || []);
+      c.select.value = w?.value ?? AUTO;
+    }
+    const tw = e.controls.turboWeight;
+    if (tw) {
+      tw.label.textContent = t.turboWeight;
+      tw.range.value = W(node, tw.name)?.value ?? 1;
+      tw.val.textContent = Number(tw.range.value).toFixed(2);
+    }
+    for (let i = 1; i <= 5; i++) {
+      const on = e.controls[`lora${i}On`];
+      const name = e.controls[`lora${i}Name`];
+      const weight = e.controls[`lora${i}Weight`];
+      if (!on || !name || !weight) continue;
+      on.input.checked = !!W(node, on.name)?.value;
+      const w = W(node, name.name);
+      fillSelect(name.select, w?.options?.values || w?.options?.options || []);
+      name.select.value = w?.value ?? NONE;
+      weight.range.value = W(node, weight.name)?.value ?? 1;
+      weight.val.textContent = Number(weight.range.value).toFixed(2);
+      const dim = on.input.checked ? "1" : ".55";
+      name.select.style.opacity = dim;
+      weight.range.style.opacity = dim;
+      weight.val.style.opacity = dim;
     }
     const why = sizeLinked ? t.noteSize : (W(node, "prompt_wire")?.value && !wired ? t.noteNoWire : (wireFlag ? t.noteWire : ""));
     e.note.textContent = why;

@@ -1,5 +1,16 @@
 # Changelog / История изменений
 
+## 🌀 Neron H3 Engine 0.4.0 — полный режим эксперта (main 3.3.0, 23.11.2026)
+
+**RU:**
+- Исправлено по замечанию автора: в режиме эксперта не было настроек. Теперь там выбираются основная модель, текстовый движок для турбо и качества, видео- и звуковой кодеки, турбо-LoRA с силой и пять дополнительных лор.
+- Устройство дополнительных лор повторяет старый селектор автора: у каждого слота свой переключатель, файл и сила от −3 до 3. Лоры ложатся на модель по порядку, выключенные и пустые слоты пропускаются, один неподходящий файл не срывает остальные.
+- Списки файлов живые: берутся из папок моделей Comfy, обновляются кнопкой без перезапуска. Если ничего не выбирать, движок работает как раньше — проверенный турбо или мощный режим.
+- Живая проверка: панель эксперта, RU / EN, обновление списков, сброс, готовый workflow, ролик с пользовательской LoRA и ролик с неподходящей LoRA. Пользовательская LoRA изменила кадры, неподходящая была пропущена, оба ролика сохранились.
+- Убрана вторая копия папки движка из `custom_nodes`: теперь загружается только один JS панели.
+
+**EN:** fixed after the author's report: expert mode had no settings. It now holds the main model, the turbo and quality text encoders, both VAEs, turbo LoRA with weight and five extra LoRAs. Extra LoRAs follow the author's old selector: each slot has its own switch, file and weight from −3 to 3; they are applied to the model in order, empty or disabled slots are skipped and one bad file does not stop the rest. File lists are live and refreshable without a restart; leaving everything on default keeps the tested turbo or power behaviour. Live-checked the panel, RU / EN, refresh, reset, ready workflow, a run with a custom LoRA and a run with an incompatible LoRA: the custom LoRA changed the frames, the bad one was skipped, both clips saved. The duplicate engine folder was removed from `custom_nodes` so only one panel script loads.
+
 ## 🌀 Neron H3 Engine 0.3.0 — фирменный вид, шина и четыре кадра (main 3.2.0, 23.11.2026)
 
 **RU:**

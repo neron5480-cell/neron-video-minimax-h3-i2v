@@ -1,7 +1,7 @@
 [project]
 name = "neron-h3-engine"
-description = "🌀 Neron H3 Engine — самостоятельный движок MiniMax H3: четыре кадра на общей шине, пресеты, ползунки и выход последнего кадра. Standalone MiniMax H3 engine with a four-frame bus, presets, sliders and a last-frame output."
-version = "0.3.0"
+description = "🌀 Neron H3 Engine — самостоятельный движок MiniMax H3: четыре кадра на общей шине, пресеты, ползунки, выбор моделей и лор в эксперте, выход последнего кадра. Standalone MiniMax H3 engine with a four-frame bus, presets, sliders, expert model and LoRA choice, last-frame output."
+version = "0.4.0"
 license = { file = "LICENSE" }
 dependencies = []
 requires-python = ">=3.11"

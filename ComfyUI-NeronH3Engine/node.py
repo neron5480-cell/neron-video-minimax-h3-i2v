@@ -15,6 +15,7 @@ import os
 from comfy_api.latest import ComfyExtension, io, ui
 
 from . import h3_bus as bus
+from . import h3_catalog as catalog
 from . import h3_hw as hw
 from .h3_engine import Engine
 
@@ -66,6 +67,32 @@ class NeronH3EngineNode(io.ComfyNode):
                 io.Combo.Input("last_image", options=files, default=bus.NONE, socketless=True),
                 io.Boolean.Input("prompt_wire", default=False, socketless=True, advanced=True),
                 io.Boolean.Input("expert", default=False, socketless=True, advanced=True),
+                io.Combo.Input("diffusion_model", options=catalog.diffusion_choices(),
+                               default=catalog.AUTO, socketless=True, advanced=True),
+                io.Combo.Input("text_turbo_model", options=catalog.text_choices(),
+                               default=catalog.AUTO, socketless=True, advanced=True),
+                io.Combo.Input("text_power_model", options=catalog.text_choices(),
+                               default=catalog.AUTO, socketless=True, advanced=True),
+                io.Combo.Input("video_vae_model", options=catalog.vae_choices(),
+                               default=catalog.AUTO, socketless=True, advanced=True),
+                io.Combo.Input("audio_vae_model", options=catalog.vae_choices(),
+                               default=catalog.AUTO, socketless=True, advanced=True),
+                io.Combo.Input("turbo_lora", options=catalog.lora_choices(),
+                               default=catalog.AUTO, socketless=True, advanced=True),
+                io.Float.Input("turbo_lora_strength", default=1.0, min=-3.0, max=3.0,
+                               step=0.05, socketless=True, advanced=True),
+                *[
+                    item
+                    for i in range(1, 6)
+                    for item in (
+                        io.Boolean.Input(f"lora_{i}_enabled", default=False,
+                                         socketless=True, advanced=True),
+                        io.Combo.Input(f"lora_{i}_name", options=catalog.extra_lora_choices(),
+                                       default=catalog.NONE, socketless=True, advanced=True),
+                        io.Float.Input(f"lora_{i}_strength", default=1.0, min=-3.0, max=3.0,
+                                       step=0.05, socketless=True, advanced=True),
+                    )
+                ],
             ],
             outputs=[
                 io.Image.Output("frames", display_name="Кадры", tooltip="Все кадры готового ролика"),
@@ -82,7 +109,21 @@ class NeronH3EngineNode(io.ComfyNode):
                 width=0, height=0, steps=0, previews=True, lang="ru", video_name="NeronH3/H3",
                 preset="обычный", sharpness=1.0, frame_format="auto", manual_size=False,
                 prompt_override="", first_image=bus.NONE, mid_image_1=bus.NONE,
-                mid_image_2=bus.NONE, last_image=bus.NONE, prompt_wire=False, expert=False) -> io.NodeOutput:
+                mid_image_2=bus.NONE, last_image=bus.NONE, prompt_wire=False, expert=False,
+                **kwargs) -> io.NodeOutput:
+        # RU: экспертные выборы приходят отдельным пакетом и в схему не лезут.
+        option_names = [
+            "diffusion_model", "text_turbo_model", "text_power_model",
+            "video_vae_model", "audio_vae_model", "turbo_lora", "turbo_lora_strength",
+        ]
+        for i in range(1, 6):
+            option_names += [f"lora_{i}_enabled", f"lora_{i}_name", f"lora_{i}_strength"]
+        options = {name: kwargs.get(name) for name in option_names}
+        options.setdefault("turbo_lora", catalog.AUTO)
+        options.setdefault("turbo_lora_strength", 1.0)
+        for i in range(1, 6):
+            options.setdefault(f"lora_{i}_name", catalog.NONE)
+            options.setdefault(f"lora_{i}_strength", 1.0)
         # RU: шина главнее; провод промта главнее ручного поля; ручной кадр главнее пресета.
         manual = {
             "first": first_frame if first_frame is not None else bus.load_frame(first_image),
@@ -115,6 +156,7 @@ class NeronH3EngineNode(io.ComfyNode):
                 frame_format=frame_format,
                 bus_data=bundle,
                 video_name=video_name,
+                options=options,
             )
         finally:
             engine.close()

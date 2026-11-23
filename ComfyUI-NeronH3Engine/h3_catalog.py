@@ -22,6 +22,9 @@ import folder_paths
 HF = "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main"
 LIGHTX2V = "https://huggingface.co/lightx2v/Minimax-h3-Turbo/resolve/main"
 
+AUTO = "по умолчанию"
+NONE = "— нет —"
+
 
 @dataclass(frozen=True)
 class FileSpec:
@@ -87,6 +90,68 @@ CATALOG: dict[str, FileSpec] = {
 
 def _near(size: int, expected: int) -> bool:
     return abs(size - expected) <= max(64 * 1024 * 1024, expected * 0.02)
+
+
+def refresh_lists():
+    """RU: сбросить кэш списков файлов, чтобы новые лоры видны были без перезапуска."""
+    register_shared_paths()
+    try:
+        folder_paths.filename_list_cache.clear()
+    except Exception:
+        pass
+    try:
+        folder_paths.cache_helper.clear()
+    except Exception:
+        pass
+
+
+def available(kind: str, tokens: tuple = (), preferred: tuple = ()) -> list[str]:
+    """RU: живой список файлов: знакомые имена первыми, потом остальные по алфавиту."""
+    refresh_lists()
+    names = set()
+    for name in folder_paths.get_filename_list(kind) or []:
+        low = str(name).lower()
+        if not low.endswith(".safetensors"):
+            continue
+        if tokens and not all(token in low for token in tokens):
+            continue
+        names.add(name)
+    first = [name for name in preferred if name in names]
+    rest = sorted(name for name in names if name not in first)
+    return first + rest
+
+
+def diffusion_choices() -> list[str]:
+    """RU: только модели H3 — посторонние архитектуры в выборе не мешают."""
+    return [AUTO] + available(
+        "diffusion_models",
+        ("h3",),
+        (CATALOG["diffusion"].name,),
+    )
+
+
+def text_choices() -> list[str]:
+    return [AUTO] + available("text_encoders", (), (
+        CATALOG["text_turbo"].name,
+        CATALOG["text_power"].name,
+    ))
+
+
+def vae_choices() -> list[str]:
+    return [AUTO] + available("vae", (), (
+        CATALOG["vae_video"].name,
+        CATALOG["vae_audio"].name,
+    ))
+
+
+def lora_choices() -> list[str]:
+    """RU: все лоры из папки моделей; неподходящие пропускаются применителем."""
+    return [AUTO, NONE] + available("loras")
+
+
+def extra_lora_choices() -> list[str]:
+    """RU: в дополнительных слотах «по умолчанию» смысла нет."""
+    return [NONE] + available("loras")
 
 
 def _writable_dir(kind: str) -> str:
