@@ -55,7 +55,7 @@ def size_from_frame(frame) -> tuple[int, int]:
 
 def target_size(width=None, height=None, frame_format="auto", mode="auto",
                 first_frame=None) -> tuple[int, int]:
-    """RU: шина/ручной размер → формат → первый кадр → стандарт, затем сетка H3."""
+    """RU: шина/ручной размер → формат → первый кадр → стандарт, затем паспорт H3."""
     w, h = int(width or 0), int(height or 0)
     fmt = str(frame_format or "auto").lower()
     if (not w or not h) and fmt != "auto":
@@ -107,16 +107,15 @@ def snap_length(seconds: float) -> int:
     return max(124, min(362, int(frames)))
 
 
-def snap_size(width: int | None, height: int | None, mode: str) -> tuple[int, int]:
-    """RU: размер по официальной сетке H3: строго кратен 32, иначе ключевые кадры не встают."""
+def snap_size(width: int | None, height: int | None, mode: str = "auto") -> tuple[int, int]:
+    """RU: паспорт H3 — короткая сторона 768, площадь ≤ 1344×768, шаг 32.
+
+    EN: the H3 passport — short edge 768, area <= 1344x768, step 32.
+
+    RU: размер не зависит от железа и не уменьшается в турбо. Больше модель —
+        только дольше; память берётся ступенями видеокарта → оперативка → M.2.
+    """
     from comfy_extras.nodes_minimax_h3 import adapt_canvas
 
-    hw = gpu_info()
-    small = mode == "turbo" or hw["vram_mb"] < 20000
-    w, h = adapt_canvas(int(width or 1344), int(height or 768))
-    if small:
-        # RU: турбо держим на короткой стороне 448 — это то же отношение, что у родного 768.
-        scale = 448 / min(w, h)
-        w = max(32, round(w * scale / 32) * 32)
-        h = max(32, round(h * scale / 32) * 32)
-    return int(w), int(h)
+    # RU: режим оставлен в подписи для совместимости, на кадр он больше не влияет.
+    return adapt_canvas(int(width or 1344), int(height or 768))
