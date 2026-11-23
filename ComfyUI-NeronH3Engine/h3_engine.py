@@ -14,6 +14,10 @@ from __future__ import annotations
 import gc
 import os
 
+import numpy as np
+import torch
+from PIL import Image, ImageFilter
+
 import comfy.model_management
 import comfy.sample
 import comfy.samplers
@@ -23,9 +27,10 @@ import nodes
 from comfy_api.latest import Types
 from comfy_extras.nodes_audio import VAEDecodeAudio
 from comfy_extras.nodes_custom_sampler import BasicGuider, RandomNoise
-from comfy_extras.nodes_minimax_h3 import MiniMaxH3ImageToVideo
+from comfy_extras.nodes_minimax_h3 import MiniMaxH3AddGuide, MiniMaxH3ImageToVideo
 from comfy_extras.nodes_video import CreateVideo
 
+from . import h3_bus as bus
 from . import h3_catalog as catalog
 from . import h3_hw as hw
 from . import h3_i18n as i18n
@@ -43,6 +48,27 @@ def _as_image(value):
     if isinstance(value, str) and value.strip():
         return nodes.LoadImage().load_image(value.strip())[0]
     return value
+
+
+def _sharpen(frames, amount: float):
+    """RU: лёгкая резкость по готовым кадрам. 1.0 — честно ничего не меняет."""
+    try:
+        value = float(amount)
+    except Exception:
+        value = 1.0
+    if value <= 1.0 or not torch.is_tensor(frames):
+        return frames
+    percent = max(1, min(180, int(round((value - 1.0) * 140))))
+    device = frames.device
+    out = []
+    for frame in frames:
+        arr = frame.detach().clamp(0, 1).cpu().numpy()
+        if arr.ndim == 3 and arr.shape[0] in (3, 4):
+            arr = np.moveaxis(arr[:3], 0, -1)
+        img = Image.fromarray((arr * 255).astype(np.uint8), "RGB")
+        img = img.filter(ImageFilter.UnsharpMask(radius=1.1, percent=percent, threshold=2))
+        out.append(torch.from_numpy(np.asarray(img).astype(np.float32) / 255.0))
+    return torch.stack(out).to(device)
 
 
 class Engine:
@@ -119,16 +145,28 @@ class Engine:
         result["samples"] = samples
         return result
 
-    def run(self, prompt, first_frame=None, last_frame=None, seconds=5.0, mode="auto",
-            seed=0, width=None, height=None, steps=0, video_name="NeronH3/H3"):
+    def run(self, prompt=None, first_frame=None, mid_1=None, mid_2=None, last_frame=None,
+            seconds=5.0, frame_count=None, mode="auto", seed=0, width=None, height=None,
+            steps=0, sharpness=1.0, frame_format="auto", previews=True,
+            bus_data=None, video_name="NeronH3/H3"):
+        got = bus.resolve(
+            bus_data, prompt, seconds, frame_count,
+            {"first": first_frame, "mid_1": mid_1, "mid_2": mid_2, "last": last_frame},
+        )
+        prompt = got["prompt"]
         if not str(prompt or "").strip():
             raise ValueError(self.t("err_prompt"))
-        first_frame = _as_image(first_frame)
-        last_frame = _as_image(last_frame)
+
+        first_frame = _as_image(got["frames"].get("first"))
+        mid_1 = _as_image(got["frames"].get("mid_1"))
+        mid_2 = _as_image(got["frames"].get("mid_2"))
+        last_frame = _as_image(got["frames"].get("last"))
+
         mode = hw.choose_mode(mode)
         steps = int(steps) if steps and int(steps) >= 4 else (8 if mode == "turbo" else 20)
-        length = hw.snap_length(seconds)
-        width, height = hw.snap_size(width, height, mode)
+        length = hw.snap_length(float(got["frame_count"]) / FPS if got["frame_count"] else got["seconds"])
+        fw, fh = hw.size_from_format(frame_format)
+        width, height = hw.snap_size(width or fw, height or fh, mode)
         self.status(self.t("mode_turbo" if mode == "turbo" else "mode_power"), 2)
 
         files = self._files(mode)
@@ -140,14 +178,24 @@ class Engine:
             self.status(self.t("with_image"), 34)
         else:
             self.status(self.t("no_image"), 34)
+        if mid_1 is not None or mid_2 is not None:
+            self.status(self.t("mid_image"), 35)
         if last_frame is not None:
-            self.status(self.t("last_image"), 35)
+            self.status(self.t("last_image"), 36)
 
         cond, latent = MiniMaxH3ImageToVideo.execute(
             clip=self.loaded["clip"], vae=self.loaded["vae"], prompt=prompt,
             width=width, height=height, length=length,
             first_frame=first_frame, last_frame=last_frame,
         ).result
+        if mid_1 is not None:
+            cond = MiniMaxH3AddGuide.execute(
+                cond, latent, max(1, length // 3), vae=self.loaded["vae"], image=mid_1[:1]
+            ).result[0]
+        if mid_2 is not None:
+            cond = MiniMaxH3AddGuide.execute(
+                cond, latent, max(2, (2 * length) // 3), vae=self.loaded["vae"], image=mid_2[:1]
+            ).result[0]
         self.status(self.t("no_geometry"), 38)
 
         self.status(self.t("sampling"), 40)
@@ -155,6 +203,7 @@ class Engine:
 
         self.status(self.t("decoding"), 92)
         frames = nodes.VAEDecode().decode(self.loaded["vae"], samples)[0]
+        frames = _sharpen(frames, sharpness)
         audio = VAEDecodeAudio.execute(vae=self.loaded["audio_vae"], samples=samples).result[0]
 
         self.status(self.t("saving"), 96)
@@ -169,7 +218,7 @@ class Engine:
         video.save_to(path, format=Types.VideoContainer("mp4"), codec=Types.VideoCodec("auto"))
 
         self.status(self.t("done"), 100)
-        return frames, os.path.relpath(path, folder_paths.get_output_directory()).replace("\\", "/")
+        return frames, os.path.relpath(path, folder_paths.get_output_directory()).replace("\\", "/"), frames[-1:]
 
     def close(self):
         if self.board:

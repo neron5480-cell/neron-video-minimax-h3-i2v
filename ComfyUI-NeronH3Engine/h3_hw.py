@@ -19,6 +19,24 @@ except Exception:
 BASE_PIXELS = 768 * 1344
 FPS = 24
 
+# RU: понятные формы кадра для панели; точные числа прячутся в «эксперте».
+FORMATS = {
+    "auto": (1344, 768),
+    "16:9": (1344, 768),
+    "9:16": (768, 1344),
+    "1:1": (1024, 1024),
+    "4:3": (1216, 896),
+    "3:2": (1344, 896),
+}
+
+
+def size_from_format(fmt: str) -> tuple[int | None, int | None]:
+    """RU: форма кадра → пиксели; авто оставляет размер за движком."""
+    if not fmt or fmt == "auto":
+        return None, None
+    return FORMATS.get(str(fmt), FORMATS["auto"])
+
+
 
 def gpu_info() -> dict:
     vram = 0

@@ -1,5 +1,16 @@
 # Changelog / История изменений
 
+## 🌀 Neron H3 Engine 0.3.0 — фирменный вид, шина и четыре кадра (main 3.2.0, 23.11.2026)
+
+**RU:**
+- Панель ноды приведена к общему виду Neron: пилюли RU / EN, справка, явный режим эксперта, разделы, раскадровка и кнопка запуска — одно целое. Новые точные числа спрятаны в эксперте, на виду ползунки длительности и резкости.
+- Добавлены пресеты и ручной выбор размера кадра. Приоритет: провод, потом ручное значение, потом пресет.
+- Четыре кадра — первый, два промежуточных и последний — идут через общий канал по принципу общей шины: один хозяин состояния, остальные читают. Промежуточные кадры закрепляются официальной нодой модели.
+- Появился отдельный выход «Последний кадр» для продолжения ролика следующим куском. Длительность доведена до 15 секунд. Резкость применяется к готовым кадрам перед сохранением, значение 1.0 ничего не меняет.
+- Живая проверка в ComfyUI: панель, RU / EN, тема, пресеты, ползунки, четыре окна кадров и загрузка готового workflow. Старая копия движка отложена в `.disabled`, чтобы не перехватывать оформление.
+
+**EN:** the node panel now follows the shared Neron look: RU / EN pills, help, a real expert mode, sections, storyboard and run button form one whole. Exact numbers are hidden in expert mode; duration and sharpness are sliders. Presets and manual frame size were added, with wire → manual → preset priority. Four frames (first, two middle, last) travel on one shared CAN-style bus with a single owner of state; middle frames are anchored through the official `MiniMaxH3AddGuide`. A separate Last frame output continues the clip. Duration now reaches 15 seconds. Sharpness is applied to decoded frames and 1.0 is neutral. Live-checked in ComfyUI: panel, language switch, theme, presets, sliders, four frame windows and workflow load. The old duplicate engine was moved to `.disabled` so it cannot take over the look.
+
 ## 🌀 Neron H3 Engine 0.2.0 — самостоятельный движок без автопромптера (main 3.1.0, 23.11.2026)
 
 **RU:**
