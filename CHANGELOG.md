@@ -1,5 +1,14 @@
 # Changelog / История изменений
 
+## 🖼 Neron Image 0.6 — тема только в своём процессе (main 3.0.2, отдельный пакет 0.5.1, 23.11.2026)
+
+**RU:**
+- Исправлено по замечанию автора: оформление больше не «залипает» при переходе в другой процесс. Тема включается, только пока на открытом холсте есть нода темы; открыл другую схему — ComfyUI возвращается к обычному виду.
+- Выбор темы по-прежнему хранится в свёрнутой ноде и переключается кнопкой **«🎨 Сменить оформление»**; RU / EN по-прежнему меняет весь процесс целиком.
+- Генерация, закачка моделей и раскладка моделей не тронуты.
+
+**EN:** fixed on the author's report: the look no longer sticks when you switch workflows. The theme is on only while the open canvas has a theme node; open another workflow and ComfyUI returns to its normal look. The choice is still kept in the collapsed node and changed with **«🎨 Change look»**; RU / EN still switches the whole process. Generation and model downloads are untouched.
+
 ## 🖼 Neron Image 0.5 — тема внутри процесса, включена по умолчанию (main 3.0.1, 23.11.2026)
 
 **RU:**

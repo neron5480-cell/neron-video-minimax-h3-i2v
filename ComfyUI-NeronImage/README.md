@@ -10,7 +10,7 @@
 
 Язык меняется кнопками **RU / EN** в самой верхней строке ноды: вместе с подписями меняются справка, окно моделей и готовый процесс. Всё остальное настраивать не надо.
 
-**Тема уже включена.** Процесс приходит со своим оформлением и включает его сам, отдельную ноду тем ставить не надо. Другой вид выбирается кнопкой **«🎨 Сменить оформление»** в разделе ⚙ эксперт. Маленькая свёрнутая нода **«🎨 Тема»** слева просто хранит выбор — трогать её не надо. Оформление переключается вместе с языком.
+**Тема уже включена.** Процесс приходит со своим оформлением и включает его сам, отдельную ноду тем ставить не надо. Другой вид выбирается кнопкой **«🎨 Сменить оформление»** в разделе ⚙ эксперт. Маленькая свёрнутая нода **«🎨 Тема»** слева просто хранит выбор — трогать её не надо. Оформление переключается вместе с языком и действует только в этом процессе: открыл другую схему — ComfyUI снова обычный.
 
 ## 🇬🇧 Install — three steps
 
@@ -22,7 +22,7 @@ Even easier once the pack shows up in Manager: find **Neron Image — Krea 2** a
 
 The **RU / EN** buttons in the top row of the node switch the whole process: labels, help, model window and the ready workflow.
 
-**The theme is already on.** The process brings its own look and switches it on by itself; you do not need to install a separate theme node. Pick another look with **«🎨 Change look»** in the ⚙ expert section. The small collapsed **«🎨 Theme»** node on the left only keeps the choice — you do not need to touch it. The look follows the language too.
+**The theme is already on.** The process brings its own look and switches it on by itself; you do not need to install a separate theme node. Pick another look with **«🎨 Change look»** in the ⚙ expert section. The small collapsed **«🎨 Theme»** node on the left only keeps the choice — you do not need to touch it. The look follows the language and belongs only to this workflow: open another one and ComfyUI returns to its normal look.
 
 ## 🇷🇺 Русский
 

@@ -142,17 +142,33 @@ function setLang(v) {
 //  ТЕМА: одна панель оформления, одна тема, один язык
 // ============================================================
 function themeNode() {
-    return (app.graph?._nodes || []).find((n) => (n.type || n.comfyClass) === THEME_NODE);
+    return (app.graph?._nodes || []).find((n) => (n.type || n.comfyClass) === THEME_NODE) || null;
 }
 function themeState(n) {
     const w = (n?.widgets || []).find((x) => x.name === "theme_json");
     if (!w) return null;
     try { return JSON.parse(w.value) || null; } catch (_) { return null; }
 }
+// Оформление принадлежит тому процессу, который открыт на холсте. Как только ноды темы
+// на открытом процессе нет (перешли в другую схему), снимаем краску — чужие процессы
+// должны оставаться в своём обычном виде. Две проверки подряд — чтобы не мигало при загрузке.
+let themeApplied = false;
+let themeMisses = 0;
 function applyTheme() {
     const st = themeState(themeNode());
-    if (!st?.theme) return;
-    try { setCurrent(normalizeTheme(st.theme)); } catch (_) {}
+    if (!st?.theme) {
+        themeMisses++;
+        if (themeApplied && themeMisses >= 2) {
+            themeApplied = false;
+            try { setCurrent(null); } catch (_) {}
+        }
+        return;
+    }
+    themeMisses = 0;
+    try {
+        setCurrent(normalizeTheme(st.theme));
+        themeApplied = true;
+    } catch (_) {}
 }
 setTimeout(applyTheme, 300);
 setInterval(applyTheme, 600);
