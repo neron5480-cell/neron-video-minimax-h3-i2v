@@ -1,8 +1,14 @@
-# Changelog / История изменений
+# История изменений
+
+## 🧹 Neron 3.4.1 — чистые тексты на GitHub (пакет H3 Engine 0.5.1, 23.11.2026)
+
+- По замечанию автора убраны смешанные языки и обрывки фраз: русский текст живёт в `README.md`, английский — в отдельном `README_EN.md`.
+- Из истории изменений удалены английские копии записей и двуязычные заголовки: осталась одна русская история.
+- Исправлены описания репозиториев и пакетов: битая кодировка и недописанные фразы убраны.
+- Версии пакетов повышены, чтобы обновление в каталоге Comfy прошло без повторной публикации старой версии.
 
 ## 🌀 Neron H3 Engine 0.5.0 — голый движок на одной шине (main 3.4.0, 23.11.2026)
 
-**RU:**
 - Остался **один вход — шина данных** и **один выход — последний кадр**. Убраны четыре провода под кадры, отдельная шина кадров, провод промта и выходы «Кадры» / «Файл». Ролик по-прежнему показывается в ноде и сохраняется в `output/NeronH3`.
 - Убрано окно «Итоговый промпт»: в движке остаётся одно поле текста. Автопромптер — отдельная нода и будет писать в общий канал.
 - Шина теперь несёт не только промт, кадры и длительность, но и размер кадра. Приоритет: шина → ручное → пресет.
@@ -10,69 +16,48 @@
 - Ручной размер перестал прятаться в эксперте: переключатель и ползунки на виду, точные числа — в эксперте.
 - Живая проверка: загрузка готового workflow, RU / EN, появление и скрытие органов при подключении шины, ручной размер, эксперт, прокрутка видео в ноде; генерация дала 768×448, 24 к/с, ~5,17 с со звуком.
 
-**EN:** one data-bus input and one last-frame output remain. The four frame wires, a separate frame bus, the prompt wire and the frames/file outputs are gone; the clip still plays inside the node and is saved to `output/NeronH3`. The duplicate «Final prompt» box is gone — the engine keeps a single text field and the autoprompter stays a separate node writing to the bus. The bus now carries size as well as prompt, frames and duration, with bus → manual → preset priority. The panel rebuilds itself when the bus is connected: standalone shows the prompt, four frame windows, standard size presets plus custom sliders, duration, sharpness and expert; on the bus only quality, sharpness, progress, video and expert stay. Live-checked workflow loading, RU / EN, panel switching, custom size, expert, in-node video and a 768×448, 24 fps, ~5.17 s clip with audio.
-
 ## 🌀 Neron H3 Engine 0.4.0 — полный режим эксперта (main 3.3.0, 23.11.2026)
 
-**RU:**
 - Исправлено по замечанию автора: в режиме эксперта не было настроек. Теперь там выбираются основная модель, текстовый движок для турбо и качества, видео- и звуковой кодеки, турбо-LoRA с силой и пять дополнительных лор.
 - Устройство дополнительных лор повторяет старый селектор автора: у каждого слота свой переключатель, файл и сила от −3 до 3. Лоры ложатся на модель по порядку, выключенные и пустые слоты пропускаются, один неподходящий файл не срывает остальные.
 - Списки файлов живые: берутся из папок моделей Comfy, обновляются кнопкой без перезапуска. Если ничего не выбирать, движок работает как раньше — проверенный турбо или мощный режим.
 - Живая проверка: панель эксперта, RU / EN, обновление списков, сброс, готовый workflow, ролик с пользовательской LoRA и ролик с неподходящей LoRA. Пользовательская LoRA изменила кадры, неподходящая была пропущена, оба ролика сохранились.
 - Убрана вторая копия папки движка из `custom_nodes`: теперь загружается только один JS панели.
 
-**EN:** fixed after the author's report: expert mode had no settings. It now holds the main model, the turbo and quality text encoders, both VAEs, turbo LoRA with weight and five extra LoRAs. Extra LoRAs follow the author's old selector: each slot has its own switch, file and weight from −3 to 3; they are applied to the model in order, empty or disabled slots are skipped and one bad file does not stop the rest. File lists are live and refreshable without a restart; leaving everything on default keeps the tested turbo or power behaviour. Live-checked the panel, RU / EN, refresh, reset, ready workflow, a run with a custom LoRA and a run with an incompatible LoRA: the custom LoRA changed the frames, the bad one was skipped, both clips saved. The duplicate engine folder was removed from `custom_nodes` so only one panel script loads.
-
 ## 🌀 Neron H3 Engine 0.3.0 — фирменный вид, шина и четыре кадра (main 3.2.0, 23.11.2026)
 
-**RU:**
 - Панель ноды приведена к общему виду Neron: пилюли RU / EN, справка, явный режим эксперта, разделы, раскадровка и кнопка запуска — одно целое. Новые точные числа спрятаны в эксперте, на виду ползунки длительности и резкости.
 - Добавлены пресеты и ручной выбор размера кадра. Приоритет: провод, потом ручное значение, потом пресет.
 - Четыре кадра — первый, два промежуточных и последний — идут через общий канал по принципу общей шины: один хозяин состояния, остальные читают. Промежуточные кадры закрепляются официальной нодой модели.
 - Появился отдельный выход «Последний кадр» для продолжения ролика следующим куском. Длительность доведена до 15 секунд. Резкость применяется к готовым кадрам перед сохранением, значение 1.0 ничего не меняет.
 - Живая проверка в ComfyUI: панель, RU / EN, тема, пресеты, ползунки, четыре окна кадров и загрузка готового workflow. Старая копия движка отложена в `.disabled`, чтобы не перехватывать оформление.
 
-**EN:** the node panel now follows the shared Neron look: RU / EN pills, help, a real expert mode, sections, storyboard and run button form one whole. Exact numbers are hidden in expert mode; duration and sharpness are sliders. Presets and manual frame size were added, with wire → manual → preset priority. Four frames (first, two middle, last) travel on one shared CAN-style bus with a single owner of state; middle frames are anchored through the official `MiniMaxH3AddGuide`. A separate Last frame output continues the clip. Duration now reaches 15 seconds. Sharpness is applied to decoded frames and 1.0 is neutral. Live-checked in ComfyUI: panel, language switch, theme, presets, sliders, four frame windows and workflow load. The old duplicate engine was moved to `.disabled` so it cannot take over the look.
-
 ## 🌀 Neron H3 Engine 0.2.0 — самостоятельный движок без автопромптера (main 3.1.0, 23.11.2026)
 
-**RU:**
 - Добавлена отдельная папка `ComfyUI-NeronH3Engine` с одной нодой: текст → видео, кадр → видео, первый и последний кадр → видео. Автопромптера нет: что написал, то и уходит в модель.
 - Модели ищутся во всех папках ComfyUI и докачиваются сами с места обрыва. Железо само выбирает режим и размер кадра; на 16 ГБ видеокарты это турбо.
 - Турбо — 8 шагов с лёгким текстовым движком и турбо-LoRA только на модели. Мощный — 20 шагов на полном текстовом движке без LoRA. Во время счёта в панели появляется раскадровка: начало, середина, конец.
 - RU/EN меняет весь процесс и оформление. Тема уходит при переходе в другую схему и возвращается при возврате; соседние Neron-процессы не меняются.
 - Живая проверка на RTX 5070 Ti: четыре ролика 768×448, 24 к/с, ~5,17 с, H.264 + AAC stereo. Первый кадр I2V совпадает с поданной картинкой, последний — со вторым кадром; мощный режим подтверждён по логу как 20/20 без LoRA.
 
-**EN:** added a standalone `ComfyUI-NeronH3Engine` folder with one node: text → video, one frame → video, first and last frame → video. No autoprompter. The engine finds and resumes-downloads its own models and picks the mode and frame grid from the hardware. Turbo is 8 steps with the light text encoder and LoRA on the model only; power is 20 steps on the full text encoder with no LoRA. A storyboard appears during rendering. RU/EN switches the whole process and look; the theme leaves with the workflow and returns with it, leaving neighbouring processes untouched. Live-checked on an RTX 5070 Ti with four 768×448, 24 fps, ~5.17 s H.264 + AAC clips; first/last frame binding and the 20-step power run were confirmed.
-
 ## 🖼 Neron Image 0.8 — обычный вид возвращается полностью (main 3.0.4, отдельный пакет 0.5.3, 23.11.2026)
 
-**RU:**
 - Исправлено по новому замечанию автора: после выхода в другой процесс окно ComfyUI становилось обычным, но ноды оставались в цветах темы. Причина — чужие копии движка темы красили ноды и не возвращали их цвета.
 - Теперь оформление процесса красит только свой движок; он же возвращает все цвета и фон при выходе. Проверено с тремя движками одновременно: после перехода в другую схему обычный вид возвращается полностью, при возврате оформление включается снова.
 
-**EN:** fixed after the author's next report: leaving the workflow restored the ComfyUI window but left nodes themed. Foreign theme engines were colouring nodes and never restoring them. Now only this process's engine paints and restores everything; checked with three engines at once — switching away fully restores the normal look, switching back brings the theme back.
-
 ## 🖼 Neron Image 0.7 — сброс темы закрепляется и при двух пакетах (main 3.0.3, отдельный пакет 0.5.2, 23.11.2026)
 
-**RU:**
 - Исправлено по новому замечанию автора: после установки через Manager рядом осталась старая папка процесса, и её старый движок через секунду возвращал оформление. Теперь при выходе из процесса тема сбрасывается во всех копиях движка, а не только в новой.
 - Нода темы, RU / EN, кнопка оформления, генерация и закачка моделей работают как раньше.
 
-**EN:** fixed after the author's next report: installing from Manager left the old folder in place, and its old theme engine restored the look about a second after the reset. Leaving the workflow now clears the theme in every engine copy, so the reset sticks. The theme node, RU / EN, look switcher, generation and model downloads work as before.
-
 ## 🖼 Neron Image 0.6 — тема только в своём процессе (main 3.0.2, отдельный пакет 0.5.1, 23.11.2026)
 
-**RU:**
 - Исправлено по замечанию автора: оформление больше не «залипает» при переходе в другой процесс. Тема включается, только пока на открытом холсте есть нода темы; открыл другую схему — ComfyUI возвращается к обычному виду.
 - Выбор темы по-прежнему хранится в свёрнутой ноде и переключается кнопкой **«🎨 Сменить оформление»**; RU / EN по-прежнему меняет весь процесс целиком.
 - Генерация, закачка моделей и раскладка моделей не тронуты.
 
-**EN:** fixed on the author's report: the look no longer sticks when you switch workflows. The theme is on only while the open canvas has a theme node; open another workflow and ComfyUI returns to its normal look. The choice is still kept in the collapsed node and changed with **«🎨 Change look»**; RU / EN still switches the whole process. Generation and model downloads are untouched.
-
 ## 🖼 Neron Image 0.5 — тема внутри процесса, включена по умолчанию (main 3.0.1, 23.11.2026)
 
-**RU:**
 - Тема теперь живёт внутри папки `ComfyUI-NeronImage` и включается сама: открыл готовый процесс — оформление уже работает. Отдельный пакет Neron Theme ставить не надо.
 - Нода темы стоит в готовом процессе по умолчанию и не мешает работе; другой вид выбирается кнопкой **«🎨 Сменить оформление»** в разделе ⚙ эксперт.
 - Кнопка **RU / EN** переключает и тему целиком: внутри процесса не осталось англоязычных подписей. Убрано наслоение двух панелей, когда рядом стоит отдельный пакет тем.
@@ -80,68 +65,44 @@
 - Живая проверка автора: ничего не сломано, всё работает; с автопромптером прогон на его железе стал примерно на 15 секунд быстрее.
 - Для простой установки процесс вынесен в отдельный пакет каталога Comfy **Neron Image — Krea 2**: ставится через Manager и обновляется сам, остальные папки пакета ему не нужны. Пакет получил собственный репозиторий `neron5480-cell/neron-image` — каталог не разрешает две ноды с одной ссылкой на репозиторий.
 
-**EN:** the theme now lives inside the `ComfyUI-NeronImage` folder and turns on by itself — open the ready workflow and the look is already there; no separate Neron Theme package needed. The theme node is in the workflow by default and stays out of the way; another look is one button in the expert section. **RU / EN** switches the theme too, and the doubled panel is gone when a separate theme pack is installed. Fixed duplicate labels, English wire captions, extra size inputs and the prompt output. Author's live check: nothing broken, everything works, and with the prompter the run is about 15 seconds faster on his machine. The process is also published on its own as **Neron Image — Krea 2**, so Manager installs and updates just this process without the rest of the pack. It has its own repository, `neron5480-cell/neron-image` — the registry does not allow two nodes pointing at the same repository.
-
 ## 🧹 Neron 3.0.0 — чистка: каждая папка самостоятельна (main, 19.11.2026)
 
-**RU:** по итогам тестов Романа в пакете остались только рабочие проекты, и **каждая папка работает сама по себе** — свои ноды и свой код, без соседей.
+по итогам тестов Романа в пакете остались только рабочие проекты, и **каждая папка работает сама по себе** — свои ноды и свой код, без соседей.
 - **Остались:** 🎬 H3 Story · 🎬 LTX Engine (+ LTX AutoPrompter) · 🖼 Neron Image (Krea 2) · 🎨 Restore Studio · 🎛 Perception Relay · 🎹 Audio Studio · 🎨 Neron Theme · 🖥 Neron Studio (стол).
 - **Убраны из пакета** (код сохранён в ветке dev): H3 Engine, Neron Studio H3 (Lite-генератор, AutoPrompter, Image Processor, Video Clarity), Fixed Camera H3, H3 LoRA Selector, Interactive Processor, Hero Swap, Dialog Autoprompter / Multi-Image LLM, старые процессы `workflow/`, README_INSTALL.
 - **Независимость:** 📝 Story AutoPrompter — свой код LLM и камера H3 в `ComfyUI-NeronH3Story/llm` (свой llama-server, порт 8766); 🎬 LTX AutoPrompter переехал в `ComfyUI-NeronLTXEngine` (своя копия кода LLM, порт 8765); Restore Studio — свой процесс в `restore_studio/workflows` и своя копия Manual Color & Upscale.
 - Стол: убраны плитки на удалённое (Диалог, H3 Raw, H3 v3.0, Full Pipeline, папка «Тест»), добавлена плитка «Картинка по тексту» (Neron Image).
 - Проверено: каждая папка грузится в одиночку, без соседей.
 
-**EN:** cleanup after Roman's tests — only working projects stay, and every folder is self-contained. Kept: H3 Story, LTX Engine (+ its AutoPrompter, now inside it), Neron Image, Restore Studio (own workflow and color/upscale copy), Perception Relay, Audio Studio, Neron Theme, Neron Studio. Removed from the pack (code kept in the dev branch): H3 Engine, Neron Studio H3, Fixed Camera H3, H3 LoRA Selector, Interactive Processor, Hero Swap, Dialog Autoprompter, old workflows. The Story AutoPrompter carries its own LLM code.
-
 ## 🖼 Neron Image 0.4 — большой редактор промпта (main 2.4.1, 16.11.2026)
 
-**RU:**
 - **📝 Большой редактор промпта** — кнопка под полем: окно почти на весь экран, весь текст видно целиком; открывается само при «✍ как есть» и «✏ Править итоговый промпт». Ctrl+Enter — сохранить, Esc — отмена.
 - Новый вход **prompt_text**: свой промпт проводом из любой текстовой ноды (поле на ноде тогда прячется).
 - В готовом процессе — **пример большого промпта** (кот-художник), не подключён нарочно; что соединить и зачем — в заметке и справке.
 - Честно о пределе: встроенный автопромтер хорош для лёгких сцен; сложные (много героев, каждого прописать) — свой подробный промпт или мощная ИИ (готовая просьба в справке), затем «✍ как есть».
 
-**EN:** a big prompt editor, a prompt_text input, an unconnected example big prompt in the workflow, and a plain note on the prompter's limits (busy scenes need your own detailed prompt or a big AI).
-
 ## 🖼 Neron Image — картинка по тексту на Krea 2 (main 2.4.0, 16.11.2026)
 
-**RU:**
 - Новая нода **🖼 Neron Image** (папка `ComfyUI-NeronImage`) и процесс `workflows/Neron_Image_Krea2.json`: текст (на любом языке) → картинка до 2K.
 - Krea 2 Turbo bf16 (Comfy-Org), рецепт авторов: 8 шагов, CFG 1, euler / simple; RAW — по своему рецепту (52 шага, CFG 3.5, до 1K).
 - Автопромтер на том же Qwen3-VL 4B: «🎨 до мелочей» (по умолчанию), «✨ расписать» (официально), «🌐 подправить», «✍ как есть»; итоговый промпт на ноде.
 - Форма кадра, качество 1K / 1.5K / 2K, резкость (по умолчанию 1.0), стили-LoRA Krea, «📥 Модели», справка. Проверено вживую: 2K ≈ 1 мин на RTX 5070 Ti 16 ГБ.
 
-**EN:** new **🖼 Neron Image** node — Krea 2 Turbo bf16 text-to-image up to 2K with a built-in prompter (every detail / expand / polish / as is), aspect and quality presets, sharpness, style LoRAs and a model downloader. Tested live: 2K ≈ 1 min on a 16 GB RTX 5070 Ti.
+## 🎭 Neron H3 Замена героя — тест (main 2.3.0, 14.11.2026)
 
-## 🎭 Neron H3 Замена героя / Hero Swap — тест (main 2.3.0, 14.11.2026)
-
-**RU:**
 - Новая нода **🎭 Neron H3 Замена героя** (папка `ComfyUI-NeronH3Swap`) и процесс `workflows/Neron_H3_Swap.json`: клип + фото → тот же клип с человеком с фото; режимы «весь облик», «лицо и причёска», «только лицо».
 - MiniMax H3 Ref2VA + LoRA Character Swap V1.5 (Akatz Labs) + турбо-LoRA, 8 шагов; маски — SAM 3.1 (родные ноды); оригинал в образце размывается; звук клипа — оригинал.
 - Умолчания по прогонам: быстрое внимание выкл, «рисовать» = авто. Модели — кнопка «📥 Модели». В справке — подгонка под фото и клип и отказ от ответственности.
 
-**EN:**
-- New node **🎭 Neron H3 Hero Swap** (folder `ComfyUI-NeronH3Swap`) and the workflow `workflows/Neron_H3_Swap.json`: clip + photo → the same clip with the person from the photo; «whole look», «face & hair», «face only».
-- MiniMax H3 Ref2VA + Character Swap V1.5 LoRA (Akatz Labs) + turbo LoRA, 8 steps; masks — SAM 3.1 (native nodes); the original in the reference is blurred; the clip's sound is kept.
-- Tested defaults: fast attention off, «draw» = auto. Models — the «📥 Models» button. The help covers fitting to your photo and clip and a disclaimer.
+## 🖥 Neron Studio — рабочий стол внутри ComfyUI (main 2.2.0, 08.11.2026)
 
-## 🖥 Neron Studio — рабочий стол внутри ComfyUI / desktop inside ComfyUI (main 2.2.0, 08.11.2026)
-
-**RU:**
 - **🖥 Neron Studio** — монета **N** на холсте и меню Neron → Neron Studio: стол с папками (Видео · Картинки · Звук · Модели), живыми плитками и своим фоном (фото / гифка / видео). «Открыть» загружает процесс новой вкладкой в оформлении стола: «▶ Создать», «■ Стоп», часы, «⤴ Наверх» из подграфа; «✕» — обычный ComfyUI.
 - Размер плиток 50–140 %, свои цвета плиток и акцента, темы Neron Theme. RU / EN по языку системы + переключатель.
 - Внутри — проверенные процессы как есть: MiniMax H3 I2V v3.0, LTX Engine, LTX 2.3 I2V, H3 Full Pipeline, Smart MiniMax H3 v1.0, SCAIL (Wan 2.1), Perception Relay, H3 Raw Engine, Flux-Fill Pre-Processor v1.1, Restore Studio, Audio Studio 2.0.
 - **🎨 Neron Theme:** фон стола под холстом ComfyUI, тема «Neron Studio» для оформления процессов.
 
-**EN:**
-- **🖥 Neron Studio** — an **N** coin on the canvas and the Neron → Neron Studio menu: a desktop with folders (Video · Images · Sound · Models), live tiles and your own background (photo / GIF / video). «Open» loads a workflow in a new tab in the desk look: «▶ Create», «■ Stop», a clock, «⤴ Up» out of a subgraph; «✕» — plain ComfyUI.
-- Tile size 50–140 %, your own tile and accent colors, Neron Theme themes. RU / EN from the system language + a switch.
-- Inside — tested workflows as they are (see the RU list).
-- **🎨 Neron Theme:** the desk background under the ComfyUI canvas, a «Neron Studio» theme for the workflow look.
+## 🎬 Neron H3 Story — длинные ролики H3 до 45 с (main, 06.11.2026)
 
-## 🎬 Neron H3 Story — длинные ролики H3 до 45 с / long H3 videos up to 45 s (main, 06.11.2026)
-
-**RU:**
 - **🎬 Neron H3 Story** — ролик MiniMax H3 5–45 с со звуком цепочкой блоков (блок 5–15 с, до 12). Каждый следующий блок начинается с последних ~0,9 с прошлого **вместе со звуком** (родная нода «Add Guide for MiniMax H3»), перехлёст вырезается, звук сводится — стыков не видно и не слышно. Модель грузится один раз на весь ролик. 🔒 Сохранить внешний вид — первый кадр образцом во все блоки.
 - **🖼 Neron H3 Кадры** — четыре окна загрузки прямо в ноде (первый, два промежуточных, последний), клик или перетаскивание, картинки любого размера; один провод вместо четырёх.
 - **📝 Neron H3 Story AutoPrompter** — один сценарий (любой язык) → план и промпт каждого отрезка: продолжение стыка, действия по секундам, физика, звук. Камера как в ⚡ Fixed Camera H3 (АВТО: стоит, пока сценарий не попросит движение; пресеты — жёсткий ракурс). Промежуточные картинки появляются там, где сказано в сценарии («изображение 3»), и держат облик до конца. Предпросмотр и своя правка. Пользуется сервером LLM 🎬 Neron AutoPrompter.
@@ -150,12 +111,8 @@
 - Настроено на качество: 30 с — от ~45 мин (🚀) до 1,5 ч (⚡ на полных моделях) на RTX 5070 Ti. Совет: в сложных сценах первый кадр — горизонтальный.
 - Процессы: `Neron_H3_Story_AutoPrompter.json`, `Neron_H3_Story_Expert.json` (блоки без автопромтера), `Neron_H3_Story.json`.
 
-**EN:**
-- **🎬 Neron H3 Story** — a 5–45 s MiniMax H3 video with sound as a chain of blocks joined without visible or audible seams (each block continues the previous tail with its sound). **🖼 Frames** — four picture windows inside one node. **📝 Story AutoPrompter** — one scenario → a prompt per part with timing, physics, sound and camera. **🎞 Block** / **🎨 LoRA set** — work without the AutoPrompter or add per-part LoRAs. 🚀 Fast / ⚡ Turbo / Quality / Maximum; downloads its models. Tuned for quality: 30 s ≈ 45 min – 1.5 h on an RTX 5070 Ti.
-
 ## 🎬 LTX 2.5 v2.0 — Neron LTX Engine + Neron LTX AutoPrompter (main, 04.11.2026)
 
-**RU:**
 - **🎬 Neron LTX Engine** — генератор LTX 2.5 одной нодой по процессу Neron «LTX 2.5 Pure 2K/3K»: два прохода, плавность ×2 встроенной нодой ComfyUI, только встроенные ноды. Входы: промпт, камера, первый / два промежуточных / последний кадр, width/height и seconds_in с проводов. Выходы: видео со звуком, звук, кадры, к/с, prompt_used.
 - **📥 Модели качает сам:** окно открывается само, токен Hugging Face по шагам, прогресс, докачка, проверка места, раскладка по папкам. Модели на «авто».
 - Размер: Авто по видеокарте, 16 пресетов, по площади, ручной. Камера из camera_prompt — в начало и конец промпта.
@@ -165,32 +122,18 @@
 - Понятные ошибки на двух языках. 💡 Хочешь хорошо — ставь промежуточные и последний кадр.
 - Процессы: `ComfyUI-NeronLTXEngine/workflows/Neron_LTX_AutoPrompter.json` и `Neron_LTX_Engine.json`.
 
-**EN:**
-- **🎬 Neron LTX Engine** — LTX 2.5 in one node (Neron two-pass recipe, built-in ×2 smoothness), first / middle / last frames, wired size and seconds, video + audio + frames + prompt_used; downloads its models (HF token steps, resume, disk check); size presets; camera at the start and end.
-- **🎬 Neron LTX AutoPrompter** — detailed LTX prompts with physics, obstacles, exact poses and sound; camera as the first sentence, clip length on the first line; in-node preview and edit; finds or downloads its LLM and llama-server.
-- AutoPrompter retries empty answers; no red errors from missing saved files; clear bilingual errors.
+## 🎬 Длинные клипы: Видео ×24, быстрое сохранение (02.11.2026)
 
-## 🎬 Длинные клипы: Видео ×24, быстрое сохранение / Long clips: Video ×24, fast saving (02.11.2026)
-
-**RU:**
 - **Пульт больше не «висит» на сохранении клипа.** В ffmpeg 7 (стоит в свежем ComfyUI) склейка видео со звуком могла не закончиться никогда: процессор почти не занят, прогресс стоит часами. Теперь длина звука задаётся точно по длине видео — клип на пару минут сохраняется за секунды. То же исправлено в Neron Video Combine.
 - **Видео ×24** (было ×3): до 24 роликов в одной ноде, нода сама растёт под новые слоты.
 - **Видео-сэмплер:** экран держит форму кадра, список роликов растягивается и подрастает при добавлении.
 - **DJ Пульт:** без треков больше не останавливает весь запуск — отдаёт тишину, Пульт этот канал пропускает; не прячется наполовину после переключения схем.
 
-**EN:**
-- **The Pult no longer hangs while saving the clip.** With ffmpeg 7 (shipped with recent ComfyUI) muxing video + sound could run forever at near-zero CPU. The audio length is now set exactly to the video length — a two-minute clip saves in seconds. Same fix in Neron Video Combine.
-- **Video ×24** (was ×3): up to 24 clips in one node, the node grows with new slots.
-- **Video Sampler:** the monitor keeps the frame shape; the clip list is resizable and grows as clips are added.
-- **DJ Pult:** with no tracks it no longer stops the whole run — it outputs silence and the Pult skips that channel; no longer half-hidden after switching workflows.
+## 🎬 Видео-сэмплер: плавные переходы (01.11.2026)
 
-## 🎬 Видео-сэмплер: плавные переходы / Video Sampler: smooth transitions (01.11.2026)
+В монтаже Видео-сэмплера появились переходы. **Надвиньте кусок на предыдущий** — на сколько надвинули, столько длится переход (жёлтый клин на ленте); утащили дальше — кусок переставляется, как раньше. Вид перехода — внизу у выделенного куска: **наплыв, через тьму, через свет, шторка, растворение, круг, проявление** (сначала тёмное — как карандашный рисунок) или «сразу», и длина в секундах. Звук на стыке перетекает плавно. Как только монтаж собран, окно сэмплера показывает и играет его **с переходами и звуком**. Если ffmpeg на компьютере придирчив к частоте кадров, сэмплер сам собирает монтаж в строгом режиме; при ошибке полный текст — в консоли ComfyUI. Старые схемы открываются как раньше.
 
-**RU:** В монтаже Видео-сэмплера появились переходы. **Надвиньте кусок на предыдущий** — на сколько надвинули, столько длится переход (жёлтый клин на ленте); утащили дальше — кусок переставляется, как раньше. Вид перехода — внизу у выделенного куска: **наплыв, через тьму, через свет, шторка, растворение, круг, проявление** (сначала тёмное — как карандашный рисунок) или «сразу», и длина в секундах. Звук на стыке перетекает плавно. Как только монтаж собран, окно сэмплера показывает и играет его **с переходами и звуком**. Если ffmpeg на компьютере придирчив к частоте кадров, сэмплер сам собирает монтаж в строгом режиме; при ошибке полный текст — в консоли ComfyUI. Старые схемы открываются как раньше.
-
-**EN:** The Video Sampler edit gets transitions. **Slide a piece over the previous one** — the overlap is the transition (yellow wedge); drag further to reorder as before. Pick the type and length below for the selected piece: dissolve, dip to black/white, wipe, pixel dissolve, circle, reveal (dark first, like a pencil drawing) or cut. Audio crossfades. Once built, the sampler monitor plays the edit with transitions and sound. A strict fallback build handles picky ffmpeg versions; on failure the full error goes to the ComfyUI console. Old workflows open unchanged.
-
-## 🖼 Image Processor: превью = выход / preview = output (31.10.2026)
+## 🖼 Image Processor: превью = выход (31.10.2026)
 
 **RU (Interactive Image Processor и 🖼 Neron Studio Image Processor):**
 - **Что видит глаз — то и уходит в генератор.** Пока двигаешь ползунок — быстрое превью в полном размере выхода той же математикой (раньше резкость считалась на уменьшенной копии и выглядела иначе). Через ~0.3 с после остановки — **точный кадр от сервера, тем же кодом, что и при запуске** (в подписи «✓»). Проверено: превью и реальный выход совпадают до 1 уровня яркости из 255. Считается на процессоре, видеокарту не трогает. AI-апскейл в превью не входит.
@@ -200,9 +143,7 @@
 
 **AutoPrompter:** в справке, подсказке и README — какую модель LLM брать: системный промпт написан под Qwen 3.5 9B; модели поменьше (например, Qwen2.5-VL 7B) часто просто переводят бриф.
 
-**EN:** Image Processors — **preview = output** (fast full-size preview, then the exact frame from the same Python code, ✓, verified within 1/255), sharp at any zoom and on HiDPI, no layout breakage after upload. AutoPrompter — a note on which LLM to use (written for Qwen 3.5 9B).
-
-## Автопромтеры — исправления / Autoprompters fixes (30.10.2026)
+## Автопромтеры — исправления (30.10.2026)
 
 **RU (AutoPrompter, Dialog Autoprompter, Multi-Image LLM):**
 - **llama-server снова скачивается сам.** llama.cpp переименовал файлы в релизах (cuda-12.4 → cuda-13.x), и старый поиск ничего не находил. Теперь сборка ищется по образцу, под версию CUDA драйвера, вместе с CUDA-библиотеками; без NVIDIA — Vulkan или CPU; если в свежем релизе сборки нет — смотрятся предыдущие.
@@ -211,28 +152,15 @@
 - **Модели находятся там, где их держит ComfyUI Desktop**: `models/LLM` с подпапками, папки `LLM` из `extra_model_paths` и `LLM` рядом с каждой папкой моделей, которую знает ComfyUI. Новые файлы видны после перезапуска.
 - Ошибка «сервер не найден» объясняет, что делать (RU/EN).
 
-**EN:**
-- **llama-server downloads again** (llama.cpp renamed its release files): matched by pattern for the driver's CUDA version, with the CUDA runtime; Vulkan/CPU without NVIDIA; older releases checked if the newest lacks a build.
-- **One llama-server shared by both nodes.**
-- **AutoPrompter no longer passes an LLM error to the generator as a prompt.**
-- **Models are found where ComfyUI Desktop keeps them** (`models/LLM` subfolders, `LLM` from `extra_model_paths`, `LLM` next to every known models folder).
-- The "server not found" error explains what to do.
+## 🧹 Порядок в пакете (30.10.2026)
 
-## 🧹 Порядок в пакете / Pack cleanup (30.10.2026)
-
-**RU:**
 - **Один код картинки на четыре ноды**: Interactive Image Processor, 🖼 Neron Studio Image Processor, Smart Load & Resize Image и Manual Color & Upscale Panel. Раньше было три разные копии, и старые ноды из воркфлоу v1.0/v2.0 всё ещё растягивали картинку при «Отключено». Теперь у всех «Отключено» = как есть, резкость 0 = выкл. Поля нод не изменились — старые воркфлоу открываются как раньше. Студия по-прежнему подрезает пресеты по центру, простая нода — растягивает.
 - **Камера H3 — одна копия** (в `ComfyUI-H3-Static-Camera`); AutoPrompter берёт её оттуда.
 - **Системный промпт H3 — одна копия**, самая новая и полная (в `NeronStudio-AutoPrompter/prompts`). Две старые копии удалены; Dialog Autoprompter и Multi-Image LLM видят её под тем же именем, так что старые воркфлоу работают.
 - Старые ноды подписаны в меню «(legacy → …)»: Smart Load, Color Panel, старая тема Audio Studio. Ничего не удалено.
 - В README — **карта**: какую ноду брать для какой задачи, и какие папки ставить вместе при ручной установке.
 
-**EN:**
-- **One image code for four nodes** (Interactive, Studio, Smart Load, Color Panel); old v1.0/v2.0 nodes no longer stretch in Disabled. Node fields are unchanged; old workflows open as before.
-- **One copy of the H3 camera** and **one copy of the H3 system prompt** (the newest); old copies removed, same file name, old workflows work.
-- Legacy nodes are labelled "(legacy → …)"; nothing removed. README has a **map** of which node to use and which folders go together.
-
-## Image Processor — исправления / fixes (30.10.2026)
+## Image Processor — исправления (30.10.2026)
 
 **RU (обе ноды: Interactive Image Processor и 🖼 Neron Studio Image Processor):**
 - **«Отключено» = картинка как есть**: без округления до кратного 32 и без пересчёта пикселей. Раньше, например, 1200×720 молча растягивалось до 1216×736 — фигуры вытягивались, кадр мылился.
@@ -248,35 +176,21 @@
 - **Sharpness 0 = off**; anything above adds sharpening, 1.0+ is strong. Tooltip and help explain it.
 - Interactive Image Processor: **Reset** and bilingual **Help** buttons; the preview stays inside the node. Buttons are at the end, so old workflows open without shifted settings.
 
-## Установка на чистую систему / Fresh install fix (30.10.2026)
+## Установка на чистую систему (30.10.2026)
 
-**RU:**
 - Если Manager или ComfyUI Desktop не поставили библиотеки из `requirements.txt` (soundfile, imageio-ffmpeg), пакет Neron теперь ставит их сам при запуске. В консоли — строка `[Neron pack] ставлю недостающие библиотеки`, затем `установлено`. Отключить: переменная окружения `NERON_NO_AUTOINSTALL=1`.
 - Audio Studio без soundfile больше не падает целиком (раньше все её ноды, включая Neron Video Combine, становились красными): WAV пишется и читается встроенным модулем Python. Если нужно что-то сверх этого — нода прямо пишет, что поставить.
 
-**EN:**
-- If Manager or ComfyUI Desktop did not install the `requirements.txt` libraries (soundfile, imageio-ffmpeg), the Neron pack now installs them at startup. Console: `[Neron pack] installing missing libraries`, then `installed`. Disable with `NERON_NO_AUTOINSTALL=1`.
-- Audio Studio no longer fails as a whole without soundfile (all its nodes, Neron Video Combine included, used to turn red): WAV goes through Python's built-in wave module; anything beyond that reports what to install.
+## Neron DJ Пульт 🎧 v1.0 + Neron Theme для Audio Studio (28.10.2026)
 
-## Neron DJ Пульт / DJ Controller 🎧 v1.0 + Neron Theme для Audio Studio (28.10.2026)
-
-**RU:**
 - Новая нода **Neron DJ Пульт** (меню NeronAudio): две деки с джогами и волнами, ▶ / CUE / SYNC, ползунки темпа, 8 пэдов на деку в трёх режимах (точки, звуки, петли), фильтр, громкость, кроссфейдер, индикаторы.
 - Треки — проводами `deck_a`, `deck_b`; свои звуки для пэдов — `pad_sounds` (Звук ×8). Без провода пэды играют 8 встроенных звуков (без файлов).
 - **⏺ ЗАПИСЬ** сета: по Queue запись идёт на выход `audio` и сохраняется в `output/Neron_DJ`. Без записи — авто-переход A → B.
 - Темп и удары находятся сами; SYNC подгоняет и темп, и удары.
 - Пульт и все ноды студии красятся **новой Neron Theme**: панели, ручки, индикаторы, джоги и волны — в цветах темы, в том числе светлой. В готовой схеме Audio Studio v2.0 устаревшая «Тема» заменена на Neron Theme (старая нода оставлена, чтобы открывались старые схемы; её цвета, записанные в ноды схемы, убраны).
 
-**EN:**
-- New **Neron DJ Controller** node (NeronAudio menu): two decks with jog wheels and waves, ▶ / CUE / SYNC, tempo sliders, 8 pads per deck in three modes (cues, samples, loops), filter, volume, crossfader, meters.
-- Tracks by wire `deck_a`, `deck_b`; your own pad sounds — `pad_sounds` (Sound ×8). Without it the pads play 8 built-in sounds (no files).
-- **⏺ REC** a set: on Queue it goes out on `audio` and is saved in `output/Neron_DJ`. No recording — an auto transition A → B.
-- Tempo and beats are detected automatically; SYNC matches both tempo and beats.
-- The controller and all studio nodes follow the **new Neron Theme**: panels, knobs, meters, jogs and waves take the theme colors, light themes included. The ready Audio Studio v2.0 workflow now uses Neron Theme instead of the legacy "Theme" (the old node is kept so old workflows open; the colors it had written into the workflow's nodes are removed).
+## Neron Theme 🎨 v1.0 — темы для всего ComfyUI (28.10.2026)
 
-## Neron Theme 🎨 v1.0 — темы для всего ComfyUI / themes for the whole ComfyUI (28.10.2026)
-
-**RU:**
 - Новая папка **NeronTheme**, нода **Neron Theme 🎨** (меню Neron). Пока нода на столе — весь ComfyUI в теме: окно, стол, ноды по 9 ролям, провода. Удалили — всё возвращается как было (проверено сравнением настроек до и после).
 - **УСТАНОВИТЬ:** 9 встроенных тем, «Мои» (файлы в `ComfyUI/user/neron_themes`), примерка наведением, чужая тема кодом или файлом (бросить на ноду).
 - **СОЗДАТЬ:** тема из одного цвета (соседние оттенки / радуга / один тон, светлая), тема из картинки (вход `image`) — с рамкой по нужному участку и выбором главного цвета из найденных, ⚙ — все цвета, роли, свечение, живость. Текст всегда читаемый — нода сама следит за контрастом.
@@ -285,24 +199,12 @@
 - Ручной цвет ноды и ноды с фирменным цветом не перекрашиваются; сам workflow тема не меняет.
 - **Прозрачность нод**, **подсветка нод** (свечение из-под ноды цветом роли), **цвет проводов**: по типу / один цвет / свой цвет каждого типа. Новая встроенная тема **«Подсветка»**.
 
-**EN:**
-- New **NeronTheme** folder, **Neron Theme 🎨** node (Neron menu). While it is on the canvas the whole ComfyUI is themed: window, canvas, nodes by 9 roles, wires. Remove it and everything is restored (checked by comparing settings before and after).
-- **INSTALL:** 9 built-in themes, "Mine" (files in `ComfyUI/user/neron_themes`), hover to try on, someone's theme by code or file (drop onto the node).
-- **CREATE:** a theme from one color (harmony / rainbow / mono, light), a theme from a picture (`image` input) — with a frame over the area you want and a choice of the main color from the found ones, ⚙ — every color, role, glow, life. Text always stays readable.
-- **SHARE:** a `NERON-THEME1:…` code, a theme file, a palette for Settings → Appearance → Color Palette.
-- **Life:** frame lights, wire sparks, background (flow / particles / stars), workflow run highlights (running / done / error + progress), beat flashes from Neron Audio Studio sound, "quieter while generating", FPS limit.
-- Hand-set node colors and nodes with their own signature color are not repainted; the workflow itself is not changed.
-- **Node opacity**, **node backlight** (a glow under each node in its role color), **wire colors**: by type / one color / your own per type. New built-in theme **"Backlight"**.
-
 ## v2.0 — Neron Audio Studio 2 (25.10.2026)
 
-**RU:** Модульная студия: кубики (Видео ×3, Звук ×8, Музыка) → посредники (Видео-сэмплер, Сэмплер, Студия) → Пульт-сердце. Эквалайзер и эхо, музыка под ролик, монтаж по кадрам, поле сборки, общий эквалайзер со спектром, темы с живыми огнями. Новая схема: `NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json`; прежняя `Neron_Audio_Studio_v1.0_Beta.json` оставлена. Подробности — в записях ниже.
+Модульная студия: кубики (Видео ×3, Звук ×8, Музыка) → посредники (Видео-сэмплер, Сэмплер, Студия) → Пульт-сердце. Эквалайзер и эхо, музыка под ролик, монтаж по кадрам, поле сборки, общий эквалайзер со спектром, темы с живыми огнями. Новая схема: `NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json`; прежняя `Neron_Audio_Studio_v1.0_Beta.json` оставлена. Подробности — в записях ниже.
 
-**EN:** A modular studio: cubes (Video ×3, Sound ×8, Music) → middle nodes (Video Sampler, Sampler, Studio) → the Pult as the heart. EQ and reverb, music to the clip, frame-accurate editing, an arrange field, a master EQ with a spectrum, themes with live lights. New workflow: `NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json`; the previous `Neron_Audio_Studio_v1.0_Beta.json` is kept. Details below.
+## v2.0 · Neron Audio Studio: темы и «живость» (вошло в v2.0)
 
-## v2.0 · Neron Audio Studio: темы и «живость» / themes and "life" (вошло в v2.0 / part of v2.0)
-
-**RU:**
 - **Neron Theme / Тема 🎨** — нода ни к чему не подключается. Есть на столе — ноды Neron в теме; удалили — снова обычный серый вид. Тема сохраняется вместе со схемой: кто скачал workflow, видит его таким, как задумано.
 - Три темы карточками с превью: **Графит** (спокойный серый), **Neron Brown** (фирменная тёплая), **Неон** (яркая, светящаяся).
 - У каждого кубика свой цвет: видео — синий, звук — зелёный, музыка и студия — оранжевый, Пульт — фиолетовый. В этот цвет окрашены шапка ноды, рамка панели и **провода** по типу (видео / звуки / AUDIO). Группы рабочего стола (🎬 🎵 🥁 🎚 🎨) — в тон теме.
@@ -313,19 +215,8 @@
 - Огни стали плавными: вспышка мягко разгорается (~0,06 с) и долго тает (~0,9 с), рывок огня набирается и сходит на нет плавно, свечение панелей гаснет за 0,35 с — стол «дышит», а не дёргается.
 - «Видео ×3»: пока большой ролик грузится — надпись «⏳ загружаю ролик…» вместо пустого плеера; превью и экран Видео-сэмплера показывают кадр из ~10% ролика (начало клипов часто тёмное).
 
-**EN:**
-- **Neron Theme 🎨** — not wired to anything. On the canvas — Neron nodes take the theme; delete it — back to the plain grey look. The theme is saved with the workflow.
-- Three theme cards with previews: **Graphite**, **Neron Brown** (the warm signature one), **Neon** (bright, glowing).
-- Every cube has its colour (video blue, sound green, music/studio orange, Pult purple) for the title, the panel frame and the **wires** by type. Desk groups follow the theme.
-- **✨ Life**: OFF; CALM — a slow light on node frames and wire sparks while music plays; FULL — two running lights with glowing tails, sparks always, and frames and panels **flash on every beat** (a shared level bus hears the Pult, Studio, sampler, drums, piano and loaders).
-- All panels now use theme colours with grey fallbacks — without the Theme node everything looks exactly as before. The ready desk has a Theme node (Neron Brown, calm).
-- **Lights on the beat**: beats are detected from the bass (kick, 40–160 Hz), not overall loudness — hats do not trigger, dense music keeps its beats (test: 6/6 on a simple beat, 7/8 on a dense track). On every beat the frame lights and wire sparks jump forward and flash, then slow down until the next one.
-- Smoother lights: the flash rises softly (~0.06 s) and fades slowly (~0.9 s), light jumps ease in and out, panel glow fades over 0.35 s — the desk breathes instead of twitching.
-- Video ×3 shows "⏳ loading the clip…" while a big file loads; the preview and the Video Sampler screen show a frame from ~10% of the clip (clip starts are often dark).
+## v2.0 · Neron Audio Studio: Студия (вошло в v2.0)
 
-## v2.0 · Neron Audio Studio: Студия / Studio (вошло в v2.0 / part of v2.0)
-
-**RU:**
 - **Neron Studio / Студия 🎛** — посредник между «Музыкой» (или «Звук ×8», сэмплером) и Пультом. **Каждая дорожка студии** (HIHATS, KICKS, каждая дорожка пианино, каждый звук) — свой канал: ▶ (слушать только её), M, S, громкость, баланс, **НИЗ / СЕР / ВЕРХ**, **ЭХО** + помещение, ↺, индикатор уровня и волна с бегунком.
 - **Общий эквалайзер на выходе — 10 полос** (31 Гц … 16 кГц, ±12 дБ): тяните точки вверх-вниз, колёсико — точнее, двойной клик — в ноль. Под кривой — **живой спектр** звука. Готовые настройки: Ровно, Больше баса, Ярче, Тёплый, Голос впереди, Улыбка, Клуб, Старое радио. **ВКЛ / ВЫКЛ** — сравнить «с ним / без него».
 - ⏭ ПРОПУСТИТЬ — Пульт видит всё, как будто Студии нет (у «Музыки» — барабаны и пианино). Отжата — Пульт слышит Студию одним каналом «🎛 СТУДИЯ» (и заранее, без Queue).
@@ -333,16 +224,8 @@
 - Ручки и эхо вынесены в общий файл — в Пульте и Студии они одинаковые. Рабочий стол: Музыка → Студия → Пульт.
 - **🧱 ПОЛЕ сборки в Студии** (как плейлист FL Studio): по горизонтали такты, у каждой дорожки своя полоса. Клик по полосе — блок (длина = луп дорожки), тянуть — двигать, край — длина, двойной клик / Delete — убрать, Ctrl+D — копия следом, Ctrl+Z — отменить, клик по линейке — откуда играть, колёсико — масштаб. Внутри блоков видна волна дорожки, тёмные черточки — где луп начинается заново. ⊞ ВСЕ ДОРОЖКИ — каждая дорожка блоком с 1-го такта. Пустое поле — всё по кругу, как раньше; есть блоки — Студия (и Пульт, и файл) играет собранный трек ровно по тактам.
 
-**EN:**
-- **Neron Studio 🎛** — between Music (or Sound ×8, the sampler) and the Pult. **Every studio track** is its own channel: ▶ (solo listen), M, S, volume, pan, **LOW / MID / HIGH**, **REVERB** + room, ↺, a level meter and a wave with a playhead.
-- **10-band master EQ** (31 Hz … 16 kHz, ±12 dB): drag the points, wheel for fine steps, double-click resets. A **live spectrum** under the curve. Presets: Flat, More bass, Brighter, Warm, Voice up front, Smile, Club, Old radio. **ON / OFF** to compare.
-- ⏭ BYPASS — the Pult sees everything as if the Studio weren't there. Off — the Pult hears the Studio as one "🎛 STUDIO" channel (also before Queue).
-- Music now also outputs every track separately (for the Studio); the Pult still sees two channels. Knobs and reverb live in a shared file. Ready desk: Music → Studio → Pult.
-- **🧱 ARRANGE field in the Studio** (like the FL Studio playlist): bars across, one lane per track. Click a lane to put a block (track loop length), drag to move, edge — length, double-click / Delete — remove, Ctrl+D — copy after, Ctrl+Z — undo, click the ruler to set the start, wheel zooms. Blocks show the track wave. ⊞ ALL TRACKS puts every track from bar 1. An empty field loops everything as before; with blocks the Studio (the Pult and the file too) plays the arranged track bar-exact.
+## v2.0 · Neron Audio Studio: музыка под ролик (вошло в v2.0)
 
-## v2.0 · Neron Audio Studio: музыка под ролик / music to the clip (вошло в v2.0 / part of v2.0)
-
-**RU:**
 - **ПО ДЛИНЕ ВИДЕО** в новом Пульте включено сразу: короткая музыка повторяется до конца ролика, длинная обрезается — и теперь **мягко затихает в конце** (1,5 с; и при прослушивании, и в файле).
 - **Рамка на волне:** если трек длиннее ролика, на его волне жёлтая рамка «▶ 0:18» — тяните её, чтобы выбрать, какой кусок трека звучит под роликом (например, припев). Клик мимо рамки — перемотка, как раньше.
 - **⚙ ДЛЯ СПЕЦОВ** в Пульте: длина затухания (0–6 с, двойной клик — 1,5), **🎯 ТЕМП ПОД ВИДЕО** — Пульт чуть меняет BPM, чтобы в ролик входило целое число тактов (для барабанов, пианино, «Музыки», сэмплера; пишет, насколько точно), **⇤ РАМКИ В НАЧАЛО**.
@@ -350,16 +233,8 @@
 - Склейки монтажа считаются от начала (концы кусков округляются к кадру по общему времени) — на длинном монтаже ошибка не копится.
 - В Пульте появилась кнопка **📖** с помощью на двух языках.
 
-**EN:**
-- **FIT TO VIDEO** is on by default in a new Pult: short music repeats, long music is cut — and now **fades out at the end** (1.5 s, in preview and in the file).
-- **Frame on the wave:** a track longer than the clip shows a yellow frame "▶ 0:18" — drag it to choose which part plays under the clip. A click outside the frame seeks as before.
-- **⚙ EXPERT** in the Pult: fade length, **🎯 TEMPO TO VIDEO** (nudges the BPM so a whole number of bars fits the clip, reports the accuracy), **⇤ FRAMES TO START**.
-- **⚙ EXPERT** in the Video Sampler: **🧲 CUT ON THE BEAT** — cuts, piece edges and the cursor stick to the Pult tempo beats; a new piece is a whole number of beats.
-- Edit cuts are rounded to frames on the overall timeline, so long edits don't drift. The Pult got a bilingual **📖** help.
+## v2.0 · Neron Audio Studio: Видео-сэмплер (вошло в v2.0)
 
-## v2.0 · Neron Audio Studio: Видео-сэмплер / Video Sampler (вошло в v2.0 / part of v2.0)
-
-**RU:**
 - **Neron Video Sampler / Видео-сэмплер 🎬** — между «Видео ×3» и Пультом. Слева экран, справа три дорожки — три ролика с кадрами-превью: мышкой выделяете кусок «откуда — докуда» (края тянутся, двойной клик — весь ролик), ▶ — посмотреть кусок, **➜** или перетащить вниз (можно наискосок) — кусок встаёт в **МОНТАЖ**.
 - **Монтаж** — куски идут друг за другом: тянуть кусок — переставить, тянуть края — обрезать, клик — курсор (экран показывает этот кадр), **✂ / S** — разрезать на курсоре (точно по кадру), **⧉ / Ctrl+D** — копия, **◀ ▶** — переставить, **🗑 / Delete** — убрать, **Ctrl+Z / Ctrl+Y** — отменить / вернуть, ←/→ — по кадру, колёсико — масштаб, Shift+колёсико — прокрутка, пробел — смотреть.
 - **⏭ ПРОПУСТИТЬ** — ролики идут в Пульт как есть. Положили первый кусок — пропуск выключается сам, Пульт видит монтаж.
@@ -369,31 +244,15 @@
 - Рабочий стол обновлён: Видео ×3 → Видео-сэмплер → Пульт.
 - Исправлено: ⏭ работает всегда (и во время просмотра). Отжата — в Пульте ровно один блок «🎬 Монтаж»; пока монтаж пуст или собирается, в этом блоке так и написано (раньше при пустом монтаже в Пульт шли исходные ролики).
 
-**EN:**
-- **Neron Video Sampler 🎬** — between Video ×3 and the Pult. A screen on the left, three clip rows with thumbnails: select a piece (drag edges, double-click = whole clip), ▶ watches it, **➜** or drag it down (diagonal is fine) puts it into the **EDIT**.
-- **Edit**: pieces play one after another — drag to reorder, drag edges to trim, click to set the cursor, **✂ / S** cuts at the cursor (frame-exact), **⧉ / Ctrl+D** copies, **◀ ▶** moves, **🗑 / Delete** removes, Ctrl+Z / Ctrl+Y, ←/→ step a frame, wheel zooms, Shift+wheel scrolls, space plays.
-- **⏭ BYPASS** sends the clips as they are; the first piece you add turns it off. **🔇** removes the clip sound everywhere.
-- The edit is built into a frame-accurate mp4 automatically and goes to the Pult as one clip "🎬 Edit". Old draft builds are cleaned up.
-- The Pult with video only and no sound now outputs the clip with silence instead of an error. The ready desk now has Video ×3 → Video Sampler → Pult.
-- Fixed: ⏭ always works (also while playing). Off — the Pult shows exactly one "🎬 Edit" block; while the edit is empty or building, the block says so (before, an empty edit passed the original clips).
+## v2.0 · Neron Audio Studio: эквалайзер и эхо в Пульте, модуль «Музыка», готовый рабочий стол (вошло в v2.0)
 
-## v2.0 · Neron Audio Studio: эквалайзер и эхо в Пульте, модуль «Музыка», готовый рабочий стол (вошло в v2.0 / part of v2.0)
-
-**RU:**
 - **Пульт:** у каждого канала (и у звука видео) — эквалайзер из трёх ручек **НИЗ / СЕР / ВЕРХ** (±12 дБ: 200 Гц, 1 кГц, 4 кГц) и **ЭХО** (одна ручка «сколько» + кнопка помещения **КОМН → ЗАЛ → СОБОР**). Ручки крутятся мышкой вверх-вниз или колёсиком, Shift — точнее, двойной клик — сброс; ↺ — сбросить все эффекты канала. Слышно сразу при прослушивании, и ровно так же сводится в файл после Queue / SAVE.
 - **Neron Music / Музыка 🥁🎹** — барабаны и пианино в одной ноде: вкладки 🥁 / 🎹, общий темп, **▶ ВСЁ ВМЕСТЕ** играет обе части, на вкладке мигает точка, если часть играет. Выход **sounds** → Пульт: **два канала** (барабаны и пианино отдельно). Выход **audio** — всё одним звуком. Размер ноды меняется, как у всех.
 - Пустые «Видео ×3», «Звук ×8» и сэмплер без звуков больше не роняют Queue.
 - Готовый рабочий стол: `NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json` — группы ВИДЕО, МУЗЫКА, ЗВУК, СЭМПЛЕР и ПУЛЬТ, всё уже соединено.
 
-**EN:**
-- **Pult:** every channel (and the video sound) gets a 3-knob EQ **LOW / MID / HIGH** (±12 dB at 200 Hz, 1 kHz, 4 kHz) and **REVERB** (one amount knob + a **ROOM → HALL → CATHEDRAL** button). Drag knobs up/down or use the wheel, Shift for fine steps, double-click resets; ↺ resets the channel's effects. Heard live and rendered the same into the file after Queue / SAVE.
-- **Neron Music / Музыка 🥁🎹** — drums and piano in one node: 🥁 / 🎹 tabs, one tempo, **▶ ALL** plays both, a blinking dot shows which part is playing. **sounds** → Pult gives **two channels**; **audio** is everything as one sound. Resizable like every node.
-- Empty Video ×3, Sound ×8 and a sampler without sounds no longer break Queue.
-- Ready desk: `NeronAudioStudio/workflow/Neron_Audio_Studio_v2.0.json` — groups VIDEO, MUSIC, SOUND, SAMPLER and PULT, all wired.
+## v2.0 · Neron Audio Studio: Сэмплер, вторая версия (вошло в v2.0)
 
-## v2.0 · Neron Audio Studio: Сэмплер, вторая версия / Sampler v2 (вошло в v2.0 / part of v2.0)
-
-**RU:**
 - Сэмплер теперь из двух частей. **① ИСТОЧНИКИ** — каждый звук целиком, вся волна; мышкой выделяете кусок «откуда — докуда» (видны секунды), ▶ — послушать кусок. **➜** или просто перетащить выделенное вниз — кусок становится кирпичиком. **② ПОЛЕ** — сетка по тактам, 4 слоя; кирпичики складываются друг за другом, Пульт слышит только поле.
 - Колёсико мыши — приблизить / отдалить (Shift + колёсико — прокрутка), ⤢ — показать всё.
 - Клики попадают точно при любом зуме схемы (раньше курсор и блоки «промахивались»).
@@ -404,30 +263,16 @@
 - У каждого слоя поля своя кнопка ▶ / ■: играет только этот слой; можно сразу переключиться на другой слой его ▶; верхний ▶ — снова всё поле.
 - Строка источника переделана: клик — курсор «играть отсюда» (▶ играет от него, во время игры клик перескакивает); повести вбок — всегда новое выделение (раньше при выделенном целиком треке всё «зависало»); края выделения тянутся; выделенное вниз — в поле; колёсико над волной — приблизить звук вокруг мышки (полоска внизу показывает, где вы), Shift — сдвинуть.
 
-**EN:**
-- The sampler now has two parts: **① SOURCES** — every sound in full, select a piece with the mouse, ▶ to listen, **➜** or drag it down; **② FIELD** — a bar grid with 4 layers where bricks are assembled; the Pult hears only the field.
-- Mouse wheel zooms (Shift+wheel scrolls), ⤢ fits all. Clicks are exact at any canvas zoom. Everything can be edited while playing. Bigger, reliable fade handles. Level meters for sources, layers and master. An empty field gives one bar of silence instead of an error.
-- Every field layer has its own ▶ / ■: plays only that layer; switch layers on the fly; the top ▶ plays the whole field again.
-- Source row reworked: click sets a play-from cursor; dragging sideways always makes a new selection (a full selection no longer locks it); selection edges drag; dragging the selection down puts it in the field; the wheel zooms the source around the mouse, Shift scrolls.
+## v2.0 · Neron Audio Studio: Сэмплер, первая версия (вошло в v2.0)
 
-## v2.0 · Neron Audio Studio: Сэмплер, первая версия / Sampler v1 (вошло в v2.0 / part of v2.0)
-
-**RU:**
 - **Neron Sampler / Сэмплер** — нода между «Звук ×8» и Пультом. Вид как у Piano Roll: слева дорожки, справа сетка по тактам, каждый звук — блок.
 - **⏭ ПРОПУСТИТЬ** нажата — сэмплер не работает, все звуки идут в Пульт как есть, каждый своим каналом. Отжата — Пульт видит только результат сэмплера, одним каналом «🎛 СЭМПЛЕР».
 - Новый звук сам ложится на свою дорожку в начало. Блоки двигаются (и на другую дорожку — звуки складываются), края обрезаются, квадратики в углах — появление и затухание, двойной клик по пустому — поставить звук, ⧉ копия сразу после (Ctrl+D), ✂ разрезать (S), отмена (Ctrl+Z).
 - Сетка: такт, 1/2, 1/4, 1/8, 1/16 или без сетки. BPM синхронизирует Пульт. У дорожки M, S, громкость.
 - Результат идёт целыми тактами, поэтому в Пульте луп повторяется ровно. Пульт слышит сэмплер сразу, без Queue.
 
-**EN:**
-- **Neron Sampler** — sits between Sound ×8 and the Pult. Looks like the Piano Roll: tracks on the left, a bar grid on the right, every sound is a block.
-- **⏭ BYPASS** on — all sounds go to the Pult as they are; off — the Pult sees only the sampler result as one channel.
-- A new sound places itself on its own track at the start. Move blocks (also between tracks), trim edges, fades, double click to place, copy (Ctrl+D), split (S), undo.
-- Grid: bar, 1/2, 1/4, 1/8, 1/16 or free; BPM synced by the Pult; tracks have M, S, volume. The result is whole bars, so it loops evenly; the Pult hears it without Queue.
+## 2026-10-25 — Neron Audio Studio: кубики и Пульт
 
-## 2026-10-25 — Neron Audio Studio: кубики и Пульт / cubes and the Pult
-
-**RU:**
 - **Neron Video ×3 / Видео ×3** — одна нода, в ней до трёх загрузчиков видео. Загрузили ролик — открылся следующий слот. Каждый ролик виден прямо в ноде. Файлы можно перетащить на слот.
 - **Neron Sound ×8 / Звук ×8** — одна нода, до восьми загрузчиков звука. Пустые строки скрыты, у каждого звука ▶ и волна.
 - **Пульт (Neron Mixer) понимает кубики:** «Видео ×3» — во вход `video`, «Звук ×8» — в любой `audio_N` (каждый звук становится своим каналом с громкостью, балансом, M/S и индикатором уровня).
@@ -436,30 +281,14 @@
 - Пульт стал выходной нодой: Queue работает и без нод после него.
 - Кубики аккуратнее: панель не упирается в край ноды, высота считается по содержимому (и при смене ширины), в списках только имя файла (папка — во всплывающей подсказке).
 
-**EN:**
-- **Neron Video ×3** — one node with up to three video loaders; the next slot opens when a clip is loaded; each clip is visible in the node; files can be dropped onto a slot.
-- **Neron Sound ×8** — one node with up to eight audio loaders; empty rows stay hidden; each sound has ▶ and a waveform.
-- **The Pult (Neron Mixer) understands cubes:** Video ×3 → the `video` input, Sound ×8 → any `audio_N` (every sound becomes its own channel with volume, pan, M/S and a level meter).
-- **Summary at the top of the Pult:** number of clips, sound channels, total length.
-- **Clips in the Pult:** side by side; click one — it fills the screen and playback jumps to its start; during playback the screen follows the playing clip; "◀ ALL CLIPS" — side by side again. In the saved clip they play one after another (1 → 2 → 3), frame-accurate, with their sound joined the same way.
-- The Pult is now an output node: Queue works without nodes after it.
-- Tidier cubes: the panel no longer touches the node edge, the height follows the content (also when the width changes), lists show just the file name (folder in the tooltip).
+## 2026-10-25 — Neron Audio Studio: размер нод и индикаторы уровня
 
-## 2026-10-25 — Neron Audio Studio: размер нод и индикаторы уровня / node size and level meters
-
-**RU:**
 - **Размер задаёт пользователь** у Piano Roll, Drum Machine, Микшера, Audio Loader и Video Combine. Раньше высота была жёсткой (Piano Roll был огромным и не уменьшался). Теперь ноду можно растянуть или сжать: содержимое подстраивается, лишнее прокручивается, размер запоминается в схеме. Пока ноду не трогали, она, как раньше, подстраивается сама. Правый клик → «↕ Авто-размер» возвращает подгонку.
 - **Индикаторы уровня в Микшере:** прыгающие столбики у каждого канала (левый и правый) и общий L/R рядом с MASTER. Зелёный — нормально, жёлтый — громко, красный — перегруз; пиковая метка держится секунду. Пока звук не играет, индикаторы ничего не нагружают.
 - Исправлено: «Поле» и Audio Loader использовали одинаковые имена стилей и могли портить вид друг другу на одной схеме.
 
-**EN:**
-- **The user sets the size** of Piano Roll, Drum Machine, Mixer, Audio Loader and Video Combine. The height used to be fixed (Piano Roll was huge and could not shrink). Now the content adapts and scrolls, the size is saved in the workflow; an untouched node still fits itself. Right click → "↕ Auto size" restores fitting.
-- **Level meters in the Mixer:** bouncing bars per channel (left and right) and a master L/R meter next to MASTER. Green — fine, yellow — loud, red — clipping; the peak mark holds for a second. No load while nothing plays.
-- Fixed: the Field and the Audio Loader shared style names and could spoil each other's look on one canvas.
+## 2026-10-25 — Neron Audio Studio: новая нода «Поле»
 
-## 2026-10-25 — Neron Audio Studio: новая нода «Поле» / new node "Field"
-
-**RU:**
 - **Neron Field / Поле** — общее поле в духе Playlist из FL Studio. На холсте — маленькая карточка (картинка, обзор, ▶ / ■, «Открыть»), которую можно растягивать как угодно. Большое окно открывается поверх всего, двигается, тянется, разворачивается на весь экран и помнит своё место.
 - **Видео:** до 3 роликов. Ролик сдвигается мышкой или по кадру (◀ / ▶, стрелки), два разделителя решают, где какой ролик идёт. Склейка или наплыв. Где у ролика нет кадров — красная штриховка (в итоге чёрный экран). Родной звук роликов режется по тем же разделителям и выключается кнопкой M.
 - **Звук:** куски из файлов и из нод студии (входы `audio_N`). Двигать, переносить между дорожками, обрезать, резать (S), копия (Ctrl+D), появление и затухание, громкость куска; у дорожки M, S, громкость, баланс. Прилипание к краям и разделителям. Отмена и повтор.
@@ -469,37 +298,21 @@
 - Пока окно Поля активно, клавиши не уходят в ComfyUI: Ctrl+Z не откатывает граф, Delete не удаляет ноду.
 - **Оптимизация:** все ноды студии теперь используют один общий звуковой движок на страницу (раньше у каждой был свой). Окно Поля ничего не рисует, пока закрыто; во время игры двигается только курсор.
 
-**EN:**
-- **Neron Field** — a shared field in the spirit of the FL Studio Playlist. On the canvas: a small, freely resizable card (picture, overview, ▶ / ■, "Open"). The big window opens above everything; it can be moved, resized, made full screen and remembers its place.
-- **Video:** up to 3 clips, shifted by mouse or frame by frame; two dividers decide which clip plays where; cut or dissolve. Missing frames are shown with red stripes (black in the result). The clips' own sound follows the same dividers and can be muted.
-- **Sound:** pieces from files and from studio nodes (`audio_N` inputs): move, move between tracks, trim, split, copy, fades, piece volume; tracks have M, S, volume, pan. Snapping, undo / redo.
-- Drop files onto the window. Watch and listen at once, no Queue.
-- **💾 BUILD** saves WAV and mp4 without Queue; Queue outputs `audio`, `video`, `fps`, `seconds`. Frame-accurate, exactly as long as the video.
-- The Mixer hears the Field without Queue.
-- While the Field window is focused, keys stay in it: Ctrl+Z does not undo the graph, Delete does not delete the node.
-- **Performance:** all studio nodes now share one audio engine per page. The Field window draws nothing while closed; during playback only the cursor moves.
+## 2026-10-23 — Perception Relay: защита от нехватки памяти
 
-## 2026-10-23 — Perception Relay: защита от нехватки памяти / out-of-memory guard
+Если выход «кадры» (`frames_out`) не влезает в оперативку (нужно больше половины свободной), Пульт его пропускает вместо вылета; готовый ролик сохраняется в файл, в отчёте — пояснение.
 
-**RU:** Если выход «кадры» (`frames_out`) не влезает в оперативку (нужно больше половины свободной), Пульт его пропускает вместо вылета; готовый ролик сохраняется в файл, в отчёте — пояснение.
+## 2026-10-23 — Perception Relay: место на диске
 
-**EN:** If the `frames_out` output would not fit in RAM (more than half of the free memory), the Pult skips it instead of crashing; the final video is still saved to a file and the report explains why.
+Рабочие папки задач (~5 ГБ на 10 с видео) больше не копятся бесконечно. Хранятся только 2 последних ролика, старые удаляются сами после прогона; файлы этапов, которых нет в цепочке, тоже удаляются. Готовые видео и отчёты не трогаются. Настройка: `output/perception_relay/settings.json` → `keep_jobs`.
 
-## 2026-10-23 — Perception Relay: место на диске / disk space
+## 2026-10-23 — Perception Relay: растягивание Пульта
 
-**RU:** Рабочие папки задач (~5 ГБ на 10 с видео) больше не копятся бесконечно. Хранятся только 2 последних ролика, старые удаляются сами после прогона; файлы этапов, которых нет в цепочке, тоже удаляются. Готовые видео и отчёты не трогаются. Настройка: `output/perception_relay/settings.json` → `keep_jobs`.
+Пульт больше не «борется» с мышью. Раньше при растягивании нода сама возвращала свою высоту, и раскладка разваливалась (окно уезжало, внизу оставалось пустое поле). Теперь размер задаёте вы: окно заполняет всё свободное место, кадр вписывается с сохранением пропорций. Размер запоминается в схеме и не меняется при включении режима эксперта. Новая нода, пока её не трогали руками, по-прежнему подстраивается под кадр сама.
 
-**EN:** Work folders (~5 GB per 10 s of video) no longer pile up. Only the 2 most recent clips keep them, older ones are deleted after a run, and stage files no longer in the chain are removed. Final videos and reports are untouched. Setting: `output/perception_relay/settings.json` → `keep_jobs`.
+## 2026-10-23 — порядок в репозитории
 
-## 2026-10-23 — Perception Relay: растягивание Пульта / Pult resizing
-
-**RU:** Пульт больше не «борется» с мышью. Раньше при растягивании нода сама возвращала свою высоту, и раскладка разваливалась (окно уезжало, внизу оставалось пустое поле). Теперь размер задаёте вы: окно заполняет всё свободное место, кадр вписывается с сохранением пропорций. Размер запоминается в схеме и не меняется при включении режима эксперта. Новая нода, пока её не трогали руками, по-прежнему подстраивается под кадр сама.
-
-**EN:** The Pult no longer fights the mouse. It used to snap its height back while being resized, breaking the layout (the window shifted, an empty area stayed below). Now you own the size: the live window fills the free space and the frame keeps its aspect ratio. The size is saved in the workflow and is kept when expert mode is toggled. A new, untouched node still fits itself to the frame.
-
-## 2026-10-23 — порядок в репозитории / repository cleanup
-
-### 🇷🇺 Что изменилось
+### Что изменилось
 
 **Установка**
 - Весь репозиторий теперь ставится **одной ссылкой**: ComfyUI Manager → Install via Git URL. Раньше ComfyUI после такой установки не видел ни одной ноды.
@@ -528,33 +341,3 @@
 **Что не тронуто**
 - Код самих нод (генерация, обработка, интерфейс) не менялся.
 - Самостоятельные ноды в корне и их воркфлоу v1.0 / v2.0 работают как раньше.
-
-### 🇬🇧 What changed
-
-**Installation**
-- The whole repository now installs with **one link**: ComfyUI Manager → Install via Git URL. Before, ComfyUI saw no nodes after such an install.
-- Added a root loader (`__init__.py`). It finds all nodes, registers their UI and skips nodes already installed on their own. It is not involved in a manual install.
-- Added a shared `requirements.txt` (`imageio-ffmpeg`, `soundfile`): Manager installs them automatically.
-
-**Renames**
-| Was | Now | Why |
-|---|---|---|
-| `NeronH3Engine Full/` | `ComfyUI-NeronH3Engine/` | the space in the folder name gets in the way of links and installs |
-| `Neron_Studio_H3/ComfyUI-Interactive-Processor/` | `Neron_Studio_H3/NeronStudio-Image-Processor/` | same name as the standalone root node: one folder overwrote the other |
-| `Neron_Studio_H3/neron_dialog_autoprompter/` | `Neron_Studio_H3/NeronStudio-AutoPrompter/` | same reason |
-| node `InteractiveImageProcessor` (Studio) | node `NeronStudioImageProcessor` | two different nodes had one id |
-| `workflow/фотошоп.json` | `workflow/Neron_Restore_Studio_Photoshop.json` | Cyrillic file names break in archives |
-| `NeronH3Engine Full.json` | `Neron_H3_Engine.json` | no spaces |
-
-**Fixes**
-- The Studio AutoPrompter no longer registers Dialog Autoprompter and Multi-Image LLM: the standalone root node does. Before, both copies took the same `/neron_dialog/*` routes.
-- The Studio Image Processor has its own UI extension name: before, two copies with one name got in each other's way.
-- Old Studio pipeline saves open as before: the node switches to the new id by itself.
-- Dialog Autoprompter finds `ComfyUI-LLM-text-processor` when installed via Manager too.
-- Removed `torch` from the autoprompter `requirements.txt`: it must not be installed over ComfyUI Desktop.
-- AudioStudio got its own `requirements.txt` (`soundfile`, `imageio-ffmpeg`): `soundfile` was not listed anywhere before.
-- Added bilingual READMEs for Lora Selector, Static Camera, Interactive Processor and the Studio AutoPrompter, plus install sections in the H3 Engine and Neron Studio READMEs.
-
-**Untouched**
-- The nodes' own code (generation, processing, UI) did not change.
-- The standalone root nodes and their v1.0 / v2.0 workflows work as before.

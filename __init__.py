@@ -227,7 +227,7 @@ for _p in _find_packages():
         print(f"{_TAG} FAILED / ОШИБКА: {_n}")
         traceback.print_exc()
 
-print(f"{_TAG} loaded / загружено: {', '.join(_ok) if _ok else '-'}")
+print(f"{_TAG} загружено: {', '.join(_ok) if _ok else '-'}")
 if _fail:
     print(f"{_TAG} failed / не загрузились: {', '.join(_fail)}")
 

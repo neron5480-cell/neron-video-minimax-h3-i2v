@@ -18,10 +18,10 @@
 | **Neron Video ×3 / Видео ×3** | Кубик: до 3 роликов в одной ноде, идёт в Пульт одним проводом |
 | **Neron Sound ×8 / Звук ×8** | Кубик: до 8 звуков в одной ноде, в Пульте каждый звук — свой канал |
 | **Neron Sampler / Сэмплер** | Между «Звук ×8» и Пультом: сетка как у Piano Roll, звуки-блоки; ⏭ ПРОПУСТИТЬ — звуки идут в Пульт как есть |
-| **Neron Music / Музыка 🥁🎹** | Барабаны + пианино в одной ноде (вкладки), общий темп; в Пульт — 2 канала / Drums + piano in one node, 2 channels to the Pult |
-| **Neron Video Sampler / Видео-сэмплер 🎬** | Между «Видео ×3» и Пультом: куски роликов → монтаж (резать, переставлять, обрезать), экран, ⏭, 🔇 / Video edit between Video ×3 and the Pult |
-| **Neron Studio / Студия 🎛** | Между «Музыкой» и Пультом: каждая дорожка — канал с НИЗ/СЕР/ВЕРХ/ЭХО, общий эквалайзер на 10 полос со спектром / Every track a channel with EQ and reverb, 10-band master EQ |
-| **Neron Theme / Тема 🎨** (устаревшая / legacy) | Оставлена, чтобы открывались старые схемы. Вместо неё — новая **[Neron Theme 🎨](../NeronTheme/)**: тема для всего ComfyUI, красит и ноды студии, и DJ Пульт / Kept so old workflows open. Use the new **[Neron Theme 🎨](../NeronTheme/)** instead: themes the whole ComfyUI, including studio nodes and the DJ Controller |
+| **Neron Music — Музыка 🥁🎹** | Барабаны + пианино в одной ноде (вкладки), общий темп; в Пульт — 2 канала |
+| **Neron Video Sampler — Видео-сэмплер 🎬** | Между «Видео ×3» и Пультом: куски роликов → монтаж (резать, переставлять, обрезать), экран, ⏭, 🔇 |
+| **Neron Studio — Студия 🎛** | Между «Музыкой» и Пультом: каждая дорожка — канал с НИЗ/СЕР/ВЕРХ/ЭХО, общий эквалайзер на 10 полос со спектром |
+| **Neron Theme — Тема 🎨** (устаревшая) | Оставлена, чтобы открывались старые схемы. Вместо неё — новая **[Neron Theme 🎨](../NeronTheme/)**: тема для всего ComfyUI, красит и ноды студии, и DJ Пульт |
 | **Neron Field / Поле** | Общее поле, как Playlist в FL Studio: склейка до 3 роликов по кадрам и дорожки со звуком (двигать, обрезать, резать, появление и затухание) |
 | **Neron Dancer** | Для настроения: маленькая героиня, которая танцует под звук Neron-нод |
 | **Neron DJ Пульт / DJ Controller 🎧** | Диджейский пульт: две деки с джогами, SYNC, пэды (точки / звуки / петли), фильтр, кроссфейдер, ⏺ запись сета / Two decks, SYNC, pads, filter, crossfader, set recording |
@@ -309,7 +309,7 @@ input/Neron_Drums/default/
 
 ---
 
-## Кубики и Пульт / Cubes and the Pult
+## Кубики и Пульт
 
 Схема простая: **кубики** делают каждый своё, **Пульт** (Neron Mixer) — сердце, он видит все кубики и показывает общий результат.
 
@@ -333,13 +333,9 @@ Neron Drum Machine ────────> Neron Mixer (audio_2)
 Neron Sound ×8 ──> Neron Sampler ──> Neron Mixer (audio_1)
 ```
 
-**EN:** cubes do one job each, the Pult (Neron Mixer) is the heart. Video ×3 → `video`, Sound ×8 → any `audio_N` (each sound becomes
-its own channel). The Pult shows a summary, the clips side by side (click one — full screen), and saves the clips one after another
-with your sound.
-
 ---
 
-## Neron Field / Поле
+## Поле
 
 Общее поле для видео и звука, в духе **Playlist из FL Studio**. Всё, что нужно для клипа, в одном окне.
 
@@ -388,22 +384,6 @@ Ctrl+D — копия · Ctrl+Z / Ctrl+Y — отмена / повтор · ← 
 До 3 роликов, до 8 дорожек, до 96 кусков, длина поля до 15 минут.
 Ролики разного размера приводятся к размеру первого (с чёрными полями, без растягивания).
 
-### 🇬🇧 English
-A shared field for video and sound, in the spirit of the **FL Studio Playlist**. On the canvas the node is a small,
-freely resizable card (picture, overview, ▶ / ■, **🎬 OPEN FIELD**). The big window: drag by the title, resize by the
-corner, ⛶ full screen; it remembers its place and draws nothing while closed.
-- **Video (up to 3 clips):** drag a clip to shift it, ◀ / ▶ or arrow keys for single frames. Two yellow dividers in the
-  **RESULT** row decide where each clip plays. ✂ cut or 🌫 dissolve. Red stripes = no frames there (black in the result).
-  **VIDEO SOUND** row: the clips' own sound, M mutes it.
-- **Sound:** files, uploads, or nodes wired into `audio_N`. Drag to move (also between tracks), drag edges to trim,
-  top-corner squares for fades; volume, split, copy, delete. Tracks have M, S, volume, pan; 🧲 snapping.
-- **Keys:** Space, Home, S (split), Delete, Ctrl+D, Ctrl+Z / Ctrl+Y, arrows, wheel / Ctrl+wheel. They stay in the window.
-- **💾 BUILD** saves the WAV and the mp4 without Queue; Queue does the same and outputs `audio`, `video`, `fps`, `seconds`.
-  With video, the result is exactly as long as the video, frame-accurate.
-- **Expert (⚙):** exact numbers, dissolve length, MASTER, file name, projects.
-
----
-
 ## Neron Dancer
 
 Просто для настроения. Нода никуда не подключается и ничего не считает: она стоит на столе схемы, слушает звук
@@ -417,12 +397,12 @@ Neron-нод (драм-машины, пианоролла, микшера, за�
 
 ---
 
-## Neron DJ Пульт / DJ Controller 🎧
+## Neron DJ Пульт 🎧
 
 Диджейский пульт прямо в ComfyUI: две деки, кроссфейдер, пэды, запись сета.
 **Играть можно сразу в ноде — Queue не нужен.** Queue нужен только чтобы отдать результат дальше по схеме.
 
-### 🇷🇺 Русский
+### Русский
 
 #### Что куда подключать
 
@@ -536,88 +516,6 @@ Load Audio (трек 2) ───────> deck_b ├──> Neron DJ Пул
 | Петля не включается | Темп не найден («BPM ?») |
 | «Запись не сохранилась» | Слишком короткая (меньше 0,5 с) или нет места на диске |
 | Звука нет вообще | Проверьте кроссфейдер (не увели ли в другую сторону), громкость A/B и ОБЩАЯ |
-
-### 🇬🇧 English
-
-#### What to wire
-
-| Input | What to connect | Required? |
-|---|---|---|
-| `deck_a` | Track for the left deck: **Load Audio**, **Neron Audio Loader**, **Drum Machine**, **Music**, etc. | At least one deck |
-| `deck_b` | Track for the right deck — the same | At least one deck |
-| `pad_sounds` | **Your own pad sounds**: Sound ×8 (up to 8 sounds) or one Load Audio | No — without it 8 built-in sounds play |
-
-The track shows up on the deck **right away**: wave, length, tempo (BPM). For unusual sources (e.g. an AI music node) the deck says "press Queue once" — after one Queue the track loads.
-
-#### First 2 minutes
-
-1. Wire two tracks to `deck_a` and `deck_b`.
-2. Crossfader (horizontal slider, bottom center) — **all the way left**: only A is heard.
-3. Press **▶** on deck A.
-4. Press **SYNC** on deck B (B's tempo and beats match A), then **▶**.
-5. Slowly move the crossfader **right** — the music blends from A into B. That is mixing.
-
-#### Deck (left and right are the same)
-
-- **▶ / ❚❚** — play / pause.
-- **CUE** — start point. Paused: remembers the spot. Playing: jumps back to it and stops.
-- **SYNC** — matches this deck's tempo **and beats** to the other deck (the other deck must be playing for the beats to line up).
-- **Tempo slider** (vertical, by the jog): up — faster, down — slower; pitch changes too, like vinyl. Double-click — back to 0.
-- **Jog** (the big wheel): paused — spin it with the mouse to find a spot; playing — nudge forward or slow down if the beats drift. The mouse wheel works too.
-- Jog center: **tempo**, time left, LOOP when looping.
-- **Waves on top**: the big strip is a close-up (white line — playing now, light ticks — beats), the thin strip — the whole track. Click a wave to jump there.
-
-#### Pads — 8 squares under each deck, 3 modes
-
-**CUES — bookmarks in the track.** Numbers 1–8 mean the slots are **empty**; there are no sounds in this mode. Play the track, press an empty pad at the right moment — it lights up and shows the time (e.g. `0:42.5`). Pressing it again **jumps** there. **Right-click** clears it. Cues show as colored marks on the wave and the jog ring and are saved with the workflow.
-
-**SAMPLES — sounds over the music.** Kick, snare, clap, hat, open hat, horn, laser, siren — built in, no files needed.
-**Your own sounds:** add a **Sound ×8** node, load up to 8 files (wav, mp3, flac, ogg…), wire its output to **`pad_sounds`**. Sound 1 goes to pad 1, sound 2 to pad 2 and so on; pads show the file names; missing ones stay built-in. One **Load Audio** → `pad_sounds` fills pad 1. Sound ×8, Load Audio and Neron Audio Loader are picked up instantly; other nodes after one Queue. A pad uses the first **30 seconds** of a sound. Sample pads are shared by both decks.
-
-**LOOP — repeat a piece.** Pads read 1/4 … 32 — the loop length **in beats**. Press — the piece from the current spot loops exactly on the beat (green on the wave). Press the same pad again — exit. Needs a detected tempo ("BPM ?" means no loop).
-
-#### Mixer (center)
-
-- **FILTER** (A and B knobs): left — muffled (lows only), right — thin (highs only), middle — off.
-- **A and B vertical faders** — deck volume, with meters.
-- **MASTER** — overall volume (also in the recording).
-- **Crossfader**: left — A, right — B, middle — both. Double-click — center.
-
-Knobs: drag up/down or use the wheel, double-click resets.
-
-#### Recording a set and the `audio` output
-
-1. Press **⏺ REC** — **everything you hear** is recorded (both decks, pads, filters, crossfader).
-2. Play. The button shows the recording time.
-3. Press **⏹ STOP** — saved to `output/Neron_DJ` (name from `save_name` + date and time).
-4. Press **Queue** — the recording goes out on **`audio`**.
-
-The box under the button shows what goes out: **recording …** (✖ forgets it; the file stays) or **auto transition** — with no recording, track A in full blending into B at its end (length in ⚙, 8 s by default), saved as `output/Neron_DJ/<save_name>_auto.wav`. Every recording is a new file; old ones are never overwritten.
-
-#### ⚙ EXPERT
-
-- **GAIN** — per-deck input gain (±12 dB). **HI / MID / LOW** — per-deck EQ: left kills the band, right up to +6 dB.
-- **Crossfader curve**: smooth (mixing) or sharp (scratching). **Tempo range**: ±8 / 16 / 50 % (SYNC widens it if needed).
-- **PADS** — pad volume. **AUTO, s** — auto transition length (0–60 s).
-
-#### Tempo (BPM)
-
-Detected automatically; **≈** means "found by ear". Drum Machine and Music give their exact tempo. On test beats 87.5 … 128 BPM it was exact; fast tracks like 174 show as half (87), SYNC handles that. On live tracks with drifting rhythm it may be wrong — then mix by ear with the tempo slider and the jog.
-
-#### Troubleshooting
-
-| You see | Do this |
-|---|---|
-| "wire a track to deck_a" | No wire on that deck |
-| "no file chosen in the loader" | Pick a file in the loader node |
-| "press Queue once" | Unusual source — press Queue |
-| "failed to load: …" | The file can't be read — try wav |
-| CUES pads are grey with numbers | Normal: no cues yet. Press a pad while playing |
-| Loop does not start | Tempo not found ("BPM ?") |
-| "Recording not saved" | Too short (under 0.5 s) or no disk space |
-| No sound at all | Check the crossfader side, A/B volume and MASTER |
-
----
 
 ## Готовые рецепты
 
@@ -743,13 +641,11 @@ Neron Mixer (fps)  ──────────> Neron Video Combine (fps)
 
 Скорость ролика подстраивается в пределах примерно от x0.45 до x2.2; если нужна больше - измените `beats` (вдвое больше или меньше).
 
+## Эквалайзер и эхо в Пульте
 
-## Эквалайзер и эхо в Пульте / EQ and reverb in the Pult
+У каждого канала Пульта: **НИЗ / СЕР / ВЕРХ** (±12 дБ) и **ЭХО** + помещение (комната / зал / собор). Крутить мышкой вверх-вниз или колёсиком, двойной клик — сброс, ↺ — сбросить всё у канала.
 
-**RU:** У каждого канала Пульта: **НИЗ / СЕР / ВЕРХ** (±12 дБ) и **ЭХО** + помещение (комната / зал / собор). Крутить мышкой вверх-вниз или колёсиком, двойной клик — сброс, ↺ — сбросить всё у канала.
-**EN:** Every Pult channel has **LOW / MID / HIGH** (±12 dB) and **REVERB** + a room (room / hall / cathedral). Drag up/down or use the wheel, double-click resets, ↺ resets the channel.
-
-## Готовый рабочий стол / Ready desk
+## Готовый рабочий стол
 
 `workflow/Neron_Audio_Studio_v2.0.json`:
 
