@@ -1,216 +1,365 @@
-// 🖼 Neron Image — оформление в стиле Neron (как 🎭 Замена героя, H3 Story / H3 Engine):
-// режим эксперта, часы генерации, окно «📥 Модели», итоговый промпт на ноде и справка на двух языках.
+// 🖼 Neron Image — общий вид Neron: панель с RU/EN, эксперт, ход работы и окно моделей.
+// Генерация, закачка и раскладка моделей не тронуты: node.py / engine.py / downloader.py работают как раньше.
+// Всё видимое живёт здесь и целиком переключается одним нажатием RU / EN.
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
+import { BUILTIN, normalizeTheme } from "./nts_core.js";
+import { setCurrent } from "./nts_engine.js";
 
 const NODE = "NeronImage";
-const NODE_COLOR = "#23345a";
-const NODE_BGCOLOR = "#141e33";
-const FRAME_BOTTOM = 8;
-const GROUP_GAP = 18 + FRAME_BOTTOM;
-const LABEL_FONT = "bold 10px sans-serif";
-const MODELS_BTN = "📥 Модели / Models";
+const THEME_NODE = "NeronThemeStudio";   // тема вшита в процесс и говорит на том же языке
+const ROUTE = "/neron_image";
 const EVENT_PROGRESS = "neron_image.progress";
 const EVENT_DOWNLOAD = "neron_image.download";
-const ROUTE = "/neron_image";
+const LANG_KEY = "neron-image-lang";
+const DESK_LANG_KEY = "neron-studio-lang";
+const NAMED = "neron_values";
+const NOTE_FLAG = "ni_note";
+const PROMPT_FLAG = "ni_prompt";
+const TITLE_RU = "🖼 Neron Image — картинка";
+const TITLE_EN = "🖼 Neron Image — text to image";
+const TITLE_ALIASES = new Set(["🖼 Neron Image / Картинка (Krea 2)", TITLE_RU, TITLE_EN]);
+const nodeTitle = () => (LANG === "RU" ? TITLE_RU : TITLE_EN);
 
-const GROUPS = [
-    { name: "⚙️ EXPERT MODE / ЭКСПЕРТ", widgets: ["expert"],
-      fill: "rgba(255, 200, 100, 0.22)", border: "rgba(255, 200, 100, 0.95)", label: "rgba(255, 235, 160, 1.0)", thick: 2.5 },
-    { name: "ЧТО НАРИСОВАТЬ / PROMPT", widgets: ["text", "📝 Большой редактор промпта / Big prompt editor", "prompter"],
-      fill: "rgba( 90, 140, 200, 0.15)", border: "rgba( 90, 140, 200, 0.75)", label: "rgba(180, 215, 255, 1.0)" },
-    { name: "КАДР / FRAME", widgets: ["aspect", "quality", "sharpness", "seed", "control_after_generate"],
-      fill: "rgba(120, 170, 120, 0.15)", border: "rgba(120, 170, 120, 0.75)", label: "rgba(200, 245, 200, 1.0)" },
-    { name: "РИСОВАНИЕ / SAMPLING", widgets: ["count", "steps", "cfg", "sampler", "scheduler"],
-      fill: "rgba(200, 160,  90, 0.15)", border: "rgba(200, 160,  90, 0.75)", label: "rgba(255, 225, 170, 1.0)" },
-    { name: "АВТОПРОМТЕР / PROMPTER", widgets: ["prompter_seed", "prompter_creativity", "prompter_instruction"],
-      fill: "rgba( 90, 200, 200, 0.15)", border: "rgba( 90, 200, 200, 0.75)", label: "rgba(180, 255, 255, 1.0)" },
-    { name: "СТИЛЬ / STYLE", widgets: ["style_lora", "style_strength"],
-      fill: "rgba(180, 120, 220, 0.15)", border: "rgba(180, 120, 220, 0.75)", label: "rgba(230, 200, 255, 1.0)" },
-    { name: "МОДЕЛИ / MODELS", widgets: ["keep_loaded", "unet_model", "clip_model", "vae_model"],
-      fill: "rgba(200, 120, 120, 0.15)", border: "rgba(200, 120, 120, 0.75)", label: "rgba(255, 190, 190, 1.0)" },
-    { name: "ИТОГОВЫЙ ПРОМПТ / FINAL PROMPT", widgets: ["neron_final_prompt", "✏ Править итоговый промпт / Edit final prompt"],
-      fill: "rgba(150, 150, 170, 0.12)", border: "rgba(150, 150, 170, 0.60)", label: "rgba(215, 215, 235, 1.0)" },
-];
-function wv(node, name) {
-    const w = node.widgets?.find((x) => x.name === name);
-    return w ? w.value : undefined;
+// ============================================================
+//  ЯЗЫК
+// ============================================================
+const UI = {
+    RU: {
+        expert: "⚙ эксперт", help: "📖 справка",
+        prompt: "ЧТО НАРИСОВАТЬ", promptHint: "Своими словами — можно по-русски",
+        promptPh: "Например: рыжий кот-астронавт в стеклянном шлеме на фоне Земли, 3D мультфильм",
+        bigEditor: "📝 Большой редактор",
+        prompter: "АВТОПРОМТЕР", prompterHint: "Допишет то, чего ты не написал: ткани, свет, детали, место",
+        frame: "КАДР", aspect: "Форма кадра", quality: "Качество",
+        sharpness: "Резкость", sharpHint: "1.0 — проверенное значение; портрет — меньше",
+        variant: "ВАРИАНТ", seed: "Номер картинки", after: "После запуска",
+        count: "Картинок за раз", countHint: "На 2K лучше по одной",
+        sampling: "РИСОВАНИЕ", steps: "Шаги", cfg: "CFG", sampler: "Сэмплер", scheduler: "Расписание",
+        prompterFine: "ПРОМПТЕР", instruction: "Своя инструкция", promptVariant: "Вариант промпта", creativity: "Фантазия",
+        style: "СТИЛЬ", styleLora: "Стиль (LoRA)", styleStrength: "Сила стиля",
+        modelsFine: "МОДЕЛИ И ПАМЯТЬ", keepLoaded: "Держать модели в памяти",
+        unet: "Модель Krea 2", clip: "Текстовый энкодер", vae: "VAE",
+        progress: "ХОД РАБОТЫ", idle: "Ждёт запуска.", waiting: "ждёт своей очереди",
+        elapsed: "прошло", left: "осталось ~", done: "✅ Готово за", error: "❌ Ошибка — подробности в консоли",
+        step: "шаг", sec: "с",
+        final: "ИТОГОВЫЙ ПРОМПТ", finalPh: "Здесь появится промпт, который ушёл в модель.",
+        editFinal: "✏ Править итоговый промпт",
+        models: "📥 Модели", modelsOk: "✅ Модели на месте", modelsBusy: "⏬ Качаю модели…",
+        modelsNeed: (m, n) => `📥 Скачать модели (нет ${m} из ${n})`,
+        reset: "🔄 Сбросить настройки", themeCycle: "🎨 Сменить оформление", close: "Закрыть", cancel: "Отмена", save: "✅ Сохранить",
+        stop: "⏹ Остановить", resume: "⏬ Докачать", downloadPack: "⏬ Скачать пакет",
+        wiredSize: "Провода width + height подключены — форма кадра и качество не работают.",
+        wiredPrompt: "Промпт идёт проводом — поле «что нарисовать» не работает.",
+        expertNote: "Здесь только тонкие настройки. Для обычной работы не нужны.",
+        words: (n) => `${n} слов`, chars: (n) => `${n} знаков`,
+    },
+    EN: {
+        expert: "⚙ expert", help: "📖 help",
+        prompt: "WHAT TO DRAW", promptHint: "In your own words — any language works",
+        promptPh: "For example: a ginger cat astronaut in a glass helmet, Earth behind, 3D cartoon",
+        bigEditor: "📝 Big editor",
+        prompter: "AUTO-PROMPTER", prompterHint: "Fills in what you did not write: fabrics, light, details, setting",
+        frame: "FRAME", aspect: "Aspect ratio", quality: "Quality",
+        sharpness: "Sharpness", sharpHint: "1.0 is tested; portraits — less",
+        variant: "VARIANT", seed: "Picture number", after: "After run",
+        count: "Pictures per run", countHint: "At 2K, one at a time is best",
+        sampling: "SAMPLING", steps: "Steps", cfg: "CFG", sampler: "Sampler", scheduler: "Scheduler",
+        prompterFine: "PROMPTER", instruction: "Custom instruction", promptVariant: "Prompt variant", creativity: "Creativity",
+        style: "STYLE", styleLora: "Style (LoRA)", styleStrength: "Style strength",
+        modelsFine: "MODELS AND MEMORY", keepLoaded: "Keep models loaded",
+        unet: "Krea 2 model", clip: "Text encoder", vae: "VAE",
+        progress: "PROGRESS", idle: "Waiting for a run.", waiting: "waiting in queue",
+        elapsed: "elapsed", left: "left ~", done: "✅ Done in", error: "❌ Error — see the console",
+        step: "step", sec: "s",
+        final: "FINAL PROMPT", finalPh: "The prompt sent to the model appears here.",
+        editFinal: "✏ Edit final prompt",
+        models: "📥 Models", modelsOk: "✅ Models are ready", modelsBusy: "⏬ Getting models…",
+        modelsNeed: (m, n) => `📥 Download models (${m} of ${n} missing)`,
+        reset: "🔄 Reset settings", themeCycle: "🎨 Change look", close: "Close", cancel: "Cancel", save: "✅ Save",
+        stop: "⏹ Stop", resume: "⏬ Resume", downloadPack: "⏬ Download pack",
+        wiredSize: "width + height wires are connected — aspect and quality are ignored.",
+        wiredPrompt: "A prompt wire is connected — the «what to draw» field is ignored.",
+        expertNote: "Fine settings only. Not needed for ordinary work.",
+        words: (n) => `${n} words`, chars: (n) => `${n} characters`,
+    },
+};
+
+function initialLang() {
+    try {
+        const own = localStorage.getItem(LANG_KEY);
+        if (own === "RU" || own === "EN") return own;
+        const desk = localStorage.getItem(DESK_LANG_KEY);
+        if (desk === "ru" || desk === "en") return desk === "ru" ? "RU" : "EN";
+        const loc = app.ui?.settings?.getSettingValue?.("Comfy.Locale") || navigator.language || "";
+        return String(loc).toLowerCase().startsWith("ru") ? "RU" : "EN";
+    } catch (_) { return "RU"; }
 }
+let LANG = initialLang();
+const T = () => UI[LANG];
+const L = (ru, en) => (LANG === "RU" ? ru : en);
 
-function getWidget(node, name) {
-    return node.widgets?.find((w) => w.name === name);
-}
-
-function isHidden(w) {
-    return !w || w.hidden === true;
-}
-
-function roundRect(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    if (ctx.roundRect) { ctx.roundRect(x, y, w, h, r); return; }
-    ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
-}
-
-// ---------- отступы между группами ----------
-function setBottomPadding(widget, amount) {
-    if (!widget) return;
-    if (!widget.__neronOrigSize) widget.__neronOrigSize = widget.computeSize || null;
-    widget.__neronBottomPadding = amount;
-    const orig = widget.__neronOrigSize;
-    widget.computeSize = function (width) {
-        const sz = orig ? orig.call(this, width) : [width, 24];
-        return [sz[0], sz[1] + amount];
+// «⬜ 1:1 квадрат / square» → только нужная половина
+function pick(value) {
+    const s = String(value ?? "");
+    const system = {
+        fixed: L("фиксированный", "fixed"), increment: L("увеличить", "increment"),
+        decrement: L("уменьшить", "decrement"), randomize: L("случайно", "randomize"),
     };
+    if (Object.prototype.hasOwnProperty.call(system, s)) return system[s];
+    const mark = s.indexOf("\n\nEN:");
+    const src = mark >= 0 ? (LANG === "RU" ? s.slice(0, mark) : s.slice(mark + 5)) : s;
+    const parts = src.split(" / ");
+    if (parts.length < 2) return src.trim();
+    const clean = (x) => x.trim().replace(/^\s*[—-]+\s*|\s*[—-]+\s*$/g, "");
+    return LANG === "RU" ? clean(parts[0]) : clean(parts[parts.length - 1]);
 }
 
-function clearBottomPadding(widget) {
-    if (!widget || !("__neronBottomPadding" in widget)) return;
-    if (widget.__neronOrigSize) widget.computeSize = widget.__neronOrigSize;
-    else delete widget.computeSize;
-    delete widget.__neronOrigSize;
-    delete widget.__neronBottomPadding;
-}
-
-function widgetHeight(w, nodeWidth) {
+const NODES = new Set();
+const DIALOGS = new Set();
+function setLang(v) {
+    if (v !== "RU" && v !== "EN") return;
+    LANG = v;
     try {
-        if (w.computeSize) {
-            const s = w.computeSize(nodeWidth);
-            if (s && s[1] != null && s[1] > 0) return s[1];
-        }
+        localStorage.setItem(LANG_KEY, v);
+        localStorage.setItem(DESK_LANG_KEY, v.toLowerCase());   // чтобы весь стол говорил на одном языке
     } catch (_) {}
-    return 24;
+    for (const n of NODES) {
+        try { if (!n.title || TITLE_ALIASES.has(n.title)) n.title = nodeTitle(); } catch (_) {}
+        try { n.__niPaint?.(); } catch (_) {}
+    }
+    for (const d of DIALOGS) { try { d.render?.(); } catch (_) {} }
+    for (const n of (app.graph?._nodes || [])) {
+        if ((n.type || n.comfyClass) !== THEME_NODE) continue;
+        try { n.title = L("🎨 Тема", "🎨 Theme"); } catch (_) {}
+        try { n.__ntsReload?.(); } catch (_) {}   // панель тем перекрасится на выбранном языке
+    }
+    syncNotes();
+    refreshButtons();
 }
 
-function groupRect(node, g) {
-    let y0 = Infinity, y1 = -Infinity;
-    const ws = node.widgets || [];
-    for (let i = 0; i < ws.length; i++) {
-        const w = ws[i];
-        const wy = w.last_y ?? w.y;                    // в разных сборках ComfyUI — last_y или y
-        if (!g.widgets.includes(w.name) || isHidden(w) || wy === undefined) continue;
-        let bottom = wy + widgetHeight(w, node.size[0]) - (w.__neronBottomPadding || 0);
-        // Низ виджета — по месту, которое ему реально отдал ComfyUI (до следующего виджета): в некоторых сборках
-        // виджеты выше, чем говорит computeSize, и рамка «не доставала» до низа последнего виджета.
-        for (let j = i + 1; j < ws.length; j++) {
-            const nx = ws[j], ny = nx.last_y ?? nx.y;
-            if (isHidden(nx) || ny === undefined || ny <= wy) continue;
-            bottom = Math.max(bottom, ny - (w.__neronBottomPadding || 0) - 2);
-            break;
+// ============================================================
+//  ТЕМА: одна панель оформления, одна тема, один язык
+// ============================================================
+function themeNode() {
+    return (app.graph?._nodes || []).find((n) => (n.type || n.comfyClass) === THEME_NODE);
+}
+function themeState(n) {
+    const w = (n?.widgets || []).find((x) => x.name === "theme_json");
+    if (!w) return null;
+    try { return JSON.parse(w.value) || null; } catch (_) { return null; }
+}
+function applyTheme() {
+    const st = themeState(themeNode());
+    if (!st?.theme) return;
+    try { setCurrent(normalizeTheme(st.theme)); } catch (_) {}
+}
+setTimeout(applyTheme, 300);
+setInterval(applyTheme, 600);
+
+let themeCursor = -1;
+function cycleTheme() {
+    const n = themeNode();
+    const w = (n?.widgets || []).find((x) => x.name === "theme_json");
+    if (!n || !w || !BUILTIN.length) return;
+    const st = themeState(n) || { v: 1, tab: "install" };
+    let i = BUILTIN.findIndex((t) => t.id === st.theme?.id);
+    if (i < 0) i = themeCursor;
+    i = (i + 1) % BUILTIN.length;
+    themeCursor = i;
+    st.theme = BUILTIN[i];
+    try { w.value = JSON.stringify(st); } catch (_) {}
+    applyTheme();
+}
+
+// ============================================================
+//  СПРАВКА И ЗАМЕТКИ
+// ============================================================
+const HELP_RU = `🖼 NERON IMAGE — КАРТИНКА ПО ТЕКСТУ
+
+ЧТО ДЕЛАЕТ
+Рисует картинку по твоему описанию на Krea 2 Turbo. Модели официальные. Пиши как хочешь, хоть по-русски: встроенный промптер переведёт и допишет детали.
+
+КАК
+1. Напиши, что нарисовать. Слова, которые должны быть НА картинке, — в кавычках. Длинный текст — кнопка «Большой редактор».
+2. Выбери форму кадра и качество. 2K — максимум, это честный предел модели, а не нехватка памяти.
+3. Нажми кнопку запуска. В готовом процессе результат сразу сохраняется.
+4. Внизу ноды — итоговый промпт: что на самом деле ушло в модель.
+
+АВТОПРОМТЕР
+• до мелочей — твои слова остаются первыми, остальное промптер придумывает конкретно;
+• расписать — сдержанно, по официальной инструкции Krea;
+• подправить — только перевод и лёгкая правка;
+• как есть — текст уходит без изменений (пиши по-английски).
+Тот же текст и режим второй раз не переписывается: «вариант» меняет только картинку.
+
+КОГДА ПРОМПТЕР НЕ СПРАВИТСЯ
+Он маленький. Один-два героя, пейзаж, предмет, механизм — отлично. Много персонажей, каждого надо описать отдельно — ему не по силам. Напиши промпт сам или попроси большую ИИ, затем поставь «как есть». В готовом процессе есть зелёная нода с примером такого промпта — она не подключена нарочно.
+
+РЕЗКОСТЬ
+1.0 — по умолчанию. Крупный портрет — 0.5–0.8, пейзаж и техника — 1.0–1.3.
+
+⚙ ЭКСПЕРТ
+Шаги, CFG, сэмплер, настройки промптера, стиль, выбор файлов моделей, «держать модели». Обычно менять не нужно.
+
+МОДЕЛИ
+Кнопка «Модели» сама покажет, чего не хватает, скачает и разложит по папкам Comfy Desktop. Уже лежащее не трогает, оборванную закачку продолжает с того места. Ничего указывать руками не надо.`;
+
+const HELP_EN = `🖼 NERON IMAGE — TEXT TO IMAGE
+
+WHAT IT DOES
+Draws a picture from your description with Krea 2 Turbo. The models are official. Write in any language: the built-in prompter translates and fills in the details.
+
+HOW
+1. Write what to draw. Words that must appear IN the picture go in quotes. For a long text, use «Big editor».
+2. Choose the aspect and quality. 2K is the model's honest maximum, not a memory limit.
+3. Press Run. In the ready workflow the result is saved automatically.
+4. The bottom of the node shows the final prompt — what actually went to the model.
+
+AUTO-PROMPTER
+• every detail — your words stay first, the rest is filled in concretely;
+• expand — restrained, the official Krea instruction;
+• polish — translation and a light touch only;
+• as is — the text goes unchanged (write in English).
+The same text and mode are not re-written: «seed» only changes the picture.
+
+WHEN THE PROMPTER FALLS SHORT
+It is small. One or two characters, a landscape, an object, a machine — fine. Many characters, each needing its own description — beyond it. Write the prompt yourself or ask a large AI, then choose «as is». The ready workflow has a green node with such an example; it is intentionally disconnected.
+
+SHARPNESS
+1.0 by default. Close-up portrait — 0.5–0.8; landscapes and machines — 1.0–1.3.
+
+⚙ EXPERT
+Steps, CFG, sampler, prompter settings, style, model files, keep models loaded. Usually you do not need to touch them.
+
+MODELS
+The «Models» button shows what is missing, downloads it and puts it into the right Comfy Desktop folders. It leaves existing files alone and resumes an interrupted download. You do not have to set anything by hand.`;
+
+const NOTE_RU = `🖼 NERON IMAGE — готовый процесс
+
+1. «📥 Модели» — если чего-то не хватает, нода скачает сама и разложит по папкам. Уже лежащее не трогает.
+2. Напиши, что нарисовать — можно по-русски. Нажми кнопку запуска.
+3. Внизу ноды видно итоговый промпт — что ушло в модель.
+
+ЗЕЛЁНАЯ НОДА С ПРИМЕРОМ НЕ ПОДКЛЮЧЕНА НАРОЧНО.
+Это образец подробного промпта для сложной сцены. Чтобы нарисовать его:
+• соедини выход STRING со входом prompt_text у Neron Image;
+• автопромтер — «как есть»;
+• форма кадра 16:9, качество 2K, резкость 0.6–0.8.
+Свой промпт пиши в зелёной ноде вместо примера. Убери провод — снова работает поле «что нарисовать».`;
+
+const NOTE_EN = `🖼 NERON IMAGE — ready workflow
+
+1. «📥 Models» — if anything is missing, the node downloads it and puts it in the right folders. Existing files are left alone.
+2. Write what to draw — any language works. Press Run.
+3. The bottom of the node shows the final prompt sent to the model.
+
+THE GREEN EXAMPLE NODE IS INTENTIONALLY DISCONNECTED.
+It holds a detailed prompt for a complex scene. To draw it:
+• connect its STRING output to the prompt_text input of Neron Image;
+• set the prompter to «as is»;
+• aspect 16:9, quality 2K, sharpness 0.6–0.8.
+Write your own prompt in the green node instead. Remove the wire to use the «what to draw» field again.`;
+
+function syncNotes() {
+    const g = app.graph;
+    if (!g?._nodes) return;
+    for (const n of g._nodes) {
+        if (n.properties?.[NOTE_FLAG] && Array.isArray(n.widgets_values)) {
+            n.widgets_values[0] = LANG === "RU" ? NOTE_RU : NOTE_EN;
         }
-        y0 = Math.min(y0, wy); y1 = Math.max(y1, bottom);
-    }
-    if (!isFinite(y0) || y1 <= y0) return null;
-    const padX = 10, labelH = 16;
-    return { x: padX, y: y0 - labelH, w: node.size[0] - padX * 2, h: (y1 - y0) + labelH + FRAME_BOTTOM };
-}
-
-function applyGroupGaps(node) {
-    const ws = node.widgets || [];
-    for (const w of ws) clearBottomPadding(w);
-    for (const g of GROUPS) {
-        let last = null;
-        for (const w of ws) if (g.widgets.includes(w.name) && !isHidden(w)) last = w;
-        if (last) setBottomPadding(last, GROUP_GAP);
-    }
-    // над первой строкой каждой группы — место под подпись, даже если выше стоит виджет без группы (кнопки)
-    for (const g of GROUPS) {
-        const i = ws.findIndex((w) => g.widgets.includes(w.name) && !isHidden(w));
-        if (i <= 0) continue;
-        let j = i - 1;
-        while (j >= 0 && isHidden(ws[j])) j--;
-        if (j >= 0 && !("__neronBottomPadding" in ws[j]) && ws[j].name !== "_spacer") setBottomPadding(ws[j], GROUP_GAP);
-    }
-}
-
-function drawGroupRects(node, ctx) {
-    ctx.save();
-    for (const g of GROUPS) {
-        const r = groupRect(node, g);
-        if (!r) continue;
-        ctx.fillStyle = g.fill;
-        roundRect(ctx, r.x, r.y, r.w, r.h, 10); ctx.fill();
-        ctx.strokeStyle = g.border; ctx.lineWidth = g.thick || 1.5;
-        roundRect(ctx, r.x, r.y, r.w, r.h, 10); ctx.stroke();
-    }
-    const resetW = node.widgets?.find((w) => w.name && w.name.indexOf("Reset") !== -1);
-    if (resetW && resetW.last_y !== undefined) {
-        const x0 = 14, x1 = node.size[0] - 14, y = resetW.last_y - 10;
-        const grad = ctx.createLinearGradient(x0, 0, x1, 0);
-        grad.addColorStop(0.00, "rgba(255, 255, 255, 0.00)");
-        grad.addColorStop(0.15, "rgba(255, 220, 180, 0.35)");
-        grad.addColorStop(0.50, "rgba(255, 220, 180, 0.60)");
-        grad.addColorStop(0.85, "rgba(255, 220, 180, 0.35)");
-        grad.addColorStop(1.00, "rgba(255, 255, 255, 0.00)");
-        ctx.strokeStyle = grad; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
-    }
-    ctx.restore();
-}
-
-function drawGroupLabels(node, ctx) {
-    ctx.save();
-    ctx.font = LABEL_FONT; ctx.textBaseline = "middle"; ctx.textAlign = "left";
-    for (const g of GROUPS) {
-        const r = groupRect(node, g);
-        if (!r) continue;
-        ctx.fillStyle = g.label;
-        ctx.fillText(g.name, r.x + 12, r.y + 9);
-    }
-    ctx.restore();
-}
-
-// ---------- эксперт: главное видно всегда, остальное — по переключателю ----------
-
-// ---------- эксперт: главное видно всегда, остальное — по переключателю ----------
-const SIZE_WIDGETS = ["aspect", "quality"];
-function wiredSize(node) {
-    // провода width + height главнее — тогда качество, форма и ручной размер не работают и прячутся
-    const linked = (n) => (node.inputs || []).some((i) => i.name === n && i.link != null);
-    return linked("width") && linked("height");
-}
-function promptWired(node) {
-    return (node.inputs || []).some((i) => i.name === "prompt_text" && i.link != null);
-}
-function applyExpert(node, specs) {
-    const ex = wv(node, "expert") === true;
-    const wired = wiredSize(node);
-    let prevHidden = false;
-    for (const w of node.widgets || []) {
-        if (w.name === "control_after_generate" || w.name === "control_before_generate") {
-            if (w.hidden !== prevHidden) w.hidden = prevHidden;
-            continue;
+        if (n.properties?.[PROMPT_FLAG]) {
+            n.title = L("📝 Пример большого промпта", "📝 Big prompt example");
         }
-        const o = specs[w.name];
-        if (!o) { prevHidden = false; continue; }
-        let hide = !ex && !o.neron_main;
-        if (wired && SIZE_WIDGETS.includes(w.name)) hide = true;
-        if (promptWired(node) && (w.name === "text")) hide = true;
-        if (w.hidden !== hide) w.hidden = hide;
-        prevHidden = hide;
+        if (n.type === NODE && (!n.title || TITLE_ALIASES.has(n.title))) n.title = nodeTitle();
     }
-    const eb = getWidget(node, EDITOR_BTN);
-    if (eb) eb.hidden = promptWired(node);
-    applyGroupGaps(node);
-    try {
-        const sz = node.computeSize();
-        node.setSize([Math.max(node.size[0], sz[0]), sz[1]]);
-    } catch (_) {}
-    app.graph?.setDirtyCanvas(true, true);
+    try { g.setDirtyCanvas(true, true); } catch (_) {}
 }
 
+function showHelp() {
+    const overlay = el("div", "ni-help");
+    const box = el("div", "ni-help-box");
+    const close = el("button", "ni-help-close", "✕");
+    close.title = T().close;
+    close.onclick = () => overlay.remove();
+    const text = el("div", "ni-help-text", LANG === "RU" ? HELP_RU : HELP_EN);
+    box.append(close, text);
+    overlay.appendChild(box);
+    overlay.onclick = (e) => { if (e.target === overlay) closeHelp(); };
+    document.body.appendChild(overlay);
+    const rec = { render: () => { text.textContent = LANG === "RU" ? HELP_RU : HELP_EN; close.title = T().close; } };
+    function closeHelp() { overlay.remove(); DIALOGS.delete(rec); }
+    close.onclick = closeHelp;
+    DIALOGS.add(rec);
+}
 
-// ---------- часы ----------
-// Часы стоят СРАЗУ ПОД входами/выходами , а распорка CLOCK_ROOM
-// держит под ними место — подпись больше не налезает на панели.
-const CLOCK_ROOM = 84;
-function slotsBottom(node) {
-    const h = (globalThis.LiteGraph?.NODE_SLOT_HEIGHT) || 20;
-    // у нового ComfyUI каждый виджет держит скрытый «вход» в node.inputs — считаем только настоящие гнёзда
-    const ins = (node.inputs || []).filter((i) => !i.widget).length;
-    return Math.max(ins, node.outputs?.length || 0) * h + 6;
+// ============================================================
+//  ОФОРМЛЕНИЕ
+// ============================================================
+const CSS = `
+.ni{box-sizing:border-box;width:100%;font:13px/1.4 "Segoe UI",Arial,sans-serif;color:#e7eef7;padding:2px 2px 6px}
+.ni *{box-sizing:border-box}
+.ni-bar{display:flex;gap:6px;align-items:center;margin-bottom:9px;flex-wrap:wrap}
+.ni-pill{background:#262d38;border:1px solid #55606f;border-radius:14px;padding:3px 11px;font-size:12px;color:#c3ccd8;cursor:pointer;user-select:none}
+.ni-pill:hover{border-color:#8aa0b8;color:#fff}
+.ni-pill.on{background:#3d5a80;border-color:#78a3d4;color:#fff}
+.ni-sp{flex:1}
+.ni-sec{margin-bottom:9px}
+.ni-lab{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.ni-lab b{color:#f2f6fb;font-weight:600;letter-spacing:.3px;font-size:12px}
+.ni-lab i{color:#93a2b4;font-style:normal;font-size:11.5px;text-align:right}
+.ni select,.ni input{background:#1d2634;color:#e9f0fa;border:1px solid #46566b;border-radius:6px;padding:5px 8px;font:12.5px "Segoe UI",Arial,sans-serif;width:100%}
+.ni textarea{background:#101a2b;color:#e8f1ff;border:1px solid #334c72;border-radius:7px;padding:8px 10px;font:13px/1.5 "Segoe UI",Arial,sans-serif;width:100%;resize:vertical;outline:none}
+.ni .ni-prompt{min-height:76px}
+.ni .ni-final{min-height:82px;font-size:12px}
+.ni-btn{background:#2f4561;color:#fff;border:1px solid #52749b;border-radius:6px;padding:5px 11px;cursor:pointer;font:12px "Segoe UI",Arial,sans-serif;margin-top:5px}
+.ni-btn:hover{background:#3b567a}
+.ni-btn.main{background:#2a7fc4;border-color:#4fa5e0;font-weight:600;width:100%;padding:8px;margin-top:4px}
+.ni-btn.warn{background:#7a3c3c;border-color:#a55a5a}
+.ni-row{display:flex;gap:7px;align-items:center;margin-bottom:4px}
+.ni-row>span{color:#a9b8c9;font-size:12px;min-width:96px}
+.ni-row>input,.ni-row>select{flex:1}
+.ni-check{display:flex;gap:8px;align-items:center;color:#c4d0de;font-size:12.5px;cursor:pointer;margin:4px 0}
+.ni-check input{width:auto}
+.ni-exp{background:#222b38;border:1px solid #4a4b3d;border-radius:7px;padding:8px 10px;margin:6px 0 9px}
+.ni-exp h4{margin:7px 0 4px;font-size:11.5px;color:#f0cd8a;font-weight:600;letter-spacing:.4px}
+.ni-note{font-size:11.5px;color:#e0b98a;background:#2c261c;border:1px solid #615338;border-radius:6px;padding:6px 9px;margin:5px 0}
+.ni-prog{background:#18212d;border:1px solid #36516f;border-radius:8px;padding:8px 10px}
+.ni-stages{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px}
+.ni-stage{font-size:11px;padding:2px 8px;border-radius:10px;background:#263040;color:#8291a2;border:1px solid #33435a}
+.ni-stage.now{background:#3d5a80;color:#fff;border-color:#78a3d4}
+.ni-stage.ok{background:#25402a;color:#bfe3bf;border-color:#4d7a4d}
+.ni-track{height:12px;border-radius:6px;background:#101822;border:1px solid #2b3a4f;overflow:hidden}
+.ni-fill{height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,#2f7d4f,#5fd09a);transition:width .5s}
+.ni-fill.err{background:linear-gradient(90deg,#7d2f2f,#c95b5b)}
+.ni-pt{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:#cfe0f5;margin-top:5px}
+.ni-pt span:last-child{color:#93a2b4}
+.ni-help{position:fixed;inset:0;background:#000a;z-index:100000;display:flex;align-items:center;justify-content:center}
+.ni-help-box{background:#18202c;color:#e6edf6;border:1px solid #48617e;border-radius:10px;max-width:760px;width:92vw;max-height:86vh;overflow:auto;padding:16px 22px;position:relative;box-shadow:0 10px 40px #000a}
+.ni-help-close{position:sticky;top:0;float:right;background:#3d5a80;color:#fff;border:0;border-radius:6px;padding:4px 12px;cursor:pointer}
+.ni-help-text{white-space:pre-wrap;font:13px/1.55 "Segoe UI",Arial,sans-serif}
+.ni-dlg{position:fixed;inset:0;background:#000a;z-index:100001;display:flex;align-items:center;justify-content:center}
+.ni-dlg-box{background:#14202a;color:#e2eaf4;border:1px solid #3d6273;border-radius:10px;padding:18px 20px;width:min(680px,92vw);max-height:88vh;overflow:auto;font:13px/1.5 "Segoe UI",Arial,sans-serif;box-shadow:0 10px 40px #000a}
+`;
+let CSS_ADDED = false;
+function addCss() {
+    if (CSS_ADDED) return;
+    CSS_ADDED = true;
+    const s = document.createElement("style");
+    s.id = "neron-image-common-css";
+    s.textContent = CSS;
+    document.head.appendChild(s);
+}
+function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+}
+function button(text, cls, onClick) {
+    const b = el("button", "ni-btn " + (cls || ""), text);
+    b.onclick = onClick;
+    return b;
 }
 function fmt(ms) {
     const t = Math.max(0, Math.round(ms / 1000));
@@ -219,615 +368,70 @@ function fmt(ms) {
     return h ? `${h}:${p(m)}:${p(s)}` : `${p(m)}:${p(s)}`;
 }
 
-// Состояние часов — одно на всю страницу, а не в ноде: ComfyUI иногда пересоздаёт ноду (переключение вкладок
-// со схемами, Ctrl+Z, смена значения в списке), и тогда часы «забывали», что прогон идёт, и показывали «--:--».
-// События тоже слушаем один раз на страницу — без утечек от старых копий ноды.
-const CLOCK = { start: null, end: null, running: false, result: "", stage: "", i: 0, total: 0, stageT0: 0,
-                current: null, timer: null, approx: false, hooked: false };
-
-function clockRedraw() { app.graph?.setDirtyCanvas(true, false); }
-
-function clockFinish(r) {
-    if (!CLOCK.running) return;
-    CLOCK.running = false; CLOCK.end = Date.now(); CLOCK.result = r; CLOCK.current = null;
-    clearInterval(CLOCK.timer); CLOCK.timer = null; clockRedraw();
-}
-
-function clockStart(approx) {
-    Object.assign(CLOCK, { start: Date.now(), end: null, running: true, result: "", stage: "", i: 0, total: 0,
-                           current: null, approx });
-    clearInterval(CLOCK.timer); CLOCK.timer = setInterval(clockRedraw, 500); clockRedraw();
-}
-
-function hookClock() {
-    if (CLOCK.hooked) return;
-    CLOCK.hooked = true;
-    api.addEventListener("execution_start", () => clockStart(false));
-    api.addEventListener("executing", (e) => {
-        const d = e.detail;
-        const id = (d && typeof d === "object") ? (d.display_node ?? d.node) : d;
-        if (id == null) { clockFinish("ok"); return; }
-        if (!CLOCK.running) clockStart(true);      // страницу открыли посреди прогона
-        CLOCK.current = id;
-    });
-    api.addEventListener("execution_success", () => clockFinish("ok"));
-    api.addEventListener("execution_error", () => clockFinish("error"));
-    api.addEventListener("execution_interrupted", () => clockFinish("stop"));
-    api.addEventListener("status", (e) => {           // очередь не пуста, а старт мы пропустили
-        const q = e.detail?.exec_info?.queue_remaining;
-        if (q > 0 && !CLOCK.running && CLOCK.start == null) clockStart(true);
-    });
-    api.addEventListener(EVENT_PROGRESS, (e) => {
-        const d = e.detail || {};
-        if (d.stage !== CLOCK.stage) { CLOCK.stage = d.stage; CLOCK.stageT0 = Date.now(); }
-        CLOCK.i = d.i || 0; CLOCK.total = d.total || 0;
-    });
-    api.addEventListener("progress", (e) => {         // шаги сэмплера — штатное событие Comfy
-        const d = e.detail || {};
-        if (!d.max || String(d.node) !== String(CLOCK.current)) return;
-        if (app.graph?.getNodeById?.(d.node)?.type !== NODE) return;
-        if (d.max !== CLOCK.total || d.value < CLOCK.i) CLOCK.stageT0 = Date.now() - 1;
-        CLOCK.i = d.value; CLOCK.total = d.max;
-    });
-}
-
-function setupClock(node) {
-    hookClock();
-    node.__h3Clock = CLOCK;
-    const odf = node.onDrawForeground;
-    node.onDrawForeground = function (ctx) {
-        const r = odf?.apply(this, arguments);
-        if (this.flags?.collapsed) return r;
-        const c = CLOCK;
-        const mine = c.current != null && String(c.current) === String(this.id);
-        // место справа под выходами: входов 8, выходов 5 — там пусто
-        const cx = this.size[0] * 0.5, maxW = this.size[0] * 0.9;
-        const fit = (t) => {
-            if (ctx.measureText(t).width <= maxW) return t;
-            while (t.length > 4 && ctx.measureText(t + "…").width > maxW) t = t.slice(0, -1);
-            return t + "…";
-        };
-        const now = Date.now();
-        let big, l2 = "", l3 = "", color = "#cfd8dc";
-        if (c.running) {
-            big = (c.approx ? "⏱ ≥" : "⏱ ") + fmt(now - c.start); color = "#ffffff";
-            if (mine && c.stage) {
-                l2 = c.total > 1 ? `${c.stage} · ${c.i}/${c.total}` : c.stage;
-                if (c.i > 0 && c.total > c.i) l3 = `≈ ещё ${fmt((now - c.stageT0) / c.i * (c.total - c.i))} / left`;
-            } else if (!mine) {
-                l2 = "ждёт своей очереди / waiting";
-            }
-        } else if (c.start) {
-            big = "⏱ " + fmt(c.end - c.start);
-            color = c.result === "ok" ? "#9be7a0" : c.result === "error" ? "#ff8a80" : "#ffd180";
-            l2 = c.result === "ok" ? "весь прогон / total run" :
-                 c.result === "error" ? "ошибка — время до неё / failed after" : "остановлено / stopped";
-        } else {
-            big = "⏱ --:--"; color = "#78909c"; l2 = "время генерации / run time";
-        }
-        ctx.save();
-        ctx.textAlign = "center";
-        ctx.fillStyle = color; ctx.font = "bold 28px monospace";
-        const y0 = slotsBottom(this);
-        ctx.fillText(big, cx, y0 + 30);
-        ctx.font = "13px sans-serif"; ctx.fillStyle = "#b0bec5";
-        if (l2) ctx.fillText(fit(l2), cx, y0 + 52);
-        ctx.font = "12px sans-serif"; ctx.fillStyle = "#90a4ae";
-        if (l3) ctx.fillText(fit(l3), cx, y0 + 70);
-        ctx.restore();
-        return r;
-    };
-}
-
-
-// ---------- 📥 модели ----------
-const DL = { status: null, hooked: false, dialog: null, autoShown: false, nodes: new Set() };
-
-function gb(b) { return (b / 1024 ** 3).toFixed(1); }
-
-async function fetchStatus() {
-    try {
-        const r = await api.fetchApi(ROUTE + "/status");
-        DL.status = await r.json();
-    } catch (_) { DL.status = null; }
-    refreshButtons();
-    return DL.status;
-}
-
-function refreshButtons() {
-    const s = DL.status;
-    let label = MODELS_BTN;
-    if (s) {
-        const miss = s.files.filter((f) => !f.present).length;
-        const st = s.download?.state;
-        if (st === "downloading" || st === "probing") label = "⏬ Качаю модели… / Downloading…";
-        else if (miss === 0) label = "✅ Модели на месте / Models OK";
-        else label = `📥 Скачать модели (нет ${miss} из ${s.files.length}) / Download models`;
-    }
-    for (const node of DL.nodes) {
-        const b = node.__h3ModelsBtn;
-        if (b) { b.name = label; b.label = label; }
-    }
-    app.graph?.setDirtyCanvas(true, false);
-}
-
-function hookDownload() {
-    if (DL.hooked) return;
-    DL.hooked = true;
-    api.addEventListener(EVENT_DOWNLOAD, (e) => {
-        if (DL.status) DL.status.download = e.detail || {};
-        const st = e.detail?.state;
-        if (st === "done") {
-            // новые файлы — сразу в списки моделей, без перезапуска ComfyUI
-            try { app.refreshComboInNodes?.(); } catch (_) {}
-            fetchStatus().then(() => DL.dialog?.render());
-        }
-        else { refreshButtons(); DL.dialog?.render(); }
-    });
-}
-
-function el(tag, css, text) {
-    const e = document.createElement(tag);
-    if (css) e.style.cssText = css;
-    if (text != null) e.textContent = text;
-    return e;
-}
-
-function btn(text, bg, onClick) {
-    const b = el("button", `padding:8px 16px;background:${bg};color:#fff;border:none;border-radius:5px;` +
-        "cursor:pointer;font:13px sans-serif;margin:4px 6px 4px 0;", text);
-    b.onclick = onClick;
-    return b;
-}
-
-function openModelsDialog(greeting) {
-    if (DL.dialog) { DL.dialog.render(); return; }
-    const overlay = el("div", "position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:99999;display:flex;" +
-        "align-items:center;justify-content:center;");
-    const box = el("div", "background:#14202a;color:#e0e0e0;border:1px solid #3d6273;border-radius:10px;padding:20px 22px;" +
-        "width:min(680px,92vw);max-height:88vh;overflow-y:auto;font:13px/1.5 sans-serif;" +
-        "box-shadow:0 10px 40px rgba(0,0,0,0.85);");
-    overlay.append(box);
-    const close = () => { overlay.remove(); DL.dialog = null; };
-    overlay.onclick = (e) => { if (e.target === overlay) close(); };
-    let tokenInput = null;
-
-    const render = () => {
-        const s = DL.status;
-        box.innerHTML = "";
-        box.append(el("div", "font:bold 17px sans-serif;margin-bottom:6px;color:#bfe9ff;",
-                      "📥 Модели для Neron Image / Models for Neron Image"));
-        if (!s) {
-            box.append(el("div", "color:#ff8a80;margin:10px 0;", "Не удалось узнать состояние моделей. Перезапусти ComfyUI.\n" +
-                          "EN: Could not read model status. Restart ComfyUI."));
-            box.append(btn("Закрыть / Close", "#455a64", close));
-            return;
-        }
-        const missing = s.files.filter((f) => !f.present);
-        const d = s.download || {};
-        if (greeting && missing.length) {
-            box.append(el("div", "background:#1f3a2a;border:1px solid #3f7a52;border-radius:6px;padding:10px 12px;margin:8px 0;",
-                "👋 Каких-то моделей для картинок у тебя пока нет. Не беда — нажми «Скачать пакет»: нода скачает недостающее " +
-                "сама и разложит по папкам. Что уже лежит — не трогает.\n\n" +
-                "EN: Some models for Neron Image are missing. Press «Download pack» — the node downloads what is missing and " +
-                "puts it in the right folders. What you already have is left alone."));
-            box.lastChild.style.whiteSpace = "pre-wrap";
-        }
-        box.append(el("div", "font:bold 14px sans-serif;margin-top:10px;", s.pack_title));
-        const desc = el("div", "color:#b0bec5;white-space:pre-wrap;margin:4px 0 8px;", s.pack_description);
-        box.append(desc);
-        const list = el("div", "background:#0d171e;border-radius:6px;padding:8px 12px;margin:6px 0;font:12px monospace;");
-        for (const f of s.files) {
-            const part = (!f.present && f.partial_bytes) ? `  (скачано ${gb(f.partial_bytes)} ГБ — докачаю)` : "";
-            const alt = (f.present && f.have && f.have !== f.name) ? `  (есть замена / have: ${f.have})` : "";
-            list.append(el("div", f.present ? "color:#9be7a0;" : "color:#ffcc80;",
-                           `${f.present ? "✅" : "❌"} ${f.name}${alt}${part}`));
-        }
-        box.append(list);
-        const info = [];
-        if (s.size_note) info.push(`Объём пакета / pack size: ${s.size_note}`);
-        if (s.free_gb != null) info.push(`Свободно на диске моделей / free disk: ${s.free_gb.toFixed(0)} ГБ`);
-        if (s.vram_gb) info.push(`Видеокарта / GPU: ${s.vram_gb.toFixed(0)} ГБ` + (s.ram_gb ? `, оперативка / RAM: ${s.ram_gb.toFixed(0)} ГБ` : ""));
-        box.append(el("div", "color:#90a4ae;white-space:pre-wrap;margin-bottom:8px;", info.join("\n")));
-
-        const busy = d.state === "downloading" || d.state === "probing";
-        if (!missing.length) {
-            box.append(el("div", "color:#9be7a0;font:bold 14px sans-serif;margin:10px 0;",
-                          "✅ Всё на месте! Напиши, что нарисовать, и жми Run.\nEN: All set! Write what to draw and press Run."));
-            box.lastChild.style.whiteSpace = "pre-wrap";
-            box.append(btn("Закрыть / Close", "#2a5d9c", close));
-            return;
-        }
-
-        // доступ к Hugging Face
-        const needToken = missing.some((f) => f.gated) || ["gated", "no_token"].includes(d.error);
-        if (needToken) {
-            const t = el("div", "border:1px solid #3d6273;border-radius:6px;padding:10px 12px;margin:8px 0;");
-            t.append(el("div", "font:bold 13px sans-serif;margin-bottom:4px;",
-                        s.token_set ? "🔑 Доступ к Hugging Face: токен сохранён ✅ / token saved"
-                                    : "🔑 Доступ к Hugging Face — один раз / one time only"));
-            t.append(el("div", "color:#b0bec5;white-space:pre-wrap;",
-                "Hugging Face попросил вход. Это бесплатно и один раз:\n" +
-                "1) Открой страницу модели, войди (можно через Google); если есть «Agree and access» — нажми.\n" +
-                "2) Открой страницу токенов → «Create new token» → тип «Read» → скопируй.\n" +
-                "3) Вставь токен сюда и нажми «Сохранить», потом «Докачать». Он хранится только на твоём компьютере.\n" +
-                "Токен от Замены героя, H3 Story и LTX Engine подхватывается сам.\n\n" +
-                "EN: Hugging Face asked for a sign-in (free, once): 1) open the model page, sign in, accept if asked; " +
-                "2) create a Read token; 3) paste it here, save, resume. It stays on your computer."));
-            const row = el("div", "margin-top:6px;");
-            row.append(btn("1. Страница модели / Model page", "#37474f", () => window.open(s.license_url, "_blank")));
-            row.append(btn("2. Страница токенов / Tokens page", "#37474f", () => window.open(s.token_url, "_blank")));
-            t.append(row);
-            if (!s.token_from_env) {
-                const r2 = el("div", "display:flex;gap:6px;align-items:center;margin-top:4px;");
-                tokenInput = el("input", "flex:1;padding:7px;background:#0d171e;color:#e0e0e0;border:1px solid #3d6273;" +
-                    "border-radius:4px;font:12px monospace;");
-                tokenInput.type = "password";
-                tokenInput.placeholder = s.token_set ? "токен уже сохранён — можно заменить / saved, can replace" : "hf_…";
-                r2.append(tokenInput);
-                r2.append(btn("3. Сохранить / Save", "#2e7d32", async () => {
-                    const v = tokenInput.value.trim();
-                    if (!v) return;
-                    await api.fetchApi(ROUTE + "/token", { method: "POST", body: JSON.stringify({ token: v }) });
-                    await fetchStatus(); render();
-                }));
-                t.append(r2);
-            }
-            box.append(t);
-        }
-
-        // прогресс и ошибки
-        if (busy || d.state === "error" || d.state === "cancelled") {
-            const p = el("div", "margin:8px 0;");
-            if (busy) {
-                const pct = d.total ? Math.min(100, d.done / d.total * 100) : 0;
-                p.append(el("div", "", d.state === "probing" ? "Проверяю файлы… / Checking files…"
-                    : `Файл ${d.file_i} из ${d.files_n}: ${d.file}`));
-                const bar = el("div", "height:14px;background:#0d171e;border-radius:7px;overflow:hidden;margin:6px 0;");
-                bar.append(el("div", `height:100%;width:${pct.toFixed(1)}%;background:linear-gradient(90deg,#2a8fc4,#5fd0ff);`));
-                p.append(bar);
-                if (d.total) p.append(el("div", "color:#90a4ae;font:12px monospace;",
-                    `${gb(d.done)} / ${gb(d.total)} ГБ · ${pct.toFixed(1)}% · ${(d.speed || 0).toFixed(1)} МБ/с` +
-                    (d.speed > 0 ? ` · ≈ ещё ${fmt((d.total - d.done) / (d.speed * 1024 * 1024) * 1000)}` : "")));
-                p.append(el("div", "color:#78909c;font-size:12px;margin-top:4px;",
-                    "Окно можно закрыть — скачивание продолжится. EN: You can close this window, the download continues."));
-            } else {
-                p.append(el("div", "color:#ff8a80;white-space:pre-wrap;background:#2a1414;border-radius:6px;padding:8px 10px;",
-                            d.message || "Ошибка / Error"));
-            }
-            box.append(p);
-        }
-
-        const row = el("div", "margin-top:10px;");
-        if (busy) {
-            row.append(btn("⏹ Остановить / Stop", "#8e3b3b", async () => {
-                await api.fetchApi(ROUTE + "/cancel", { method: "POST", body: "{}" });
-            }));
-        } else {
-            const resume = s.files.some((f) => !f.present && f.partial_bytes);
-            row.append(btn(resume ? "⏬ Докачать / Resume" : "⏬ Скачать пакет / Download pack", "#2a7fc4", async () => {
-                if (needToken && !s.token_set && tokenInput && tokenInput.value.trim()) {
-                    await api.fetchApi(ROUTE + "/token", { method: "POST", body: JSON.stringify({ token: tokenInput.value.trim() }) });
-                }
-                await api.fetchApi(ROUTE + "/download", { method: "POST", body: JSON.stringify({ pack: s.pack_id }) });
-                await fetchStatus(); render();
-            }));
-        }
-        row.append(btn("Закрыть / Close", "#455a64", close));
-        box.append(row);
-    };
-
-    DL.dialog = { render };
-    document.body.append(overlay);
-    fetchStatus().then(render);
-    render();
-}
-
-// ---------- многострочные поля ComfyUI: внутрь рамки (Роман 16.11: поле промпта вылезало за края рамки) ----------
-const TEXT_FIELDS = ["text", "prompter_instruction"];
-function tidyTextareas(node) {
-    for (const name of TEXT_FIELDS) {
-        const w = getWidget(node, name);
-        const el = w?.inputEl || w?.element;
-        const ta = el?.tagName === "TEXTAREA" ? el : el?.querySelector?.("textarea");
-        if (!ta || ta.__neronTidy) continue;
-        ta.__neronTidy = true;
-        ta.style.boxSizing = "border-box";
-        ta.style.marginLeft = "12px";
-        ta.style.marginRight = "12px";
-        ta.style.width = "calc(100% - 24px)";
-        ta.style.borderRadius = "6px";
-        ta.style.border = "1px solid #2f4870";
-    }
-}
-
-// ---------- большой редактор промпта (16.11, Роман: «в таком узком окне нормальный промпт не написать —
-// человек должен видеть весь текст») ----------
-const EDITOR_BTN = "📝 Большой редактор промпта / Big prompt editor";
-function openPromptEditor(node) {
-    const tw = getWidget(node, "text");
-    if (!tw) return;
-    const overlay = el("div", "position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:99999;display:flex;" +
-        "align-items:center;justify-content:center;");
-    const box = el("div", "background:#101a2b;color:#e0e0e0;border:1px solid #2f4870;border-radius:10px;padding:16px 18px;" +
-        "width:min(1100px,94vw);height:min(820px,90vh);display:flex;flex-direction:column;gap:10px;" +
-        "box-shadow:0 10px 40px rgba(0,0,0,0.85);font:13px sans-serif;");
-    box.append(el("div", "font:bold 16px sans-serif;color:#bfe0ff;", "📝 Промпт целиком / The whole prompt"));
-    box.append(el("div", "color:#90a4ae;", "Пиши свободно, абзацами. Ctrl+Enter — сохранить, Esc — отмена. " +
-        "Свой готовый промпт — ставь автопромтер «✍ как есть».  EN: Ctrl+Enter — save, Esc — cancel."));
-    const ta = el("textarea", "flex:1;width:100%;box-sizing:border-box;resize:none;background:#0b1320;color:#e8f0ff;" +
-        "border:1px solid #2f4870;border-radius:8px;padding:14px 16px;font:15px/1.65 sans-serif;outline:none;");
-    ta.value = tw.value || "";
-    ta.spellcheck = false;
-    box.append(ta);
-    const foot = el("div", "display:flex;align-items:center;gap:8px;");
-    const count = el("div", "flex:1;color:#78909c;font:12px monospace;");
-    const upd = () => {
-        const t = ta.value.trim();
-        count.textContent = `${t ? t.split(/\s+/).length : 0} слов / words · ${ta.value.length} знаков / chars`;
-    };
-    ta.addEventListener("input", upd); upd();
-    const close = () => { overlay.remove(); document.removeEventListener("keydown", onKey, true); };
-    const save = () => {
-        tw.value = ta.value;
-        try { tw.callback?.(tw.value, app.canvas, node, [0, 0], null); } catch (_) {}
-        app.graph?.setDirtyCanvas(true, true);
-        close();
-    };
-    const onKey = (e) => {
-        if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(); }
-        else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); e.stopPropagation(); save(); }
-    };
-    document.addEventListener("keydown", onKey, true);
-    foot.append(count);
-    foot.append(btn("Отмена / Cancel", "#455a64", close));
-    foot.append(btn("✅ Сохранить / Save", "#2e7d32", save));
-    box.append(foot);
-    overlay.append(box);
-    overlay.onclick = (e) => { if (e.target === overlay) close(); };
-    document.body.append(overlay);
-    setTimeout(() => { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }, 30);
-}
-function addEditorButton(node) {
-    const b = node.addWidget("button", EDITOR_BTN, null, () => openPromptEditor(node));
-    // поставить кнопку сразу под полем «что нарисовать»
-    const ws = node.widgets;
-    ws.splice(ws.indexOf(b), 1);
-    const ti = ws.findIndex((w) => w.name === "text");
-    ws.splice(ti >= 0 ? ti + 1 : ws.length, 0, b);
-    // выбрали «✍ как есть» — сразу открыть большой редактор
-    const pw = getWidget(node, "prompter");
-    if (pw) {
-        const cb = pw.callback;
-        pw.callback = function (v) {
-            const r = cb?.apply(this, arguments);
-            if (String(pw.value).startsWith("✍") && !promptWired(node) && !node.__neronEditing) openPromptEditor(node);
-            return r;
-        };
-    }
-}
-
-// ---------- итоговый промпт на ноде ----------
-const EDIT_BTN = "✏ Править итоговый промпт / Edit final prompt";
-const PROMPT_BOX_H = 130;
-function addPromptBox(node) {
-    const ta = document.createElement("textarea");
-    ta.readOnly = true;
-    ta.placeholder = "Здесь появится промпт, который ушёл в модель.\nEN: The prompt sent to the model appears here.";
-    ta.style.cssText = "width:100%;height:100%;box-sizing:border-box;resize:none;background:#0d1626;color:#cfe3ff;" +
-        "border:1px solid #2f4870;border-radius:6px;padding:6px 8px;font:12px/1.45 sans-serif;";
-    let w = null;
-    try {
-        w = node.addDOMWidget("neron_final_prompt", "neron_text", ta, {
-            serialize: false, hideOnZoom: false,
-            getValue: () => ta.value, setValue: (v) => { ta.value = v || ""; },
-            getMinHeight: () => PROMPT_BOX_H, getHeight: () => PROMPT_BOX_H,
-        });
-    } catch (e) { console.warn("[Neron Image] окно промпта:", e); }
-    if (w) {
-        w.serialize = false;
-        w.computeSize = (width) => [width, PROMPT_BOX_H];
-    }
-    node.__neronPromptBox = ta;
-    if (node.__neronFinal) ta.value = node.__neronFinal;
-}
-function editFinalPrompt(node) {
-    const p = node.__neronPrompt;
-    if (!p) { alert("Сначала сделай картинку — тогда появится итоговый промпт.\nEN: Make a picture first."); return; }
-    const tw = getWidget(node, "text");
-    const pw = getWidget(node, "prompter");
-    if (tw) tw.value = p;
-    if (pw) {
-        const list = comboList(pw) || [];
-        const asis = list.find((x) => String(x).startsWith("✍")) || pw.value;
-        pw.value = asis;
-    }
-    app.graph?.setDirtyCanvas(true, true);
-    openPromptEditor(node);
-}
-
-// ---------- справка ----------
-const HELP_TEXT = `
-🖼 NERON IMAGE — КАРТИНКА ПО ТЕКСТУ (KREA 2)
-===================================================
-
-🇷🇺 ЧТО ДЕЛАЕТ
-Рисует картинку по твоему описанию на Krea 2 Turbo — официальные модели Comfy-Org.
-Пиши своими словами, хоть по-русски: автопромтер переведёт и распишет.
-
-КАК ПОЛЬЗОВАТЬСЯ
-1. «Что нарисовать» — опиши картинку. Текст, который должен быть НА картинке, — в кавычках.
-   Длинный промпт — кнопка «📝 Большой редактор»: текст видно целиком. Свой промпт можно
-   подать и проводом во вход prompt_text (например, из большой текстовой ноды).
-2. Автопромтер — «🎨 до мелочей» (по умолчанию). Форма кадра, качество (2K — максимум).
-3. Run. Выход image подключи к Save Image (в готовом процессе уже подключено).
-4. Внизу ноды — итоговый промпт: что на самом деле ушло в модель.
-
-АВТОПРОМТЕР
-• 🎨 до мелочей (по умолчанию) — всё, что ты написал, остаётся как есть и идёт первым;
-  всё, чего не написал, промптер придумает конкретно: одежда и ткани, материалы, детали
-  механизмов (шестерни, валы, заклёпки, следы износа), место, свет, объектив, стиль.
-  Flux и Krea лучше всего рисуют по длинным подробным промптам.
-• ✨ расписать — официальная инструкция Krea: сдержанно, без выдуманных деталей.
-• 🌐 подправить — только перевод и лёгкая шлифовка, близко к твоим словам.
-• ✍ как есть — текст уходит в модель без изменений (пиши по-английски).
-• Это тот же Qwen3-VL 4B, что кодирует текст для Krea, — отдельно ничего качать не надо.
-
-⚠ ГДЕ АВТОПРОМТЕР НЕ СПРАВИТСЯ (проверено вживую)
-Он маленький (4B) и отлично расписывает лёгкие сцены: один-два героя, пейзаж, предмет,
-механизм. Насыщенная сцена — много персонажей, и каждого надо прописать отдельно, —
-ему не по силам: люди выходят похожими друг на друга, и правками инструкции это не лечится.
-Для таких сцен:
-• напиши промпт сам (по-английски) и поставь «✍ как есть»;
-• или попроси большую ИИ (Gemini, ChatGPT, Claude…) — вставь ей текст ниже со своей идеей,
-  а её ответ — в ноду с «✍ как есть»:
-
-  Перепиши мою идею в промпт для генератора картинок Krea 2 / FLUX, на английском. Правила: 1) мои слова — свято, главное — первым. 2) Логика, а не клише: материалы, машины, свет и одежда — как было бы на самом деле в этом мире и при его технике, а не «как обычно рисуют этот жанр». 3) Эпоха и настроение держатся до конца (будущее — значит электрический свет; мрачно — значит без тёплого уюта). 4) Всё, что названо, описано отдельно: КАЖДЫЙ человек — своим предложением (где в кадре, возраст, телосложение, лицо, волосы, одежда: крой, ткань, цвет, состояние; что делает); КАЖДЫЙ механизм — своим предложением (из чего, что двигает, куда идёт, в каком состоянии). Слова «разные», «непохожие», «несколько», «разного возраста» не писать — модель их не рисует. 5) Описывай, а не указывай; без отрицаний «no …». 6) Фон осмысленный, но остаётся фоном. Объём — сколько нужно. Только промпт, без пояснений. Идея: …
-
-• Тот же текст и режим — промптер второй раз не гоняется: «вариант» меняет только картинку.
-• «✍ как есть» — сразу открывается большой редактор: свой промпт удобно писать целиком.
-• Хочешь поправить промпт руками — кнопка «✏ Править итоговый промпт»: он встанет в поле,
-  а автопромтер переключится на «как есть».
-
-РЕЗКОСТЬ
-• После рисования — мягкая нерезкая маска: края чётче, деталей не добавляет.
-  1.0 — по умолчанию (проверено на 2K). Подбирай под сюжет: крупный портрет — меньше
-  (0.5–0.8), чтобы кожа не «песочила»; пейзаж, ткань, техника — 1.0–1.3; 0 — как нарисовала модель.
-
-ПРИМЕР В ГОТОВОМ ПРОЦЕССЕ (workflows/Neron_Image_Krea2.json)
-Зелёная нода «📝 Пример большого промпта (кот-художник)» НЕ подключена нарочно.
-Это образец подробного промпта для сложной сцены — такой встроенный промптер не напишет.
-Чтобы нарисовать пример:
-• соедини её выход STRING со входом prompt_text у Neron Image;
-• автопромтер — «✍ как есть», иначе он перепишет твой текст;
-• форма кадра 16:9, качество 2K, резкость 0.6–0.8 (3D гладкое).
-Свой большой промпт пиши в этой же зелёной ноде вместо примера (её можно растянуть).
-Отключить — убери провод: снова работает поле «что нарисовать».
-
-ВАРИАНТЫ
-• «вариант» — номер картинки. Другой номер — другая картинка по тому же промпту.
-• Понравилась — «управление после генерации» = fixed, и меняй только слова.
-
-⚙ ЭКСПЕРТ
-• Шаги 8, CFG 1, euler / simple — рецепт авторов Krea 2 Turbo. Менять не обязательно.
-• Вариант промпта, фантазия промптера, своя инструкция (по-английски; пусто — официальная).
-• Стиль (LoRA) — официальные стили Krea 2 (Comfy-Org/Krea-2, папка loras): слова-ключ
-  нода допишет сама. Сила 1.0.
-• Держать модели — для серии картинок подряд. Выкл — память свободна для видео.
-• Входы width / height — внешний размер; форма кадра и качество отключаются.
-
-МОДЕЛИ — «📥 Модели» на ноде (официально, Comfy-Org/Krea-2):
-• krea2_turbo_bf16 — полная точность, 26,3 ГБ. Нет её — нода возьмёт сжатую версию
-  Turbo (fp8 / int8 / nvfp4), если лежит, и напишет об этом;
-• qwen3vl_4b_fp8_scaled — текстовый энкодер и автопромтер, 4,9 ГБ;
-• qwen_image_vae — 242 МБ.
-Почему Turbo, а не RAW: авторы Krea — «обучай на RAW, рисуй на Turbo». Turbo доведена
-по красоте и рисует до 2K; RAW — сырая база для обучения LoRA, до 1K, 52 шага.
-
-ЛИЦЕНЗИЯ: Krea 2 — community license авторов: личное использование можно;
-для коммерции — отдельная лицензия у Krea (opensource@krea.ai).
-
-===================================================
-
-🇬🇧 WHAT IT DOES
-Draws a picture from your description with Krea 2 Turbo — official Comfy-Org models.
-Write in any language: the prompter translates and expands it.
-
-HOW TO USE
-1. «What to draw» — describe the picture. Words to appear IN the picture go in quotes.
-   Long prompts — «📝 Big prompt editor» shows the whole text. A prompt can also come by
-   wire into the prompt_text input (e.g. from a big text node).
-2. Prompter — «every detail» (default). Aspect, quality (2K is the maximum).
-3. Run. Connect image to Save Image (already connected in the ready workflow).
-4. The bottom of the node shows the final prompt — what actually went to the model.
-
-PROMPTER
-• every detail (default) — your words stay as written and come first; everything you did
-  not specify is filled with concrete details: clothing and fabrics, materials, mechanism
-  parts (gears, shafts, rivets, wear), setting, light, lens, style.
-• expand — the official Krea instruction: restrained, no invented details.
-• polish — translation and light polishing only, close to your words.
-• as is — your text goes to the model unchanged (write in English).
-• It is the same Qwen3-VL 4B that encodes text for Krea — nothing extra to download.
-
-⚠ WHERE THE PROMPTER FALLS SHORT (tested live)
-It is small (4B) and great for light scenes: one or two characters, a landscape, an object,
-a machine. A busy scene with many characters, each of whom must be described separately, is
-beyond it: the people come out alike, and no instruction tweak fixes that. For such scenes
-write the prompt yourself (in English) with «✍ as is», or ask a big AI (Gemini, ChatGPT,
-Claude…) to write it — ask it to describe EVERY character separately and differently — and
-paste its answer with «✍ as is».
-
-• Same text and mode — the prompter is not run again: «seed» only changes the picture.
-• To edit the prompt by hand — «✏ Edit final prompt»: it goes into the text field and
-  the prompter switches to «as is».
-
-SHARPNESS — a gentle unsharp mask after drawing: 1.0 by default (tested at 2K). Tune it per
-picture: close-up portraits — less (0.5–0.8); landscapes, fabric, machines — 1.0–1.3; 0 — as drawn.
-
-EXAMPLE IN THE READY WORKFLOW — the green «📝 Example big prompt» node is NOT connected on
-purpose: a detailed prompt for a complex scene, which the built-in prompter cannot write. To
-draw it, connect its STRING output to prompt_text of Neron Image, set the prompter to «✍ as is»
-(otherwise it rewrites your text), aspect 16:9, quality 2K, sharpness 0.6–0.8. Write your own
-big prompt in that node. Remove the wire to use the «what to draw» field again.
-
-⚙ EXPERT
-• 8 steps, CFG 1, euler / simple — the Krea 2 Turbo authors' recipe.
-• Prompt variant, prompter creativity, own instruction (English; empty — official).
-• Style (LoRA) — official Krea 2 styles; trigger words are added automatically.
-• Keep models loaded — for a series of pictures. Off — memory is free for video.
-• width / height inputs — external size; aspect and quality are ignored.
-
-MODELS — «📥 Models» on the node (official, Comfy-Org/Krea-2): krea2_turbo_bf16 (26.3 GB,
-full precision; a compressed Turbo is used if bf16 is missing), qwen3vl_4b_fp8_scaled
-(text encoder and prompter, 4.9 GB), qwen_image_vae (242 MB).
-Why Turbo, not RAW: the Krea authors say «train on RAW, run on Turbo».
-
-LICENSE: Krea 2 community license — personal use is fine; commercial use needs a separate
-license from Krea (opensource@krea.ai).
-`;
-
-function showHelpDialog() {
-    const overlay = document.createElement("div");
-    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;" +
-        "align-items:center;justify-content:center;";
-    const box = document.createElement("div");
-    box.style.cssText = "background:#1a1a1a;color:#e0e0e0;border:1px solid #444;border-radius:8px;padding:20px;" +
-        "max-width:820px;max-height:85vh;overflow-y:auto;font:13px/1.5 monospace;white-space:pre-wrap;" +
-        "box-shadow:0 8px 32px rgba(0,0,0,0.8);";
-    box.textContent = HELP_TEXT;
-    const btn = document.createElement("button");
-    btn.textContent = "Close / Закрыть";
-    btn.style.cssText = "display:block;margin:16px auto 0;padding:8px 24px;background:#2a5d9c;color:#fff;" +
-        "border:none;border-radius:4px;cursor:pointer;font:13px sans-serif;";
-    btn.onclick = () => overlay.remove();
-    box.append(btn);
-    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-    overlay.append(box);
-    document.body.append(overlay);
-}
-
-// сброс: всё к заводским, кроме выбранных файлов моделей (их пользователь подбирал сам)
-// ---------- значения по ИМЕНАМ ----------
-// ComfyUI раскладывает сохранённые значения по полям по НОМЕРАМ. При смене вкладки / выходе из трея это иногда
-// сдвигалось на одно поле (в «секундах» — сид, в списках — чужие слова, нода краснела). Поэтому храним ещё и
-// по именам (properties.neron_values), после загрузки раскладываем по именам и проверяем каждое поле.
-const NAMED = "neron_values";
+// ============================================================
+//  ПОЛЯ НОДЫ
+// ============================================================
+const W = (node, name) => node.widgets?.find((x) => x.name === name);
 function comboList(w) {
-    const v = w.options?.values;
+    const v = w?.options?.values;
     try { return typeof v === "function" ? v(w) : v; } catch (_) { return null; }
 }
+function setw(node, name, value) {
+    const w = W(node, name);
+    if (!w) return;
+    w.value = value;
+    try { w.callback?.(value, app.canvas, node, [0, 0], null); } catch (_) {}
+}
+function linked(node, name) {
+    return (node.inputs || []).some((i) => i.name === name && i.link != null);
+}
+function hideNative(node) {
+    for (const w of node.widgets || []) {
+        w.hidden = true;
+        w.type = "hidden";     // иначе старый холст всё равно рисует подписи поверх панели
+        w.computeSize = () => [0, -4];
+    }
+}
+
+// В процессе «текст → картинка» размер задаётся внутри ноды: форма кадра + качество.
+// Внешние входы размера и выход готового промпта тут не нужны — убираем их с лица.
+// Если в сохранённом процессе к ним уже подключён провод, трогать не будем.
+function trimSlots(node) {
+    for (const name of ["width", "height"]) {
+        const i = (node.inputs || []).findIndex((x) => x.name === name);
+        if (i >= 0 && node.inputs[i].link == null) node.removeInput?.(i);
+    }
+    const o = (node.outputs || []).findIndex((x) => x.name === "prompt");
+    if (o >= 0 && !(node.outputs[o].links || []).length) node.removeOutput?.(o);
+}
+
+// Провода и выходы тоже должны говорить на одном языке с панелью.
+// name не трогаем — по нему Comfy передаёт значения; меняем только видимую подпись.
+function syncSlotLabels(node) {
+    const ins = {
+        width: L("Ширина", "Width"),
+        height: L("Высота", "Height"),
+        prompt_text: L("Промпт проводом", "Prompt by wire"),
+    };
+    const outs = {
+        image: L("Картинка", "Image"),
+        prompt: L("Промпт", "Prompt"),
+    };
+    for (const i of node.inputs || []) if (ins[i.name]) i.label = ins[i.name];
+    for (const o of node.outputs || []) if (outs[o.name]) o.label = outs[o.name];
+}
 function saneWidget(w, o) {
+    if (!w || !o) return;
     if (w.type === "combo") {
         const list = comboList(w);
         if (Array.isArray(list) && list.length && !list.includes(w.value))
-            w.value = (o && list.includes(o.default)) ? o.default : list[0];
+            w.value = ("default" in o && list.includes(o.default)) ? o.default : list[0];
         return;
     }
-    if (!o || !("default" in o)) return;
+    if (!("default" in o)) return;
     const d = o.default;
     if (typeof d === "number") {
-        const v = typeof w.value === "number" ? w.value : NaN;
+        const v = Number(w.value);
         if (!isFinite(v) || (o.min != null && v < o.min) || (o.max != null && v > o.max)) w.value = d;
     } else if (typeof d === "boolean") {
         if (typeof w.value !== "boolean") w.value = d;
@@ -835,58 +439,6 @@ function saneWidget(w, o) {
         if (typeof w.value !== "string") w.value = d;
     }
 }
-// ---------- самолечение (13.11, Роман: «делаешь ещё прогон, а нода красная — стоят не те значения», NaN после
-// сворачивания) ----------
-// Раз в секунду, при возврате окна и ПЕРЕД КАЖДЫМ «Запустить» нода проверяет свои поля. Сломанное (NaN, чужое слово
-// в списке, число вне диапазона) возвращается к ПОСЛЕДНЕМУ ХОРОШЕМУ значению, а не к умолчанию. В консоль браузера
-// пишется, какое поле сломалось и когда — чтобы найти виновника.
-function validValue(w, o, v) {
-    if (w.type === "combo") {
-        const list = comboList(w);
-        return !(Array.isArray(list) && list.length) || list.includes(v);
-    }
-    if (!o || !("default" in o)) return true;
-    const d = o.default;
-    if (typeof d === "number")
-        return typeof v === "number" && isFinite(v) && !(o.min != null && v < o.min) && !(o.max != null && v > o.max);
-    if (typeof d === "boolean") return typeof v === "boolean";
-    if (typeof d === "string") return typeof v === "string";
-    return true;
-}
-const HEAL_SPECS = new Map();                       // нода → описания полей
-function healNode(node, why) {
-    const specs = HEAL_SPECS.get(node);
-    if (!specs || !node.widgets) return;
-    const good = node.__neronGood || {};
-    const fixed = [];
-    for (const w of node.widgets) {
-        if (!w.name || !(specs[w.name] || w.name === "control_after_generate")) continue;
-        const o = specs[w.name];
-        if (validValue(w, o, w.value)) continue;
-        const was = w.value;
-        if (Object.prototype.hasOwnProperty.call(good, w.name) && validValue(w, o, good[w.name])) w.value = good[w.name];
-        else saneWidget(w, o);
-        fixed.push(`${w.name}: ${String(was)} → ${String(w.value)}`);
-    }
-    if (fixed.length) {
-        console.warn(`[Neron Image] самолечение (${why}): ` + fixed.join("; "));
-        try { node.setDirtyCanvas?.(true, true); app.graph?.setDirtyCanvas?.(true, true); } catch (_) {}
-    }
-    node.__neronGood = namedValues(node, specs);     // запомнить хорошие
-}
-function healAll(why) {
-    for (const n of HEAL_SPECS.keys()) { try { healNode(n, why); } catch (_) {} }
-}
-let HEAL_HOOKED = false;
-function hookHeal() {
-    if (HEAL_HOOKED) return;
-    HEAL_HOOKED = true;
-    document.addEventListener("visibilitychange", () => { if (!document.hidden) healAll("окно вернулось"); });
-    window.addEventListener("focus", () => healAll("окно в фокусе"));
-    const orig = app.graphToPrompt?.bind(app);
-    if (orig) app.graphToPrompt = async function (...args) { healAll("перед запуском"); return orig(...args); };
-}
-
 function namedValues(node, specs) {
     const out = {};
     for (const w of node.widgets || [])
@@ -901,20 +453,626 @@ function restoreNamed(node, specs, named) {
     }
 }
 
-function resetAll(node, specs) {
-    for (const w of node.widgets || []) {
-        const o = specs[w.name];
-        if (!o || w.name.endsWith("_model") || !("default" in o)) continue;
-        w.value = o.default;
-        try { w.callback?.(w.value, app.canvas, node, [0, 0], null); } catch (_) {}
-    }
-    applyExpert(node, specs);
+// ============================================================
+//  ХОД РАБОТЫ
+// ============================================================
+const CLOCK = { start: null, end: null, running: false, result: "", stage: "", i: 0, total: 0, t0: 0,
+                current: null, hooked: false };
+function hookClock() {
+    if (CLOCK.hooked) return;
+    CLOCK.hooked = true;
+    api.addEventListener("execution_start", () => {
+        Object.assign(CLOCK, { start: Date.now(), end: null, running: true, result: "", stage: "", i: 0, total: 0, current: null });
+        repaintAll();
+    });
+    api.addEventListener("executing", (e) => {
+        const d = e.detail;
+        CLOCK.current = (d && typeof d === "object") ? (d.display_node ?? d.node) : d;
+        if (!CLOCK.running) CLOCK.start = CLOCK.start || Date.now();
+    });
+    api.addEventListener("execution_success", () => { CLOCK.running = false; CLOCK.end = Date.now(); CLOCK.result = "ok"; repaintAll(); });
+    api.addEventListener("execution_error", () => { CLOCK.running = false; CLOCK.end = Date.now(); CLOCK.result = "error"; repaintAll(); });
+    api.addEventListener("execution_interrupted", () => { CLOCK.running = false; CLOCK.end = Date.now(); CLOCK.result = "stop"; repaintAll(); });
+    api.addEventListener(EVENT_PROGRESS, (e) => {
+        const d = e.detail || {};
+        if (CLOCK.stage !== (d.stage || "")) CLOCK.t0 = Date.now();
+        CLOCK.stage = d.stage || "";
+        CLOCK.i = d.i || 0;
+        CLOCK.total = d.total || 0;
+        CLOCK.running = true;
+        if (!CLOCK.start) CLOCK.start = Date.now();
+        repaintAll();
+    });
+    api.addEventListener("progress", (e) => {
+        const d = e.detail || {};
+        if (!d.max || String(d.node) !== String(CLOCK.current)) return;
+        if (app.graph?.getNodeById?.(d.node)?.type !== NODE) return;
+        CLOCK.i = d.value; CLOCK.total = d.max;
+        CLOCK.stage = CLOCK.stage || "🎨 рисую / drawing";
+        repaintAll();
+    });
+    setInterval(() => { if (CLOCK.running) repaintAll(); }, 1000);
+}
+function repaintAll() {
+    for (const n of NODES) { try { n.__niPaintProgress?.(); } catch (_) {} }
 }
 
+// ============================================================
+//  ОКНО МОДЕЛЕЙ
+// ============================================================
+const DL = { status: null, hooked: false, dialog: null, autoShown: false, nodes: new Set() };
+const gb = (b) => (b / 1024 ** 3).toFixed(1);
+async function fetchStatus() {
+    try {
+        const r = await api.fetchApi(ROUTE + "/status");
+        DL.status = await r.json();
+    } catch (_) { DL.status = null; }
+    refreshButtons();
+    return DL.status;
+}
+function refreshButtons() {
+    const s = DL.status;
+    let label = T().models;
+    if (s) {
+        const miss = s.files.filter((f) => !f.present).length;
+        const st = s.download?.state;
+        if (st === "downloading" || st === "probing") label = T().modelsBusy;
+        else if (miss === 0) label = T().modelsOk;
+        else label = T().modelsNeed(miss, s.files.length);
+    }
+    for (const n of DL.nodes) {
+        if (n.__niModelsBtn) n.__niModelsBtn.textContent = label;
+    }
+}
+function hookDownload() {
+    if (DL.hooked) return;
+    DL.hooked = true;
+    api.addEventListener(EVENT_DOWNLOAD, (e) => {
+        if (DL.status) DL.status.download = e.detail || {};
+        const st = e.detail?.state;
+        if (st === "done") {
+            try { app.refreshComboInNodes?.(); } catch (_) {}
+            fetchStatus().then(() => DL.dialog?.render());
+        } else { refreshButtons(); DL.dialog?.render(); }
+    });
+}
 
+function openModelsDialog(greeting) {
+    if (DL.dialog) { DL.dialog.render(); return; }
+    const overlay = el("div", "ni-dlg");
+    const box = el("div", "ni-dlg-box");
+    overlay.appendChild(box);
+    const close = () => { overlay.remove(); DIALOGS.delete(rec); DL.dialog = null; };
+    overlay.onclick = (e) => { if (e.target === overlay) close(); };
+
+    const render = () => {
+        const t = T(), s = DL.status;
+        box.innerHTML = "";
+        box.append(el("div", "", "📥 " + pick(L("Модели для Neron Image", "Models for Neron Image"))));
+        box.lastChild.style.cssText = "font:bold 17px sans-serif;margin-bottom:8px;color:#bfe9ff;";
+        if (!s) {
+            box.append(el("div", "", L("Не удалось узнать состояние моделей. Перезапусти ComfyUI.", "Could not read model status. Restart ComfyUI.")));
+            box.lastChild.style.color = "#ff8a80";
+            box.append(button(t.close, "", close));
+            return;
+        }
+        const missing = s.files.filter((f) => !f.present);
+        const d = s.download || {};
+        if (greeting && missing.length) {
+            const g = el("div", "", L(
+                "👋 Каких-то моделей пока нет. Нажми «Скачать пакет» — нода скачает недостающее сама и разложит по папкам. Что уже лежит — не трогает.",
+                "👋 Some models are missing. Press «Download pack» — the node gets what is missing and puts it in the right folders. Existing files are left alone."));
+            g.style.cssText = "background:#1f3a2a;border:1px solid #3f7a52;border-radius:6px;padding:10px;margin:8px 0;white-space:pre-wrap;";
+            box.append(g);
+        }
+        box.append(el("div", "", pick(s.pack_title || "")));
+        box.lastChild.style.cssText = "font:bold 14px sans-serif;margin-top:8px;";
+        const desc = el("div", "", pick(s.pack_description || ""));
+        desc.style.cssText = "color:#b0bec5;white-space:pre-wrap;margin:4px 0 8px;";
+        box.append(desc);
+        const list = el("div", "");
+        list.style.cssText = "background:#0d171e;border-radius:6px;padding:8px 12px;margin:6px 0;font:12px monospace;";
+        for (const f of s.files) {
+            const part = (!f.present && f.partial_bytes) ? `  (${L("скачано", "downloaded")} ${gb(f.partial_bytes)} ${L("ГБ", "GB")} — ${L("докачаю", "will resume")})` : "";
+            const alt = (f.present && f.have && f.have !== f.name) ? `  (${L("есть замена", "have")}: ${f.have})` : "";
+            const line = el("div", "", `${f.present ? "✅" : "❌"} ${f.name}${alt}${part}`);
+            line.style.color = f.present ? "#9be7a0" : "#ffcc80";
+            list.append(line);
+        }
+        box.append(list);
+        const info = [];
+        if (s.size_note) info.push(L("Объём пакета", "Pack size") + ": " + pick(s.size_note));
+        if (s.free_gb != null) info.push(L("Свободно на диске", "Free disk") + ": " + s.free_gb.toFixed(0) + " " + L("ГБ", "GB"));
+        if (s.vram_gb) info.push(L("Видеокарта", "GPU") + ": " + s.vram_gb.toFixed(0) + " " + L("ГБ", "GB") +
+            (s.ram_gb ? ", " + L("оперативка", "RAM") + ": " + s.ram_gb.toFixed(0) + " " + L("ГБ", "GB") : ""));
+        const inf = el("div", "", info.join("\n"));
+        inf.style.cssText = "color:#90a4ae;white-space:pre-wrap;margin-bottom:8px;";
+        box.append(inf);
+
+        const busy = d.state === "downloading" || d.state === "probing";
+        if (!missing.length) {
+            const ok = el("div", "", "✅ " + L("Всё на месте! Напиши, что нарисовать, и жми кнопку запуска.", "All set! Write what to draw and press Run."));
+            ok.style.cssText = "color:#9be7a0;font:bold 14px sans-serif;margin:10px 0;white-space:pre-wrap;";
+            box.append(ok, button(t.close, "", close));
+            return;
+        }
+        const needToken = missing.some((f) => f.gated) || ["gated", "no_token"].includes(d.error);
+        let tokenInput = null;
+        if (needToken) {
+            const tok = el("div", "");
+            tok.style.cssText = "border:1px solid #3d6273;border-radius:6px;padding:10px;margin:8px 0;";
+            const head = el("div", "", s.token_set ? "🔑 " + L("Доступ сохранён", "Access saved") + " ✅" : "🔑 " + L("Доступ к Hugging Face — один раз", "Hugging Face sign-in — once"));
+            head.style.cssText = "font:bold 13px sans-serif;margin-bottom:5px;";
+            const how = el("div", "", L(
+                "Это бесплатно и один раз: открой страницу модели, войди, согласись с условиями, если попросят. Потом страница токенов → создать новый токен → разрешение только на чтение → скопируй. Вставь сюда, сохрани и нажми «Докачать». Токен остаётся только на твоём компьютере.",
+                "It is free and one time: open the model page, sign in, accept if asked. Then the tokens page → Create new token → Read → copy it. Paste here, save, press Resume. The token stays on your computer."));
+            how.style.cssText = "color:#b0bec5;white-space:pre-wrap;";
+            tok.append(head, how);
+            const row = el("div", "");
+            row.style.marginTop = "6px";
+            row.append(button("1. " + L("Страница модели", "Model page"), "", () => window.open(s.license_url, "_blank")));
+            row.append(button("2. " + L("Страница токенов", "Tokens page"), "", () => window.open(s.token_url, "_blank")));
+            tok.append(row);
+            if (!s.token_from_env) {
+                const r2 = el("div", "");
+                r2.style.cssText = "display:flex;gap:6px;align-items:center;margin-top:5px;";
+                tokenInput = el("input");
+                tokenInput.type = "password";
+                tokenInput.placeholder = s.token_set ? L("токен уже сохранён", "token saved") : "hf_…";
+                r2.append(tokenInput, button("3. " + t.save, "", async () => {
+                    const v = tokenInput.value.trim();
+                    if (!v) return;
+                    await api.fetchApi(ROUTE + "/token", { method: "POST", body: JSON.stringify({ token: v }) });
+                    await fetchStatus(); render();
+                }));
+                tok.append(r2);
+            }
+            box.append(tok);
+        }
+        if (busy || d.state === "error" || d.state === "cancelled") {
+            const p = el("div", ""); p.style.margin = "8px 0";
+            if (busy) {
+                const pct = d.total ? Math.min(100, d.done / d.total * 100) : 0;
+                p.append(el("div", "", d.state === "probing" ? L("Проверяю файлы…", "Checking files…") :
+                    `${L("Файл", "File")} ${d.file_i} ${L("из", "of")} ${d.files_n}: ${d.file}`));
+                const bar = el("div", "");
+                bar.style.cssText = "height:14px;background:#0d171e;border-radius:7px;overflow:hidden;margin:6px 0;";
+                const fill = el("div", "");
+                fill.style.cssText = `height:100%;width:${pct.toFixed(1)}%;background:linear-gradient(90deg,#2a8fc4,#5fd0ff);`;
+                bar.append(fill); p.append(bar);
+                p.append(el("div", "", `${gb(d.done)} / ${gb(d.total)} ${L("ГБ", "GB")} · ${pct.toFixed(1)}% · ${(d.speed || 0).toFixed(1)} ${L("МБ/с", "MB/s")}` +
+                    (d.speed > 0 ? ` · ≈ ${L("осталось", "left")} ${fmt((d.total - d.done) / (d.speed * 1024 * 1024) * 1000)}` : "")));
+                p.append(el("div", "", L("Окно можно закрыть — скачивание продолжится.", "You can close this window — the download continues.")));
+            } else {
+                const err = el("div", "", pick(d.message || L("Ошибка", "Error")));
+                err.style.cssText = "color:#ff8a80;white-space:pre-wrap;background:#2a1414;border-radius:6px;padding:8px 10px;";
+                p.append(err);
+            }
+            box.append(p);
+        }
+        const row = el("div", ""); row.style.marginTop = "10px";
+        if (busy) {
+            row.append(button(t.stop, "warn", async () => {
+                await api.fetchApi(ROUTE + "/cancel", { method: "POST", body: "{}" });
+            }));
+        } else {
+            const resume = s.files.some((f) => !f.present && f.partial_bytes);
+            row.append(button(resume ? t.resume : t.downloadPack, "", async () => {
+                if (needToken && !s.token_set && tokenInput && tokenInput.value.trim()) {
+                    await api.fetchApi(ROUTE + "/token", { method: "POST", body: JSON.stringify({ token: tokenInput.value.trim() }) });
+                }
+                await api.fetchApi(ROUTE + "/download", { method: "POST", body: JSON.stringify({ pack: s.pack_id }) });
+                await fetchStatus(); render();
+            }));
+        }
+        row.append(button(t.close, "", close));
+        box.append(row);
+    };
+
+    const rec = { render };
+    DIALOGS.add(rec);
+    DL.dialog = rec;
+    document.body.append(overlay);
+    fetchStatus().then(render);
+    render();
+}
+
+// ============================================================
+//  БОЛЬШОЙ РЕДАКТОР ПРОМПТА
+// ============================================================
+function openEditor(node) {
+    const tw = W(node, "text");
+    if (!tw) return;
+    const t = T();
+    const overlay = el("div", "ni-dlg");
+    const box = el("div", "ni-dlg-box");
+    box.style.cssText += "width:min(1000px,94vw);height:min(760px,88vh);display:flex;flex-direction:column;gap:9px;";
+    box.append(el("div", "", "📝 " + (L("Промпт целиком", "The whole prompt"))));
+    box.lastChild.style.cssText = "font:bold 16px sans-serif;color:#bfe0ff;";
+    box.append(el("div", "", L(
+        "Пиши свободно, абзацами. Ctrl+Enter — сохранить, Esc — отмена. Свой готовый промпт — ставь автопромтер «как есть».",
+        "Write freely, in paragraphs. Ctrl+Enter — save, Esc — cancel. For your own finished prompt choose the «as is» prompter.")));
+    box.lastChild.style.color = "#93a2b4";
+    const ta = el("textarea");
+    ta.style.cssText = "flex:1;width:100%;box-sizing:border-box;resize:none;background:#0b1320;color:#e8f0ff;border:1px solid #334c72;border-radius:8px;padding:14px;font:15px/1.6 sans-serif;outline:none;";
+    ta.value = tw.value || "";
+    const count = el("div", "");
+    count.style.cssText = "color:#8291a2;font:12px monospace;";
+    const upd = () => {
+        const s = ta.value.trim();
+        count.textContent = `${t.words(s ? s.split(/\s+/).length : 0)} · ${t.chars(ta.value.length)}`;
+    };
+    ta.addEventListener("input", upd); upd();
+    const close = () => { overlay.remove(); document.removeEventListener("keydown", onKey, true); DIALOGS.delete(rec); };
+    const save = () => {
+        setw(node, "text", ta.value);
+        node.__niPaint?.();
+        close();
+    };
+    const onKey = (e) => {
+        if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(); }
+        else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); e.stopPropagation(); save(); }
+    };
+    document.addEventListener("keydown", onKey, true);
+    const foot = el("div", ""); foot.style.cssText = "display:flex;gap:8px;align-items:center;";
+    foot.append(count, button(t.cancel, "", close), button(t.save, "", save));
+    box.append(ta, foot);
+    overlay.append(box);
+    overlay.onclick = (e) => { if (e.target === overlay) close(); };
+    document.body.append(overlay);
+    const rec = { render: () => {} };
+    DIALOGS.add(rec);
+    setTimeout(() => ta.focus(), 30);
+}
+
+// ============================================================
+//  ПАНЕЛЬ НОДЫ
+// ============================================================
+function buildPanel(node, specs) {
+    addCss();
+    hookClock();
+    hookDownload();
+    hideNative(node);
+    trimSlots(node);
+    const root = el("div", "ni"), inner = el("div");
+    root.appendChild(inner);
+    for (const ev of ["pointerdown", "mousedown", "wheel", "keydown", "contextmenu"]) {
+        root.addEventListener(ev, (e) => {
+            if (e.target.closest("select,input,textarea,button")) e.stopPropagation();
+        }, { passive: true });
+    }
+
+    // верхняя панель
+    const bar = el("div", "ni-bar");
+    const ru = el("span", "ni-pill", "RU"), en = el("span", "ni-pill", "EN");
+    const exp = el("span", "ni-pill"), hlp = el("span", "ni-pill");
+    bar.append(ru, en, el("span", "ni-sp"), exp, hlp);
+    inner.appendChild(bar);
+    ru.onclick = () => setLang("RU");
+    en.onclick = () => setLang("EN");
+    hlp.onclick = () => showHelp();
+    exp.onclick = () => { setw(node, "expert", W(node, "expert")?.value !== true); node.__niPaint?.(); };
+
+    const ctl = [];   // [имя поля, элемент, подпись, ключ словаря]
+    function field(parent, key, name, kind) {
+        const w = W(node, name);
+        if (!w) return null;
+        let input, label = null;
+        if (kind === "check") {
+            const wrap = el("label", "ni-check");
+            input = document.createElement("input"); input.type = "checkbox";
+            label = el("span");
+            input.onchange = () => setw(node, name, input.checked);
+            wrap.append(input, label); parent.append(wrap);
+        } else if (w.type === "combo" || Array.isArray(comboList(w))) {
+            input = document.createElement("select");
+            const vals = [...(comboList(w) || [])];
+            if (w.value != null && !vals.includes(w.value)) vals.unshift(w.value);
+            for (const v of vals) {
+                const o = document.createElement("option");
+                o.value = v; o.textContent = pick(v);
+                input.appendChild(o);
+            }
+            input.onchange = () => setw(node, name, input.value);
+            parent.append(input);
+        } else {
+            input = document.createElement("input");
+            input.type = "number";
+            if (w.options?.min != null) input.min = w.options.min;
+            if (w.options?.max != null) input.max = w.options.max;
+            input.step = w.options?.step ?? (Number.isInteger(w.value) ? 1 : 0.05);
+            input.onchange = () => {
+                const v = Number(input.value);
+                if (isFinite(v)) setw(node, name, v);
+                input.value = W(node, name)?.value;
+            };
+            parent.append(input);
+        }
+        ctl.push([name, input, label, key]);
+        return input;
+    }
+    function row(parent, key, name) {
+        const r = el("div", "ni-row");
+        const s = el("span");
+        r.append(s);
+        const input = field(r, key, name);
+        parent.append(r);
+        if (input) ctl[ctl.length - 1][2] = s;
+        return input;
+    }
+
+    // что нарисовать
+    const promptSec = el("div", "ni-sec");
+    const [promptB, promptI] = (() => {
+        const r = el("div", "ni-lab"), b = el("b"), i = el("i");
+        r.append(b, i); promptSec.append(r);
+        return [b, i];
+    })();
+    const promptArea = el("textarea", "ni-prompt");
+    promptArea.spellcheck = false;
+    promptArea.oninput = () => {
+        const w = W(node, "text");
+        if (w) w.value = promptArea.value;
+    };
+    promptSec.append(promptArea);
+    const editorBtn = button("", "", () => openEditor(node));
+    promptSec.append(editorBtn);
+    inner.appendChild(promptSec);
+
+    // автопромтер
+    const autSec = el("div", "ni-sec");
+    const autLab = el("div", "ni-lab"), autB = el("b"), autI = el("i");
+    autLab.append(autB, autI); autSec.append(autLab);
+    field(autSec, "prompter", "prompter");
+    inner.append(autSec);
+
+    // кадр
+    const frameSec = el("div", "ni-sec");
+    const frameLab = el("div", "ni-lab"), frameB = el("b"), frameI = el("i");
+    frameLab.append(frameB, frameI); frameSec.append(frameLab);
+    const aspectRow = row(frameSec, "aspect", "aspect");
+    const qualityRow = row(frameSec, "quality", "quality");
+    const sharpRow = row(frameSec, "sharpness", "sharpness");
+    inner.append(frameSec);
+
+    // вариант
+    const varSec = el("div", "ni-sec");
+    const varLab = el("div", "ni-lab"), varB = el("b"), varI = el("i");
+    varLab.append(varB, varI); varSec.append(varLab);
+    const seedRow = row(varSec, "seed", "seed");
+    const afterRow = row(varSec, "after", "control_after_generate");
+    inner.append(varSec);
+
+    // ход работы
+    const progSec = el("div", "ni-sec");
+    const progLab = el("div", "ni-lab"), progB = el("b");
+    progLab.append(progB); progSec.append(progLab);
+    const prog = el("div", "ni-prog");
+    const stages = el("div", "ni-stages");
+    const track = el("div", "ni-track"), fill = el("div", "ni-fill");
+    track.append(fill);
+    const pt = el("div", "ni-pt"), ptL = el("span"), ptR = el("span");
+    pt.append(ptL, ptR);
+    prog.append(stages, track, pt);
+    progSec.append(prog);
+    inner.append(progSec);
+
+    // итоговый промпт
+    const finalSec = el("div", "ni-sec");
+    const finalLab = el("div", "ni-lab"), finalB = el("b");
+    finalLab.append(finalB); finalSec.append(finalLab);
+    const finalArea = el("textarea", "ni-final");
+    finalArea.readOnly = true;
+    finalSec.append(finalArea);
+    const editBtn = button("", "", () => {
+        if (!node.__neronFinal) {
+            alert(L("Сначала сделай картинку — тогда появится итоговый промпт.", "Make a picture first — the final prompt will appear here."));
+            return;
+        }
+        const w = W(node, "text");
+        if (w) w.value = node.__neronPrompt || "";
+        const pw = W(node, "prompter");
+        if (pw) {
+            const asis = (comboList(pw) || []).find((x) => String(x).startsWith("✍"));
+            if (asis) pw.value = asis;
+        }
+        node.__niPaint?.();
+        openEditor(node);
+    });
+    finalSec.append(editBtn);
+    inner.append(finalSec);
+
+    // кнопка моделей
+    const modelsBtn = button(T().models, "main", () => openModelsDialog(false));
+    node.__niModelsBtn = modelsBtn;
+    DL.nodes.add(node);
+    inner.append(modelsBtn);
+
+    // предупреждение про провода
+    const wireNote = el("div", "ni-note");
+    wireNote.style.display = "none";
+    inner.append(wireNote);
+
+    // эксперт
+    const expBox = el("div", "ni-exp");
+    const expNote = el("div", "ni-note"); expBox.append(expNote);
+    const hSample = el("h4"); expBox.append(hSample);
+    row(expBox, "count", "count");
+    row(expBox, "steps", "steps");
+    row(expBox, "cfg", "cfg");
+    row(expBox, "sampler", "sampler");
+    row(expBox, "scheduler", "scheduler");
+    const hPrompter = el("h4"); expBox.append(hPrompter);
+    const instrSec = el("div", "ni-sec");
+    const instrLab = el("div", "ni-lab"), instrB = el("b");
+    instrLab.append(instrB); instrSec.append(instrLab);
+    const instrArea = el("textarea", "ni-prompt");
+    instrArea.style.minHeight = "52px";
+    instrArea.oninput = () => { const w = W(node, "prompter_instruction"); if (w) w.value = instrArea.value; };
+    instrSec.append(instrArea); expBox.append(instrSec);
+    row(expBox, "promptVariant", "prompter_seed");
+    row(expBox, "creativity", "prompter_creativity");
+    const hStyle = el("h4"); expBox.append(hStyle);
+    row(expBox, "styleLora", "style_lora");
+    row(expBox, "styleStrength", "style_strength");
+    const hModels = el("h4"); expBox.append(hModels);
+    field(expBox, "keepLoaded", "keep_loaded", "check");
+    row(expBox, "unet", "unet_model");
+    row(expBox, "clip", "clip_model");
+    row(expBox, "vae", "vae_model");
+    const resetBtn = button("", "", () => {
+        for (const w of node.widgets || []) {
+            const o = specs[w.name];
+            if (!o || w.name.endsWith("_model") || !("default" in o)) continue;
+            setw(node, w.name, o.default);
+        }
+        node.__niPaint?.();
+    });
+    expBox.append(resetBtn);
+    const themeBtn = button("", "", () => cycleTheme());
+    expBox.append(themeBtn);
+    inner.append(expBox);
+
+    // размер панели
+    function height() { return Math.ceil(inner.scrollHeight) + 8; }
+    let lastH = 0;
+    function fit() {
+        requestAnimationFrame(() => {
+            const h = height();
+            if (Math.abs(h - lastH) < 2) return;
+            lastH = h;
+            try { const sz = node.computeSize(); node.setSize([Math.max(node.size[0], sz[0]), sz[1]]); } catch (_) {}
+            try { app.graph?.setDirtyCanvas(true, true); } catch (_) {}
+        });
+    }
+    function paintProgress() {
+        const t = T();
+        const c = CLOCK, mine = c.current == null || String(c.current) === String(node.id);
+        let text = t.idle, right = "", pct = 0;
+        if (c.running) {
+            if (mine && c.stage) {
+                text = pick(c.stage) + (c.total > 1 ? ` · ${c.i}/${c.total}` : "");
+                if (c.i > 0 && c.total > c.i && c.t0) {
+                    const per = (Date.now() - c.t0) / 1000 / c.i;
+                    right = `${t.elapsed} ${fmt(Date.now() - c.start)} · ${t.left} ${fmt(per * (c.total - c.i) * 1000)}`;
+                } else right = `${t.elapsed} ${fmt(Date.now() - c.start)}`;
+                pct = c.total > 1 ? c.i / c.total : 0.12;
+            } else {
+                text = t.waiting;
+                right = c.start ? fmt(Date.now() - c.start) : "";
+                pct = 0.03;
+            }
+        } else if (c.end) {
+            text = c.result === "error" ? t.error : `${t.done} ${fmt(c.end - c.start)}`;
+            pct = 1;
+        }
+        ptL.textContent = text;
+        ptR.textContent = right;
+        fill.style.width = `${Math.min(100, pct * 100)}%`;
+        fill.classList.toggle("err", c.result === "error");
+        const wanted = c.running && mine ? [pick(c.stage || "🎨 рисую / drawing")] : [];
+        if (stages.childElementCount !== wanted.length || stages.firstChild?.textContent !== wanted[0]) {
+            stages.innerHTML = "";
+            for (const s of wanted) stages.append(el("span", "ni-stage now", s));
+        }
+    }
+    node.__niPaintProgress = paintProgress;
+
+    function paint() {
+        const t = T();
+        syncSlotLabels(node);
+        ru.classList.toggle("on", LANG === "RU");
+        en.classList.toggle("on", LANG === "EN");
+        exp.textContent = t.expert;
+        exp.classList.toggle("on", W(node, "expert")?.value === true);
+        hlp.textContent = t.help;
+        promptB.textContent = t.prompt; promptI.textContent = t.promptHint;
+        promptArea.placeholder = t.promptPh;
+        if (document.activeElement !== promptArea) promptArea.value = W(node, "text")?.value ?? "";
+        if (document.activeElement !== instrArea) instrArea.value = W(node, "prompter_instruction")?.value ?? "";
+        editorBtn.textContent = t.bigEditor;
+        autB.textContent = t.prompter; autI.textContent = t.prompterHint;
+        frameB.textContent = t.frame; frameI.textContent = "";
+        varB.textContent = t.variant; varI.textContent = "";
+        progB.textContent = t.progress;
+        finalB.textContent = t.final;
+        finalArea.placeholder = t.finalPh;
+        editBtn.textContent = t.editFinal;
+        modelsBtn.textContent = t.models;
+        resetBtn.textContent = t.reset;
+        themeBtn.textContent = t.themeCycle;
+        expNote.textContent = t.expertNote;
+        hSample.textContent = t.sampling;
+        hPrompter.textContent = t.prompterFine;
+        hStyle.textContent = t.style;
+        hModels.textContent = t.modelsFine;
+        instrB.textContent = t.instruction;
+        for (const [name, input, label, key] of ctl) {
+            if (!name || !input) continue;
+            if (label && key) label.textContent = t[key] ?? key;
+            const w = W(node, name);
+            if (!w) continue;
+            if (input.type === "checkbox") input.checked = !!w.value;
+            else if (input.tagName === "SELECT") {
+                if (w.value != null && [...input.options].every((o) => o.value !== w.value)) {
+                    const o = document.createElement("option");
+                    o.value = w.value; o.textContent = pick(w.value);
+                    input.insertBefore(o, input.firstChild);
+                }
+                input.value = w.value;
+                for (const o of input.options) o.textContent = pick(o.value);
+            } else input.value = w.value;
+        }
+        const wSized = linked(node, "width") && linked(node, "height");
+        const wPrompt = linked(node, "prompt_text");
+        for (const inp of [aspectRow, qualityRow]) if (inp) inp.style.display = wSized ? "none" : "";
+        sharpRow.style.display = wSized ? "none" : "";
+        promptArea.style.display = wPrompt ? "none" : "";
+        editorBtn.style.display = wPrompt ? "none" : "";
+        autSec.style.display = wPrompt ? "none" : "";
+        wireNote.style.display = (wSized || wPrompt) ? "" : "none";
+        wireNote.textContent = wPrompt ? t.wiredPrompt : t.wiredSize;
+        expBox.style.display = W(node, "expert")?.value === true ? "" : "none";
+        if (node.__neronFinal) finalArea.value = node.__neronFinal;
+        paintProgress();
+        fit();
+    }
+    node.__niPaint = paint;
+
+    const w = node.addDOMWidget("neron_image_panel", "neron_image_panel", root, {
+        serialize: false, hideOnZoom: false,
+        getMinHeight: height, getHeight: height,
+    });
+    if (w) { w.serialize = false; w.computeSize = () => [node.size[0], height()]; }
+    setTimeout(() => { paint(); syncNotes(); }, 60);
+    return paint;
+}
+
+// ============================================================
+//  РЕГИСТРАЦИЯ
+// ============================================================
 app.registerExtension({
-    name: "Neron.Image",
+    name: "Neron.Image.Common",
     async beforeRegisterNodeDef(nodeType, nodeData) {
+        if (nodeData.name === THEME_NODE) {
+            // длинный текст темы человеку не показываем: оформление меняется кнопкой в панели
+            const made0 = nodeType.prototype.onNodeCreated;
+            nodeType.prototype.onNodeCreated = function () {
+                const r = made0?.apply(this, arguments);
+                const hide = () => {
+                    for (const w of this.widgets || []) {
+                        if (w?.name !== "theme_json") continue;
+                        w.hidden = true;
+                        w.type = "hidden";
+                        w.computeSize = () => [0, -4];
+                    }
+                };
+                hide();
+                setTimeout(hide, 100);
+                return r;
+            };
+            return;
+        }
         if (nodeData.name !== NODE) return;
         const specs = {};
         for (const grp of ["required", "optional"])
@@ -922,54 +1080,36 @@ app.registerExtension({
                 specs[k] = (Array.isArray(s) && s[1] && typeof s[1] === "object") ? s[1] : {};
 
         const origCreated = nodeType.prototype.onNodeCreated;
+        const origExecuted = nodeType.prototype.onExecuted;
         const origConfigure = nodeType.prototype.onConfigure;
-        const origDrawBg = nodeType.prototype.onDrawBackground;
-        const origDrawFg = nodeType.prototype.onDrawForeground;
-        const origResize = nodeType.prototype.onResize;
+        const origSerialize = nodeType.prototype.onSerialize;
         const origRemoved = nodeType.prototype.onRemoved;
+        const origConn = nodeType.prototype.onConnectionsChange;
+
         nodeType.prototype.onRemoved = function () {
-            DL.nodes.delete(this);
-            clearInterval(this.__neronHeal);
-            HEAL_SPECS.delete(this);
+            NODES.delete(this); DL.nodes.delete(this);
             return origRemoved?.apply(this, arguments);
         };
-
         nodeType.prototype.onNodeCreated = function () {
             const r = origCreated?.apply(this, arguments);
             const node = this;
-            node.color = NODE_COLOR;
-            node.bgcolor = NODE_BGCOLOR;
-            HEAL_SPECS.set(node, specs);
-            hookHeal();
-            clearInterval(node.__neronHeal);
-            node.__neronHeal = setInterval(() => { try { healNode(node, "проверка"); } catch (_) {} }, 1000);
-            const spacer = node.addCustomWidget({ name: "_spacer", type: "neron_blank", value: "", serialize: false,
-                                                  options: { serialize: false }, draw() {},
-                                                  computeSize: () => [0, CLOCK_ROOM], mouse() { return false; } });
-            node.widgets.splice(node.widgets.indexOf(spacer), 1);
-            node.widgets.unshift(spacer);
-            for (const name of ["expert"]) {
-                const ew = getWidget(node, name);
-                if (!ew) continue;
-                const cb = ew.callback;
-                ew.callback = function () { const rr = cb?.apply(this, arguments); applyExpert(node, specs); return rr; };
-            }
-            node.__h3ModelsBtn = node.addWidget("button", MODELS_BTN, null, () => openModelsDialog(false));
-            node.addWidget("button", "🔄 Reset to Defaults / Сброс", null, () => resetAll(node, specs));
-            node.addWidget("button", "📖 Help / Справка", null, () => showHelpDialog());
-            addEditorButton(node);
-            addPromptBox(node);
-            node.addWidget("button", EDIT_BTN, null, () => editFinalPrompt(node));
-            for (const t of [50, 300, 800]) setTimeout(() => { applyExpert(node, specs); tidyTextareas(node); }, t);
-            setupClock(node);
-            hookDownload();
-            DL.nodes.add(node);
+            node.color = "#23345a";
+            node.bgcolor = "#141e33";
+            if (!node.title || TITLE_ALIASES.has(node.title)) node.title = nodeTitle();
+            buildPanel(node, specs);
+            NODES.add(node);
+            node.__neronFinal = node.__neronFinal || "";
+            const fix = () => {
+                for (const w of node.widgets || []) saneWidget(w, specs[w.name]);
+                node.__niPaint?.();
+            };
+            setTimeout(fix, 0);
+            setTimeout(fix, 300);
             fetchStatus().then((s) => {
                 if (s && !s.all_present && !DL.autoShown) { DL.autoShown = true; openModelsDialog(true); }
             });
             return r;
         };
-        const origExecuted = nodeType.prototype.onExecuted;
         nodeType.prototype.onExecuted = function (message) {
             const r = origExecuted?.apply(this, arguments);
             const p = message?.neron_prompt?.[0];
@@ -977,18 +1117,16 @@ app.registerExtension({
             if (p != null) {
                 this.__neronPrompt = String(p);
                 this.__neronFinal = String(p) + (info ? "\n\n— — —\n" + String(info) : "");
-                if (this.__neronPromptBox) this.__neronPromptBox.value = this.__neronFinal;
+                this.__niPaint?.();
             }
             return r;
         };
-        const origConn = nodeType.prototype.onConnectionsChange;
         nodeType.prototype.onConnectionsChange = function () {
             const r = origConn?.apply(this, arguments);
-            clearTimeout(this.__neronWire);
-            this.__neronWire = setTimeout(() => applyExpert(this, specs), 30);
+            clearTimeout(this.__niWire);
+            this.__niWire = setTimeout(() => this.__niPaint?.(), 30);
             return r;
         };
-        const origSerialize = nodeType.prototype.onSerialize;
         nodeType.prototype.onSerialize = function (o) {
             const r = origSerialize?.apply(this, arguments);
             try {
@@ -1000,24 +1138,15 @@ app.registerExtension({
         nodeType.prototype.onConfigure = function (info) {
             const r = origConfigure?.apply(this, arguments);
             const named = info?.properties?.[NAMED] || this.properties?.[NAMED];
-            const fix = () => { restoreNamed(this, specs, named); applyExpert(this, specs); this.__neronGood = namedValues(this, specs); };
+            const fix = () => {
+                restoreNamed(this, specs, named);
+                trimSlots(this);
+                if (!this.title || TITLE_ALIASES.has(this.title)) this.title = nodeTitle();
+                this.__niPaint?.();
+            };
             fix();
-            for (const t of [0, 50, 300, 800]) setTimeout(fix, t);
+            for (const t of [50, 300, 800]) setTimeout(fix, t);
             return r;
-        };
-        nodeType.prototype.onResize = function () {
-            const r = origResize?.apply(this, arguments);
-            clearTimeout(this.__neronReapply);
-            this.__neronReapply = setTimeout(() => applyGroupGaps(this), 50);
-            return r;
-        };
-        nodeType.prototype.onDrawBackground = function (ctx) {
-            origDrawBg?.apply(this, arguments);
-            if (!this.flags?.collapsed) drawGroupRects(this, ctx);
-        };
-        nodeType.prototype.onDrawForeground = function (ctx) {
-            origDrawFg?.apply(this, arguments);
-            if (!this.flags?.collapsed) drawGroupLabels(this, ctx);
         };
     },
 });

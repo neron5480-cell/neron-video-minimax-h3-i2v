@@ -3,7 +3,7 @@
   "default": "krea2",
   "packs": {
     "krea2": {
-      "title": "Krea 2 Turbo · максимум качества (bf16) / maximum quality",
+      "title": "Krea 2 Turbo · максимум качества (bf16) / Krea 2 Turbo · maximum quality",
       "description": "Всё для картинок на Krea 2 (официально, Comfy-Org):\n• Krea 2 Turbo bf16 — полная точность, без сжатия (26,3 ГБ). Авторы Krea советуют рисовать именно на Turbo: она доведена по красоте и рисует до 2048×2048; RAW — сырая база для обучения LoRA;\n• текстовый энкодер Qwen3-VL 4B — он же автопромтер (4,9 ГБ);\n• VAE (242 МБ).\nНа 16 ГБ видеокарты модель bf16 частью живёт в оперативке — это нормально, просто чуть дольше.\n\nEN: Everything for Krea 2 images (official, Comfy-Org): Krea 2 Turbo bf16 — full precision (26.3 GB; the Krea authors recommend Turbo for images, up to 2048×2048), the Qwen3-VL 4B text encoder (also the auto-prompter, 4.9 GB) and the VAE (242 MB). Files you already have are skipped.",
       "known_size_note": "≈ 31,5 ГБ (точный размер окно узнаёт у сервера) / ≈ 31.5 GB",
       "files": [

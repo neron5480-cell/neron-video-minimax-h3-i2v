@@ -1,5 +1,16 @@
 # Changelog / История изменений
 
+## 🖼 Neron Image 0.5 — тема внутри процесса, включена по умолчанию (main 3.0.1, 23.11.2026)
+
+**RU:**
+- Тема теперь живёт внутри папки `ComfyUI-NeronImage` и включается сама: открыл готовый процесс — оформление уже работает. Отдельный пакет Neron Theme ставить не надо.
+- Нода темы стоит в готовом процессе по умолчанию и не мешает работе; другой вид выбирается кнопкой **«🎨 Сменить оформление»** в разделе ⚙ эксперт.
+- Кнопка **RU / EN** переключает и тему целиком: внутри процесса не осталось англоязычных подписей. Убрано наслоение двух панелей, когда рядом стоит отдельный пакет тем.
+- По замечаниям автора исправлены двойные подписи, английские названия проводов, лишние входы размера и выход промпта.
+- Живая проверка автора: ничего не сломано, всё работает; с автопромптером прогон на его железе стал примерно на 15 секунд быстрее.
+
+**EN:** the theme now lives inside the `ComfyUI-NeronImage` folder and turns on by itself — open the ready workflow and the look is already there; no separate Neron Theme package needed. The theme node is in the workflow by default and stays out of the way; another look is one button in the expert section. **RU / EN** switches the theme too, and the doubled panel is gone when a separate theme pack is installed. Fixed duplicate labels, English wire captions, extra size inputs and the prompt output. Author's live check: nothing broken, everything works, and with the prompter the run is about 15 seconds faster on his machine.
+
 ## 🧹 Neron 3.0.0 — чистка: каждая папка самостоятельна (main, 19.11.2026)
 
 **RU:** по итогам тестов Романа в пакете остались только рабочие проекты, и **каждая папка работает сама по себе** — свои ноды и свой код, без соседей.
