@@ -35,6 +35,23 @@ const E = {
     run: { id: null, start: 0, progress: new Map(), done: new Map(), err: new Map() },
     onChange: null,
 };
+// RU: когда стоит несколько пакетов с темами (например, старая папка и новая из Manager),
+//     у каждого свой движок. Запоминаем все копии, чтобы при выходе из процесса
+//     сбросить тему и у них — иначе старый движок через секунду вернёт оформление обратно.
+// EN: several theme packs can be installed at once (an old folder plus the Manager copy).
+//     Track every engine so leaving the workflow clears all of them; otherwise an old
+//     copy restores the look a second later.
+const CLIENTS = window.__neronThemeEngines || (window.__neronThemeEngines = []);
+if (window.__neronThemeEngine && !CLIENTS.includes(window.__neronThemeEngine)) CLIENTS.push(window.__neronThemeEngine);
+CLIENTS.push(E);
+const ENGINE_REF = window.__neronThemeEngineRef || (window.__neronThemeEngineRef = { cur: window.__neronThemeEngine });
+try {
+    Object.defineProperty(window, "__neronThemeEngine", {
+        configurable: true,
+        get: () => ENGINE_REF.cur,
+        set(v) { ENGINE_REF.cur = v; if (v && !CLIENTS.includes(v)) CLIENTS.push(v); },
+    });
+} catch (_) { /* старый браузер / old browser */ }
 window.__neronThemeEngine = E;   // для проверки / for tests
 
 // ---------------------------------------------------------------------------
@@ -194,6 +211,17 @@ function refresh() {
 }
 
 export function setCurrent(t) { E.current = t || null; refresh(); }
+// RU: убрать тему из чужих копий движка, чтобы после выхода из процесса её не вернули.
+// EN: clear the theme in other engine copies so they cannot bring it back after we leave.
+export function clearOtherThemes() {
+    for (const o of CLIENTS) {
+        if (!o || o === E) continue;
+        try {
+            o.applied = null; o.bk = null; o.ours = null; o.sig = "";
+            o.preview = null; o.studio = null; o.current = null;
+        } catch (_) { /* чужая копия / foreign copy */ }
+    }
+}
 // Neron Studio: процесс открыт со стола — холст в оформлении стола (стеклянные ноды, цвета стола)
 export function setStudio(t) { E.studio = t || null; refresh(); }
 export function setPreview(t) { E.preview = t || null; refresh(); }

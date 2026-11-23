@@ -1,7 +1,7 @@
 [project]
 name = "neron-image"
 description = "🖼 Neron Image — картинка по тексту на Krea 2 до 2K: автопромптер, RU/EN и тема внутри процесса. Text-to-image on Krea 2 with a built-in prompter, RU/EN and the theme included."
-version = "0.5.1"
+version = "0.5.2"
 license = { file = "LICENSE" }
 dependencies = []
 

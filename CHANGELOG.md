@@ -1,5 +1,13 @@
 # Changelog / История изменений
 
+## 🖼 Neron Image 0.7 — сброс темы закрепляется и при двух пакетах (main 3.0.3, отдельный пакет 0.5.2, 23.11.2026)
+
+**RU:**
+- Исправлено по новому замечанию автора: после установки через Manager рядом осталась старая папка процесса, и её старый движок через секунду возвращал оформление. Теперь при выходе из процесса тема сбрасывается во всех копиях движка, а не только в новой.
+- Нода темы, RU / EN, кнопка оформления, генерация и закачка моделей работают как раньше.
+
+**EN:** fixed after the author's next report: installing from Manager left the old folder in place, and its old theme engine restored the look about a second after the reset. Leaving the workflow now clears the theme in every engine copy, so the reset sticks. The theme node, RU / EN, look switcher, generation and model downloads work as before.
+
 ## 🖼 Neron Image 0.6 — тема только в своём процессе (main 3.0.2, отдельный пакет 0.5.1, 23.11.2026)
 
 **RU:**

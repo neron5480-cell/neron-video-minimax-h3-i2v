@@ -4,7 +4,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 import { BUILTIN, normalizeTheme } from "./nts_core.js";
-import { setCurrent } from "./nts_engine.js";
+import { setCurrent, clearOtherThemes } from "./nts_engine.js";
 
 const NODE = "NeronImage";
 const THEME_NODE = "NeronThemeStudio";   // тема вшита в процесс и говорит на том же языке
@@ -160,12 +160,13 @@ function applyTheme() {
         themeMisses++;
         if (themeApplied && themeMisses >= 2) {
             themeApplied = false;
-            try { setCurrent(null); } catch (_) {}
+            try { setCurrent(null); clearOtherThemes(); } catch (_) {}
         }
         return;
     }
     themeMisses = 0;
     try {
+        clearOtherThemes();
         setCurrent(normalizeTheme(st.theme));
         themeApplied = true;
     } catch (_) {}
