@@ -43,7 +43,7 @@ _ROOT = os.path.dirname(os.path.abspath(__file__))
 
 # Старые имена папок: если нода стоит отдельно под старым именем, пакетную копию
 # не грузим. Old folder names of the same node.
-_ALIASES = {}
+_ALIASES = {"ComfyUI-NeronH3Engine": ["neron-h3-engine"]}
 
 
 def _custom_nodes_dirs():

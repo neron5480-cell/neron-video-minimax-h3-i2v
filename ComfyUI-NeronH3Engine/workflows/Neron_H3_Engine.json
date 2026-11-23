@@ -1,0 +1,44 @@
+{
+  "id": "a1f4c2e8-9d63-4b17-8f2a-6c5e1d0b7a34",
+  "revision": 0,
+  "last_node_id": 1,
+  "last_link_id": 0,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "NeronH3Engine",
+      "pos": [180, 140],
+      "size": [520, 360],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        { "name": "first_frame", "type": "IMAGE", "link": null },
+        { "name": "last_frame", "type": "IMAGE", "link": null }
+      ],
+      "outputs": [
+        { "name": "frames", "type": "IMAGE", "links": [] },
+        { "name": "path", "type": "STRING", "links": [] }
+      ],
+      "properties": { "Node name for S&R": "NeronH3Engine" },
+      "widgets_values": [
+        "Cinematic live-action scene, shot on film. A lone courier in a dark raincoat rides a bicycle across a wet city bridge at dusk, neon signs reflecting in the puddles, slow tracking shot from the side, shallow depth of field, realistic physics, restrained colour grading.\nTimeline: [0s-2s] the rider enters from the left, wheels throwing spray; [2s-4s] the camera moves alongside as the rider pedals harder; [4s-5s] the rider passes a bright sign and disappears into the fog.\nAudio: steady tire hiss, distant traffic, low ambient synth, a soft swell at the end. No text, no subtitles, no logos, no watermark.",
+        5,
+        "auto",
+        0,
+        "fixed",
+        0,
+        0,
+        0,
+        true,
+        "ru",
+        "NeronH3/H3"
+      ]
+    }
+  ],
+  "links": [],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.4
+}

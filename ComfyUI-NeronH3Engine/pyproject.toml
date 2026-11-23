@@ -1,0 +1,17 @@
+[project]
+name = "neron-h3-engine"
+description = "🌀 Neron H3 Engine — самостоятельный движок MiniMax H3: пустой кадр или картинка, турбо и мощный режим, промежуточные кадры. Standalone MiniMax H3 engine with turbo/power modes and live previews."
+version = "0.2.0"
+license = { file = "LICENSE" }
+dependencies = []
+requires-python = ">=3.11"
+
+[project.urls]
+Repository = "https://github.com/neron5480-cell/neron-h3-engine"
+Documentation = "https://github.com/neron5480-cell/neron-video-minimax-h3-i2v#readme"
+"Bug Tracker" = "https://github.com/neron5480-cell/neron-video-minimax-h3-i2v/issues"
+
+[tool.comfy]
+PublisherId = "neron"
+DisplayName = "🌀 Neron H3 Engine"
+Icon = "https://raw.githubusercontent.com/neron5480-cell/neron-video-minimax-h3-i2v/main/docs/img/neron_icon.png"

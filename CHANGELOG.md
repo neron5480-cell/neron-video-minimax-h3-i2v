@@ -1,5 +1,16 @@
 # Changelog / История изменений
 
+## 🌀 Neron H3 Engine 0.2.0 — самостоятельный движок без автопромптера (main 3.1.0, 23.11.2026)
+
+**RU:**
+- Добавлена отдельная папка `ComfyUI-NeronH3Engine` с одной нодой: текст → видео, кадр → видео, первый и последний кадр → видео. Автопромптера нет: что написал, то и уходит в модель.
+- Модели ищутся во всех папках ComfyUI и докачиваются сами с места обрыва. Железо само выбирает режим и размер кадра; на 16 ГБ видеокарты это турбо.
+- Турбо — 8 шагов с лёгким текстовым движком и турбо-LoRA только на модели. Мощный — 20 шагов на полном текстовом движке без LoRA. Во время счёта в панели появляется раскадровка: начало, середина, конец.
+- RU/EN меняет весь процесс и оформление. Тема уходит при переходе в другую схему и возвращается при возврате; соседние Neron-процессы не меняются.
+- Живая проверка на RTX 5070 Ti: четыре ролика 768×448, 24 к/с, ~5,17 с, H.264 + AAC stereo. Первый кадр I2V совпадает с поданной картинкой, последний — со вторым кадром; мощный режим подтверждён по логу как 20/20 без LoRA.
+
+**EN:** added a standalone `ComfyUI-NeronH3Engine` folder with one node: text → video, one frame → video, first and last frame → video. No autoprompter. The engine finds and resumes-downloads its own models and picks the mode and frame grid from the hardware. Turbo is 8 steps with the light text encoder and LoRA on the model only; power is 20 steps on the full text encoder with no LoRA. A storyboard appears during rendering. RU/EN switches the whole process and look; the theme leaves with the workflow and returns with it, leaving neighbouring processes untouched. Live-checked on an RTX 5070 Ti with four 768×448, 24 fps, ~5.17 s H.264 + AAC clips; first/last frame binding and the 20-step power run were confirmed.
+
 ## 🖼 Neron Image 0.8 — обычный вид возвращается полностью (main 3.0.4, отдельный пакет 0.5.3, 23.11.2026)
 
 **RU:**
