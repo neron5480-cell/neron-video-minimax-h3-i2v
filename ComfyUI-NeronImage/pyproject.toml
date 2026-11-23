@@ -6,7 +6,7 @@ license = { file = "LICENSE" }
 dependencies = []
 
 [project.urls]
-Repository = "https://github.com/neron5480-cell/neron-video-minimax-h3-i2v"
+Repository = "https://github.com/neron5480-cell/neron-image"
 Documentation = "https://github.com/neron5480-cell/neron-video-minimax-h3-i2v#readme"
 "Bug Tracker" = "https://github.com/neron5480-cell/neron-video-minimax-h3-i2v/issues"
 
