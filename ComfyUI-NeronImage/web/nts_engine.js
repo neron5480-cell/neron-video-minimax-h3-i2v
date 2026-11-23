@@ -35,23 +35,39 @@ const E = {
     run: { id: null, start: 0, progress: new Map(), done: new Map(), err: new Map() },
     onChange: null,
 };
-// RU: когда стоит несколько пакетов с темами (например, старая папка и новая из Manager),
-//     у каждого свой движок. Запоминаем все копии, чтобы при выходе из процесса
-//     сбросить тему и у них — иначе старый движок через секунду вернёт оформление обратно.
-// EN: several theme packs can be installed at once (an old folder plus the Manager copy).
-//     Track every engine so leaving the workflow clears all of them; otherwise an old
-//     copy restores the look a second later.
+// RU: когда стоит несколько пакетов с темами (старая папка, Manager, Neron Theme),
+//     у каждого свой движок. Один из них должен быть единственным, кто красит ComfyUI:
+//     иначе чужие копии меняют цвета нод и потом не возвращают их обратно.
+//     Здесь мы делаем этот движок единственным, а остальные переводим в режим «не красить».
+// EN: several theme packs may be installed at once. Only one engine may repaint ComfyUI;
+//     other copies would change node colours and leave them changed after we leave.
+//     This engine becomes the only painter; all other copies are made passive.
 const CLIENTS = window.__neronThemeEngines || (window.__neronThemeEngines = []);
-if (window.__neronThemeEngine && !CLIENTS.includes(window.__neronThemeEngine)) CLIENTS.push(window.__neronThemeEngine);
+if (window.__neronThemeEngine && window.__neronThemeEngine !== E && !CLIENTS.includes(window.__neronThemeEngine)) CLIENTS.push(window.__neronThemeEngine);
 CLIENTS.push(E);
+function makePassive(x) {
+    if (!x || x === E || x.__neronThemePassive) return;
+    x.__neronThemePassive = true;
+    const none = () => null;
+    const noop = () => {};
+    for (const k of ["current", "preview", "studio", "applied"]) {
+        try { Object.defineProperty(x, k, { configurable: true, get: none, set: noop }); } catch (_) {}
+    }
+    try { Object.defineProperty(x, "sig", { configurable: true, get: () => "", set: noop }); } catch (_) {}
+    try { x.bk = null; x.ours = null; } catch (_) {}
+}
 const ENGINE_REF = window.__neronThemeEngineRef || (window.__neronThemeEngineRef = { cur: window.__neronThemeEngine });
 try {
     Object.defineProperty(window, "__neronThemeEngine", {
         configurable: true,
         get: () => ENGINE_REF.cur,
-        set(v) { ENGINE_REF.cur = v; if (v && !CLIENTS.includes(v)) CLIENTS.push(v); },
+        set(v) {
+            ENGINE_REF.cur = v;
+            if (v && v !== E) { if (!CLIENTS.includes(v)) CLIENTS.push(v); makePassive(v); }
+        },
     });
 } catch (_) { /* старый браузер / old browser */ }
+for (const c of CLIENTS.slice()) makePassive(c);
 window.__neronThemeEngine = E;   // для проверки / for tests
 
 // ---------------------------------------------------------------------------
@@ -211,17 +227,6 @@ function refresh() {
 }
 
 export function setCurrent(t) { E.current = t || null; refresh(); }
-// RU: убрать тему из чужих копий движка, чтобы после выхода из процесса её не вернули.
-// EN: clear the theme in other engine copies so they cannot bring it back after we leave.
-export function clearOtherThemes() {
-    for (const o of CLIENTS) {
-        if (!o || o === E) continue;
-        try {
-            o.applied = null; o.bk = null; o.ours = null; o.sig = "";
-            o.preview = null; o.studio = null; o.current = null;
-        } catch (_) { /* чужая копия / foreign copy */ }
-    }
-}
 // Neron Studio: процесс открыт со стола — холст в оформлении стола (стеклянные ноды, цвета стола)
 export function setStudio(t) { E.studio = t || null; refresh(); }
 export function setPreview(t) { E.preview = t || null; refresh(); }

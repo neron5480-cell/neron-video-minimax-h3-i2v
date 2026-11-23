@@ -1,5 +1,13 @@
 # Changelog / История изменений
 
+## 🖼 Neron Image 0.8 — обычный вид возвращается полностью (main 3.0.4, отдельный пакет 0.5.3, 23.11.2026)
+
+**RU:**
+- Исправлено по новому замечанию автора: после выхода в другой процесс окно ComfyUI становилось обычным, но ноды оставались в цветах темы. Причина — чужие копии движка темы красили ноды и не возвращали их цвета.
+- Теперь оформление процесса красит только свой движок; он же возвращает все цвета и фон при выходе. Проверено с тремя движками одновременно: после перехода в другую схему обычный вид возвращается полностью, при возврате оформление включается снова.
+
+**EN:** fixed after the author's next report: leaving the workflow restored the ComfyUI window but left nodes themed. Foreign theme engines were colouring nodes and never restoring them. Now only this process's engine paints and restores everything; checked with three engines at once — switching away fully restores the normal look, switching back brings the theme back.
+
 ## 🖼 Neron Image 0.7 — сброс темы закрепляется и при двух пакетах (main 3.0.3, отдельный пакет 0.5.2, 23.11.2026)
 
 **RU:**

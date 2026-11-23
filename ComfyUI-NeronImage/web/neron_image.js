@@ -4,7 +4,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 import { BUILTIN, normalizeTheme } from "./nts_core.js";
-import { setCurrent, clearOtherThemes } from "./nts_engine.js";
+import { setCurrent, registerType } from "./nts_engine.js";
 
 const NODE = "NeronImage";
 const THEME_NODE = "NeronThemeStudio";   // тема вшита в процесс и говорит на том же языке
@@ -160,13 +160,12 @@ function applyTheme() {
         themeMisses++;
         if (themeApplied && themeMisses >= 2) {
             themeApplied = false;
-            try { setCurrent(null); clearOtherThemes(); } catch (_) {}
+            try { setCurrent(null); } catch (_) {}
         }
         return;
     }
     themeMisses = 0;
     try {
-        clearOtherThemes();
         setCurrent(normalizeTheme(st.theme));
         themeApplied = true;
     } catch (_) {}
@@ -1076,6 +1075,8 @@ const registerOnce = (ext) => {
 registerOnce({
     name: "Neron.Image.Common",
     async beforeRegisterNodeDef(nodeType, nodeData) {
+        // красим ноды ourselves: чужие движки тем выключены, чтобы цвета не оставались после выхода
+        try { registerType(nodeType, nodeData); } catch (_) {}
         if (nodeData.name === THEME_NODE) {
             // длинный текст темы человеку не показываем: оформление меняется кнопкой в панели
             const made0 = nodeType.prototype.onNodeCreated;
